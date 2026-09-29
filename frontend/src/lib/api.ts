@@ -21,6 +21,23 @@ export interface FlowRecord {
   extension_count: number;
   score?: number | null;
   anomaly?: boolean;
+  /** Module 8: 5G/6G slice this flow was classified onto. */
+  slice?: string;
+  /** Module 6: immune assessment (level 0-3 → ignore/monitor/alert/isolate). */
+  immune?: ImmuneAnnotation;
+  /** Module 6: spiking-network timing score (percentile), when trained. */
+  snn_score?: number | null;
+  /** Module 6: swarm quorum flag for this flow. */
+  swarm_flag?: boolean;
+}
+
+export interface ImmuneAnnotation {
+  level: number;
+  response: string;
+  affinity: number;
+  danger_total: number;
+  memory_hit: boolean;
+  slice_policy: string | null;
 }
 
 export interface Reason {
@@ -86,6 +103,127 @@ export type WsEvent =
   | { type: "status"; data: CaptureStatus }
   | { type: "model"; data: ModelInfo };
 
+/* ---------- Module 6: bio-inspired immunity ---------- */
+
+export interface BioStatus {
+  available: boolean;
+  contamination: number | null;
+  self_model: { trained: boolean; n_features: number };
+  snn: { trained: boolean; threshold: number | null; threshold_pct: number };
+  swarm: {
+    agents: string[];
+    quorum: number;
+    min_agents: number;
+    weights: Record<string, number>;
+  };
+  memory_cells: number;
+  assessed: number;
+  response_histogram: Record<string, number>;
+  drift_level: string | null;
+  evasion_active: boolean;
+  timing_scale: number;
+}
+
+/* ---------- Module 2: confidential computing (TEE) ---------- */
+
+export interface TeeQuote {
+  domain: string;
+  measurement: string;
+  nonce: string | null;
+  ts: number;
+  service: string;
+  pubkey: string;
+  signature: string;
+}
+
+export interface TeeCheck {
+  name: string;
+  ok: boolean;
+  detail: string;
+}
+
+export interface TeeVerifyResult {
+  ok: boolean;
+  checks: TeeCheck[];
+  measurement: string;
+  expected_measurement: string;
+  age_s: number;
+}
+
+export interface FederateResult {
+  parties: number;
+  shareholders: number;
+  dim: number;
+  quantize: number;
+  seed: number;
+  exact: boolean;
+  aggregate: number[];
+  claims: Record<string, unknown>;
+}
+
+/* ---------- Module 8: edge-native (5G/6G) ---------- */
+
+export interface EdgeLink {
+  link: string;
+  label: string;
+  rtt_ms: number;
+  jitter_ms: number;
+  timing_scale: number;
+}
+
+export interface EdgeSliceDef {
+  label: string;
+  sensitivity: number;
+  policy: string;
+}
+
+export interface EdgeLatency {
+  available: boolean;
+  n: number;
+  p50_ms: number;
+  p95_ms: number;
+  budget_ms: number;
+  within_budget: boolean;
+}
+
+export interface EdgeMicro {
+  trained: boolean;
+  n_features: number;
+  features: string[];
+  threshold: number | null;
+  threshold_pct: number;
+  digest: string;
+  latency: EdgeLatency | null;
+  budget_ms: number;
+}
+
+export interface EdgeDeployment {
+  node: string;
+  slice: string;
+  link: string;
+  digest: string;
+  threshold_pct: number;
+  budget_ms: number;
+  deployed_at: number;
+}
+
+export interface EdgeReport {
+  link: EdgeLink;
+  link_profiles: Record<string, { rtt_ms: number; jitter_ms: number; label: string }>;
+  micro: EdgeMicro;
+  deployments: EdgeDeployment[];
+  slices: Record<string, EdgeSliceDef>;
+  slice_counts: Record<string, number>;
+}
+
+export interface EdgeSliceResult {
+  slice: string;
+  policy: EdgeSliceDef;
+  level: number;
+  adjusted_level: number;
+  note: string | null;
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     headers: { "Content-Type": "application/json" },
@@ -118,5 +256,48 @@ export const api = {
     request<{ n_train: number; model_path: string }>("/api/model/train", {
       method: "POST",
       body: JSON.stringify({ pcap_path, contamination }),
+    }),
+
+  // Module 6: bio-inspired immunity
+  bioStatus: () => request<BioStatus>("/api/bio/status"),
+  bioAssess: (features: number[], score?: number, anomaly = false) =>
+    request<Record<string, unknown>>("/api/bio/assess", {
+      method: "POST",
+      body: JSON.stringify({ features, score: score ?? null, anomaly }),
+    }),
+
+  // Module 2: confidential computing
+  teeAttest: (nonce: string | null = null) =>
+    request<TeeQuote>("/api/tee/attest", {
+      method: "POST",
+      body: JSON.stringify({ nonce }),
+    }),
+  teeVerify: (quote: TeeQuote, nonce: string | null = null) =>
+    request<TeeVerifyResult>("/api/tee/verify", {
+      method: "POST",
+      body: JSON.stringify({ quote, nonce }),
+    }),
+  teeFederate: (body: { deltas?: number[][]; shareholders?: number; seed?: number }) =>
+    request<FederateResult>("/api/tee/federate", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+
+  // Module 8: edge-native
+  edgeReport: () => request<EdgeReport>("/api/edge/report"),
+  edgeSetLink: (link: string) =>
+    request<{ link: EdgeLink }>("/api/edge/link", {
+      method: "POST",
+      body: JSON.stringify({ link }),
+    }),
+  edgeSlice: (record: Record<string, unknown>, level: number) =>
+    request<EdgeSliceResult>("/api/edge/slice", {
+      method: "POST",
+      body: JSON.stringify({ record, level }),
+    }),
+  edgeDeploy: (node: string, slice: string) =>
+    request<EdgeDeployment>("/api/edge/deploy", {
+      method: "POST",
+      body: JSON.stringify({ node, slice }),
     }),
 };

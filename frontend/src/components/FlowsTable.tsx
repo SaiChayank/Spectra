@@ -13,6 +13,7 @@ export default function FlowsTable({ items }: { items: FlowRecord[] }) {
             <thead>
               <tr>
                 <th>Score</th>
+                <th>Immune</th>
                 <th>Time</th>
                 <th>Proto</th>
                 <th>Source</th>
@@ -32,6 +33,29 @@ export default function FlowsTable({ items }: { items: FlowRecord[] }) {
                     ) : (
                       <span className="dim">—</span>
                     )}
+                  </td>
+                  <td>
+                    {f.immune ? (
+                      <span
+                        className={`tag imm-${f.immune.response}`}
+                        title={[
+                          `affinity ${f.immune.affinity.toFixed(2)}`,
+                          `danger ${f.immune.danger_total.toFixed(2)}`,
+                          f.immune.memory_hit ? "memory hit" : null,
+                          f.snn_score != null ? `snn ${f.snn_score.toFixed(0)}%` : null,
+                          f.swarm_flag ? "swarm flagged" : null,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      >
+                        {f.immune.response}
+                      </span>
+                    ) : (
+                      <span className="dim">—</span>
+                    )}
+                    {f.slice && f.slice !== "default" ? (
+                      <span className="tag slice-tag">{f.slice}</span>
+                    ) : null}
                   </td>
                   <td className="dim">{formatClock(f.start_ts)}</td>
                   <td>{f.proto}</td>

@@ -392,3 +392,165 @@ tbody tr:hover {
   display: inline-block;
   margin-right: 6px;
 }
+
+/* ---------- tabs (module navigation) ---------- */
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.tab {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  padding: 10px 16px;
+  font-size: 12px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.tab:hover:not(:disabled) {
+  transform: none;
+  box-shadow: none;
+  color: var(--text);
+}
+
+.tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ---------- key/value rows (module panels) ---------- */
+
+.kv {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 14px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(29, 42, 63, 0.55);
+  font-size: 13px;
+}
+
+.kv:last-child {
+  border-bottom: none;
+}
+
+.kv .k {
+  color: var(--text-dim);
+  font-size: 11px;
+  letter-spacing: 1.1px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.kv .v {
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.kv.verdict.ok .v {
+  color: var(--ok);
+  font-weight: 700;
+}
+
+.kv.verdict.bad .v {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+.check-ok {
+  color: var(--ok);
+  font-weight: 700;
+}
+
+.check-bad {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+/* ---------- horizontal bars (histograms, pheromones) ---------- */
+
+.bar-row {
+  display: grid;
+  grid-template-columns: 88px 1fr 44px;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.bar-row .tag {
+  margin-right: 0;
+  text-align: center;
+}
+
+.bar {
+  background: #0a111c;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  height: 12px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  transition: width 0.4s ease;
+}
+
+.bar-num {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--text-dim);
+}
+
+/* ---------- immune response colouring ---------- */
+
+.tag.imm-ignore,
+.tag.slice-tag {
+  background: rgba(61, 220, 151, 0.12);
+  border-color: rgba(61, 220, 151, 0.35);
+  color: var(--ok);
+}
+
+.tag.imm-monitor {
+  background: rgba(53, 224, 208, 0.12);
+  border-color: rgba(53, 224, 208, 0.4);
+  color: var(--accent);
+}
+
+.tag.imm-alert {
+  background: rgba(255, 179, 71, 0.14);
+  border-color: rgba(255, 179, 71, 0.4);
+  color: var(--warn);
+}
+
+.tag.imm-isolate {
+  background: rgba(255, 77, 109, 0.16);
+  border-color: rgba(255, 77, 109, 0.45);
+  color: #ff8098;
+}
+
+.bar-fill.imm-ignore {
+  background: var(--ok);
+}
+
+.bar-fill.imm-monitor {
+  background: var(--accent);
+}
+
+.bar-fill.imm-alert {
+  background: var(--warn);
+}
+
+.bar-fill.imm-isolate {
+  background: var(--danger);
+}
