@@ -1,0 +1,219 @@
+"""Anomaly detection model.
+
+Ensemble of a StandardScaler and an Isolation Forest trained on a baseline of
+benign flows. Scoring produces both a 0-100 anomaly score (percentile of the
+training distribution) and per-feature explanations for the analyst.
+"""
+
+from __future__ import annotations
+
+import os
+from datetime import datetime, timezone
+
+import joblib
+import numpy as np
+from sklearn.ensemble import IsolationForest
+from sklearn.preprocessing import StandardScaler
+
+from ..features.extractor import FEATURE_NAMES, N_FEATURES
+
+MODEL_VERSION = 1
+
+
+class NotTrainedError(RuntimeError):
+    pass
+
+
+class SpectraDetector:
+    def __init__(self, n_estimators: int = 300, contamination: float = 0.02, random_state: int = 42):
+        self.n_estimators = n_estimators
+        self.contamination = contamination
+        self.random_state = random_state
+        self.scaler = StandardScaler()
+        self.model = IsolationForest(
+            n_estimators=n_estimators,
+            contamination="auto",
+            random_state=random_state,
+            n_jobs=-1,
+        )
+        self.feature_names = list(FEATURE_NAMES)
+        self.trained_at: str | None = None
+        self.n_train = 0
+        self._train_raw: np.ndarray | None = None
+        self._threshold: float = 0.0
+        # baseline distribution for drift detection (PSI)
+        self._baseline_edges: np.ndarray | None = None   # (n_features, bins+1)
+        self._baseline_props: np.ndarray | None = None   # (n_features, bins)
+
+    N_BASELINE_BINS = 40
+
+    # -- training -----------------------------------------------------------
+
+    def _make_baseline(self, X: np.ndarray) -> None:
+        edges = []
+        props = []
+        for col in range(X.shape[1]):
+            lo = float(np.min(X[:, col]))
+            hi = float(np.max(X[:, col]))
+            if not np.isfinite(lo) or not np.isfinite(hi) or hi <= lo:
+                hi = lo + 1e-6
+            e = np.linspace(lo, hi, self.N_BASELINE_BINS + 1)
+            counts, _ = np.histogram(X[:, col], bins=e)
+            p = counts.astype(np.float64) + 1e-6
+            p /= p.sum()
+            edges.append(e)
+            props.append(p)
+        self._baseline_edges = np.array(edges)
+        self._baseline_props = np.array(props)
+
+    @property
+    def has_baseline(self) -> bool:
+        return getattr(self, "_baseline_props", None) is not None
+
+    def fit(self, X: np.ndarray) -> dict:
+        X = self._check(X)
+        if len(X) < 10:
+            raise ValueError(
+                f"need at least 10 flows to train, got {len(X)} - "
+                "point at a PCAP with more baseline traffic."
+            )
+        Z = self.scaler.fit_transform(X)
+        self.model.fit(Z)
+        raw = -self.model.decision_function(Z)  # higher = more anomalous
+        self._train_raw = np.sort(raw)
+        self._threshold = float(np.percentile(raw, 100 * (1 - self.contamination)))
+        self._make_baseline(X)
+        self.n_train = int(len(X))
+        self.trained_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        return {
+            "n_train": self.n_train,
+            "threshold": round(self._threshold, 6),
+            "train_score_mean": round(float(raw.mean()), 6),
+            "train_score_p99": round(float(np.percentile(raw, 99)), 6),
+            "contamination": self.contamination,
+        }
+
+    # -- inference ----------------------------------------------------------
+
+    @property
+    def is_trained(self) -> bool:
+        return self._train_raw is not None
+
+    def _raw(self, X: np.ndarray) -> np.ndarray:
+        if not self.is_trained:
+            raise NotTrainedError("model is not trained yet")
+        return -self.model.decision_function(self.scaler.transform(self._check(X)))
+
+    def score(self, X: np.ndarray) -> np.ndarray:
+        """0-100 anomaly score (percentile rank against the training set)."""
+        raw = self._raw(X)
+        train = self._train_raw
+        idx = np.searchsorted(train, raw, side="left")
+        pct = 100.0 * idx / max(1, len(train) - 1)
+        return np.clip(np.round(pct, 2), 0.0, 100.0)
+
+    def predict(self, X: np.ndarray) -> np.ndarray:
+        """Boolean anomaly labels using the training-derived threshold."""
+        return self._raw(X) > self._threshold
+
+    def explain(self, x: np.ndarray, top: int = 3) -> list[dict]:
+        """Top features driving the anomaly score, by z-score magnitude."""
+        z = self.scaler.transform(x.reshape(1, -1))[0]
+        order = np.argsort(np.abs(z))[::-1][:top]
+        return [
+            {
+                "feature": self.feature_names[i],
+                "z_score": round(float(z[i]), 2),
+                "value": round(float(x[i]), 4),
+            }
+            for i in order
+            if abs(z[i]) > 0.5
+        ]
+
+    # -- drift --------------------------------------------------------------
+
+    def psi(self, X: np.ndarray) -> dict:
+        """Population Stability Index of X against the training baseline.
+
+        PSI < 0.10 = stable, 0.10-0.25 = moderate drift, > 0.25 = significant
+        (values shifted enough that model scores are no longer calibrated).
+        """
+        if not self.has_baseline:
+            return {"available": False, "reason": "model predates drift support - retrain"}
+        X = self._check(X)
+        if len(X) == 0:
+            return {"available": True, "n": 0, "psi": 0.0, "level": "stable",
+                    "features": []}
+
+        eps = 1e-6
+        rows = []
+        for i, name in enumerate(self.feature_names):
+            counts, _ = np.histogram(X[:, i], bins=self._baseline_edges[i])
+            q = counts.astype(np.float64) + eps
+            q /= q.sum()
+            p = self._baseline_props[i]
+            # skip constant (degenerate) baselines
+            if np.allclose(p, p[0]):
+                rows.append({"feature": name, "psi": 0.0, "constant": True})
+                continue
+            val = float(np.sum((q - p) * np.log(q / p)))
+            rows.append({"feature": name, "psi": round(val, 4)})
+
+        values = [r["psi"] for r in rows]
+        overall = float(np.mean(values)) if values else 0.0
+        level = ("significant" if overall > 0.25
+                 else "moderate" if overall > 0.10 else "stable")
+        rows.sort(key=lambda r: -r["psi"])
+        return {
+            "available": True,
+            "n": int(len(X)),
+            "psi": round(overall, 4),
+            "level": level,
+            "features": rows[:10],
+        }
+
+    # -- persistence --------------------------------------------------------
+
+    def save(self, path: str) -> None:
+        os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+        joblib.dump(
+            {
+                "version": MODEL_VERSION,
+                "detector": self,
+            },
+            path,
+        )
+
+    @classmethod
+    def load(cls, path: str) -> "SpectraDetector":
+        blob = joblib.load(path)
+        if blob.get("version") != MODEL_VERSION:
+            raise ValueError("model file version mismatch - retrain the model")
+        det = blob["detector"]
+        if not isinstance(det, cls):  # pragma: no cover - defensive
+            raise ValueError("unexpected object in model file")
+        return det
+
+    def info(self) -> dict:
+        return {
+            "trained": self.is_trained,
+            "trained_at": self.trained_at,
+            "n_train": self.n_train,
+            "n_features": N_FEATURES,
+            "feature_names": self.feature_names,
+            "n_estimators": self.n_estimators,
+            "contamination": self.contamination,
+            "threshold": round(self._threshold, 6) if self.is_trained else None,
+            "version": MODEL_VERSION,
+        }
+
+    # -- helpers ------------------------------------------------------------
+
+    @staticmethod
+    def _check(X: np.ndarray) -> np.ndarray:
+        X = np.asarray(X, dtype=np.float32)
+        if X.ndim == 1:
+            X = X.reshape(1, -1)
+        if X.shape[1] != N_FEATURES:
+            raise ValueError(f"expected {N_FEATURES} features, got {X.shape[1]}")
+        return np.nan_to_num(X, nan=0.0, posinf=0.0, neginf=0.0)

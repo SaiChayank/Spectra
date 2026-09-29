@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spectra"
+version = "0.1.0"
+description = "Spectra - encrypted traffic threat detection (metadata-only, privacy-preserving)"
+requires-python = ">=3.11"
+dependencies = [
+    "scapy>=2.5.0",
+    "numpy>=1.26.0",
+    "scikit-learn>=1.4.0",
+    "joblib>=1.3.0",
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.29.0",
+    "pydantic>=2.6.0",
+]
+
+[project.scripts]
+spectra = "spectra.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["spectra*"]
