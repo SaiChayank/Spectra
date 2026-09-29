@@ -52,6 +52,14 @@ export interface Detection extends FlowRecord {
   detected_at: number;
 }
 
+export interface IfaceDetail {
+  id: string;
+  name: string;
+  description: string;
+  ip: string;
+  mac: string;
+}
+
 export interface CaptureStatus {
   running: boolean;
   mode: "pcap" | "live" | null;
@@ -248,7 +256,8 @@ export const api = {
   detections: (limit = 100) =>
     request<{ count: number; items: Detection[] }>(`/api/detections?limit=${limit}`),
   model: () => request<ModelInfo>("/api/model"),
-  interfaces: () => request<{ interfaces: string[]; error?: string }>("/api/interfaces"),
+  interfaces: () =>
+    request<{ interfaces: string[]; details?: IfaceDetail[]; error?: string }>("/api/interfaces"),
   startCapture: (body: { mode: "pcap" | "live"; path?: string; iface?: string; bpf_filter?: string }) =>
     request<CaptureStatus>("/api/capture/start", { method: "POST", body: JSON.stringify(body) }),
   stopCapture: () => request<CaptureStatus>("/api/capture/stop", { method: "POST" }),

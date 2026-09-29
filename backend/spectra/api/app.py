@@ -149,11 +149,38 @@ def model_robustness(req: RobustnessRequest) -> dict:
 
 @app.get("/api/interfaces")
 def interfaces() -> dict:
-    """List capture interfaces. Empty until Npcap/libpcap is installed."""
+    """List capture interfaces with friendly metadata. Empty until
+    Npcap/libpcap is installed. Adapters carrying a real (non-APIPA) IP sort
+    first so the default pick in the dashboard is the active NIC."""
     try:
-        from scapy.all import get_if_list
+        from scapy.all import conf, get_if_list
 
-        return {"interfaces": get_if_list()}
+        rows: list[tuple[int, str, dict]] = []
+        for dev in get_if_list():
+            try:
+                iface = conf.ifaces.get(dev)
+            except Exception:  # noqa: BLE001 - keep the raw device id usable
+                iface = None
+            name = (getattr(iface, "name", None) or dev) if iface else dev
+            ip = (getattr(iface, "ip", "") or "") if iface else ""
+            if not ip or ip.startswith("127."):
+                rank = 3
+            elif ip.startswith("169.254"):
+                rank = 2
+            else:
+                rank = 0
+            rows.append((rank, dev, {
+                "id": dev,
+                "name": name,
+                "description": (getattr(iface, "description", "") or "") if iface else "",
+                "ip": ip,
+                "mac": (getattr(iface, "mac", "") or "") if iface else "",
+            }))
+        rows.sort(key=lambda r: r[0])
+        return {
+            "interfaces": [dev for _, dev, _ in rows],
+            "details": [meta for _, _, meta in rows],
+        }
     except Exception as exc:  # noqa: BLE001 - live capture unavailable
         return {"interfaces": [], "error": str(exc)}
 

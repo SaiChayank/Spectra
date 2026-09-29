@@ -26,7 +26,7 @@ CLI, and the React dashboard — with **230 passing tests**.
 | API (52 HTTP routes + WebSocket) + CLI (12 commands) | ✅ |
 | React dashboard | ✅ live |
 | Automated tests (pytest) | ✅ 230 passing |
-| Live capture on Windows | ⏳ requires [Npcap](https://nmap.org/npcap/) installed |
+| Live capture on Windows | ✅ validated with [Npcap](https://nmap.org/npcap/) (driver required) |
 
 ## The eight modules
 
@@ -95,7 +95,14 @@ python -m spectra.cli scan   /path/to/capture.pcap           # find deviations
 
 Live sniffing needs Npcap: install from <https://nmap.org/npcap/> with
 **"WinPcap API-compatible mode"** enabled, then restart the API and start a
-`live` capture from the dashboard (run the backend **as Administrator**).
+`live` capture from the dashboard (run the backend **as Administrator** if your
+machine requires it — the validated install did not).
+
+When scoring real networks, train on a benign baseline captured from *that*
+network (`spectra train your-baseline.pcap`): the bundled synthetic demo
+baseline is tuned for the demo PCAPs and will flag ordinary real traffic as
+out-of-distribution (validated in
+[`docs/acceptance-report.md`](./docs/acceptance-report.md) §6).
 
 ## API
 
@@ -175,5 +182,6 @@ frontend/           # React + TypeScript dashboard (Vite)
 
 ## Version
 
-`1.0.0rc1` — final acceptance pass (live-capture validation + module acceptance
-matrix) pending; see repository history for phase-by-phase development.
+`1.0.0` — all tracks accepted: PCAP + **live NIC capture** (Npcap 1.88,
+validated 2026-09-29), full API/CLI/dashboard coverage, 230 tests, 102-check
+acceptance run. See [`docs/acceptance-report.md`](./docs/acceptance-report.md).

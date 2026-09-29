@@ -12,6 +12,9 @@ export default function CapturePanel({ status, onError, onNotice }: Props) {
   const [path, setPath] = useState("data/demo/suspicious.pcap");
   const [iface, setIface] = useState("");
   const [interfaces, setInterfaces] = useState<string[]>([]);
+  const [details, setDetails] = useState<
+    { id: string; name: string; ip: string; description: string }[]
+  >([]);
   const [trainPath, setTrainPath] = useState("data/demo/baseline.pcap");
   const [contamination, setContamination] = useState(0.05);
   const [busy, setBusy] = useState(false);
@@ -19,8 +22,14 @@ export default function CapturePanel({ status, onError, onNotice }: Props) {
   useEffect(() => {
     api
       .interfaces()
-      .then((r) => setInterfaces(r.interfaces))
-      .catch(() => setInterfaces([]));
+      .then((r) => {
+        setInterfaces(r.interfaces);
+        setDetails(r.details ?? []);
+      })
+      .catch(() => {
+        setInterfaces([]);
+        setDetails([]);
+      });
   }, [status.running]);
 
   const start = async () => {
@@ -86,11 +95,21 @@ export default function CapturePanel({ status, onError, onNotice }: Props) {
               Interface
               <select value={iface} onChange={(e) => setIface(e.target.value)}>
                 <option value="">default</option>
-                {interfaces.map((i) => (
-                  <option key={i} value={i}>
-                    {i}
-                  </option>
-                ))}
+                {details.length > 0
+                  ? details.map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.name}
+                        {d.ip ? ` (${d.ip})` : ""}
+                        {d.description && d.description !== d.name
+                          ? ` — ${d.description}`
+                          : ""}
+                      </option>
+                    ))
+                  : interfaces.map((i) => (
+                      <option key={i} value={i}>
+                        {i}
+                      </option>
+                    ))}
               </select>
             </label>
           )}

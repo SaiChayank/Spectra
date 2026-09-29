@@ -4,4 +4,4 @@ Pipeline: capture -> TLS/flow metadata parsing -> feature extraction -> ML detec
 Only metadata is processed; payload contents are never inspected or stored.
 """
 
-__version__ = "1.0.0rc1"
+__version__ = "1.0.0"

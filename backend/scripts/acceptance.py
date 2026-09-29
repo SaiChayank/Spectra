@@ -21,6 +21,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import urllib.error
 import urllib.parse
@@ -423,10 +424,77 @@ def run_cli(tmp: str) -> None:
     add(g, "spectra serve", "pass", "covered by the running acceptance server")
 
 
+def _npcap_present() -> bool:
+    return os.path.exists(r"C:\Windows\System32\wpcap.dll")
+
+
+def _make_https_traffic() -> None:
+    """Poke a few HTTPS endpoints so live capture has TLS flows to track."""
+    for url in ("https://www.example.com/", "https://www.cloudflare.com/",
+                "https://github.com/", "https://www.wikipedia.org/"):
+        try:
+            urllib.request.urlopen(url, timeout=4).read(256)
+        except Exception:  # noqa: BLE001 - best-effort traffic generation
+            pass
+        time.sleep(0.3)
+
+
+def run_live(skip: bool = False) -> None:
+    """Live NIC capture: gated on Npcap; requires an elevated API server."""
+    g = "live"
+    if skip:
+        add(g, "live capture", "warn", "skipped via --skip-live")
+        return
+    if not _npcap_present():
+        add(g, "live capture", "warn",
+            "Npcap not installed - live path unverified (install from "
+            "https://nmap.org/npcap/ and rerun)")
+        return
+
+    st, body = req("GET", "/api/interfaces")
+    want(g, "GET /api/interfaces", st)
+    ifaces = body.get("interfaces") or []
+    details = body.get("details") or []
+    check(g, "interfaces listed", len(ifaces) > 0, f"got {ifaces!r}")
+    if not ifaces:
+        return
+    # prefer the adapter that actually carries traffic (real, non-APIPA IP)
+    pick = next((d["id"] for d in details
+                 if d.get("ip") and not d["ip"].startswith(("169.254", "127."))),
+                ifaces[0])
+
+    st, _ = req("POST", "/api/capture/start", {"mode": "live", "iface": pick})
+    if not want(g, "POST /api/capture/start (live)", st):
+        return
+
+    threading.Thread(target=_make_https_traffic, daemon=True).start()
+    saw_running = False
+    deadline = time.time() + 8.0
+    while time.time() < deadline:
+        _, poll = req("GET", "/api/status")
+        saw_running = saw_running or bool(poll.get("running"))
+        time.sleep(0.5)
+
+    _, status = req("GET", "/api/status")
+    packets = status.get("packets", 0)
+    check(g, "live capture ran cleanly", saw_running and not status.get("error"),
+          f"error={status.get('error')!r}")
+    check(g, "live packets > 0", packets > 0, f"packets={packets}")
+
+    st, _ = req("POST", "/api/capture/stop")
+    want(g, "POST /api/capture/stop", st)
+    _, status = req("GET", "/api/status")
+    flows = status.get("flows", 0)
+    check(g, "live flows tracked >= 1", flows >= 1,
+          f"flows={flows}, packets={status.get('packets', 0)}")
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--skip-cli", action="store_true")
     ap.add_argument("--skip-ws", action="store_true")
+    ap.add_argument("--skip-live", action="store_true",
+                    help="skip the Npcap-gated live capture group")
     args = ap.parse_args()
 
     try:
@@ -466,6 +534,8 @@ def main() -> int:
         print("== CLI sweep ==")
         with tempfile.TemporaryDirectory(prefix="spectra_acc_") as tmp:
             run_cli(tmp)
+    print("== live capture (Npcap-gated) ==")
+    run_live(skip=args.skip_live)
 
     fails = [r for r in results if r[2] == "fail"]
     warns = [r for r in results if r[2] == "warn"]
