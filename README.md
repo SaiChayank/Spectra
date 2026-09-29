@@ -14,7 +14,7 @@ Three target verticals: **Fintech · Healthcare · Smart City Infrastructure**.
 ## Status
 
 Backend **complete** (Phases 0–6): detection core, all 8 strategic modules, REST API,
-CLI, and the React dashboard — with **224 passing tests**.
+CLI, and the React dashboard — with **230 passing tests**.
 
 | Layer | State |
 |---|---|
@@ -25,7 +25,7 @@ CLI, and the React dashboard — with **224 passing tests**.
 | 8 strategic modules (see matrix below) | ✅ |
 | API (52 HTTP routes + WebSocket) + CLI (12 commands) | ✅ |
 | React dashboard | ✅ live |
-| Automated tests (pytest) | ✅ 224 passing |
+| Automated tests (pytest) | ✅ 230 passing |
 | Live capture on Windows | ⏳ requires [Npcap](https://nmap.org/npcap/) installed |
 
 ## The eight modules
@@ -137,7 +137,7 @@ Live sniffing needs Npcap: install from <https://nmap.org/npcap/> with
 
 ```bash
 cd backend
-python -m pytest tests -q      # 224 tests
+python -m pytest tests -q      # 230 tests
 ```
 
 The suite covers TLS/QUIC parsing, flow tracking, feature extraction, filters, the
@@ -161,7 +161,7 @@ backend/
     pipeline.py     # engine wiring capture → detection → annotation → events
     cli.py          # 12 CLI commands
     demo.py         # synthetic PCAP generators (tests + demos)
-  tests/            # 224 unit/integration tests
+  tests/            # 230 unit/integration tests
   demo_pcaps/       # committed fixture captures
 frontend/           # React + TypeScript dashboard (Vite)
 ```

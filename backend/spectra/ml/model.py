@@ -25,6 +25,10 @@ class NotTrainedError(RuntimeError):
 
 
 class SpectraDetector:
+    # Per-instance state rebuilt lazily; the class default keeps unpickling of
+    # models saved before the fast path existed safe (they start at None).
+    _fast = None
+
     def __init__(self, n_estimators: int = 300, contamination: float = 0.02, random_state: int = 42):
         self.n_estimators = n_estimators
         self.contamination = contamination
@@ -77,6 +81,7 @@ class SpectraDetector:
                 f"need at least 10 flows to train, got {len(X)} - "
                 "point at a PCAP with more baseline traffic."
             )
+        self._fast = None  # trees are being replaced; rebuild the fast path after
         Z = self.scaler.fit_transform(X)
         self.model.fit(Z)
         raw = -self.model.decision_function(Z)  # higher = more anomalous
@@ -99,10 +104,71 @@ class SpectraDetector:
     def is_trained(self) -> bool:
         return self._train_raw is not None
 
+    def _build_fast(self) -> None:
+        """Prepare the single-row fast path (mirrors sklearn's scoring exactly).
+
+        sklearn's IsolationForest.decision_function pays ~300 per-tree task
+        dispatches (joblib + validation + sparse alloc) per call, which costs
+        ~10 ms for a one-row input - unacceptable on the ingest path. The
+        computation is equivalent to summing, per tree,
+        ``decision_path_lengths[leaf] + avg_path_lengths[leaf] - 1`` over the
+        forest, so we pre-convert the tree node arrays to Python lists once and
+        walk them directly. ``tests/test_model.py::test_fast_raw_matches_sklearn``
+        asserts bit-identical output; any environment where the prerequisites
+        are missing falls back to sklearn's decision_function.
+        """
+        try:
+            from sklearn.ensemble._iforest import _average_path_length
+
+            m = self.model
+            if not self.is_trained or m._max_features != N_FEATURES:
+                self._fast = False  # feature subsampling -> keep the sklearn path
+                return
+            trees = [
+                (t.tree_.children_left.tolist(),
+                 t.tree_.children_right.tolist(),
+                 t.tree_.feature.tolist(),
+                 t.tree_.threshold.tolist())
+                for t in m.estimators_
+            ]
+            max_samples = getattr(m, "_max_samples", None) or m.max_samples_
+            denom = (len(m.estimators_)
+                     * float(np.atleast_1d(_average_path_length([max_samples]))[0]))
+            if denom == 0.0 or not m._decision_path_lengths:
+                self._fast = False
+                return
+            self._fast = (
+                trees,
+                m._decision_path_lengths,
+                m._average_path_length_per_tree,
+                denom,
+                float(m.offset_),
+            )
+        except Exception:  # noqa: BLE001 - any doubt -> sklearn path (always correct)
+            self._fast = False
+
+    def _raw_fast(self, z_row: np.ndarray) -> float:
+        trees, dpls, apls, denom, offset = self._fast
+        x = z_row.tolist()
+        depths = 0.0
+        for (cl, cr, ft, th), dpl, apl in zip(trees, dpls, apls):
+            node = 0
+            while cl[node] != -1:
+                node = cl[node] if x[ft[node]] <= th[node] else cr[node]
+            depths += dpl[node] + apl[node] - 1.0
+        return float(2.0 ** (-depths / denom) + offset)
+
     def _raw(self, X: np.ndarray) -> np.ndarray:
         if not self.is_trained:
             raise NotTrainedError("model is not trained yet")
-        return -self.model.decision_function(self.scaler.transform(self._check(X)))
+        X = self._check(X)
+        Z = self.scaler.transform(X)
+        if X.shape[0] == 1:
+            if self._fast is None:
+                self._build_fast()
+            if self._fast:
+                return np.array([self._raw_fast(Z[0])])
+        return -self.model.decision_function(Z)
 
     def score(self, X: np.ndarray) -> np.ndarray:
         """0-100 anomaly score (percentile rank against the training set)."""
@@ -176,13 +242,19 @@ class SpectraDetector:
 
     def save(self, path: str) -> None:
         os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
-        joblib.dump(
-            {
-                "version": MODEL_VERSION,
-                "detector": self,
-            },
-            path,
-        )
+        # Keep the fast-path caches out of the artifact; they are rebuilt
+        # lazily on first score after load (saves ~1 MB of tree lists).
+        fast, self._fast = self._fast, None
+        try:
+            joblib.dump(
+                {
+                    "version": MODEL_VERSION,
+                    "detector": self,
+                },
+                path,
+            )
+        finally:
+            self._fast = fast
 
     @classmethod
     def load(cls, path: str) -> "SpectraDetector":

@@ -236,6 +236,7 @@ def cmd_twin(args: argparse.Namespace) -> int:
     from .pipeline import SpectraEngine
 
     engine = SpectraEngine()
+    engine.hydrate_graph()   # one-shot CLI: rebuild the twin from persisted flows
     cmd = args.twin_cmd
     sim_kwargs = {
         "seed": getattr(args, "seed", 7),
