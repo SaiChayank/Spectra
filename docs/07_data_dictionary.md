@@ -1,9 +1,13 @@
 # Data Dictionary
-## FinShield AI
+## Spectra
 
-**Version:** 0.1 (Draft) | **Classification:** Confidential
+**Version:** 0.2 (Consolidated draft) | **Classification:** Confidential
 
-**Note:** Covers raw/stored field definitions. See Feature Engineering Specification for derived ML features.
+**Note (2026-09-30):** This document absorbs and replaces
+`07_data_dictionary_feature_engineering_log.md` (deleted to remove
+duplication). It now carries the raw/stored field definitions **and** the
+feature-engineering log format. The derived ML feature specification lives in
+`08_feature_engineering_specification.md`.
 
 ---
 
@@ -51,4 +55,51 @@ Aligned with Data Governance Plan §2: Restricted (never collected) / Sensitive 
 ## 5. Governance
 Any new field touching Sensitive-classified data requires Data Governance Officer review before ingestion (Data Governance Plan §6).
 
-*Draft — populate/extend as real ingestion schema is implemented. See Database Schemas for storage-layer table definitions.*
+---
+
+## 6. Derived / Engineered Features (Template)
+
+| Feature Name | Definition | Source Field(s) | Transformation | Owner |
+|--------------|------------|-------------------|-----------------|-------|
+| `session_duration_s` | Session length in seconds | `ts_start`, `ts_end` | `ts_end - ts_start` | TBD |
+| `bytes_ratio` | Upload/download ratio | `byte_count_up`, `byte_count_down` | `up / (down + 1)` | TBD |
+| `cipher_risk_score` | Quantum vulnerability weight | `cipher_suite` | Lookup against NIST reference table | TBD |
+| `endpoint_crypto_agility_trend` | 30-day trend of PQC posture | `pqc_classification` (time series) | Rolling window aggregation | TBD |
+| `timing_entropy` | Entropy of inter-packet timing | `packet_timing_vector` | Shannon entropy calculation | TBD |
+| `cross_sector_edge_weight` | Strength of inferred infra link | Graph DB edges | Graph algorithm (TBD) | TBD |
+
+## 7. Feature Engineering Log Format
+
+Each entry logs a change to feature definitions or engineering logic:
+
+```
+Date:
+Author:
+Feature(s) affected:
+Change description:
+Rationale:
+Validation performed (before/after distribution comparison):
+Model(s) impacted:
+Approved by:
+```
+
+### Example (illustrative placeholder — not a real entry)
+
+```
+Date: TBD
+Author: TBD
+Feature(s) affected: cipher_risk_score
+Change description: Added weighting for hybrid PQC handshakes
+Rationale: TLS 1.3 hybrid key exchange was misclassified as fully vulnerable
+Validation performed: TBD
+Model(s) impacted: PQC Risk Scanner
+Approved by: TBD
+```
+
+## 8. Feature Governance
+
+- Any new field touching Sensitive-classified data requires Data Governance Officer review before ingestion.
+- Feature changes affecting a production model require Model Evaluation & Validation re-run before deployment.
+- Feature drift monitored continuously; significant drift triggers review per ML Architecture §6.
+
+*Draft — populate/extend as the real ingestion schema and feature pipeline are implemented.*

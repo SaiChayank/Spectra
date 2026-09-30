@@ -1,5 +1,5 @@
 # System Architecture Plan
-## FinShield AI — High-Level & Low-Level Design
+## Spectra — High-Level & Low-Level Design
 
 **Version:** 0.1 (Draft) | **Classification:** Confidential
 

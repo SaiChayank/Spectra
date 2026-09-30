@@ -1,5 +1,5 @@
 # Feature Engineering Specification
-## FinShield AI
+## Spectra
 
 **Version:** 0.1 (Draft Template) | **Classification:** Confidential
 
@@ -26,28 +26,7 @@
 
 ## 3. Feature Engineering Log Format
 
-```
-Date:
-Author:
-Feature(s) affected:
-Change description:
-Rationale:
-Validation performed (before/after distribution comparison):
-Model(s) impacted:
-Approved by:
-```
-
-### Example (illustrative placeholder only)
-```
-Date: TBD
-Author: TBD
-Feature(s) affected: cipher_risk_score
-Change description: Added weighting for hybrid PQC handshakes
-Rationale: TLS 1.3 hybrid key exchange was misclassified as fully vulnerable
-Validation performed: TBD
-Model(s) impacted: PQC Risk Scanner
-Approved by: TBD
-```
+Maintained in the Data Dictionary §7 (single copy — changes are logged there, not here).
 
 ## 4. Feature Governance
 - New features touching Sensitive-classified source fields require Data Governance Officer review.

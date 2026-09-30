@@ -1,5 +1,5 @@
 # Pseudo-Formal Task Briefs
-## FinShield AI
+## Spectra
 
 **Version:** 0.1 (Draft Template) | **Classification:** Internal
 

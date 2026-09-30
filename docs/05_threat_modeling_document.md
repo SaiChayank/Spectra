@@ -1,12 +1,12 @@
 # Threat Modeling Document
-## FinShield AI
+## Spectra
 
 **Version:** 0.1 (Draft) | **Methodology:** STRIDE | **Classification:** Confidential
 
 ---
 
 ## 1. Purpose
-Identify threats to FinShield AI itself — a security product whose compromise would be especially damaging to trust across fintech, healthcare, and smart city customers.
+Identify threats to Spectra itself — a security product whose compromise would be especially damaging to trust across fintech, healthcare, and smart city customers.
 
 ## 2. Scope & Assets
 
@@ -20,11 +20,11 @@ Identify threats to FinShield AI itself — a security product whose compromise 
 | Customer dashboard credentials | SOC/analyst access | High |
 
 ## 3. Trust Boundaries
-- TB-1: Customer network ↔ FinShield ingestion edge node
+- TB-1: Customer network ↔ Spectra ingestion edge node
 - TB-2: Edge node ↔ core platform (cloud/data center)
 - TB-3: Core platform ↔ TEE enclave boundary
-- TB-4: FinShield tenant A data ↔ tenant B data (multi-tenancy)
-- TB-5: FinShield ↔ third-party auditor (ZK-Proof consumption)
+- TB-4: Spectra tenant A data ↔ tenant B data (multi-tenancy)
+- TB-5: Spectra ↔ third-party auditor (ZK-Proof consumption)
 
 ## 4. STRIDE Analysis
 

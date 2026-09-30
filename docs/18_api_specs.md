@@ -1,5 +1,5 @@
 # Machine-Readable API Specs
-## FinShield AI
+## Spectra
 
 **Version:** 0.1 (Draft) | **Format:** OpenAPI 3.0 (excerpt) | **Classification:** Confidential
 
@@ -15,11 +15,11 @@ Defines the initial API contract for detection alerts, PQC status, and correlati
 ```yaml
 openapi: 3.0.3
 info:
-  title: FinShield AI Detection API
+  title: Spectra Detection API
   version: 0.1.0-draft
   description: Metadata-only encrypted traffic threat detection API. No payload content is ever accepted or returned by this API.
 servers:
-  - url: https://api.finshield.example/v1
+  - url: https://api.spectra.example/v1
 paths:
   /alerts:
     get:

@@ -1,5 +1,5 @@
 # High-Level Architecture
-## FinShield AI
+## Spectra
 
 **Version:** 0.1 (Draft) | **Classification:** Confidential
 
@@ -18,8 +18,8 @@ Describes the system at a level suitable for executive, customer, and cross-team
 
 ```mermaid
 flowchart LR
-    Customer[Customer Network] -->|TLS metadata only| Edge[FinShield Edge Node]
-    Edge --> Core[FinShield Core Platform]
+    Customer[Customer Network] -->|TLS metadata only| Edge[Spectra Edge Node]
+    Edge --> Core[Spectra Core Platform]
     Core --> Dashboard[Customer Dashboard / SOC]
     Core --> SIEM[Customer SIEM via webhook]
     Core --> Auditor[Third-Party Auditor - ZK-Proof verification]

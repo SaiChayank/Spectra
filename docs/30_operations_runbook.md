@@ -1,5 +1,5 @@
 # Operations Runbook
-## FinShield AI
+## Spectra
 
 **Version:** 0.1 (Draft Template) | **Classification:** Internal
 
@@ -52,7 +52,7 @@ Step-by-step operational procedures for common tasks and failure scenarios — w
 ## 7. Runbook: Edge Node Offline
 ```
 1. Confirm via Monitoring & Observability heartbeat alert.
-2. Check customer-side connectivity vs. FinShield-side issue.
+2. Check customer-side connectivity vs. Spectra-side issue.
 3. Confirm local buffering is active (no detection gap once reconnected, within retention window).
 4. If extended outage: notify customer per SLA.
 ```

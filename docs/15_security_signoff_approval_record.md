@@ -1,5 +1,5 @@
 # Security Sign-Off / Approval Record — Template
-## FinShield AI
+## Spectra
 
 **Version:** 0.1 (Draft Template) | **Classification:** Confidential
 
@@ -45,7 +45,7 @@ Date:
 - Before any production deployment touching Sensitive-classified data paths (per Deployment & Rollback Plan §2).
 - At close of any VAPT engagement remediation cycle.
 - Before first customer onboarding in a new regulated sector.
-- Annually, as part of the compliance review cycle (see Security & Compliance Strategy §7).
+- Annually, as part of the compliance review cycle (see Compliance Strategy §9).
 
 ## 3. Record Retention
 - Retained per Data Governance Plan compliance-record schedule (7 years, aligned with ZK-Proof audit token retention).

@@ -1,5 +1,5 @@
 # Deployment & Rollback Plan
-## FinShield AI
+## Spectra
 
 **Version:** 0.1 (Draft) | **Classification:** Confidential
 

@@ -1,12 +1,12 @@
 # Infrastructure as Code (IaC) Documentation
-## FinShield AI
+## Spectra
 
 **Version:** 0.1 (Draft) | **Classification:** Confidential
 
 ---
 
 ## 1. Purpose
-Defines how FinShield AI infrastructure is provisioned, reviewed, and audited as code — required for reproducibility and for compliance evidence (SOC 2, HIPAA).
+Defines how Spectra infrastructure is provisioned, reviewed, and audited as code — required for reproducibility and for compliance evidence (SOC 2, HIPAA).
 
 ## 2. Tooling (Proposed)
 | Layer | Tool |

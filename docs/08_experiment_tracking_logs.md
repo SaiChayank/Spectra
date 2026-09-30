@@ -1,5 +1,5 @@
 # Experiment Tracking Log
-## FinShield AI
+## Spectra
 
 **Version:** 0.1 (Draft Template) | **Classification:** Confidential
 

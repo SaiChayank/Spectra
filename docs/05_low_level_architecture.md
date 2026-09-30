@@ -1,5 +1,5 @@
 # Low-Level Architecture
-## FinShield AI
+## Spectra
 
 **Version:** 0.1 (Draft) | **Classification:** Confidential
 

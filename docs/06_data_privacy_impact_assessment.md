@@ -1,5 +1,5 @@
 # Data Privacy Impact Assessment (DPIA)
-## FinShield AI
+## Spectra
 
 **Version:** 0.1 (Draft) | **Framework:** GDPR Art. 35-aligned | **Classification:** Confidential
 
@@ -11,7 +11,7 @@
 
 **Scope:** Traffic metadata from customer networks in fintech, healthcare, and smart city sectors, potentially spanning multiple jurisdictions.
 
-**Context:** Processing occurs as a security service on behalf of customers (FinShield acts as processor; customer is controller for their end-user data).
+**Context:** Processing occurs as a security service on behalf of customers (Spectra acts as processor; customer is controller for their end-user data).
 
 **Purpose:** Threat detection, quantum-vulnerability assessment, cross-sector attack correlation.
 
@@ -46,7 +46,7 @@
 - ZK-Proof audit trail gives data subjects' organizations (controllers) verifiable evidence of minimal processing.
 
 ## 6. Legal Basis (to confirm per customer contract)
-- Typically "legitimate interest" (security) or contractual necessity, established at the controller (customer) level; FinShield operates as processor under a Data Processing Agreement.
+- Typically "legitimate interest" (security) or contractual necessity, established at the controller (customer) level; Spectra operates as processor under a Data Processing Agreement.
 
 ## 7. International Transfers
 - Default: no cross-region metadata transfer without an active agreement (see Data Governance Plan §8).

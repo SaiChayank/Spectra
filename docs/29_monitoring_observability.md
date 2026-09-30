@@ -1,12 +1,12 @@
 # Monitoring & Observability
-## FinShield AI
+## Spectra
 
 **Version:** 0.1 (Draft) | **Classification:** Internal
 
 ---
 
 ## 1. Purpose
-Defines what FinShield monitors about itself — the observability layer that feeds Incident Response, Disaster Recovery triggers, and day-to-day operations.
+Defines what Spectra monitors about itself — the observability layer that feeds Incident Response, Disaster Recovery triggers, and day-to-day operations.
 
 ## 2. Observability Pillars
 - **Metrics:** system health, latency, throughput, model performance proxies.

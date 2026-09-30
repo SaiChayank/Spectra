@@ -1,5 +1,5 @@
 # Product Requirements Document (PRD)
-## FinShield AI
+## Spectra
 
 **Version:** 0.1 (Draft) | **Classification:** Confidential
 
@@ -9,7 +9,7 @@
 Where the BRD defines *business* justification, this PRD defines the *product* — what users actually see and do, translated into build-ready requirements for design and engineering.
 
 ## 2. Product Vision
-A SOC analyst or compliance officer opens FinShield AI and sees, in real time: which of their network's connections are quantum-vulnerable, which anomalies look like coordinated cross-sector attacks, and cryptographic proof they can hand an auditor — without FinShield ever having seen their data's content.
+A SOC analyst or compliance officer opens Spectra and sees, in real time: which of their network's connections are quantum-vulnerable, which anomalies look like coordinated cross-sector attacks, and cryptographic proof they can hand an auditor — without Spectra ever having seen their data's content.
 
 ## 3. Target Users & Personas
 

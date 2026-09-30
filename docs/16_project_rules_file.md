@@ -1,12 +1,12 @@
 # Project Rules File
-## FinShield AI
+## Spectra
 
 **Version:** 0.1 (Draft) | **Classification:** Internal
 
 ---
 
 ## 1. Purpose
-Ground rules for anyone (human or AI-assisted tooling) contributing to FinShield AI — engineering, data handling, and content generation constraints.
+Ground rules for anyone (human or AI-assisted tooling) contributing to Spectra — engineering, data handling, and content generation constraints.
 
 ## 2. Non-Negotiable Architectural Rules
 1. No code path may decrypt, log, or persist raw traffic payload — metadata only, always.

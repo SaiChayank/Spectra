@@ -1,5 +1,5 @@
 # Static Application Security Testing (SAST) — Strategy & Report Template
-## FinShield AI
+## Spectra
 
 **Version:** 0.1 (Draft) | **Classification:** Confidential
 
@@ -8,7 +8,7 @@
 ---
 
 ## 1. Purpose
-Catch insecure coding patterns before code reaches production, especially critical given FinShield handles security-sensitive metadata and cryptographic logic.
+Catch insecure coding patterns before code reaches production, especially critical given Spectra handles security-sensitive metadata and cryptographic logic.
 
 ## 2. Tooling (Proposed)
 | Language/Stack | Tool Candidates |
@@ -25,7 +25,7 @@ Catch insecure coding patterns before code reaches production, especially critic
 - Nightly: full-repo deep scan.
 - Pre-release: full SAST + dependency (SCA) scan, results attached to release record.
 
-## 4. Custom Rule Priorities (FinShield-Specific)
+## 4. Custom Rule Priorities (Spectra-Specific)
 Given the architecture's "no payload decryption" and "metadata-only" guarantees, custom rules should specifically flag:
 - Any code path that accesses or logs raw packet payload.
 - Any hardcoded cryptographic key or TEE attestation secret.

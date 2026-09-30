@@ -1,5 +1,5 @@
 # Vulnerability Assessment & Penetration Testing (VAPT) — Engagement Plan & Report Template
-## FinShield AI
+## Spectra
 
 **Version:** 0.1 (Draft Template) | **Classification:** Confidential
 

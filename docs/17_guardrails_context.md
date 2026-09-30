@@ -1,5 +1,5 @@
 # Guardrails Context
-## FinShield AI
+## Spectra
 
 **Version:** 0.1 (Draft) | **Classification:** Internal
 
@@ -23,7 +23,7 @@ Defines the hard boundaries any system component, model, or AI-assisted tool mus
 - Confidence thresholds below which an alert is suppressed vs. escalated must be explicit and logged, not implicit in model weights alone.
 - Adversarial sandbox retraining must not auto-promote to production — always routed through the standard Deployment gate.
 
-## 4. AI-Assisted Tooling Guardrails (for any LLM/AI agent used in building or operating FinShield)
+## 4. AI-Assisted Tooling Guardrails (for any LLM/AI agent used in building or operating Spectra)
 - May draft documentation, code, and templates.
 - Must not fabricate test results, benchmark numbers, compliance attestations, or approval signatures (ties to Project Rules File §6).
 - Must not generate or suggest disabling of the payload-decryption exclusion, even for "debugging" purposes.
@@ -35,4 +35,4 @@ Defines the hard boundaries any system component, model, or AI-assisted tool mus
 ## 6. Review
 - Guardrails reviewed at every Phase gate and whenever a new module (e.g., ZK-Proof, Digital Twin) is designed, since new capabilities can introduce new boundary conditions.
 
-*Draft — to be ratified alongside the Project Rules File and Security & Compliance Strategy.*
+*Draft — to be ratified alongside the Project Rules File and the Compliance Strategy (`17_compliance_strategy.md`).*

@@ -1,14 +1,14 @@
 # Security Payload (Event/Alert Payload Schema)
-## FinShield AI
+## Spectra
 
 **Version:** 0.1 (Draft) | **Classification:** Confidential
 
-**Scope note:** This defines the structured payload FinShield sends *about* a detection (to SIEM/webhook/SOC integrations) — it never contains raw network payload content, consistent with the platform's metadata-only architecture.
+**Scope note:** This defines the structured payload Spectra sends *about* a detection (to SIEM/webhook/SOC integrations) — it never contains raw network payload content, consistent with the platform's metadata-only architecture.
 
 ---
 
 ## 1. Purpose
-Standardize the JSON payload FinShield emits for security events so customer SIEMs (Splunk, Sentinel, QRadar, etc.) can ingest it consistently.
+Standardize the JSON payload Spectra emits for security events so customer SIEMs (Splunk, Sentinel, QRadar, etc.) can ingest it consistently.
 
 ## 2. Event Payload Schema
 

@@ -1,12 +1,12 @@
 # Data Governance Plan
-## FinShield AI
+## Spectra
 
 **Version:** 0.1 (Draft) | **Classification:** Confidential
 
 ---
 
 ## 1. Purpose
-Establishes how data flowing through FinShield AI is classified, owned, retained, and controlled across its lifecycle.
+Establishes how data flowing through Spectra is classified, owned, retained, and controlled across its lifecycle.
 
 ## 2. Data Classification
 
@@ -21,10 +21,10 @@ Establishes how data flowing through FinShield AI is classified, owned, retained
 
 | Data Domain | Owner | Steward |
 |-------------|-------|---------|
-| Traffic metadata | Customer (data controller) | FinShield Data Governance Officer (processor) |
-| Detection models | FinShield ML Engineering | ML Engineering Lead |
-| Compliance tokens / ZK proofs | FinShield Compliance | Compliance Lead |
-| Cross-sector correlation graph | FinShield Product | Security Architecture Lead |
+| Traffic metadata | Customer (data controller) | Spectra Data Governance Officer (processor) |
+| Detection models | Spectra ML Engineering | ML Engineering Lead |
+| Compliance tokens / ZK proofs | Spectra Compliance | Compliance Lead |
+| Cross-sector correlation graph | Spectra Product | Security Architecture Lead |
 
 ## 4. Data Lifecycle
 
@@ -46,7 +46,7 @@ Establishes how data flowing through FinShield AI is classified, owned, retained
 ## 6. Data Quality Standards
 - Metadata schema validated at ingestion (see Data Dictionary).
 - Null/malformed handshake records quarantined, not silently dropped, for later review.
-- Feature engineering changes logged in Feature Engineering Log with rationale.
+- Feature engineering changes logged in the Feature Engineering Log (Data Dictionary §7) with rationale.
 
 ## 7. Access Control Policy
 - Role-based access: Analyst (read anomaly scores), ML Engineer (read/write features, no raw customer identifiers), Compliance (read audit trail only).
@@ -59,7 +59,7 @@ Establishes how data flowing through FinShield AI is classified, owned, retained
 
 ## 9. Metadata Management
 - Central data catalog tracks schema versions, lineage from ingestion to model feature.
-- Every feature in a model traceable to its source field and transformation (see Data Dictionary & Feature Engineering Log).
+- Every feature in a model traceable to its source field and transformation (see Data Dictionary, incl. §6–§7).
 
 ## 10. Governance Committee
 - Meets monthly; membership: Data Governance Officer, Security Lead, Compliance Lead, ML Engineering Lead.

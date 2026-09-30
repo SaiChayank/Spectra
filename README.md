@@ -8,6 +8,15 @@ Three target verticals: **Fintech · Healthcare · Smart City Infrastructure**.
 
 > Product strategy and the eight strategic modules are documented in
 > [`Spectra documentation (extracted).md`](./Spectra%20documentation%20(extracted).md).
+> The research the platform builds on — and the improvements it suggests — are
+> mapped per module in [`docs/32_related_research.md`](./docs/32_related_research.md);
+> requirements-to-code traceability lives in
+> [`docs/31_requirements_traceability_matrix.md`](./docs/31_requirements_traceability_matrix.md)
+> and planning-vs-implementation reconciliation in
+> [`docs/00_reconciliation_note.md`](./docs/00_reconciliation_note.md).
+> The phased implementation plan (as-built phases 0–8 and the forward roadmap
+> to gap closure, hardening, and scale-out) is
+> [`docs/33_implementation_plan.md`](./docs/33_implementation_plan.md).
 
 ---
 

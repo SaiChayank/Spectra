@@ -1,9 +1,9 @@
 # Security Architecture
-## FinShield AI
+## Spectra
 
 **Version:** 0.1 (Draft) | **Classification:** Confidential
 
-**Note:** This is the technical security-controls design. See Compliance Strategy for regulatory mapping, and Threat Model for the threat/risk analysis these controls address.
+**Note:** This is the technical security-controls design. See `17_compliance_strategy.md` (absorbing the former `02_security_compliance_strategy.md`) for regulatory mapping, and Threat Model for the threat/risk analysis these controls address.
 
 ---
 

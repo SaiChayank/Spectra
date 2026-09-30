@@ -1,5 +1,5 @@
 # Dynamic Application Security Testing (DAST) — Strategy & Report Template
-## FinShield AI
+## Spectra
 
 **Version:** 0.1 (Draft Template) | **Classification:** Confidential
 
@@ -26,7 +26,7 @@ Find runtime vulnerabilities (auth bypass, injection, misconfigured TLS, SSRF, e
 - Full DAST scan: staging environment, before every production release.
 - Scheduled scan: production (safe, non-destructive checks only), weekly.
 
-## 5. FinShield-Specific Test Focus
+## 5. Spectra-Specific Test Focus
 - Attempt to retrieve payload content via any endpoint (should be structurally impossible — confirms the metadata-only architectural guarantee at runtime, not just in code review).
 - Attempt cross-tenant data access via API parameter manipulation (tenant ID spoofing per Threat Model §4.1).
 - Attempt to bypass attestation check on inference endpoints.

@@ -1,5 +1,5 @@
 # System Requirements Specification (SRS)
-## FinShield AI
+## Spectra
 
 **Version:** 0.1 (Draft) | **Standard reference:** IEEE 830-style structure | **Classification:** Confidential
 
@@ -9,7 +9,7 @@
 Translates BRD/PRD requirements into precise, testable system-level requirements for engineering implementation and QA sign-off.
 
 ## 2. System Overview
-FinShield AI ingests TLS handshake metadata, applies behavioral/ML detection, and surfaces alerts and compliance artifacts, without ever accessing decrypted payload.
+Spectra ingests TLS handshake metadata, applies behavioral/ML detection, and surfaces alerts and compliance artifacts, without ever accessing decrypted payload.
 
 ## 3. Functional Requirements (System-Level, IDs traceable to BRD)
 

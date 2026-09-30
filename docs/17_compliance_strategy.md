@@ -1,26 +1,40 @@
 # Compliance Strategy
-## FinShield AI
+## Spectra
 
-**Version:** 0.1 (Draft) | **Classification:** Confidential
+**Version:** 0.2 (Consolidated draft) | **Classification:** Confidential
 
-**Note:** Covers regulatory mapping and certification roadmap. See Security Architecture for the technical controls, and Data Governance Plan for data-handling policy.
+**Note (2026-09-30):** This document absorbs and replaces
+`02_security_compliance_strategy.md` (deleted to remove near-duplicate drift
+risk). The combined strategy is maintained here; `14_security_architecture.md`
+holds the technical control design and `05_threat_modeling_document.md` the
+threat/risk analysis these controls address.
 
 ---
 
 ## 1. Purpose
-Defines how FinShield AI achieves and demonstrates regulatory compliance across fintech, healthcare, and smart city deployments.
+
+Defines how Spectra achieves and demonstrates security posture and regulatory
+compliance across fintech, healthcare, and smart city deployments.
 
 ## 2. Regulatory Landscape
 
-| Regulation | Applies To | Key Requirement | FinShield Mechanism |
+| Regulation | Applies To | Key Requirement | Spectra Mechanism |
 |-----------|-----------|------------------|----------------------|
 | PCI-DSS | Fintech | Protect cardholder data environment | Metadata-only analysis; no payload access |
-| HIPAA | Healthcare | Protect PHI confidentiality/integrity | ZK-Proof selective disclosure; TEE inference |
+| HIPAA | Healthcare | Protect PHI confidentiality/integrity | ZK-proof-class audit trail (selective disclosure); TEE-class inference isolation |
 | GDPR | All EU-touching data | Lawful basis, data minimization, right to erasure | Data Governance Plan retention rules |
 | NIST PQC Standards (FIPS 203/204) | All | Quantum-resistant algorithm guidance | PQC Readiness module reference list |
-| Sector-specific (e.g., critical infrastructure rules) | Smart City | Critical infrastructure protection | Cross-Domain Correlation, edge isolation |
+| Sector-specific (e.g., NERC CIP for smart city/critical infra) | Smart City | Critical infrastructure protection | Cross-Domain Correlation, edge isolation |
 
-## 3. Compliance Mapping by Module
+## 3. Core Security Principles
+
+1. **Metadata-only by design** — payload content is never decrypted, inspected, or stored.
+2. **Least-privilege access** — role-based access control across all internal tooling and customer data.
+3. **Verifiable, not just claimed, privacy** — cryptographic proof (audit chain, Merkle checkpoints, signed certificates) supplements policy statements.
+4. **Defense against the model itself being attacked** — adversarial resilience treated as a first-class security control, not an ML nicety.
+5. **Assume breach** — enclave isolation and attestation reduce blast radius of a compromised host or cloud provider.
+
+## 4. Compliance Mapping by Module
 
 | Module | Primary Compliance Value |
 |--------|---------------------------|
@@ -31,12 +45,20 @@ Defines how FinShield AI achieves and demonstrates regulatory compliance across 
 | ZK-Proof Audit Trail | Directly satisfies auditor requests for proof-of-minimal-access |
 | Cross-Domain Correlation | Supports critical infrastructure interdependency reporting |
 
-## 4. Third-Party & Vendor Risk
-- Cloud/TEE providers assessed for supply-chain integrity annually.
-- Third-party ML libraries vetted for known adversarial-attack surface before adoption.
-- Any sub-processor handling customer metadata requires a signed Data Processing Agreement.
+## 5. Data Protection Controls
 
-## 5. Audit & Certification Roadmap
+- Encryption in transit and at rest for all metadata stores.
+- No raw traffic payload retention under any circumstance (architectural constraint, not just policy).
+- Key management via HSM or cloud KMS with rotation policy (interval TBD with security lead).
+- Field-level access logging for any PII/PHI-adjacent metadata (IP address, device ID).
+
+## 6. Third-Party & Vendor Risk
+
+- Cloud/TEE providers (Intel, AMD, ARM, hyperscaler) assessed for supply-chain integrity annually.
+- Any third-party ML library vetted for known adversarial-attack surface before adoption.
+- Sub-processors handling any customer metadata require a signed Data Processing Agreement.
+
+## 7. Audit & Certification Roadmap
 
 | Milestone | Target Phase |
 |-----------|--------------|
@@ -45,18 +67,22 @@ Defines how FinShield AI achieves and demonstrates regulatory compliance across 
 | SOC 2 Type I readiness | Phase 2 |
 | HIPAA security risk assessment (external) | Phase 2 |
 | PCI-DSS attestation of compliance | Phase 2 |
-| ZK-Proof audit trail external validation | Phase 3 |
+| ZK-proof-class audit trail external validation | Phase 3 |
 
-## 6. Roles & Responsibilities (RACI, abbreviated)
+## 8. Roles & Responsibilities (RACI, abbreviated)
 
 | Activity | Security Lead | ML Eng | Compliance | Product |
 |----------|:---:|:---:|:---:|:---:|
+| Threat modeling | A/R | C | C | I |
+| VAPT coordination | A/R | I | C | I |
 | Compliance mapping | C | I | A/R | C |
 | Auditor liaison | C | I | A/R | I |
 | Certification prep | C | I | A/R | C |
+| Incident response | A/R | C | C | I |
 
-## 7. Review Cadence
+## 9. Review Cadence
+
+- Security strategy reviewed quarterly and after any material architecture change.
 - Compliance mapping reviewed on any new sector entry or regulatory update.
-- Full strategy reviewed quarterly.
 
 *Draft — requires legal/compliance review before adoption as governing policy.*

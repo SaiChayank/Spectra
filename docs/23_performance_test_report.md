@@ -1,5 +1,5 @@
 # Performance Test Report — Plan & Template
-## FinShield AI
+## Spectra
 
 **Version:** 0.1 (Draft Template) | **Classification:** Confidential
 
@@ -8,7 +8,7 @@
 ---
 
 ## 1. Purpose
-Verify FinShield meets latency and throughput requirements defined in the SRS and BRD — especially critical given sub-10ms edge SLAs for healthcare robotics and smart city traffic control.
+Verify Spectra meets latency and throughput requirements defined in the SRS and BRD — especially critical given sub-10ms edge SLAs for healthcare robotics and smart city traffic control.
 
 ## 2. Test Types
 

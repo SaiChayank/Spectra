@@ -1,12 +1,12 @@
 # Disaster Recovery Plan
-## FinShield AI
+## Spectra
 
 **Version:** 0.1 (Draft) | **Classification:** Confidential
 
 ---
 
 ## 1. Purpose
-Defines how FinShield recovers from major infrastructure failure, regional outage, or catastrophic data loss — a security product going dark is itself a security incident for customers.
+Defines how Spectra recovers from major infrastructure failure, regional outage, or catastrophic data loss — a security product going dark is itself a security incident for customers.
 
 ## 2. Recovery Objectives (Proposed — confirm with engineering/product)
 

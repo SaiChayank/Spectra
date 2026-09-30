@@ -1,12 +1,12 @@
 # ML Architecture
-## FinShield AI
+## Spectra
 
 **Version:** 0.1 (Draft) | **Classification:** Confidential
 
 ---
 
 ## 1. Purpose
-Defines how ML models are trained, served, secured, and maintained across FinShield's detection modules — the ML-specific layer beneath the general system architecture.
+Defines how ML models are trained, served, secured, and maintained across Spectra's detection modules — the ML-specific layer beneath the general system architecture.
 
 ## 2. ML Pipeline Overview
 

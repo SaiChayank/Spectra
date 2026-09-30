@@ -1,5 +1,5 @@
 # Business Requirements Document (BRD)
-## FinShield AI — Encrypted Traffic Threat Detection Platform
+## Spectra — Encrypted Traffic Threat Detection Platform
 
 **Version:** 0.1 (Draft)
 **Status:** Pre-Development
@@ -9,7 +9,7 @@
 
 ## 1. Purpose
 
-This document defines the business requirements for FinShield AI, a cybersecurity platform that detects threats in encrypted network traffic without decryption. It translates the strategic modules in the project concept into requirements a development team can build against.
+This document defines the business requirements for Spectra, a cybersecurity platform that detects threats in encrypted network traffic without decryption. It translates the strategic modules in the project concept into requirements a development team can build against.
 
 ## 2. Business Objectives
 

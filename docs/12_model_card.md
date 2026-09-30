@@ -1,5 +1,5 @@
 # Model Card (Fact Sheet) — Template
-## FinShield AI
+## Spectra
 
 **Version:** 0.1 (Draft Template) | **Classification:** Confidential / Customer-shareable summary version recommended
 
@@ -22,7 +22,7 @@ Model type (e.g., gradient-boosted classifier, spiking neural net, transformer-b
 ## 3. Training Data
 ```
 Data sources (categories, not raw data):
-Data snapshot hash / version (link to Feature Engineering Log):
+Data snapshot hash / version (link to Data Dictionary §7 Feature Engineering Log):
 Sector representation (fintech/healthcare/smart city split):
 Known limitations of training data:
 ```

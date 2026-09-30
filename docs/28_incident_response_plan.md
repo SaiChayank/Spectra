@@ -1,12 +1,12 @@
 # Incident Response Plan
-## FinShield AI
+## Spectra
 
 **Version:** 0.1 (Draft) | **Classification:** Confidential
 
 ---
 
 ## 1. Purpose
-Defines how FinShield detects, contains, and responds to security incidents — including the uncomfortable case of FinShield itself being breached, which carries outsized reputational and regulatory risk for a security vendor.
+Defines how Spectra detects, contains, and responds to security incidents — including the uncomfortable case of Spectra itself being breached, which carries outsized reputational and regulatory risk for a security vendor.
 
 ## 2. Incident Severity Levels
 
@@ -49,7 +49,7 @@ Defines how FinShield detects, contains, and responds to security incidents — 
 | Communications Owner | Customer/public communication, status page updates |
 
 ## 5. Regulatory Notification Triggers (confirm exact thresholds with legal)
-- HIPAA: breach affecting PHI-adjacent metadata may trigger notification obligations even though FinShield never accesses PHI content directly — confirm scope with Compliance Lead per incident.
+- HIPAA: breach affecting PHI-adjacent metadata may trigger notification obligations even though Spectra never accesses PHI content directly — confirm scope with Compliance Lead per incident.
 - GDPR: personal data breach notification within 72 hours of awareness where applicable.
 - PCI-DSS: card-data-environment-adjacent incidents reported per acquiring bank/card network requirements.
 

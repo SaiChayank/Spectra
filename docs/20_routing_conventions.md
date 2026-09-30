@@ -1,12 +1,12 @@
 # Routing Conventions
-## FinShield AI
+## Spectra
 
 **Version:** 0.1 (Draft) | **Classification:** Internal
 
 ---
 
 ## 1. Purpose
-Consistent routing/URI conventions across all FinShield services so new endpoints (as modules mature through Phase 1–3) stay predictable.
+Consistent routing/URI conventions across all Spectra services so new endpoints (as modules mature through Phase 1–3) stay predictable.
 
 ## 2. URI Structure
 ```
