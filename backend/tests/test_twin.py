@@ -405,9 +405,7 @@ def test_engine_twin_methods(tmp_path):
         engine.twin_validate(name="does_not_exist")
 
 
-def test_twin_api_endpoints(tmp_path):
-    import time as _t
-
+def test_twin_api_endpoints(tmp_path, upload_capture, process_capture):
     from fastapi.testclient import TestClient
 
     from spectra.api.app import app, engine
@@ -418,15 +416,16 @@ def test_twin_api_endpoints(tmp_path):
     baseline = make_baseline_pcap(str(tmp_path / "b.pcap"), n_flows=30)
     suspicious = make_suspicious_pcap(str(tmp_path / "s.pcap"))
     if not engine.detector.is_trained:
+        base_id = upload_capture(client, baseline)["capture_id"]
         res = client.post("/api/model/train",
-                          json={"pcap_path": baseline, "contamination": 0.05})
+                          json={"capture_id": base_id, "contamination": 0.05})
         assert res.status_code == 200, res.text
 
-    res = client.post("/api/capture/start", json={"mode": "pcap", "path": suspicious})
+    cap_id = upload_capture(client, suspicious)["capture_id"]
+    res = client.post(f"/api/captures/{cap_id}/process")
     assert res.status_code == 200, res.text
-    deadline = _t.time() + 30
-    while engine.running and _t.time() < deadline:
-        _t.sleep(0.05)
+    det = process_capture(client, cap_id)
+    assert det["status"] == "COMPLETED"
     client.post("/api/capture/stop")
 
     res = client.get("/api/twin/topology")
@@ -479,5 +478,5 @@ def test_twin_api_endpoints(tmp_path):
     assert body.get("available") is True and body["window"] > 0
     assert "comparison" in body
 
-    res = client.post("/api/twin/shadow", json={"pcap": "/nope.pcap"})
+    res = client.post("/api/twin/shadow", json={"capture_id": 999999})
     assert res.status_code == 404

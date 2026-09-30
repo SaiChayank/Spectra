@@ -164,7 +164,7 @@ def _write(path, flows):
     return str(path)
 
 
-def test_engine_phase3_and_api(tmp_path):
+def test_engine_phase3_and_api(tmp_path, upload_capture):
     baseline = make_baseline_pcap(str(tmp_path / "baseline.pcap"), n_flows=40)
     # enough scored flows to satisfy the watch's MIN_WINDOW
     window = _write(tmp_path / "window.pcap", [
@@ -224,16 +224,15 @@ def test_engine_phase3_and_api(tmp_path):
     assert res.status_code == 200
     assert res.json()["available"] is True
 
-    res = client.post("/api/model/robustness",
-                      json={"pcap_path": suspicious})
+    cap_id = upload_capture(client, suspicious)["capture_id"]
+    res = client.post("/api/model/robustness", json={"capture_id": cap_id})
     assert res.status_code == 200
     body = res.json()
     assert body["available"] is True
     assert body["flagged"] >= 1, "suspicious pcap must yield anomalies to attack"
     assert body["evasion_rate"] >= 0.0
 
-    res = client.post("/api/model/robustness",
-                      json={"pcap_path": "/does/not/exist.pcap"})
+    res = client.post("/api/model/robustness", json={"capture_id": 999999})
     assert res.status_code == 404
 
     res = client.post("/api/model/robustness", json={})

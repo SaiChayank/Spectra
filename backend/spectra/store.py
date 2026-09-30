@@ -1,352 +1,398 @@
-"""SQLite persistence for flows, detections, capture sessions and model runs.
+"""Persistence facade: the single API services, modules and routers use.
 
-Keeps detection history across restarts so the API can serve trends and the
-analyst can query what happened earlier. One connection guarded by a lock:
-writes always come from the capture thread, reads from request handlers.
+Business logic talks to :class:`Store` only; every SQL statement, migration,
+batched commit and retention sweep lives in :mod:`spectra.db` (connection ->
+migrations -> repositories -> retention). The public method set is unchanged
+from the pre-repository implementation, so routers, services, the audit log,
+graph hydration and the test-suite keep working as-is.
+
+Write path (throughput): ``save_flow``/``record_event`` stage rows in a
+:class:`~spectra.db.batch.WriteBuffer` instead of committing per row. Batches
+commit on size/interval, and every read, capture finalisation, retention sweep
+and ``close()`` flushes first - callers always read their own writes, at the
+cost of at most one batch uncommitted during a crash.
+
+Durability rules by table:
+
+* ``flows`` / ``events``  - batched (see above)
+* ``captures`` / ``model_runs`` - immediate (ids must exist right away)
+* ``audit_log``           - immediate (hash-chain integrity) and never pruned
+* ``users`` / ``sessions`` - immediate (login must observe its own row now)
+* ``incidents`` / ``incident_notes`` - immediate (triage writes are rare)
+* ``schema_migrations``   - written by the migration runner only
 """
 
 from __future__ import annotations
 
 import json
-import os
-import sqlite3
-import threading
+import logging
 import time
-from typing import Any
 
-SCHEMA = """
-CREATE TABLE IF NOT EXISTS captures (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    mode        TEXT NOT NULL,
-    source      TEXT,
-    started_at  REAL NOT NULL,
-    stopped_at  REAL,
-    packets     INTEGER DEFAULT 0,
-    flows       INTEGER DEFAULT 0,
-    detections  INTEGER DEFAULT 0,
-    error       TEXT
-);
-CREATE TABLE IF NOT EXISTS flows (
-    id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    capture_id  INTEGER,
-    ts          REAL NOT NULL,
-    proto       TEXT,
-    src         TEXT,
-    dst         TEXT,
-    duration    REAL,
-    packets     INTEGER,
-    bytes       INTEGER,
-    tls_version TEXT,
-    sni         TEXT,
-    alpn        TEXT,
-    ja3         TEXT,
-    ja4         TEXT,
-    score       REAL,
-    anomaly     INTEGER DEFAULT 0,
-    reasons     TEXT,
-    record      TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS idx_flows_ts ON flows(ts);
-CREATE INDEX IF NOT EXISTS idx_flows_anomaly ON flows(anomaly, score);
-CREATE INDEX IF NOT EXISTS idx_flows_sni ON flows(sni);
-CREATE INDEX IF NOT EXISTS idx_flows_capture ON flows(capture_id);
-CREATE TABLE IF NOT EXISTS model_runs (
-    id            INTEGER PRIMARY KEY AUTOINCREMENT,
-    trained_at    REAL NOT NULL,
-    pcap          TEXT,
-    n_train       INTEGER,
-    contamination REAL,
-    metrics       TEXT
-);
-CREATE TABLE IF NOT EXISTS audit_log (
-    seq        INTEGER PRIMARY KEY,
-    ts         REAL NOT NULL,
-    kind       TEXT NOT NULL,
-    actor      TEXT,
-    payload    TEXT NOT NULL,
-    leaves     TEXT,
-    prev_hash  TEXT NOT NULL,
-    entry_hash TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS idx_audit_kind ON audit_log(kind, seq);
-"""
+from .db import (
+    AuditRepository,
+    CaptureRepository,
+    Database,
+    EventRepository,
+    FlowRepository,
+    IncidentRepository,
+    ModelRunRepository,
+    RetentionPolicy,
+    SessionRepository,
+    StoreError,
+    UserRepository,
+    WriteBuffer,
+    apply_retention,
+    migrate,
+    schema_version,
+)
+
+log = logging.getLogger("spectra.store")
+
+__all__ = ["Store", "StoreError"]
 
 
-class StoreError(RuntimeError):
-    pass
+def _public_user(row: dict) -> dict:
+    """Project a ``users`` row for API responses - without ``password_hash``.
+
+    Every user read except the login credential lookup goes through this
+    projector, so the scrypt encoding cannot leak into a router by accident.
+    """
+    return {
+        "id": row["id"],
+        "username": row["username"],
+        "role": row["role"],
+        "created_at": row["created_at"],
+        "updated_at": row["updated_at"],
+        "last_login_at": row["last_login_at"],
+    }
 
 
 class Store:
-    def __init__(self, path: str, max_rows: int = 200_000):
+    """Composed repositories behind the historical persistence API."""
+
+    def __init__(self, path: str, max_rows: int = 200_000, *,
+                 batch_size: int = 256, flush_interval: float = 1.0,
+                 event_max_rows: int = 50_000,
+                 retention: RetentionPolicy | None = None):
         self.path = path
         self.max_rows = max_rows
-        self._lock = threading.RLock()
+        self._db = Database(path)            # pragmas + single guarded conn
+        applied = migrate(self._db)          # schema changes happen only here
+        if applied:
+            log.info("applied migrations: %s", ", ".join(applied))
+        self._buffer = WriteBuffer(self._db, batch_size=batch_size,
+                                   flush_interval=flush_interval)
+        self._flows = FlowRepository(self._db, self._buffer, max_rows=max_rows)
+        self._events_repo = EventRepository(self._db, self._buffer,
+                                            max_rows=event_max_rows)
+        self._captures = CaptureRepository(self._db)
+        self._runs = ModelRunRepository(self._db)
+        self._audit = AuditRepository(self._db)
+        self._users = UserRepository(self._db)
+        self._sessions = SessionRepository(self._db)
+        self._incidents = IncidentRepository(self._db)
+        self.retention = retention if retention is not None else RetentionPolicy()
+        self._lock = self._db.lock           # compat: historical attribute
+        # Startup sweep: close sessions a crashed process left open and apply
+        # configured age policies before this process writes anything. A sweep
+        # failure must not disable persistence (schema and data are fine).
         try:
-            if path != ":memory:":
-                os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
-            self._conn = sqlite3.connect(path, check_same_thread=False)
-        except (sqlite3.Error, OSError) as exc:
-            raise StoreError(f"cannot open database {path}: {exc}") from exc
-        self._conn.row_factory = sqlite3.Row
-        with self._lock:
-            self._conn.execute("PRAGMA journal_mode=WAL")
-            self._conn.execute("PRAGMA synchronous=NORMAL")
-            self._conn.executescript(SCHEMA)
-            self._conn.commit()
-            self._rows = int(
-                self._conn.execute("SELECT COUNT(*) FROM flows").fetchone()[0]
-            )
+            self.run_retention()
+        except StoreError as exc:  # noqa: BLE001 - retention is best-effort
+            log.warning("retention sweep at open failed: %s", exc)
 
-    # -- capture sessions ---------------------------------------------------
+    # -- compat surface ------------------------------------------------------
+
+    @property
+    def _conn(self):
+        """The raw connection (tests tamper with rows through it)."""
+        return self._db.conn
+
+    @property
+    def schema_version(self) -> int:
+        return schema_version(self._db)
+
+    # -- capture sessions + managed resources --------------------------------
 
     def start_capture(self, mode: str, source: str | None) -> int:
-        with self._lock:
-            cur = self._conn.execute(
-                "INSERT INTO captures (mode, source, started_at) VALUES (?, ?, ?)",
-                (mode, source, time.time()),
-            )
-            self._conn.commit()
-            return int(cur.lastrowid)
+        return self._captures.start(mode, source)
 
     def finish_capture(self, capture_id: int, packets: int, flows: int,
-                       detections: int, error: str | None = None) -> None:
-        with self._lock:
-            self._conn.execute(
-                """UPDATE captures
-                   SET stopped_at = ?, packets = ?, flows = ?, detections = ?, error = ?
-                   WHERE id = ?""",
-                (time.time(), packets, flows, detections, error, capture_id),
-            )
-            self._conn.commit()
-            self._prune()
+                       detections: int, error: str | None = None,
+                       status: str | None = None) -> None:
+        """Close a session with counts and its terminal lifecycle status.
+
+        ``status`` distinguishes an explicit stop (STOPPED) from a natural
+        completion; an error always records FAILED.
+        """
+        self.flush()   # the session's flows become durable before its record
+        self._captures.finish(capture_id, packets, flows, detections, error,
+                              status)
+        self.run_retention()
 
     def recent_captures(self, limit: int = 20) -> list[dict]:
-        return self._query(
-            "SELECT * FROM captures ORDER BY id DESC LIMIT ?", (min(limit, 500),)
-        )
+        return self._captures.recent(limit)
 
-    # -- flows --------------------------------------------------------------
+    # Managed capture resources (spectra/services/captures.py owns the rules;
+    # these are the persistence calls behind them).
+
+    def insert_capture_resource(self, *, original_name: str, stored_name: str,
+                                size_bytes: int, content_hash: str,
+                                source: str, imported_at: float) -> int:
+        """Persist a validated upload (status UPLOADED)."""
+        return self._captures.insert_resource(
+            original_name=original_name, stored_name=stored_name,
+            size_bytes=size_bytes, content_hash=content_hash, source=source,
+            imported_at=imported_at)
+
+    def attach_capture(self, capture_id: int, mode: str, source: str) -> None:
+        """Claim a resource row for a (re)processing run."""
+        self._captures.attach(capture_id, mode, source)
+
+    def mark_capture_failed(self, capture_id: int, error: str) -> None:
+        """Record why a resource could not be processed."""
+        self._captures.fail(capture_id, error)
+
+    def get_capture(self, capture_id: int) -> dict | None:
+        return self._captures.get(capture_id)
+
+    def list_captures(self, limit: int = 20, offset: int = 0,
+                      status: str | None = None) -> dict:
+        return self._captures.list(limit=limit, offset=offset, status=status)
+
+    def find_capture_by_hash(self, content_hash: str) -> dict | None:
+        """Existing resource with identical bytes (duplicate-import gate)."""
+        return self._captures.by_hash(content_hash)
+
+    def stored_capture_names(self) -> set[str]:
+        """Stored filenames referenced by any row (orphan-sweep input)."""
+        return self._captures.stored_names()
+
+    def delete_capture(self, capture_id: int) -> bool:
+        """Remove one capture row (flows keep their history, FK SET NULL)."""
+        return self._captures.delete(capture_id)
+
+    # -- flows / detections ---------------------------------------------------
 
     def save_flow(self, record: dict, score: float | None, anomaly: bool,
-                  reasons: list[dict] | None = None, capture_id: int | None = None) -> int:
-        with self._lock:
-            cur = self._conn.execute(
-                """INSERT INTO flows
-                   (capture_id, ts, proto, src, dst, duration, packets, bytes,
-                    tls_version, sni, alpn, ja3, ja4, score, anomaly, reasons, record)
-                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
-                (
-                    capture_id,
-                    record.get("last_ts") or record.get("start_ts") or time.time(),
-                    record.get("proto"),
-                    record.get("src"),
-                    record.get("dst"),
-                    record.get("duration"),
-                    record.get("packets"),
-                    record.get("bytes"),
-                    record.get("tls_version"),
-                    record.get("sni"),
-                    json.dumps(record.get("alpn")) if record.get("alpn") else None,
-                    record.get("ja3"),
-                    record.get("ja4"),
-                    score,
-                    1 if anomaly else 0,
-                    json.dumps(reasons) if reasons else None,
-                    json.dumps(record),
-                ),
-            )
-            self._conn.commit()
-            self._rows += 1
-            if self._rows > self.max_rows:
-                self._prune()
-            return int(cur.lastrowid)
+                  reasons: list[dict] | None = None,
+                  capture_id: int | None = None) -> int:
+        """Stage one scored flow for a batched commit.
+
+        Returns 0 while the row is buffered (the durable id is assigned at
+        flush; no caller has ever used the return value).
+        """
+        return self._flows.enqueue(record, score, anomaly, reasons, capture_id)
 
     def query_flows(self, limit: int = 100, offset: int = 0,
                     anomaly_only: bool = False, since: float | None = None,
-                    until: float | None = None,
-                    sni: str | None = None) -> dict:
-        where, params = [], []
-        if anomaly_only:
-            where.append("anomaly = 1")
-        if since is not None:
-            where.append("ts >= ?")
-            params.append(since)
-        if until is not None:
-            where.append("ts <= ?")
-            params.append(until)
-        if sni:
-            where.append("sni LIKE ?")
-            params.append(f"%{sni}%")
-        clause = f"WHERE {' AND '.join(where)}" if where else ""
-        limit = min(max(1, limit), 1000)
-        offset = max(0, offset)
-        rows = self._query(
-            f"SELECT * FROM flows {clause} ORDER BY id DESC LIMIT ? OFFSET ?",
-            (*params, limit, offset),
-        )
-        total = self._count(clause, params)
-        items = [self._row_to_flow(r) for r in rows]
-        return {"count": total, "offset": offset, "items": items}
-
-    def _count(self, clause: str, params: tuple) -> int:
-        row = self._query(f"SELECT COUNT(*) AS n FROM flows {clause}", params)
-        return int(row[0]["n"])
+                    until: float | None = None, sni: str | None = None) -> dict:
+        return self._flows.query(limit=limit, offset=offset,
+                                 anomaly_only=anomaly_only, since=since,
+                                 until=until, sni=sni)
 
     def detections(self, limit: int = 100, offset: int = 0) -> dict:
-        return self.query_flows(limit=limit, offset=offset, anomaly_only=True)
+        return self._flows.query(limit=limit, offset=offset, anomaly_only=True)
+
+    def get_flow(self, flow_id: int) -> dict | None:
+        """One persisted flow by id (incident triage validates detections)."""
+        return self._flows.get(flow_id)
 
     def stats(self) -> dict:
-        with self._lock:
-            row = self._conn.execute(
-                """SELECT COUNT(*) AS flows,
-                          COALESCE(SUM(anomaly), 0) AS detections,
-                          AVG(score) AS avg_score,
-                          MIN(ts) AS first_ts,
-                          MAX(ts) AS last_ts
-                   FROM flows"""
-            ).fetchone()
-            by_proto = self._query(
-                "SELECT proto, COUNT(*) AS n FROM flows GROUP BY proto ORDER BY n DESC", ()
-            )
-            by_sni = self._query(
-                """SELECT sni, COUNT(*) AS n FROM flows
-                   WHERE sni IS NOT NULL AND sni != ''
-                   GROUP BY sni ORDER BY n DESC LIMIT 10""",
-                (),
-            )
-        return {
-            "flows": row["flows"],
-            "detections": row["detections"],
-            "anomaly_rate": round(row["detections"] / row["flows"], 4) if row["flows"] else 0.0,
-            "avg_score": round(row["avg_score"], 2) if row["avg_score"] is not None else None,
-            "first_ts": row["first_ts"],
-            "last_ts": row["last_ts"],
-            "by_proto": {r["proto"]: r["n"] for r in by_proto},
-            "top_sni": [{"sni": r["sni"], "flows": r["n"]} for r in by_sni],
-        }
+        return self._flows.stats()
 
-    # -- model lineage ------------------------------------------------------
+    # -- local authentication: users + sessions --------------------------------
+    #
+    # API-facing reads go through _public_user so ``password_hash`` can never
+    # reach a router; find_user_credentials is the one narrow path that
+    # returns it (login verification inside AuthService).
+
+    def count_users(self) -> int:
+        return self._users.count()
+
+    def count_admin_users(self) -> int:
+        """ADMIN accounts remaining (the last-admin deletion guard)."""
+        return self._users.count_role("ADMIN")
+
+    def create_user(self, username: str, password_hash: str,
+                    role: str) -> dict:
+        user_id = self._users.create(username, password_hash, role,
+                                     now=time.time())
+        return _public_user(self._users.get(user_id))
+
+    def find_user_credentials(self, username: str) -> dict | None:
+        """Username + role + hash for login verification (internal only)."""
+        row = self._users.by_username(username)
+        if row is None:
+            return None
+        return {"id": row["id"], "username": row["username"],
+                "password_hash": row["password_hash"], "role": row["role"]}
+
+    def get_user(self, user_id: int) -> dict | None:
+        row = self._users.get(user_id)
+        return _public_user(row) if row else None
+
+    def list_users(self) -> list[dict]:
+        return [_public_user(r) for r in self._users.list()]
+
+    def update_user(self, user_id: int, *, role: str | None = None,
+                    password_hash: str | None = None) -> dict | None:
+        if not self._users.update(user_id, role=role,
+                                  password_hash=password_hash,
+                                  now=time.time()):
+            return None
+        return _public_user(self._users.get(user_id))
+
+    def set_user_login_time(self, user_id: int) -> None:
+        self._users.touch_login(user_id, now=time.time())
+
+    def delete_user(self, user_id: int) -> bool:
+        """Delete an account; its sessions are removed by the FK cascade."""
+        return self._users.delete(user_id)
+
+    def create_session(self, user_id: int, token_hash: str,
+                       expires_at: float) -> int:
+        now = time.time()
+        return self._sessions.create(user_id, token_hash, now, expires_at)
+
+    def get_session(self, token_hash: str) -> dict | None:
+        return self._sessions.by_token_hash(token_hash)
+
+    def touch_session(self, token_hash: str, seen_at: float) -> None:
+        self._sessions.touch(token_hash, seen_at)
+
+    def delete_session(self, token_hash: str) -> bool:
+        return self._sessions.delete(token_hash)
+
+    def invalidate_user_sessions(self, user_id: int) -> int:
+        """Revoke every session of one user (password change / deletion)."""
+        return self._sessions.delete_for_user(user_id)
+
+    def purge_expired_sessions(self, now: float | None = None) -> int:
+        return self._sessions.purge_expired(
+            time.time() if now is None else now)
+
+    # -- incidents + analyst notes (ANALYST triage workflow) --------------------
+
+    def create_incident(self, title: str, detection_id: int | None,
+                        created_by: str) -> dict:
+        incident_id = self._incidents.create(title, detection_id, created_by,
+                                             now=time.time())
+        return self.get_incident(incident_id)
+
+    def get_incident(self, incident_id: int) -> dict | None:
+        row = self._incidents.get(incident_id)
+        return dict(row) if row else None
+
+    def list_incidents(self, limit: int = 50, offset: int = 0,
+                       status: str | None = None) -> dict:
+        return self._incidents.list(limit=limit, offset=offset, status=status)
+
+    def acknowledge_incident(self, incident_id: int, by: str) -> bool:
+        return self._incidents.acknowledge(incident_id, by, now=time.time())
+
+    def resolve_incident(self, incident_id: int, by: str) -> bool:
+        return self._incidents.resolve(incident_id, by, now=time.time())
+
+    def add_incident_note(self, incident_id: int, author: str,
+                          body: str) -> dict:
+        note_id = self._incidents.add_note(incident_id, author, body,
+                                           now=time.time())
+        for row in self._incidents.notes(incident_id):
+            if row["id"] == note_id:
+                return dict(row)
+        return {}  # pragma: no cover - the insert above just succeeded
+
+    def incident_notes(self, incident_id: int) -> list[dict]:
+        return [dict(r) for r in self._incidents.notes(incident_id)]
+
+    def incident_note_count(self, incident_id: int) -> int:
+        return self._incidents.note_count(incident_id)
+
+    # -- system events --------------------------------------------------------
+
+    def record_event(self, type: str, data: dict, ts: float | None = None,
+                     capture_id: int | None = None) -> int:
+        """Stage one system event (batched like flows)."""
+        payload = json.dumps(data, default=str)
+        return self._events_repo.enqueue(
+            time.time() if ts is None else ts, type, payload, capture_id)
+
+    def query_events(self, limit: int = 100, offset: int = 0,
+                     type: str | None = None) -> dict:
+        return self._events_repo.query(limit=limit, offset=offset, type=type)
+
+    # -- model lineage --------------------------------------------------------
 
     def add_model_run(self, pcap: str, n_train: int, contamination: float,
                       metrics: dict) -> int:
-        with self._lock:
-            cur = self._conn.execute(
-                """INSERT INTO model_runs (trained_at, pcap, n_train, contamination, metrics)
-                   VALUES (?, ?, ?, ?, ?)""",
-                (time.time(), pcap, n_train, contamination, json.dumps(metrics)),
-            )
-            self._conn.commit()
-            return int(cur.lastrowid)
+        return self._runs.add(pcap, n_train, contamination, metrics)
 
     def model_runs(self, limit: int = 20) -> list[dict]:
-        return self._query(
-            "SELECT * FROM model_runs ORDER BY id DESC LIMIT ?", (min(limit, 200),)
-        )
+        return self._runs.recent(limit)
 
-    # -- Module 5: audit log -------------------------------------------------
+    # -- Module 5: audit log (immediate, never pruned) ------------------------
 
     def audit_insert(self, seq: int, ts: float, kind: str, actor: str,
                      payload_json: str, leaves_json: str | None,
                      prev_hash: str, entry_hash: str) -> None:
         """Append one hash-chained audit entry (seq is assigned by the log)."""
-        with self._lock:
-            try:
-                self._conn.execute(
-                    """INSERT INTO audit_log
-                       (seq, ts, kind, actor, payload, leaves, prev_hash, entry_hash)
-                       VALUES (?,?,?,?,?,?,?,?)""",
-                    (seq, ts, kind, actor, payload_json, leaves_json,
-                     prev_hash, entry_hash),
-                )
-                self._conn.commit()
-            except sqlite3.Error as exc:
-                raise StoreError(str(exc)) from exc
+        self._audit.insert(seq, ts, kind, actor, payload_json, leaves_json,
+                           prev_hash, entry_hash)
 
     def audit_head(self) -> dict | None:
-        rows = self._query(
-            "SELECT seq, ts, kind, entry_hash FROM audit_log "
-            "ORDER BY seq DESC LIMIT 1", ()
-        )
-        return rows[0] if rows else None
+        return self._audit.head()
 
     def audit_count(self) -> int:
-        rows = self._query("SELECT COUNT(*) AS n FROM audit_log", ())
-        return int(rows[0]["n"])
+        return self._audit.count()
 
     def audit_get(self, seq: int) -> dict | None:
-        rows = self._query("SELECT * FROM audit_log WHERE seq = ?", (seq,))
-        return rows[0] if rows else None
+        return self._audit.get(seq)
 
     def audit_entries(self, limit: int = 50, offset: int = 0,
                       kind: str | None = None) -> list[dict]:
-        where, params = [], []
-        if kind:
-            where.append("kind = ?")
-            params.append(kind)
-        clause = f"WHERE {' AND '.join(where)}" if where else ""
-        return self._query(
-            f"SELECT * FROM audit_log {clause} ORDER BY seq DESC LIMIT ? OFFSET ?",
-            (*params, min(max(1, limit), 1000), max(0, offset)),
-        )
+        return self._audit.entries(limit=limit, offset=offset, kind=kind)
 
     def audit_range(self, start: int, end: int) -> list[dict]:
-        """Entries with start <= seq <= end, ascending (chain verification)."""
-        return self._query(
-            "SELECT * FROM audit_log WHERE seq >= ? AND seq <= ? ORDER BY seq ASC",
-            (start, end),
-        )
+        return self._audit.range(start, end)
 
     def audit_all(self, limit: int = 200_000) -> list[dict]:
-        return self._query(
-            "SELECT * FROM audit_log ORDER BY seq ASC LIMIT ?", (min(limit, 500_000),)
-        )
+        return self._audit.all(limit=limit)
 
     def audit_last_checkpoint(self) -> dict | None:
-        rows = self._query(
-            "SELECT * FROM audit_log WHERE kind = 'checkpoint' "
-            "ORDER BY seq DESC LIMIT 1", ()
-        )
-        return rows[0] if rows else None
+        return self._audit.last_checkpoint()
 
-    # -- helpers ------------------------------------------------------------
+    # -- batch control / introspection ------------------------------------------
 
-    def _query(self, sql: str, params: tuple) -> list[dict]:
-        with self._lock:
-            try:
-                rows = self._conn.execute(sql, params).fetchall()
-            except sqlite3.Error as exc:
-                raise StoreError(str(exc)) from exc
-        return [dict(r) for r in rows]
+    def flush(self) -> int:
+        """Commit staged rows now; returns how many became durable."""
+        return self._buffer.flush()
 
-    @staticmethod
-    def _row_to_flow(row: sqlite3.Row) -> dict:
-        out = json.loads(row["record"])
-        out["score"] = row["score"]
-        out["anomaly"] = bool(row["anomaly"])
-        out["reasons"] = json.loads(row["reasons"]) if row["reasons"] else None
-        out["id"] = row["id"]
-        out["ts"] = row["ts"]
-        return out
+    def run_retention(self) -> dict:
+        """Apply the stale-session sweep + configured age policies (one txn)."""
+        with self._db.lock:
+            self._buffer.flush_if_pending()
+            counts = apply_retention(self._db, self.retention)
+            self._flows.resync()
+            self._events_repo.resync()
+            return counts
 
-    def _prune(self) -> None:
-        """Keep the table bounded: drop the oldest rows beyond max_rows."""
-        with self._lock:
-            overflow = self._rows - self.max_rows
-            if overflow <= 0:
-                return
-            self._conn.execute(
-                """DELETE FROM flows WHERE id IN (
-                       SELECT id FROM flows ORDER BY id ASC LIMIT ?)""",
-                (overflow,),
-            )
-            self._conn.commit()
-            self._rows = int(
-                self._conn.execute("SELECT COUNT(*) FROM flows").fetchone()[0]
-            )
+    def write_stats(self) -> dict:
+        """Batching/commit telemetry (throughput + debugging aid)."""
+        return {
+            "commits": self._db.commit_count,
+            "flushes": self._buffer.flush_count,
+            "staged": self._buffer.pending(),
+            "staged_total": self._buffer.enqueued,
+            "flow_rows": self._flows.rows,
+            "event_rows": self._events_repo.rows,
+            "schema_version": self.schema_version,
+        }
 
     def close(self) -> None:
-        with self._lock:
+        with self._db.lock:
             try:
-                self._conn.close()
-            except sqlite3.Error:
+                self._buffer.flush()
+            except StoreError:  # database already unusable; nothing to save
                 pass
+            self._db.close()

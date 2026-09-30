@@ -319,7 +319,7 @@ def test_scan_pcap_report(tmp_path):
 
 # -- engine + API integration ------------------------------------------------
 
-def test_engine_tracks_pqc_and_serves_api(tmp_path):
+def test_engine_tracks_pqc_and_serves_api(tmp_path, upload_capture):
     from fastapi.testclient import TestClient
     from spectra.api.app import engine as api_engine
 
@@ -367,9 +367,11 @@ def test_engine_tracks_pqc_and_serves_api(tmp_path):
     assert res.status_code == 200
     assert res.json()["summary"]["flows"] == 3
 
-    res = client.get(f"/api/pqc/scan?pcap={mixed}")
+    res = client.get(f"/api/pqc/scan?capture_id="
+                     f"{upload_capture(client, mixed)['capture_id']}")
     assert res.status_code == 200
     assert res.json()["assessed"] == 3
 
-    res = client.get("/api/pqc/scan?pcap=/does/not/exist.pcap")
-    assert res.status_code == 400
+    # unknown capture ids are 404 - the scan never receives a path
+    res = client.get("/api/pqc/scan?capture_id=999999")
+    assert res.status_code == 404

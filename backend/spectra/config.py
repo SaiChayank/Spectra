@@ -34,12 +34,50 @@ class Config:
     detection_buffer: int = 2000   # in-memory detection ring buffer
     timeline_buckets: int = 120
 
-    # persistence
+    # managed capture storage (spectra/capture/storage.py): imported PCAPs are
+    # validated and stored here under generated names - a client filename is
+    # metadata only and never becomes a filesystem path.
+    capture_store_dir: str = ""    # resolved in __post_init__ (data/captures)
+    capture_max_bytes: int = 256 * 1024 * 1024  # per-import size cap
+
+    # streaming runtime: bounded in-process stages.  Overload never blocks
+    # packet acquisition - a full queue sheds internal work under an explicit
+    # policy and the loss is counted (status["pipeline"] + /api/metrics).
+    packet_queue_size: int = 4096    # capture -> flow processing
+    flow_queue_size: int = 1024      # completed flows -> inference
+    publish_queue_size: int = 1024   # scored flows -> persistence/events
+    max_active_flows: int = 5000     # flow-table cap (LRU force-completion)
+    flow_max_packets: int = 512      # packet metadata retained per flow
+    flow_max_lifetime: float = 900.0 # seconds one flow may remain open
+    shutdown_timeout: float = 10.0   # seconds stop() waits for the stages
+
+    # persistence (SQLite, see spectra.db)
     persist: bool = True
-    max_history_rows: int = 200_000   # oldest rows are pruned beyond this
+    max_history_rows: int = 200_000   # flow row cap (oldest rows pruned)
+    db_batch_size: int = 256          # flow/event rows staged per commit
+    db_flush_interval: float = 1.0    # seconds before a partial batch commits
+    event_max_rows: int = 50_000      # system-event feed stays bounded
+
+    # retention: age policies, off (0) by default so existing history is kept;
+    # growth stays bounded by the row caps above even when every age is 0.
+    flow_retention_days: float = 0.0      # non-flagged flow rows
+    detection_retention_days: float = 0.0 # flagged rows (investigation evidence)
+    capture_retention_days: float = 0.0   # finished capture sessions
+    event_retention_days: float = 0.0     # system event feed
+    stale_session_hours: float = 24.0     # open sessions this old = crashed
+    # audit_log is deliberately not configurable here: its hash chain is never
+    # pruned automatically (see spectra.db.retention).
 
     # detection model
     contamination: float = 0.02    # expected anomaly fraction when training
+
+    # authentication (spectra.services.auth): local accounts only - one admin
+    # is bootstrapped when the users table is empty (env password or a
+    # mode-restricted file), sessions are absolute-TTL rows keyed by token
+    # hash, so both survive restarts and are invalidated by password changes.
+    session_ttl_minutes: float = 720.0   # absolute session lifetime (12 h)
+    admin_username: str = "admin"        # bootstrap account (first run only)
+    session_cookie_secure: bool = False   # set True only behind TLS
 
     # service
     api_host: str = "127.0.0.1"
@@ -59,6 +97,9 @@ class Config:
                 "MODEL_PATH", str(BACKEND_DIR / "models" / "spectra_model.joblib")
             )
         self.data_dir = os.environ.get("SPECTRA_DATA_DIR", self.data_dir)
+        if not self.capture_store_dir:
+            self.capture_store_dir = _env(
+                "CAPTURE_STORE_DIR", os.path.join(self.data_dir, "captures"))
 
     @classmethod
     def from_env(cls) -> "Config":
@@ -80,6 +121,7 @@ class Config:
 
     def ensure_dirs(self) -> None:
         os.makedirs(self.data_dir, exist_ok=True)
+        os.makedirs(self.capture_store_dir, exist_ok=True)
         os.makedirs(os.path.dirname(os.path.abspath(self.model_path)), exist_ok=True)
 
 

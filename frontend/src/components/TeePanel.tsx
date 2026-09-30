@@ -11,7 +11,9 @@ const DEMO_DELTAS = [
   [-0.03, 0.22, 0.44],
 ];
 
-export default function TeePanel({ onError, onNotice }: {
+export default function TeePanel({ canRun, onError, onNotice }: {
+  /** investigate permission (ANALYST/ADMIN): attest, verify, federate. */
+  canRun: boolean;
   onError: (msg: string) => void;
   onNotice: (msg: string) => void;
 }) {
@@ -59,6 +61,12 @@ export default function TeePanel({ onError, onNotice }: {
 
   return (
     <div className="grid two-col">
+      <p className="note" style={{ gridColumn: "1 / -1" }}>
+        Capability: SIMULATED — local prototype enclave (no SGX/SEV hardware).
+        Attestation, sealed inference and federated rounds run in-process and are
+        never hardware-backed; per-party secret shares never leave the backend.
+        {!canRun && " Running them requires the investigate permission."}
+      </p>
       <section className="panel">
         <h2>Attestation quote</h2>
         <div className="controls" style={{ marginBottom: 12 }}>
@@ -66,7 +74,12 @@ export default function TeePanel({ onError, onNotice }: {
             Challenge nonce
             <input value={nonce} onChange={(e) => setNonce(e.target.value)} spellCheck={false} />
           </label>
-          <button onClick={attest} disabled={busy} style={{ alignSelf: "flex-end" }}>
+          <button
+            onClick={attest}
+            disabled={busy || !canRun}
+            style={{ alignSelf: "flex-end" }}
+            title={canRun ? undefined : "Requires investigate (ANALYST/ADMIN)"}
+          >
             Attest
           </button>
         </div>
@@ -103,10 +116,10 @@ export default function TeePanel({ onError, onNotice }: {
               </span>
             </div>
             <div className="controls" style={{ marginTop: 12 }}>
-              <button onClick={runVerify} disabled={busy}>
+              <button onClick={runVerify} disabled={busy || !canRun}>
                 Verify quote
               </button>
-              <button className="ghost" onClick={attest} disabled={busy}>
+              <button className="ghost" onClick={attest} disabled={busy || !canRun}>
                 Re-attest
               </button>
             </div>
@@ -150,7 +163,7 @@ export default function TeePanel({ onError, onNotice }: {
       <section className="panel" style={{ gridColumn: "1 / -1" }}>
         <h2>Federated round (k-of-k additive sharing)</h2>
         <div className="controls" style={{ marginBottom: 12 }}>
-          <button onClick={runFederate} disabled={busy}>
+          <button onClick={runFederate} disabled={busy || !canRun}>
             Run demo round
           </button>
           <span className="dim" style={{ fontSize: 12 }}>

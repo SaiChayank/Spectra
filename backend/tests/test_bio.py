@@ -462,7 +462,7 @@ def test_engine_bio_offline_without_sidecar(tmp_path):
 # -- API ---------------------------------------------------------------------
 
 
-def test_bio_api(tmp_path):
+def test_bio_api(tmp_path, upload_capture):
     from fastapi.testclient import TestClient
 
     from spectra.api.app import app
@@ -470,8 +470,9 @@ def test_bio_api(tmp_path):
 
     client = TestClient(app)
     baseline = make_baseline_pcap(str(tmp_path / "b.pcap"), n_flows=30)
+    base_id = upload_capture(client, baseline)["capture_id"]
     trained = client.post("/api/model/train",
-                          json={"pcap_path": baseline, "contamination": 0.05})
+                          json={"capture_id": base_id, "contamination": 0.05})
     assert trained.status_code == 200
 
     status = client.get("/api/bio/status")

@@ -14,19 +14,34 @@ Three target verticals: **Fintech · Healthcare · Smart City Infrastructure**.
 ## Status
 
 Backend **complete** (Phases 0–6): detection core, all 8 strategic modules, REST API,
-CLI, and the React dashboard — with **230 passing tests**.
+CLI, and the React dashboard — with **338 passing tests**. Local authentication
+(login, sessions, RBAC) gates the API, WebSocket, and dashboard.
 
 | Layer | State |
 |---|---|
-| Packet capture (PCAP file / live NIC) | ✅ pluggable sources |
+| Capture (managed PCAP import / live NIC) | ✅ validated upload store, pluggable sources |
 | Flow tracking + TLS/QUIC metadata (SNI, ALPN, JA3/JA4, versions, ciphers) | ✅ streaming parser |
 | Feature extraction (39-feature vector per flow) | ✅ |
 | ML anomaly detector (IsolationForest + scaler, 0–100 scoring, σ-explanations) | ✅ trained from a benign baseline |
 | 8 strategic modules (see matrix below) | ✅ |
-| API (52 HTTP routes + WebSocket) + CLI (12 commands) | ✅ |
-| React dashboard | ✅ live |
-| Automated tests (pytest) | ✅ 230 passing |
+| API (77 HTTP routes + WebSocket, default-deny auth) + CLI (12 commands) | ✅ |
+| Persistence (SQLite: migration-driven schema, batched writes, bounded retention) | ✅ |
+| React dashboard | ✅ live (local login, role-aware UI) |
+| Automated tests (pytest) | ✅ 338 passing |
+| Authentication & RBAC (ADMIN / ANALYST / VIEWER) | ✅ scrypt + sessions |
 | Live capture on Windows | ✅ validated with [Npcap](https://nmap.org/npcap/) (driver required) |
+
+### Persistence
+
+SQLite (WAL) behind a repository layer (`backend/spectra/db/`): schema changes are
+**migration-driven** — existing databases upgrade in place with data preserved — and
+flow/event writes are batched instead of committed per row (`SPECTRA_DB_BATCH_SIZE`,
+`SPECTRA_DB_FLUSH_INTERVAL`). Retention is configurable per table
+(`SPECTRA_FLOW_RETENTION_DAYS`, `SPECTRA_DETECTION_RETENTION_DAYS`,
+`SPECTRA_CAPTURE_RETENTION_DAYS`, `SPECTRA_EVENT_RETENTION_DAYS`,
+`SPECTRA_STALE_SESSION_HOURS`); age policies default to **off** so history is kept,
+while row caps keep tables bounded. The audit log is never pruned — its hash chain
+requires the full sequence.
 
 ## The eight modules
 
@@ -84,6 +99,19 @@ npm install
 npm run dev          # http://localhost:5173
 ```
 
+### First sign-in
+
+The API bootstraps a local `admin` account on first start: the password comes from
+`SPECTRA_ADMIN_PASSWORD` if set, otherwise a random one is written to
+`backend/data/admin_bootstrap.txt` (mode 600). Sign in on the dashboard, change
+the password, then delete that file. Use `http://localhost:5173` (not
+`127.0.0.1`) — the session cookie is `SameSite=Lax` and cross-port on `localhost`.
+
+The dashboard's **Capture** panel imports a `.pcap`/`.pcapng` from your machine
+(multipart upload — a server filesystem path is never typed or accepted), processes
+it through detection, and lists every import with its lifecycle status so captures
+can be re-run or deleted. The **Model** panel trains from an imported baseline file.
+
 Use your own traffic instead of the demo:
 
 ```bash
@@ -106,14 +134,18 @@ out-of-distribution (validated in
 
 ## API
 
-52 HTTP routes + 1 WebSocket, grouped by module:
+77 HTTP routes + 1 WebSocket, grouped by module:
 
 | Group | Routes |
 |---|---|
-| Core | `GET /api/health`, `/api/status`, `/api/stats`, `/api/flows`, `/api/detections`, `/api/interfaces`, `/api/metrics` |
-| Capture | `POST /api/capture/start`, `POST /api/capture/stop` |
+| Core | `GET /api/health`, `/api/status`, `/api/stats`, `/api/flows`, `/api/detections`, `/api/interfaces`, `/api/metrics`, `/api/capabilities` |
+| Auth (local) | `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me` |
+| Users (ADMIN) | `GET/POST /api/users`, `GET/PATCH/DELETE /api/users/{id}` |
+| Incidents | `GET/POST /api/incidents`, `GET /api/incidents/{id}`, `POST /api/incidents/{id}/{acknowledge,resolve,notes}` |
+| Live capture | `POST /api/capture/start` (live mode only), `POST /api/capture/stop` |
+| Captures (managed) | `POST /api/captures` (multipart import), `GET /api/captures`, `GET /api/captures/{id}`, `POST /api/captures/{id}/process`, `DELETE /api/captures/{id}` |
 | Model | `GET /api/model`, `POST /api/model/train`, `GET /api/model/drift`, `/api/model/evasion`, `POST /api/model/robustness` |
-| History | `GET /api/history/{flows,detections,captures,stats,model-runs}` |
+| History | `GET /api/history/{flows,detections,captures,stats,model-runs,events}` |
 | Correlation (M7) | `GET /api/graph`, `/api/graph/summary`, `/api/graph/node`, `/api/graph/cascade`, `/api/graph/path` |
 | PQC (M1) | `GET /api/pqc`, `/api/pqc/inventory`, `/api/pqc/scan` |
 | Audit (M5) | `GET/POST /api/audit/{entries,head,verify,checkpoint,proof,certificate}` |
@@ -122,6 +154,44 @@ out-of-distribution (validated in
 | TEE (M2) | `POST /api/tee/{attest,verify,infer,federate}` |
 | Edge (M8) | `GET /api/edge/report`, `POST /api/edge/{link,deploy,slice}` |
 | Events | `WS /ws/events` — `flow` / `detection` / `status` / `model` events |
+
+No route accepts a server filesystem path. Files enter through `POST /api/captures`,
+which validates the filename (basename only), extension (`.pcap`/`.pcapng`), magic
+signature and size, then stores the bytes under a **generated** name and records the
+capture (`UPLOADED → PROCESSING → COMPLETED / FAILED / STOPPED`, persisted across
+restarts). Identical content returns `409` with the existing id; `DELETE` removes the
+row and stored file (refused while running). Training, robustness, PQC scan and twin
+shadow all address captures by this generated id.
+
+## Authentication & access control
+
+Local accounts only — no external OAuth/identity provider. A middleware makes
+`/api/*` **default-deny** (public: `GET /api/health`, `POST /api/auth/login`,
+`/docs`); every other request must resolve to a live session, and each protected
+route checks a permission from `spectra/authz.py`.
+
+| Role | Permissions |
+|---|---|
+| `ADMIN` | everything: user management, capture start/stop, PCAP import, model train/activate/rollback, advanced configuration |
+| `ANALYST` | investigate detections/incidents, acknowledge/resolve incidents, add analyst notes, inspect network/correlation/audit data |
+| `VIEWER` | read-only dashboard and reports |
+
+- **Hashing** — `hashlib.scrypt` (n=16384, r=8, p=1, per-user salt). Hashes are
+  never returned by any endpoint or log. The password policy (≥ 8 chars) is
+  enforced only when a password is *set*, never at login, so a failed login is
+  indistinguishable (`401 invalid username or password` for unknown user and
+  wrong password alike — no user enumeration).
+- **Sessions** — a 256-bit random token kept server-side only as a SHA-256 hash,
+  delivered as an HttpOnly `SameSite=Lax` cookie (`spectra_session`) and also
+  accepted as a `Bearer` header or WebSocket `?token=` query parameter. Absolute
+  lifetime `SPECTRA_SESSION_TTL_MINUTES` (default 720). Logout deletes the row;
+  a password change revokes *all* of that user's sessions; deleting a user
+  cascades their sessions. Unauthorized WebSocket handshakes close with `4401`.
+- **Bootstrap** — the first start creates `admin` from `SPECTRA_ADMIN_PASSWORD`
+  (or a generated password written to `data/admin_bootstrap.txt`, mode 600);
+  later starts are idempotent. `SPECTRA_ADMIN_USERNAME` overrides the name.
+- **Audit** — login, logout, and user-management actions are recorded in the
+  hash-chained audit log with the acting user.
 
 ## CLI
 
@@ -144,12 +214,16 @@ out-of-distribution (validated in
 
 ```bash
 cd backend
-python -m pytest tests -q      # 230 tests
+python -m pytest tests -q      # 338 tests
 ```
 
 The suite covers TLS/QUIC parsing, flow tracking, feature extraction, filters, the
-detector, PQC, correlation, adversarial, twin, audit, bio, TEE, edge, the store, the
-API (including 400-paths), and end-to-end capture runs. Synthetic PCAPs are built with
+detector, PQC, correlation, adversarial, twin, audit, bio, TEE, edge, the persistence
+layer (6 migrations, repositories, batched writes, retention), managed capture
+resources (import validation, lifecycle, path-traversal rejection, delete safety),
+local authentication and RBAC (login success/failure, session expiry and revocation,
+role matrices, default-deny route sweep, WebSocket authorization, incidents
+lifecycle), the API (including 400-paths), and end-to-end capture runs. Synthetic PCAPs are built with
 hand-crafted TLS ClientHello/ServerHello messages; a model is trained on a benign
 baseline and beacon flows must be flagged.
 
@@ -163,12 +237,16 @@ backend/
     features/       # 39-feature vector per flow
     ml/             # IsolationForest detector: train / score / explain / persist
     modules/        # eight strategic modules (pqc, tee, adv, twin, audit, bio, corr, edge)
-    api/            # FastAPI: 52 HTTP routes + WebSocket event stream
+    auth/           # password policy + scrypt hashing
+    authz.py        # RBAC matrix (ADMIN / ANALYST / VIEWER → permissions)
+    api/            # FastAPI: 77 HTTP routes + WebSocket event stream (auth gate)
+    db/             # SQLite layer: 6 migrations, repositories, batched writes, retention
     filters.py      # pure-Python BPF-style filters (no libpcap needed)
+    streaming.py    # bounded staged capture runtime (queues, overload policy, telemetry)
     pipeline.py     # engine wiring capture → detection → annotation → events
     cli.py          # 12 CLI commands
     demo.py         # synthetic PCAP generators (tests + demos)
-  tests/            # 230 unit/integration tests
+  tests/            # 338 unit/integration tests
   demo_pcaps/       # committed fixture captures
 frontend/           # React + TypeScript dashboard (Vite)
 ```
@@ -183,5 +261,5 @@ frontend/           # React + TypeScript dashboard (Vite)
 ## Version
 
 `1.0.0` — all tracks accepted: PCAP + **live NIC capture** (Npcap 1.88,
-validated 2026-09-29), full API/CLI/dashboard coverage, 230 tests, 102-check
-acceptance run. See [`docs/acceptance-report.md`](./docs/acceptance-report.md).
+validated 2026-09-29), full API/CLI/dashboard coverage, 294 tests, 106-check
+acceptance run (2026-09-30). See [`docs/acceptance-report.md`](./docs/acceptance-report.md).

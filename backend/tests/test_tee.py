@@ -290,7 +290,7 @@ def test_engine_tee_methods(tmp_path):
 # -- API ---------------------------------------------------------------------
 
 
-def test_tee_api(tmp_path):
+def test_tee_api(tmp_path, upload_capture):
     from fastapi.testclient import TestClient
 
     from spectra.api.app import app
@@ -299,8 +299,9 @@ def test_tee_api(tmp_path):
     client = TestClient(app)
     if not client.get("/api/model").json().get("trained", False):
         baseline = make_baseline_pcap(str(tmp_path / "b.pcap"), n_flows=30)
+        base_id = upload_capture(client, baseline)["capture_id"]
         assert client.post("/api/model/train",
-                           json={"pcap_path": baseline,
+                           json={"capture_id": base_id,
                                  "contamination": 0.05}).status_code == 200
 
     quote = client.post("/api/tee/attest", json={"nonce": "api-1"}).json()

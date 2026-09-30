@@ -19,6 +19,9 @@ additive sharing and is called out in the returned report.
 
 from __future__ import annotations
 
+import hashlib
+import uuid
+
 import numpy as np
 
 QUANT = 1_000_000          # float -> int scale (micro-units)
@@ -120,7 +123,12 @@ def federated_round(deltas, shareholders: int = 3, seed: int = 7) -> dict:
         for p in range(parties)
     )
 
+    digest = hashlib.sha256(
+        np.asarray(got, dtype=np.int64).tobytes()
+    ).hexdigest()
+
     return {
+        "round_id": uuid.uuid4().hex,
         "parties": parties,
         "shareholders": shareholders,
         "dim": dim,
@@ -128,6 +136,7 @@ def federated_round(deltas, shareholders: int = 3, seed: int = 7) -> dict:
         "seed": int(seed),
         "exact": exact and party_ok,
         "aggregate": aggregate,
+        "aggregate_digest": digest,
         "aggregate_shares": agg_shares,
         "party_shares": party_shares,      # [party][shareholder] -> vector
         "claims": {
@@ -137,4 +146,33 @@ def federated_round(deltas, shareholders: int = 3, seed: int = 7) -> dict:
             "caveat": f"privacy holds while < {shareholders} shareholders "
                       "collude (k-of-k additive sharing)",
         },
+    }
+
+
+def public_report(report: dict) -> dict:
+    """Safe, externally shareable summary of a round (API/CLI surface).
+
+    Strips every detail that could help reconstruct a party's model update:
+    the per-party share bundles, the per-shareholder aggregates, and the
+    round seed (k-1 shares are derivable from the seed, so it must not
+    leave the process). Consumers get round identity, participant and
+    threshold counts, verification status, the aggregate digest, and the
+    summed aggregate itself - the coordinator's intended output.
+
+    Detailed shares remain available to the internal simulation/testing
+    layer (``federated_round`` / ``recombine``).
+    """
+    return {
+        "round_id": report["round_id"],
+        "parties": report["parties"],
+        "shareholders": report["shareholders"],   # k-of-k threshold
+        "threshold": report["shareholders"],
+        "dim": report["dim"],
+        "quantize": report["quantize"],
+        "exact": report["exact"],
+        "verified": report["exact"],              # aggregate verification status
+        "aggregate": report["aggregate"],
+        "aggregate_digest": report["aggregate_digest"],
+        "capability": "SIMULATED",                # matches /api/capabilities
+        "claims": report["claims"],
     }

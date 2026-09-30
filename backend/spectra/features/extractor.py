@@ -7,6 +7,7 @@ TLS handshake metadata, and endpoint context - never from payload contents.
 
 from __future__ import annotations
 
+import hashlib
 import math
 from collections import Counter
 
@@ -63,6 +64,23 @@ FEATURE_NAMES: list[str] = [
 ]
 
 N_FEATURES = len(FEATURE_NAMES)
+
+#: Version of the feature schema (bump when FEATURE_NAMES changes shape).
+#: The digest below is the authoritative compatibility key; the version is the
+#: human-facing number recorded in the model registry.
+FEATURE_SCHEMA_VERSION = 1
+
+
+def feature_schema_digest(names: list[str] | None = None) -> str:
+    """SHA-256 over the ordered feature names - the schema identity.
+
+    Artifacts whose digest differs from the running code are rejected at load
+    time (see ``SpectraDetector.load``), so a detector trained against another
+    feature layout can never be scored silently.
+    """
+    source = FEATURE_NAMES if names is None else names
+    payload = "\x1f".join(source).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
 
 
 def _safe_div(a: float, b: float) -> float:

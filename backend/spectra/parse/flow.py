@@ -127,23 +127,39 @@ def _endpoints(pkt: Packet) -> tuple[str, int, str, int, int] | None:
 
 
 class FlowTracker:
-    """Turns a packet stream into flows, emitting them when they end."""
+    """Turns a packet stream into flows, emitting them when they end.
+
+    Resource bounds keep memory predictable on busy captures: at most
+    ``max_active_flows`` conversations are open at once (the least recently
+    seen one is force-completed when the table is full - counted in
+    :attr:`evicted`), each one retains at most ``max_packets`` packet records
+    and stays open for at most ``max_lifetime`` seconds.  Evicted flows are
+    still *emitted* (detection keeps working), they are never dropped silently.
+    """
 
     def __init__(
         self,
         idle_timeout: float = DEFAULT_IDLE_TIMEOUT,
         max_packets: int = DEFAULT_MAX_PACKETS,
         on_complete: Callable[[Flow], None] | None = None,
+        *,
+        max_active_flows: int | None = None,
+        max_lifetime: float | None = None,
     ):
         self.idle_timeout = idle_timeout
         self.max_packets = max_packets
+        self.max_active_flows = max_active_flows
+        self.max_lifetime = max_lifetime
         self.on_complete = on_complete
         # Recently completed 5-tuples: trailing ACKs / retransmitted FINs must
         # not spawn ghost flows after a connection is torn down.
         self._completed: dict[tuple, float] = {}
         self._completed_window = max(idle_timeout, 60.0)
+        # Insertion-ordered by *recency* when max_active_flows is set (see
+        # _touch), so the head of the dict is always the least recently seen.
         self._flows: dict[tuple, Flow] = {}
         self.completed = 0
+        self.evicted = 0        # flows force-completed by a resource limit
 
     def __len__(self) -> int:
         return len(self._flows)
@@ -189,6 +205,11 @@ class FlowTracker:
                 start_ts=ts, last_ts=ts, _max_packets=self.max_packets,
             )
             self._flows[fwd_key] = flow
+            if (self.max_active_flows is not None
+                    and len(self._flows) > self.max_active_flows):
+                self._evict_oldest()
+        elif self.max_active_flows is not None:
+            self._touch(flow)
 
         flow.last_ts = ts
         if direction == 0:
@@ -326,14 +347,45 @@ class FlowTracker:
             flow.server_tls = meta
             flow.server_hello_ts = ts
 
+    def _touch(self, flow: Flow) -> None:
+        """Mark ``flow`` as most recently seen (O(1) LRU order maintenance)."""
+        if not self._flows:
+            return
+        newest = next(reversed(self._flows))
+        if self._flows[newest] is flow:
+            return                      # already the newest entry
+        key = flow.key
+        if key in self._flows:
+            self._flows[key] = self._flows.pop(key)
+
+    def _evict_oldest(self) -> None:
+        """Table pressure: force-complete the least recently seen flow.
+
+        The flow is *emitted* (so detection still sees it) rather than
+        discarded, and the eviction is counted in :attr:`evicted`.
+        """
+        victim = self._flows.pop(next(iter(self._flows)))
+        self.evicted += 1
+        for _ in self._emit(victim):
+            pass
+
     def flush_expired(self, now: float) -> Iterator[Flow]:
-        """Yield and drop flows idle for longer than the timeout."""
+        """Yield flows that are idle, or that outlived ``max_lifetime``.
+
+        Timers are driven by packet timestamps (never wall clock) so offline
+        PCAP replays behave deterministically.
+        """
         expired = [
             key for key, flow in self._flows.items()
             if now - flow.last_ts >= self.idle_timeout
+            or (self.max_lifetime is not None
+                and now - flow.start_ts >= self.max_lifetime)
         ]
         for key in expired:
             flow = self._flows.pop(key)
+            if (self.max_lifetime is not None
+                    and now - flow.start_ts >= self.max_lifetime):
+                self.evicted += 1   # ended by a resource limit, not by idleness
             yield from self._emit(flow)
 
     def flush_all(self) -> Iterator[Flow]:

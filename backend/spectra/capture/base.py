@@ -21,6 +21,20 @@ class CaptureSource(ABC):
     def packets(self) -> Iterator[Packet]:
         """Yield packets until the source is exhausted or stopped."""
 
+    def stats(self) -> dict:
+        """Queue/backpressure counters for this source.
+
+        Sources without an internal queue report zeros. Treat the result as
+        read-only (a fresh dict per call).
+        """
+        return {
+            "packets_received": 0,
+            "packets_queued": 0,
+            "packets_dropped": 0,
+            "queue_depth": 0,
+            "max_queue_depth": 0,
+        }
+
     def close(self) -> None:  # pragma: no cover - default no-op
         """Release any resources held by the source."""
 

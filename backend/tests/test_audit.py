@@ -546,7 +546,7 @@ def test_sanitize_projects_only_disclosable_keys():
 # -- engine + API integration ------------------------------------------------
 
 
-def test_engine_capture_writes_audit_evidence(tmp_path):
+def test_engine_capture_writes_audit_evidence(tmp_path, upload_capture):
     from fastapi.testclient import TestClient
 
     from spectra.api.app import app, engine
@@ -556,7 +556,9 @@ def test_engine_capture_writes_audit_evidence(tmp_path):
     pcap = make_suspicious_pcap(str(tmp_path / "s.pcap"))
     before = engine.audit.count()
 
-    res = client.post("/api/capture/start", json={"mode": "pcap", "path": pcap})
+    # managed workflow: import the file, then process it by capture id
+    cap_id = upload_capture(client, pcap)["capture_id"]
+    res = client.post(f"/api/captures/{cap_id}/process")
     assert res.status_code == 200, res.text
 
     import time as _t

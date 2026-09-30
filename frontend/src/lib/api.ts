@@ -72,6 +72,37 @@ export interface CaptureStatus {
   model_trained: boolean;
 }
 
+/** A managed capture resource (imported file) and its lifecycle state. */
+export interface CaptureResource {
+  capture_id: number;
+  /** Client filename (basename only); the stored name is generated. */
+  original_name: string | null;
+  stored_name: string | null;
+  size_bytes: number;
+  source_type: string;
+  mode: "pcap" | "live";
+  status: "UPLOADED" | "PROCESSING" | "COMPLETED" | "FAILED" | "STOPPED";
+  imported_at: number | null;
+  started_at: number | null;
+  stopped_at: number | null;
+  packets: number;
+  flows: number;
+  detections: number;
+  error: string | null;
+  running: boolean;
+}
+
+/** 409 on import: identical content already stored under this id. */
+export class DuplicateCaptureError extends Error {
+  readonly captureId: number;
+
+  constructor(captureId: number, message: string) {
+    super(message);
+    this.name = "DuplicateCaptureError";
+    this.captureId = captureId;
+  }
+}
+
 export interface ModelInfo {
   trained: boolean;
   trained_at: string | null;
@@ -159,13 +190,17 @@ export interface TeeVerifyResult {
 }
 
 export interface FederateResult {
+  round_id: string;
   parties: number;
   shareholders: number;
+  threshold: number;
   dim: number;
   quantize: number;
-  seed: number;
   exact: boolean;
+  verified: boolean;
   aggregate: number[];
+  aggregate_digest: string;
+  capability: string;
   claims: Record<string, unknown>;
 }
 
@@ -232,9 +267,43 @@ export interface EdgeSliceResult {
   note: string | null;
 }
 
+/** 401: no session, or the session is no longer valid. */
+export class AuthError extends Error {
+  readonly status: number;
+
+  constructor(message: string, status: number) {
+    super(message);
+    this.name = "AuthError";
+    this.status = status;
+  }
+}
+
+/** The signed-in user — never carries hash or token material. */
+export interface AuthUser {
+  id: number;
+  username: string;
+  role: "ADMIN" | "ANALYST" | "VIEWER";
+  permissions: string[];
+}
+
+export interface Identity {
+  user: AuthUser;
+  expires_at: number;
+}
+
+/** Tell the app the session ended (drops back to the login screen). */
+function notifyUnauthorized(path: string): void {
+  // The login route owns its own 401s (bad credentials) — those are a
+  // failed form submit, not a session that just died.
+  if (!path.startsWith("/api/auth/login")) {
+    window.dispatchEvent(new CustomEvent("spectra:unauthorized"));
+  }
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     headers: { "Content-Type": "application/json" },
+    credentials: "include", // the session lives in an HttpOnly cookie
     ...init,
   });
   if (!res.ok) {
@@ -245,12 +314,25 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     } catch {
       /* non-JSON error body */
     }
+    if (res.status === 401) {
+      notifyUnauthorized(path);
+      throw new AuthError(detail, res.status);
+    }
     throw new Error(detail);
   }
   return res.json() as Promise<T>;
 }
 
 export const api = {
+  // Local authentication: HttpOnly session cookie, no tokens in JS.
+  me: () => request<Identity>("/api/auth/me"),
+  login: (username: string, password: string) =>
+    request<Identity>("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username, password }),
+    }),
+  logout: () => request<{ ok: boolean }>("/api/auth/logout", { method: "POST" }),
+
   stats: () => request<Snapshot>("/api/stats"),
   flows: (limit = 100) => request<{ count: number; items: FlowRecord[] }>(`/api/flows?limit=${limit}`),
   detections: (limit = 100) =>
@@ -258,14 +340,64 @@ export const api = {
   model: () => request<ModelInfo>("/api/model"),
   interfaces: () =>
     request<{ interfaces: string[]; details?: IfaceDetail[]; error?: string }>("/api/interfaces"),
-  startCapture: (body: { mode: "pcap" | "live"; path?: string; iface?: string; bpf_filter?: string }) =>
+  /** Live capture only — file-based starts were replaced by importCapture. */
+  startCapture: (body: { mode: "live"; iface?: string; bpf_filter?: string }) =>
     request<CaptureStatus>("/api/capture/start", { method: "POST", body: JSON.stringify(body) }),
   stopCapture: () => request<CaptureStatus>("/api/capture/stop", { method: "POST" }),
-  train: (pcap_path: string, contamination: number) =>
+  train: (captureId: number, contamination: number) =>
     request<{ n_train: number; model_path: string }>("/api/model/train", {
       method: "POST",
-      body: JSON.stringify({ pcap_path, contamination }),
+      body: JSON.stringify({ capture_id: captureId, contamination }),
     }),
+
+  // Managed capture resources: file bytes go up once via multipart import;
+  // everything else addresses the capture id this API generated (the client
+  // never sends, and the server never accepts, a filesystem path).
+  importCapture: async (file: File): Promise<CaptureResource> => {
+    const form = new FormData();
+    form.append("file", file, file.name);
+    const res = await fetch(`${API_BASE}/api/captures`, {
+      method: "POST",
+      body: form,
+      credentials: "include",
+    });
+    if (!res.ok) {
+      let detail: unknown = res.statusText;
+      try {
+        const body = (await res.json()) as { detail?: unknown };
+        detail = body.detail;
+      } catch {
+        /* non-JSON error body */
+      }
+      if (res.status === 401) {
+        notifyUnauthorized("/api/captures");
+        throw new AuthError(
+          typeof detail === "string" ? detail : res.statusText,
+          res.status,
+        );
+      }
+      if (res.status === 409 && detail && typeof detail === "object") {
+        const dup = detail as { capture_id?: number; message?: string };
+        if (typeof dup.capture_id === "number") {
+          throw new DuplicateCaptureError(dup.capture_id, dup.message ?? "capture already imported");
+        }
+      }
+      throw new Error(typeof detail === "string" ? detail : JSON.stringify(detail ?? res.statusText));
+    }
+    return res.json() as Promise<CaptureResource>;
+  },
+  listCaptures: (limit = 50) =>
+    request<{ count: number; offset: number; items: CaptureResource[] }>(
+      `/api/captures?limit=${limit}`,
+    ),
+  captureDetails: (captureId: number) => request<CaptureResource>(`/api/captures/${captureId}`),
+  processCapture: (captureId: number) =>
+    request<CaptureResource>(`/api/captures/${captureId}/process`, { method: "POST" }),
+  deleteCapture: (captureId: number) =>
+    request<{ deleted: number; file_removed: boolean; original_name: string | null }>(
+      `/api/captures/${captureId}`,
+      { method: "DELETE" },
+    ),
 
   // Module 6: bio-inspired immunity
   bioStatus: () => request<BioStatus>("/api/bio/status"),

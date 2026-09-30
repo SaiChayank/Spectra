@@ -4,7 +4,11 @@ import { api, type EdgeReport, type EdgeSliceResult } from "../lib/api";
 const LINK_ORDER = ["terrestrial", "uav", "leo_satellite", "geostationary"];
 const SLICE_ORDER = ["urllc", "embb", "mmtc", "default"];
 
-export default function EdgePanel({ onError, onNotice }: {
+export default function EdgePanel({ canRun, canConfig, onError, onNotice }: {
+  /** investigate permission (ANALYST/ADMIN): run the slice classifier. */
+  canRun: boolean;
+  /** config:manage permission (ADMIN): switch backhaul link, deploy. */
+  canConfig: boolean;
   onError: (msg: string) => void;
   onNotice: (msg: string) => void;
 }) {
@@ -95,6 +99,11 @@ export default function EdgePanel({ onError, onNotice }: {
 
   return (
     <div className="grid two-col">
+      <p className="note" style={{ gridColumn: "1 / -1" }}>
+        Capability: LOCAL scoring · SIMULATED deployment — slice and
+        micro-detector logic runs locally; NTN link profiles and MEC
+        deployments are simulations, not a real 5G control plane.
+      </p>
       <section className="panel">
         <h2>NTN backhaul link</h2>
         <div className="kv">
@@ -109,7 +118,8 @@ export default function EdgePanel({ onError, onNotice }: {
             <button
               key={l}
               className={l === report.link.link ? "" : "ghost"}
-              disabled={busy || l === report.link.link}
+              disabled={busy || !canConfig || l === report.link.link}
+              title={canConfig ? undefined : "Requires config:manage (ADMIN)"}
               onClick={() => setLink(l)}
             >
               {report.link_profiles[l]?.label ?? l}
@@ -119,6 +129,7 @@ export default function EdgePanel({ onError, onNotice }: {
         <p className="note">
           Switching the backhaul retimes flow features before scoring — satellite links must
           not read as anomalies just for being slow.
+          {!canConfig && " Switching requires config:manage (ADMIN)."}
         </p>
       </section>
 
@@ -162,7 +173,12 @@ export default function EdgePanel({ onError, onNotice }: {
               ))}
             </select>
           </label>
-          <button onClick={deploy} disabled={busy} style={{ alignSelf: "flex-end" }}>
+          <button
+            onClick={deploy}
+            disabled={busy || !canConfig}
+            style={{ alignSelf: "flex-end" }}
+            title={canConfig ? undefined : "Requires config:manage (ADMIN)"}
+          >
             Deploy
           </button>
         </div>
@@ -263,7 +279,12 @@ export default function EdgePanel({ onError, onNotice }: {
               <option value={3}>3 · isolate</option>
             </select>
           </label>
-          <button onClick={classify} disabled={busy} style={{ alignSelf: "flex-end" }}>
+          <button
+            onClick={classify}
+            disabled={busy || !canRun}
+            style={{ alignSelf: "flex-end" }}
+            title={canRun ? undefined : "Requires investigate (ANALYST/ADMIN)"}
+          >
             Classify
           </button>
         </div>
