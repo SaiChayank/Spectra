@@ -1,16 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import AlertsPanel from "./components/AlertsPanel";
-import BioPanel from "./components/BioPanel";
-import CapabilityStrip from "./components/CapabilityStrip";
-import SystemHealthPanel from "./components/SystemHealthPanel";
-import CapturePanel from "./components/CapturePanel";
-import DetectionsTable from "./components/DetectionsTable";
-import EdgePanel from "./components/EdgePanel";
-import FlowsTable from "./components/FlowsTable";
+import Landing from "./components/Landing";
 import LoginPanel from "./components/LoginPanel";
-import StatCards from "./components/StatCards";
-import TeePanel from "./components/TeePanel";
-import Timeline from "./components/Timeline";
 import {
   api,
   type Detection,
@@ -20,21 +10,29 @@ import {
   type ThreatAlert,
   type WsEvent,
 } from "./lib/api";
+import { SECTIONS, SECTION_LABELS, useRoute, type Section } from "./lib/router";
 import { useEvents } from "./lib/useEvents";
+import AuditPage from "./pages/AuditPage";
+import IncidentDetailPage from "./pages/IncidentDetailPage";
+import IncidentsPage from "./pages/IncidentsPage";
+import ModelsPage from "./pages/ModelsPage";
+import MonitorPage from "./pages/MonitorPage";
+import ModulesPage from "./pages/ModulesPage";
+import NetworkPage from "./pages/NetworkPage";
+import OverviewPage from "./pages/OverviewPage";
+import SystemPage from "./pages/SystemPage";
+import TrafficPage from "./pages/TrafficPage";
 
-type Tab = "overview" | "bio" | "tee" | "edge";
-
-const TABS: { id: Tab; label: string }[] = [
-  { id: "overview", label: "Overview" },
-  { id: "bio", label: "Bio immunity" },
-  { id: "tee", label: "TEE attestation" },
-  { id: "edge", label: "Edge / 5G" },
-];
+/** Sections the server gates behind `investigate` (shown, but restricted). */
+const INVESTIGATE_ONLY: Section[] = ["incidents", "network", "audit"];
 
 export default function App() {
   // -- session --------------------------------------------------------------
   const [identity, setIdentity] = useState<Identity | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
+
+  // -- route (tiny hash router: #/overview, #/incidents/12, #/login) ----------
+  const [route, navigate] = useRoute();
 
   // -- dashboard data --------------------------------------------------------
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
@@ -43,10 +41,9 @@ export default function App() {
   const [alerts, setAlerts] = useState<ThreatAlert[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
-  const [tab, setTab] = useState<Tab>("overview");
 
   // Restore the session from the HttpOnly cookie on load; any failure means
-  // "not signed in" — the login form collects credentials itself.
+  // "not signed in" — the landing page / login form take over.
   useEffect(() => {
     api
       .me()
@@ -55,7 +52,7 @@ export default function App() {
       .finally(() => setAuthChecked(true));
   }, []);
 
-  // A 401 anywhere in the app ends the session: drop back to the login screen.
+  // A 401 anywhere in the app ends the session: drop back to the landing page.
   useEffect(() => {
     const onUnauthorized = () => setIdentity(null);
     window.addEventListener("spectra:unauthorized", onUnauthorized);
@@ -120,8 +117,6 @@ export default function App() {
   const can = (permission: string) =>
     identity?.user.permissions.includes(permission) ?? false;
   const canManage = can("capture:manage") && can("model:manage");
-  const canRun = can("investigate");
-  const canConfig = can("config:manage");
   const canTriage = can("incidents:manage");
 
   const signOut = async () => {
@@ -131,6 +126,7 @@ export default function App() {
       /* the session may already be gone server-side */
     }
     setIdentity(null);
+    navigate("#/"); // landing page for the next visitor of this tab
   };
 
   // -- alert triage (OPEN -> ACKNOWLEDGED -> RESOLVED) ------------------------
@@ -172,6 +168,7 @@ export default function App() {
     );
   }
 
+  // -- not signed in: landing at #/, sign-in at #/login, deep links → landing --
   if (!identity) {
     return (
       <div className="app">
@@ -183,16 +180,25 @@ export default function App() {
             signed out
           </span>
         </header>
-        <LoginPanel
-          onLogin={(next) => {
-            setError(null);
-            setNotice(null);
-            setIdentity(next);
-          }}
-        />
+        {route.kind === "login" ? (
+          <LoginPanel
+            onLogin={(next) => {
+              setError(null);
+              setNotice(null);
+              setIdentity(next);
+              navigate("#/overview");
+            }}
+          />
+        ) : (
+          <Landing />
+        )}
       </div>
     );
   }
+
+  // -- signed in: console routes (any other hash lands on Overview) ----------
+  const section: Section = route.kind === "console" ? route.section : "overview";
+  const incidentId = route.kind === "console" ? route.incidentId : null;
 
   return (
     <div className="app">
@@ -228,84 +234,73 @@ export default function App() {
       {status?.error && <div className="error-banner">Capture error: {status.error}</div>}
 
       <nav className="tabs" aria-label="Sections">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            className={`tab ${tab === t.id ? "active" : ""}`}
-            onClick={() => setTab(t.id)}
-            aria-current={tab === t.id}
-          >
-            {t.label}
-          </button>
-        ))}
+        {SECTIONS.map((id) => {
+          const gated = !can("investigate") && INVESTIGATE_ONLY.includes(id);
+          return (
+            <button
+              key={id}
+              className={`tab ${section === id ? "active" : ""}${gated ? " gated" : ""}`}
+              onClick={() => navigate(`#/${id}`)}
+              aria-current={section === id}
+              title={
+                gated
+                  ? `${SECTION_LABELS[id]} requires the investigate permission — opens in a restricted state`
+                  : undefined
+              }
+            >
+              {SECTION_LABELS[id]}
+            </button>
+          );
+        })}
       </nav>
 
-      {tab === "overview" && (
-        <>
-          <StatCards snapshot={snapshot} />
-
-          {status && (
-            <div style={{ marginBottom: 16 }}>
-              <CapturePanel
-                status={status}
-                canManage={canManage}
-                onError={setError}
-                onNotice={setNotice}
-              />
-            </div>
-          )}
-
-          {/* Every advanced module: maturity (real vs simulated) and live
-              availability straight from GET /api/capabilities. */}
-          <div style={{ marginBottom: 16 }}>
-            <section className="panel">
-              <h2>Advanced module capabilities</h2>
-              <CapabilityStrip showPolicy />
-            </section>
-          </div>
-
-          {/* Operational health: per-subsystem state + why, saturation,
-              drops and latency budgets (GET /api/health/system). */}
-          <div style={{ marginBottom: 16 }}>
-            <section className="panel">
-              <h2>System health</h2>
-              <SystemHealthPanel />
-            </section>
-          </div>
-
-          <div style={{ marginBottom: 16 }}>
-            <Timeline points={snapshot?.timeline ?? []} />
-          </div>
-
-          <div style={{ marginBottom: 16 }}>
-            <AlertsPanel
-              items={alerts}
-              canTriage={canTriage}
-              onAcknowledge={(id) => triage(id, api.acknowledgeAlert)}
-              onResolve={(id) => triage(id, api.resolveAlert)}
-            />
-          </div>
-
-          <div className="grid two-col" style={{ marginBottom: 16 }}>
-            <DetectionsTable items={detections} />
-            <FlowsTable items={flows} />
-          </div>
-        </>
+      {section === "overview" && (
+        <OverviewPage snapshot={snapshot} alerts={alerts} can={can} />
       )}
 
-      {tab === "bio" && <BioPanel onError={setError} />}
-      {tab === "tee" && (
-        <TeePanel canRun={canRun} onError={setError} onNotice={setNotice} />
-      )}
-      {tab === "edge" && (
-        <EdgePanel canRun={canRun} canConfig={canConfig} onError={setError} onNotice={setNotice} />
+      {section === "monitor" && (
+        <MonitorPage
+          snapshot={snapshot}
+          flows={flows}
+          detections={detections}
+          alerts={alerts}
+          connected={connected}
+          canManage={canManage}
+          canTriage={canTriage}
+          triage={triage}
+          onError={setError}
+          onNotice={setNotice}
+        />
       )}
 
-      <p className="note">
-        Spectra inspects only flow statistics and TLS handshake structure — SNI, ALPN,
-        versions, cipher lists, JA3/JA4 fingerprints and timing. Payload contents are never
-        decrypted, stored, or displayed.
-      </p>
+      {section === "incidents" && (
+        incidentId != null ? (
+          <IncidentDetailPage
+            incidentId={incidentId}
+            can={can}
+            onError={setError}
+            onNotice={setNotice}
+          />
+        ) : (
+          <IncidentsPage can={can} onError={setError} onNotice={setNotice} />
+        )
+      )}
+
+      {section === "traffic" && <TrafficPage can={can} />}
+
+      {section === "network" && <NetworkPage can={can} />}
+
+      {section === "models" && (
+        <ModelsPage can={can} onError={setError} onNotice={setNotice} />
+      )}
+
+      {section === "audit" && <AuditPage can={can} />}
+
+      {section === "modules" && (
+        <ModulesPage can={can} onError={setError} onNotice={setNotice} />
+      )}
+
+      {section === "system" && <SystemPage connected={connected} />}
     </div>
   );
 }

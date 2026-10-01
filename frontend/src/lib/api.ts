@@ -13,6 +13,8 @@ export interface FlowRecord {
   packets: number;
   bytes: number;
   tls_version: string | null;
+  /** QUIC version name when the flow negotiated HTTP/3. */
+  quic_version?: string | null;
   sni: string | null;
   alpn: string[] | null;
   ja3: string | null;
@@ -21,6 +23,11 @@ export interface FlowRecord {
   extension_count: number;
   score?: number | null;
   anomaly?: boolean;
+  /** Persisted identity: history/detection rows carry row + batch timestamps. */
+  id?: number;
+  ts?: number;
+  /** Persisted detector reasons (present on store rows, not live frames). */
+  reasons?: { feature: string; z_score: number; value: number }[] | null;
   /** Module 8: 5G/6G slice this flow was classified onto. */
   slice?: string;
   /** Module 6: immune assessment (level 0-3 → ignore/monitor/alert/isolate). */
@@ -185,11 +192,32 @@ export class DuplicateCaptureError extends Error {
   }
 }
 
+/** Raw ``captures`` row as served by /api/history/captures (table columns). */
+export interface CaptureRow {
+  id: number;
+  mode: string;
+  source: string | null;
+  status: string;
+  original_name: string | null;
+  stored_name: string | null;
+  size_bytes: number;
+  source_type: string;
+  imported_at: number | null;
+  started_at: number | null;
+  stopped_at: number | null;
+  packets: number;
+  flows: number;
+  detections: number;
+  error: string | null;
+}
+
 export interface ModelInfo {
   trained: boolean;
   trained_at: string | null;
   n_train: number;
   n_features: number;
+  /** Ordered detector feature names (the feature schema, in use order). */
+  feature_names?: string[];
   n_estimators: number;
   contamination: number;
   threshold: number | null;
@@ -492,6 +520,431 @@ export interface SystemHealth {
   metrics: HealthMetrics;
 }
 
+/* ==========================================================================
+ * SOC surface: incidents, investigation bundle, global search, audit trail,
+ * correlation graph, persisted history, drift and the model registry.
+ * ========================================================================== */
+
+export type IncidentStatus =
+  | "OPEN"
+  | "INVESTIGATING"
+  | "ACKNOWLEDGED"
+  | "RESOLVED"
+  | "FALSE_POSITIVE";
+
+/** One row of GET /api/incidents (JSON columns hydrated server-side). */
+export interface IncidentRow {
+  id: number;
+  title: string;
+  detection_id: number | null;
+  status: IncidentStatus;
+  created_by: string;
+  created_at: number;
+  acknowledged_by?: string | null;
+  acknowledged_at?: number | null;
+  resolved_by?: string | null;
+  resolved_at?: number | null;
+  summary: string | null;
+  severity: AlertSeverity | null;
+  confidence: number | null;
+  first_seen: number | null;
+  last_seen: number | null;
+  affected_entities: string[];
+  alert_count: number;
+  primary_threat_class: string | null;
+  related_graph_nodes: string[];
+  model_versions: string[];
+  evidence_summary: string | null;
+  /** Added by the list endpoint (per-page note counts). */
+  note_count?: number;
+}
+
+export interface IncidentNote {
+  id: number;
+  incident_id: number;
+  author: string;
+  body: string;
+  created_at: number;
+}
+
+/** One incident-timeline entry (state changes, links, notes). */
+export interface IncidentEvent {
+  id: number;
+  incident_id: number;
+  ts: number;
+  kind: string;
+  actor: string;
+  data: Record<string, unknown>;
+}
+
+/** GET /api/incidents/{id}: the row + notes, member alerts, timeline. */
+export interface IncidentDetail extends IncidentRow {
+  notes: IncidentNote[];
+  alerts: ThreatAlert[];
+  timeline: IncidentEvent[];
+}
+
+/** Response of POST /api/incidents/correlate. */
+export interface CorrelateResult {
+  created: IncidentRow[];
+  clusters: number;
+  considered: number;
+  ungrouped: string[];
+}
+
+/** One bounded section of GET /api/search. */
+export interface SearchSection {
+  count: number;
+  items: Record<string, unknown>[];
+}
+
+export interface SearchResults {
+  query: string;
+  kinds: string[];
+  count: number;
+  limit: number;
+  results: Record<string, SearchSection>;
+}
+
+/* ---------- investigation bundle (GET /api/investigations/{id}) ---------- */
+
+export interface BundleWindow {
+  since: number;
+  until: number;
+  evidence_rows: number;
+  evidence_total: number;
+}
+
+export interface TlsFingerprint {
+  kind: "ja3" | "ja4" | string;
+  value: string;
+  flows: number;
+  snis: string[];
+}
+
+/** TLS/QUIC metadata aggregated over the evidence window. */
+export interface TlsSummary {
+  tls_versions: Record<string, number>;
+  quic_versions: Record<string, number>;
+  alpn: Record<string, number>;
+  fingerprints: TlsFingerprint[];
+  sampled: number;
+  flows_total: number;
+}
+
+export interface EvidenceAlert {
+  alert_id: string;
+  threat_type: string;
+  severity: AlertSeverity;
+  confidence: number;
+  anomaly_score: number | null;
+  evidence: Evidence;
+}
+
+export interface InvestigationEvidence {
+  summary: string | null;
+  primary_threat: string | null;
+  severity_factors: string[];
+  alerts: EvidenceAlert[];
+  flow_reasons: { flow_id: number; score: number | null; reasons: Reason[] }[];
+  sampled: number;
+}
+
+export interface RelatedHost {
+  host: string;
+  flows: number;
+  detections: number;
+  roles: string[];
+  first_ts: number | null;
+  last_ts: number | null;
+}
+
+export interface RelatedDomain {
+  domain: string;
+  flows: number;
+  detections: number;
+  first_ts: number | null;
+  last_ts: number | null;
+}
+
+/** PQC / behavioural / edge annotations over the evidence window. */
+export interface BundleAnnotations {
+  pqc: { ref: string; assessment: unknown }[];
+  bio: { ref: string; immune?: unknown; snn_score?: number; swarm_flag?: boolean }[];
+  edge: { ref: string; slice: string }[];
+  counts: { pqc: number; bio: number; edge: number };
+}
+
+export interface BundleGraph {
+  available: boolean;
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  missing: string[];
+  truncated?: boolean;
+}
+
+export interface BundleTwin {
+  available: boolean;
+  error?: string;
+  nodes?: { id: string; asset: boolean; [k: string]: unknown }[];
+  zones?: { assets?: string[]; [k: string]: unknown }[];
+  asset_edges?: GraphEdge[];
+  summary?: { nodes: number; assets: number; zones: number; edges: number };
+}
+
+/** An audit-log reference attached to the incident (seq + parsed payload). */
+export interface AuditRef {
+  seq: number;
+  ts: number;
+  kind: string;
+  actor: string | null;
+  payload: Record<string, unknown>;
+  entry_hash: string;
+}
+
+export interface BundleModels {
+  current: Record<string, unknown>;
+  versions: string[];
+  alerts: { alert_id: string; model_id: string | null; model_version: string | null }[];
+}
+
+/** One module's maturity + its evidence contribution to THIS incident. */
+export interface BundleModuleItem {
+  key: string;
+  title: string;
+  status: CapabilityStatus;
+  hardware_backed: boolean;
+  evidence_only: boolean;
+  affects_alert_scoring: boolean;
+  available: boolean | null;
+  detail: string | null;
+  failures: number | null;
+  contributed: number;
+  summary: string;
+}
+
+export interface InvestigationBundle {
+  incident: IncidentRow;
+  notes: IncidentNote[];
+  note_count: number;
+  timeline: IncidentEvent[];
+  alerts: { count: number; items: ThreatAlert[] };
+  flows: { count: number; offset: number; items: FlowRecord[] };
+  window: BundleWindow;
+  tls: TlsSummary;
+  evidence: InvestigationEvidence;
+  hosts: RelatedHost[];
+  domains: RelatedDomain[];
+  annotations: BundleAnnotations;
+  graph: BundleGraph;
+  twin: BundleTwin;
+  audit: { count: number; items: AuditRef[] };
+  models: BundleModels;
+  modules: { scoring_policy: string; items: BundleModuleItem[] };
+  generated_at: number;
+}
+
+/* ---------- audit trail (Module 5) ---------- */
+
+export interface AuditEntry {
+  seq: number;
+  ts: number;
+  kind: string;
+  actor: string | null;
+  /** Parsed payload document (the client never sees raw JSON text). */
+  payload: Record<string, unknown>;
+  prev_hash?: string;
+  entry_hash: string;
+}
+
+export interface AuditPage {
+  count: number;
+  signing_key: string | null;
+  items: AuditEntry[];
+}
+
+export interface AuditHead {
+  seq: number;
+  entry_hash: string;
+  ts: number | null;
+  kind: string | null;
+}
+
+export interface AuditVerifyResult {
+  ok: boolean;
+  entries: number;
+  head: AuditHead;
+  signing_key: string | null;
+  errors: { seq: number; reason: string }[];
+}
+
+/* ---------- correlation graph (Module 7) ---------- */
+
+export interface GraphNode {
+  id: string;
+  type: string;
+  label: string;
+  sector?: string | null;
+  flows?: number;
+  bytes?: number;
+  detections?: number;
+  domains?: string[];
+  first_ts?: number | null;
+  last_ts?: number | null;
+}
+
+export interface GraphEdge {
+  source: string;
+  target: string;
+  type: string;
+  weight: number;
+}
+
+export interface GraphSummary {
+  nodes: number;
+  edges: number;
+  by_type: Record<string, number>;
+  by_sector: Record<string, number>;
+  shared_infrastructure: number;
+  shared_ip_nodes: string[];
+}
+
+export interface GraphSnapshot {
+  summary: GraphSummary;
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+}
+
+/* ---------- persisted history ---------- */
+
+export interface HistoryStats {
+  flows: number;
+  detections: number;
+  anomaly_rate: number;
+  avg_score: number | null;
+  first_ts: number | null;
+  last_ts: number | null;
+  by_proto: Record<string, number>;
+  top_sni: { sni: string; flows: number }[];
+}
+
+/** One training run (lineage). `metrics` arrives as a JSON *string*. */
+export interface ModelRun {
+  id: number;
+  trained_at: number;
+  pcap: string | null;
+  n_train: number | null;
+  contamination: number | null;
+  metrics: string | Record<string, unknown>;
+}
+
+export interface HistoryEvent {
+  id: number;
+  ts: number;
+  type: string;
+  data: Record<string, unknown>;
+}
+
+/* ---------- drift (Module 3) ---------- */
+
+export interface DriftFeature {
+  feature: string;
+  psi: number;
+  constant?: boolean;
+}
+
+export interface DriftReport {
+  available: boolean;
+  reason?: string;
+  n?: number;
+  psi?: number;
+  level?: string;
+  window?: number;
+  features?: DriftFeature[];
+}
+
+/* ---------- model registry (Prompt 14) ---------- */
+
+export type RegistryStatus =
+  | "CANDIDATE"
+  | "VALIDATED"
+  | "ACTIVE"
+  | "FAILED"
+  | "RETIRED";
+
+export interface RegistryCheck {
+  name: string;
+  ok: boolean;
+  detail: string;
+}
+
+export interface RegistryMetrics {
+  passed?: boolean;
+  checks?: RegistryCheck[];
+  failed?: string[];
+  validated_at?: number;
+}
+
+export interface RegistryRow {
+  id: number;
+  model_id: string;
+  created_at: number;
+  source: string;
+  artifact: string;
+  artifact_sha256: string;
+  status: RegistryStatus;
+  trained_at: number | null;
+  n_train: number | null;
+  contamination: number | null;
+  n_features: number | null;
+  feature_schema: string | null;
+  model_version: string | null;
+  threshold: number | null;
+  metrics: RegistryMetrics | null;
+  error: string | null;
+  activated_count: number;
+  last_activated_at: number | null;
+  retired_at: number | null;
+  /** Activation responses: session side effects were applied. */
+  applied?: boolean;
+}
+
+export interface RegistryList {
+  enabled: boolean;
+  count: number;
+  offset: number;
+  active: RegistryRow | null;
+  items: RegistryRow[];
+}
+
+export interface RegistryCompare {
+  a: RegistryRow;
+  b: RegistryRow;
+  diff: {
+    same_artifact?: boolean;
+    same_feature_schema?: boolean;
+    status?: { a: string; b: string };
+    n_train?: { a?: number | null; b?: number | null; delta?: number | null };
+    [k: string]: unknown;
+  };
+}
+
+/** POST /api/model/train — registry present when persistence is on. */
+export interface TrainResult {
+  n_train: number;
+  model_path: string;
+  pcap?: string;
+  contamination?: number;
+  n_features?: number;
+  registry?: {
+    model_id: string;
+    status: RegistryStatus;
+    activated: boolean;
+    applied?: boolean;
+    error?: string;
+  };
+}
+
 /** 401: no session, or the session is no longer valid. */
 export class AuthError extends Error {
   readonly status: number;
@@ -548,6 +1001,16 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+/** Build a query string, dropping empty/undefined values. */
+function qs(params: Record<string, string | number | boolean | undefined | null>): string {
+  const out: string[] = [];
+  for (const [key, value] of Object.entries(params)) {
+    if (value === undefined || value === null || value === "") continue;
+    out.push(`${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`);
+  }
+  return out.length ? `?${out.join("&")}` : "";
+}
+
 export const api = {
   // Local authentication: HttpOnly session cookie, no tokens in JS.
   me: () => request<Identity>("/api/auth/me"),
@@ -575,16 +1038,23 @@ export const api = {
   resolveAlert: (alertId: string) =>
     request<ThreatAlert>(`/api/alerts/${alertId}/resolve`, { method: "POST" }),
   model: () => request<ModelInfo>("/api/model"),
+  /** PSI drift of recent traffic against the training baseline (ANALYST+). */
+  modelDrift: () => request<DriftReport>("/api/model/drift"),
   interfaces: () =>
     request<{ interfaces: string[]; details?: IfaceDetail[]; error?: string }>("/api/interfaces"),
   /** Live capture only — file-based starts were replaced by importCapture. */
   startCapture: (body: { mode: "live"; iface?: string; bpf_filter?: string }) =>
     request<CaptureStatus>("/api/capture/start", { method: "POST", body: JSON.stringify(body) }),
   stopCapture: () => request<CaptureStatus>("/api/capture/stop", { method: "POST" }),
-  train: (captureId: number, contamination: number) =>
-    request<{ n_train: number; model_path: string }>("/api/model/train", {
+  /**
+   * Train on a stored capture's benign baseline (model:manage).
+   * `activate: false` registers a registry CANDIDATE only — the running
+   * session model stays untouched until an explicit activation.
+   */
+  train: (captureId: number, contamination: number, activate = true) =>
+    request<TrainResult>("/api/model/train", {
       method: "POST",
-      body: JSON.stringify({ capture_id: captureId, contamination }),
+      body: JSON.stringify({ capture_id: captureId, contamination, activate }),
     }),
 
   // Managed capture resources: file bytes go up once via multipart import;
@@ -678,4 +1148,146 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ node, slice }),
     }),
+
+  // -- SOC surface: incidents --------------------------------------------------
+  incidents: (params: {
+    status?: IncidentStatus;
+    severity?: string;
+    threat_type?: string;
+    since?: number;
+    until?: number;
+    limit?: number;
+    offset?: number;
+  } = {}) =>
+    request<{ count: number; offset: number; items: IncidentRow[] }>(
+      `/api/incidents${qs(params)}`,
+    ),
+  incident: (id: number) => request<IncidentDetail>(`/api/incidents/${id}`),
+  /** Cluster unassigned related alerts into incidents (incidents:manage). */
+  correlateIncidents: () =>
+    request<CorrelateResult>("/api/incidents/correlate", {
+      method: "POST",
+      body: JSON.stringify({}),
+    }),
+  incidentAction: (
+    id: number,
+    action:
+      | "investigate"
+      | "acknowledge"
+      | "resolve"
+      | "reopen"
+      | "false-positive",
+  ) => request<IncidentRow>(`/api/incidents/${id}/${action}`, { method: "POST" }),
+  incidentNote: (id: number, body: string) =>
+    request<IncidentNote>(`/api/incidents/${id}/notes`, {
+      method: "POST",
+      body: JSON.stringify({ body }),
+    }),
+
+  // -- SOC surface: investigation + search -------------------------------------
+  /** One bundle: incident, evidence, flows, TLS, graph, modules, audit refs. */
+  investigation: (id: number) =>
+    request<InvestigationBundle>(`/api/investigations/${id}`),
+  search: (q: string, limit?: number) =>
+    request<SearchResults>(`/api/search${qs({ q, limit })}`),
+
+  // -- SOC surface: audit trail -------------------------------------------------
+  auditEntries: (params: {
+    limit?: number;
+    offset?: number;
+    kind?: string;
+    actor?: string;
+    since?: number;
+    until?: number;
+  } = {}) => request<AuditPage>(`/api/audit/entries${qs(params)}`),
+  auditHead: () => request<AuditHead>("/api/audit/head"),
+  auditVerify: () => request<AuditVerifyResult>("/api/audit/verify"),
+
+  // -- SOC surface: correlation graph -------------------------------------------
+  graphSnapshot: (params: { ntype?: string; sector?: string; limit?: number } = {}) =>
+    request<GraphSnapshot>(`/api/graph${qs(params)}`),
+  graphSummary: () => request<GraphSummary>("/api/graph/summary"),
+  /** One node plus its in/out edges (404 when the id is unknown). */
+  graphNode: (id: string) =>
+    request<{
+      node: GraphNode;
+      in: { source: string; type: string; weight: number }[];
+      out: { target: string; type: string; weight: number }[];
+    }>(`/api/graph/node${qs({ id })}`),
+
+  // -- SOC surface: persisted history --------------------------------------------
+  historyFlows: (params: {
+    limit?: number;
+    offset?: number;
+    since?: number;
+    until?: number;
+    sni?: string;
+    proto?: string;
+    src?: string;
+    dst?: string;
+    min_score?: number;
+    max_score?: number;
+    capture_id?: number;
+  } = {}) =>
+    request<{ count: number; offset: number; items: FlowRecord[] }>(
+      `/api/history/flows${qs(params)}`,
+    ),
+  historyDetections: (params: {
+    limit?: number;
+    offset?: number;
+    since?: number;
+    until?: number;
+    proto?: string;
+    src?: string;
+    dst?: string;
+    min_score?: number;
+    max_score?: number;
+  } = {}) =>
+    request<{ count: number; offset: number; items: FlowRecord[] }>(
+      `/api/history/detections${qs(params)}`,
+    ),
+  historyStats: () => request<HistoryStats>("/api/history/stats"),
+  historyCaptures: (params: { limit?: number; offset?: number } = {}) =>
+    request<{ count: number; offset: number; items: CaptureRow[] }>(
+      `/api/history/captures${qs(params)}`,
+    ),
+  historyModelRuns: (params: { limit?: number; offset?: number } = {}) =>
+    request<{ count: number; offset: number; items: ModelRun[] }>(
+      `/api/history/model-runs${qs(params)}`,
+    ),
+  historyEvents: (params: {
+    limit?: number;
+    offset?: number;
+    type?: string;
+    since?: number;
+    until?: number;
+  } = {}) =>
+    request<{ count: number; offset: number; items: HistoryEvent[] }>(
+      `/api/history/events${qs(params)}`,
+    ),
+
+  // -- model registry (Prompt 14) --------------------------------------------------
+  /** Rows newest-first + the ACTIVE model; `enabled: false` = persistence off. */
+  registryList: () => request<RegistryList>("/api/model/registry"),
+  registryGet: (modelId: string) =>
+    request<RegistryRow>(`/api/model/registry/${modelId}`),
+  registryCompare: (a: string, b: string) =>
+    request<RegistryCompare>(`/api/model/registry/compare${qs({ a, b })}`),
+  /** CANDIDATE -> VALIDATED (or FAILED with the failing checks recorded). */
+  registryValidate: (modelId: string) =>
+    request<RegistryRow>(`/api/model/registry/${modelId}/validate`, {
+      method: "POST",
+    }),
+  /** VALIDATED/RETIRED -> ACTIVE: swaps the running session model. */
+  registryActivate: (modelId: string) =>
+    request<RegistryRow>(`/api/model/registry/${modelId}/activate`, {
+      method: "POST",
+    }),
+  registryRetire: (modelId: string) =>
+    request<RegistryRow>(`/api/model/registry/${modelId}/retire`, {
+      method: "POST",
+    }),
+  /** Re-activate the most recently superseded model. */
+  registryRollback: () =>
+    request<RegistryRow>("/api/model/registry/rollback", { method: "POST" }),
 };
