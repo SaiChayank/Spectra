@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import AlertsPanel from "./components/AlertsPanel";
 import BioPanel from "./components/BioPanel";
 import CapabilityStrip from "./components/CapabilityStrip";
+import SystemHealthPanel from "./components/SystemHealthPanel";
 import CapturePanel from "./components/CapturePanel";
 import DetectionsTable from "./components/DetectionsTable";
 import EdgePanel from "./components/EdgePanel";
@@ -260,6 +261,15 @@ export default function App() {
             <section className="panel">
               <h2>Advanced module capabilities</h2>
               <CapabilityStrip showPolicy />
+            </section>
+          </div>
+
+          {/* Operational health: per-subsystem state + why, saturation,
+              drops and latency budgets (GET /api/health/system). */}
+          <div style={{ marginBottom: 16 }}>
+            <section className="panel">
+              <h2>System health</h2>
+              <SystemHealthPanel />
             </section>
           </div>
 

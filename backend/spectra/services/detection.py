@@ -88,6 +88,7 @@ class DetectionService:
         return {
             "protocols": Counter(),
             "tls_versions": Counter(),
+            "quic_versions": Counter(),
             "scores": [],
             "slices": Counter(),
         }
@@ -152,6 +153,8 @@ class DetectionService:
         self.counters["protocols"][record["proto"]] += 1
         if record["tls_version"]:
             self.counters["tls_versions"][record["tls_version"]] += 1
+        if record.get("quic_version"):
+            self.counters["quic_versions"][record["quic_version"]] += 1
         if score is not None:
             self.counters["scores"].append(score)
             if len(self.counters["scores"]) > 5000:

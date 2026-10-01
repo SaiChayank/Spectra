@@ -389,6 +389,109 @@ export interface CapabilityReport {
   hardware_backed_count: number;
 }
 
+/**
+ * Operational health state of one subsystem (GET /api/health/system).
+ * SIMULATED = working as designed but non-real by design (never masks a
+ * failure: a failing simulated module reports DEGRADED/UNAVAILABLE).
+ */
+export type HealthState = "HEALTHY" | "DEGRADED" | "UNAVAILABLE" | "SIMULATED";
+
+/** One subsystem entry: state + the *why* + the observed numbers. */
+export interface HealthSubsystem {
+  name: string;
+  title: string;
+  state: HealthState;
+  reason: string;
+  evidence: Record<string, string | number | boolean | null>;
+}
+
+/** One staged queue: depth/limit/utilisation + drop counters. */
+export interface HealthQueue {
+  depth: number;
+  limit: number;
+  utilization: number;
+  offered: number;
+  accepted: number;
+  dropped: number;
+}
+
+export interface HealthMetrics {
+  uptime_s: number;
+  packets: { captured: number; dropped: number; drop_ratio: number; rate_pps: number };
+  flows: {
+    processed: number;
+    rate_fps: number;
+    active: number;
+    active_limit: number;
+    evicted: number;
+    dropped: number;
+  };
+  queues: {
+    packet_queue: HealthQueue;
+    flow_queue: HealthQueue;
+    publish_queue: HealthQueue;
+    live_capture: {
+      received: number;
+      queued: number;
+      dropped: number;
+      depth: number;
+      max_depth: number;
+    };
+    /** Stage names at or above the saturation threshold (>= 80% of cap). */
+    saturation: string[];
+  };
+  inference: {
+    p50_ms: number;
+    p95_ms: number;
+    mean_ms: number;
+    max_ms: number;
+    ops: number;
+    budget_p95_ms: number;
+  };
+  processing_lag_ms: number;
+  processing_lag_max_ms: number;
+  database: {
+    enabled: boolean;
+    size_bytes: number;
+    write_p50_ms: number;
+    write_p95_ms: number;
+    write_samples: number;
+    commits: number;
+    flushes: number;
+    staged: number;
+    errors: number;
+    budget_p95_ms: number;
+  };
+  /** Per-minute rates measured between health reports (<= 60s window). */
+  rates: Record<string, number>;
+  websocket: {
+    clients: number;
+    subscribers: number;
+    events_emitted: number;
+    slow_client_drops: number;
+  };
+  model: {
+    id: string;
+    version: string | null;
+    trained: boolean;
+    n_train: number;
+    trained_at: number | null;
+    drift_level: string | null;
+  };
+  errors: { total: number; by_component: Record<string, number>; capture_error: string | null };
+}
+
+/** The System Health document: overall rollup + 14 subsystems + metrics. */
+export interface SystemHealth {
+  ts: number;
+  uptime_s: number;
+  state: HealthState;
+  reason: string;
+  counts: Record<HealthState, number>;
+  subsystems: HealthSubsystem[];
+  metrics: HealthMetrics;
+}
+
 /** 401: no session, or the session is no longer valid. */
 export class AuthError extends Error {
   readonly status: number;
@@ -458,6 +561,8 @@ export const api = {
   stats: () => request<Snapshot>("/api/stats"),
   /** Module maturity + live availability — real vs simulated, per module. */
   capabilities: () => request<CapabilityReport>("/api/capabilities"),
+  /** Per-subsystem health states, reasons and runtime metrics. */
+  systemHealth: () => request<SystemHealth>("/api/health/system"),
   flows: (limit = 100) => request<{ count: number; items: FlowRecord[] }>(`/api/flows?limit=${limit}`),
   detections: (limit = 100) =>
     request<{ count: number; items: Detection[] }>(`/api/detections?limit=${limit}`),

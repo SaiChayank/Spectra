@@ -65,6 +65,12 @@ class ModelService:
     def info(self) -> dict:
         return self.detector.info()
 
+    @property
+    def drift_level(self) -> str | None:
+        """Cached PSI drift level owned by AlertService (no recomputation -
+        reading health must never trigger a drift analysis side effect)."""
+        return self._alerts.drift_level
+
     def version(self) -> ModelVersion:
         """Immutable identity snapshot of the loaded model artifact."""
         return ModelVersion.from_info(self.model_path, self.detector.info())

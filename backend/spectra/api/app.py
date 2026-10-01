@@ -46,6 +46,7 @@ from .routers import (
     twin,
     users,
 )
+from .middleware import RequestIdMiddleware
 from .runtime import cfg, engine  # noqa: F401  (re-exported for tests/tools)
 from .security import (
     auth_gate,
@@ -67,7 +68,12 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Request-ID"],  # browsers may read the correlation id
 )
+
+# Outermost last: request id + structured access log wrap CORS and the gate
+# (see spectra.api.middleware - query strings are never logged).
+app.add_middleware(RequestIdMiddleware)
 
 for _router in (core.router, captures.router, model.router, history.router,
                 graph.router, pqc.router, audit.router, twin.router,
@@ -100,11 +106,16 @@ async def ws_events(ws: WebSocket) -> None:
     await ws.accept()
     loop = asyncio.get_running_loop()
     queue: asyncio.Queue[dict] = asyncio.Queue(maxsize=500)
+    ws_status = engine.status["websocket"]
+    ws_status["clients"] += 1
+    log.info("websocket client connected", extra={
+        "event": "ws_open", "clients": ws_status["clients"]})
 
     def _put(event: dict) -> None:
         try:
             queue.put_nowait(event)
         except asyncio.QueueFull:  # slow client: drop oldest to keep stream fresh
+            ws_status["slow_client_drops"] += 1
             try:
                 queue.get_nowait()
                 queue.put_nowait(event)
@@ -141,6 +152,9 @@ async def ws_events(ws: WebSocket) -> None:
         for task in (reader_task, writer_task):
             task.cancel()
         unsubscribe()
+        ws_status["clients"] = max(0, ws_status["clients"] - 1)
+        log.info("websocket client disconnected", extra={
+            "event": "ws_close", "clients": ws_status["clients"]})
         try:
             await ws.close()
         except RuntimeError:  # already closed by the client

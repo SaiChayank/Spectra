@@ -15,11 +15,21 @@ class EventBus:
 
     A failing listener is isolated: one bad subscriber (e.g. a disconnected
     WebSocket handler) must never stop capture or starve other listeners.
+    Listener errors are also counted (``listener_errors``) so the health
+    layer can surface delivery failures instead of swallowing them silently.
     """
 
     def __init__(self) -> None:
         self._listeners: list[Listener] = []
         self._lock = threading.Lock()
+        #: Lifetime telemetry (health layer): events emitted / listener errors.
+        self.emit_count = 0
+        self.listener_errors = 0
+
+    @property
+    def subscriber_count(self) -> int:
+        with self._lock:
+            return len(self._listeners)
 
     def subscribe(self, listener: Listener) -> Callable[[], None]:
         """Register ``listener``; returns a callable that unsubscribes it."""
@@ -37,8 +47,9 @@ class EventBus:
         """Deliver ``event`` to every subscriber; listener errors are swallowed."""
         with self._lock:
             listeners = list(self._listeners)
+        self.emit_count += 1
         for listener in listeners:
             try:
                 listener(event)
             except Exception:  # noqa: BLE001 - a bad subscriber must not stop capture
-                pass
+                self.listener_errors += 1

@@ -154,6 +154,8 @@ class SpectraEngine:
             # capture, kept after the session so drops stay inspectable
             "pipeline": initial_stream_status(
                 self.config, idle_timeout=self.idle_timeout),
+            # event-websocket telemetry (spectra.api.app owns the counters)
+            "websocket": {"clients": 0, "slow_client_drops": 0},
             # cumulative optional-module failure counts (component -> n)
             "failures": {},
         }
@@ -213,6 +215,8 @@ class SpectraEngine:
         self.system = SystemService(
             self.status, self.config, self._store, self.model,
             self.detection, self.failures,
+            events=self.events,
+            capability_provider=lambda: self.capability_status(),
         )
         # Local authentication (login/session/user lifecycle) and incident
         # triage. AuthService keeps the construction-time store on purpose -

@@ -34,6 +34,18 @@ def health() -> dict:
     return engine.system.health()
 
 
+@router.get("/api/health/system",
+            dependencies=[Depends(require("read"))])
+def system_health() -> dict:
+    """System Health: per-subsystem state + reason + runtime metrics.
+
+    The frontend's health panel reads this; ``/api/health`` stays the
+    public liveness probe. States: HEALTHY / DEGRADED / UNAVAILABLE /
+    SIMULATED (see spectra.health for the rules and thresholds).
+    """
+    return engine.system.health_report()
+
+
 @router.get("/api/status",
            dependencies=[Depends(require("read"))])
 def status() -> dict:

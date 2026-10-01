@@ -108,6 +108,16 @@ def req(method: str, path: str, body=None, timeout: int = 60):
     return _call(r, timeout)
 
 
+def resp_headers(path: str) -> dict:
+    """Response headers of a GET (correlation-id check; never the body)."""
+    r = urllib.request.Request(BASE + path, headers=dict(_cookie_header()))
+    try:
+        with urllib.request.urlopen(r, timeout=15) as resp:
+            return {k.lower(): v for k, v in resp.headers.items()}
+    except urllib.error.HTTPError as exc:
+        return {k.lower(): v for k, v in (exc.headers or {}).items()}
+
+
 def upload(filename: str, payload: bytes, timeout: int = 60):
     """Import a capture: multipart bytes, never a server filesystem path."""
     boundary = "----SpectraAcceptBoundary7c1f"
@@ -366,6 +376,41 @@ def run_core() -> None:
           and cap.get("modules", {}).get("tee", {}).get("status") == "SIMULATED"
           and cap.get("hardware_backed_count") == 0,
           f"HTTP {stt}")
+
+    # -- system health: per-subsystem states, reasons, runtime metrics ----
+    stt, health = req("GET", "/api/health/system")
+    if check(g, "GET /api/health/system",
+             stt == 200 and isinstance(health, dict), f"HTTP {stt}"):
+        valid = {"HEALTHY", "DEGRADED", "UNAVAILABLE", "SIMULATED"}
+        subs = health.get("subsystems") or []
+        check(g, "health reports all 14 subsystems with reasons",
+              len(subs) == 14
+              and len({s.get("name") for s in subs}) == 14
+              and all(s.get("state") in valid
+                      and s.get("reason")
+                      and isinstance(s.get("evidence"), dict)
+                      for s in subs),
+              f"n={len(subs)}")
+        check(g, "health overall state + counts are coherent",
+              health.get("state") in valid
+              and sum((health.get("counts") or {}).values()) == 14
+              and bool(health.get("reason")),
+              f"state={health.get('state')} reason={health.get('reason')!r}")
+        metrics = health.get("metrics") or {}
+        check(g, "health metrics expose saturation, drops and latencies",
+              {"packets", "flows", "queues", "inference", "database",
+               "rates", "websocket", "errors"} <= set(metrics)
+              and isinstance(metrics.get("queues", {}).get("saturation"), list)
+              and isinstance(metrics.get("packets", {}).get("drop_ratio"),
+                             (int, float))
+              and isinstance(metrics.get("inference", {}).get("p95_ms"),
+                             (int, float)),
+              f"keys={sorted(metrics)}")
+        # correlation id on every response (structured request log)
+        headers = resp_headers("/api/health/system")
+        check(g, "responses carry X-Request-ID",
+              bool(headers.get("x-request-id")),
+              f"headers={sorted(headers)}")
 
     # -- managed capture resources: import -> validate -> process ---------
     global CAP_SUSP_ID, CAP_BASE_ID

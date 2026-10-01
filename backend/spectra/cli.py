@@ -682,7 +682,17 @@ def _add_sim_args(p: argparse.ArgumentParser) -> None:
 def cmd_serve(args: argparse.Namespace) -> int:
     import uvicorn
 
-    uvicorn.run("spectra.api.app:app", host=args.host, port=args.port, reload=args.reload)
+    # access_log=False: uvicorn's access lines include the full query
+    # string, and the event WebSocket authenticates with ?token=... - the
+    # structured, path-only request log in spectra.api.middleware replaces
+    # them (request_id, method, path, status, duration).
+    # log_config=None: keeps uvicorn from installing its own plain-text
+    # handlers - without it the uvicorn.error logger prints the WebSocket
+    # handshake line (with ?token=...) outside the structured formatter's
+    # redaction. Routing uvicorn through the root handler emits it as JSON
+    # with the session token masked.
+    uvicorn.run("spectra.api.app:app", host=args.host, port=args.port,
+                reload=args.reload, access_log=False, log_config=None)
     return 0
 
 

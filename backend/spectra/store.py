@@ -530,6 +530,7 @@ class Store:
 
     def write_stats(self) -> dict:
         """Batching/commit telemetry (throughput + debugging aid)."""
+        latency = self._db.write_latency.summary()
         return {
             "commits": self._db.commit_count,
             "flushes": self._buffer.flush_count,
@@ -538,7 +539,17 @@ class Store:
             "flow_rows": self._flows.rows,
             "event_rows": self._events_repo.rows,
             "schema_version": self.schema_version,
+            # health-layer write telemetry (recent ring + lifetime errors)
+            "write_p50_ms": latency["p50_ms"],
+            "write_p95_ms": latency["p95_ms"],
+            "write_samples": latency["samples"],
+            "write_total": latency["total_samples"],
+            "errors": self._db.error_count,
         }
+
+    def incident_count(self) -> int:
+        """Total incidents on disk (health/rate telemetry)."""
+        return self._incidents.count()
 
     def close(self) -> None:
         with self._db.lock:

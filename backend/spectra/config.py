@@ -147,12 +147,16 @@ class Config:
 
 
 def setup_logging(level: str | None = None) -> None:
-    """Configure process-wide logging once."""
+    """Configure process-wide logging once.
+
+    Structured JSON lines with the request id and credential redaction -
+    see :mod:`spectra.observability`. Idempotent (formatters are swapped,
+    handlers never stacked).
+    """
     resolved = (level or Config().log_level).upper()
-    logging.basicConfig(
-        level=getattr(logging, resolved, logging.INFO),
-        format="%(asctime)s %(levelname)-7s %(name)s: %(message)s",
-    )
+    from .observability import configure_logging
+
+    configure_logging(getattr(logging, resolved, logging.INFO))
 
 
 _config: Config | None = None

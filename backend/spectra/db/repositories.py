@@ -855,6 +855,10 @@ class IncidentRepository:
                               (incident_id,))
         return self.hydrate(rows[0]) if rows else None
 
+    def count(self) -> int:
+        """Total incidents (health telemetry: incidents/min rate)."""
+        return int(self._db.query("SELECT COUNT(*) AS n FROM incidents")[0]["n"])
+
     def list(self, limit: int = 50, offset: int = 0,
              status: str | None = None, severity: str | None = None,
              threat_type: str | None = None,
