@@ -156,6 +156,68 @@ class ThreatAlert(TypedDict, total=False):
     occurrences: int
 
 
+class Incident(TypedDict, total=False):
+    """An incident: related security activity above individual alerts.
+
+    Groups alerts that share anchors (spectra.incident_correlation) or points
+    at the flagged flow raised by hand.  The rollup fields (severity,
+    confidence, first/last seen, affected entities, alert count, primary
+    threat class, related graph nodes, model versions, evidence summary) are
+    re-derived from member alerts on every membership change — severity is
+    the ordinal max of members, confidence belongs to the primary (most
+    severe) member's verdict, never an average.
+    """
+
+    #: Durable incident id (row id, assigned on create).
+    id: int
+    title: str
+    #: Optional free-text investigation summary (analyst- or correlation-set).
+    summary: str | None
+    #: Optional flagged-flow anchor that raised this incident by hand.
+    detection_id: int | None
+    #: OPEN | INVESTIGATING | ACKNOWLEDGED | RESOLVED | FALSE_POSITIVE.
+    status: str
+    created_by: str
+    created_at: float
+    updated_by: str | None
+    updated_at: float | None
+    acknowledged_by: str | None
+    acknowledged_at: float | None
+    resolved_by: str | None
+    resolved_at: float | None
+    #: Ordinal max (LOW..CRITICAL) of the member alerts' severities.
+    severity: str | None
+    #: Confidence of the primary threat verdict (see rollup).
+    confidence: float | None
+    first_seen: float | None
+    last_seen: float | None
+    #: Hosts/domains the incident touches (bounded, deduplicated).
+    affected_entities: list[str]
+    #: Number of linked alerts (the IncidentAlert relation size).
+    alert_count: int
+    primary_threat_class: str | None
+    #: Correlation-graph node ids of the members' endpoints (present ones).
+    related_graph_nodes: list[str]
+    #: Unique ``model_id@model_version`` pairs that scored the members.
+    model_versions: list[str]
+    #: One plain sentence: member count + primary threat + its evidence.
+    evidence_summary: str | None
+
+
+class IncidentEvent(TypedDict, total=False):
+    """One ordered entry of an incident's timeline (the local history)."""
+
+    id: int
+    incident_id: int
+    ts: float
+    #: created | alert_added | status_changed | note_added.
+    kind: str
+    #: Username for analyst actions, ``spectra`` for automatic correlation.
+    actor: str
+    #: Kind-specific payload (from/to/action, alert_id/source/score, ...).
+    data: dict
+
+
 class EvidenceRecord(FlowRecord, total=False):
     """A committed flow record used as a Merkle leaf in the audit chain."""
 

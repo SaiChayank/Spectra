@@ -34,10 +34,17 @@ users/sessions   tables (v5) - local authentication: scrypt password hashes,
                  three RBAC roles, session rows keyed by a SHA-256 *hash* of
                  the bearer token (the raw token exists only in the client's
                  HttpOnly cookie) with an absolute expiry
-incidents        table (v6) - analyst triage workflow (OPEN -> ACKNOWLEDGED
-                 -> RESOLVED), optionally referencing the flagged flow that
-                 raised it
+incidents        table (v6, rebuilt v8) - analyst triage workflow (OPEN ->
+                  INVESTIGATING -> ACKNOWLEDGED -> RESOLVED / FALSE_POSITIVE),
+                  optionally referencing the flagged flow that raised it; v8
+                  adds the rollup columns (severity, confidence, first/last
+                  seen, affected entities, alert count, primary threat class,
+                  related graph nodes, model versions, evidence summary)
 analyst notes    table (v6) - author-attributed comments on an incident
+incident links   table (v8) - the IncidentAlert relation: which alerts belong
+                  to which incident, with attribution + correlation reason
+incident events  table (v8) - incident timeline: creations, alert joins,
+                  state changes and notes in order (auditable history)
 alerts           table (v7) - analyst alerts from the threat classifier:
                  severity/evidence/lifecycle grouped per behaviour, next to
                  (never instead of) the raw detection; the flow row carries
@@ -385,6 +392,97 @@ def _alerts(db: Database) -> None:
                "ON alerts(threat_type, last_seen)")
 
 
+def _incident_alert_layer(db: Database) -> None:
+    """v8: the incident layer above alerts (correlation, timeline, rollups).
+
+    Rebuilds ``incidents`` because SQLite cannot ``ALTER`` a CHECK constraint
+    into admitting ``INVESTIGATING``/``FALSE_POSITIVE``, and adds the rollup
+    columns the correlation layer maintains next to the rows.  Rows copy
+    across unchanged (existing triage history survives); ``incident_notes``
+    keeps resolving by table name after the rename - foreign keys are off for
+    the whole run, so the drop/rename window is safe.  The membership table
+    enforces single ownership of an alert (``UNIQUE(alert_id)``): one alert
+    belongs to at most one incident, which is what keeps correlation
+    conservative.  The timeline table gives every incident an ordered,
+    actor-attributed history independent of the global audit log.
+    """
+    db.execute(
+        """CREATE TABLE incidents_v8 (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            title           TEXT NOT NULL,
+            detection_id    INTEGER REFERENCES flows(id) ON DELETE SET NULL,
+            status          TEXT NOT NULL DEFAULT 'OPEN'
+                            CHECK (status IN ('OPEN','INVESTIGATING',
+                                   'ACKNOWLEDGED','RESOLVED','FALSE_POSITIVE')),
+            created_by      TEXT NOT NULL,
+            created_at      REAL NOT NULL,
+            acknowledged_by TEXT,
+            acknowledged_at REAL,
+            resolved_by     TEXT,
+            resolved_at     REAL,
+            updated_by      TEXT,
+            updated_at      REAL,
+            summary         TEXT,
+            severity        TEXT CHECK (severity IN ('LOW','MEDIUM',
+                                       'HIGH','CRITICAL')),
+            confidence      REAL,
+            first_seen      REAL,
+            last_seen       REAL,
+            affected_entities TEXT NOT NULL DEFAULT '[]',
+            alert_count     INTEGER NOT NULL DEFAULT 0,
+            primary_threat_class TEXT,
+            related_graph_nodes  TEXT NOT NULL DEFAULT '[]',
+            model_versions       TEXT NOT NULL DEFAULT '[]',
+            evidence_summary     TEXT
+        )"""
+    )
+    db.execute(
+        """INSERT INTO incidents_v8
+           (id, title, detection_id, status, created_by, created_at,
+            acknowledged_by, acknowledged_at, resolved_by, resolved_at)
+           SELECT id, title, detection_id, status, created_by, created_at,
+                  acknowledged_by, acknowledged_at, resolved_by, resolved_at
+           FROM incidents"""
+    )
+    db.execute("DROP TABLE incidents")
+    db.execute("ALTER TABLE incidents_v8 RENAME TO incidents")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_incidents_status "
+               "ON incidents(status, id)")
+    db.execute(
+        """CREATE TABLE IF NOT EXISTS incident_alerts (
+            incident_id INTEGER NOT NULL REFERENCES incidents(id)
+                         ON DELETE CASCADE,
+            alert_id    TEXT NOT NULL REFERENCES alerts(alert_id)
+                         ON DELETE CASCADE,
+            added_at    REAL NOT NULL,
+            added_by    TEXT NOT NULL,
+            source      TEXT NOT NULL
+                        CHECK (source IN ('manual','auto','correlate')),
+            reason      TEXT NOT NULL DEFAULT '',
+            score       REAL,
+            PRIMARY KEY (incident_id, alert_id)
+        )"""
+    )
+    # An alert belongs to exactly one incident (single ownership).
+    db.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_incident_alerts_alert "
+               "ON incident_alerts(alert_id)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_incident_alerts_incident "
+               "ON incident_alerts(incident_id, added_at)")
+    db.execute(
+        """CREATE TABLE IF NOT EXISTS incident_events (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            incident_id INTEGER NOT NULL REFERENCES incidents(id)
+                         ON DELETE CASCADE,
+            ts          REAL NOT NULL,
+            kind        TEXT NOT NULL,
+            actor       TEXT NOT NULL,
+            data        TEXT NOT NULL DEFAULT '{}'
+        )"""
+    )
+    db.execute("CREATE INDEX IF NOT EXISTS idx_incident_events "
+               "ON incident_events(incident_id, id)")
+
+
 MIGRATIONS: tuple[Migration, ...] = (
     Migration(1, "baseline_schema", _baseline),
     Migration(2, "flows_capture_foreign_key", _flows_capture_foreign_key),
@@ -393,6 +491,7 @@ MIGRATIONS: tuple[Migration, ...] = (
     Migration(5, "auth_users_sessions", _auth_users_sessions),
     Migration(6, "incidents_and_notes", _incidents_and_notes),
     Migration(7, "alerts", _alerts),
+    Migration(8, "incident_alert_layer", _incident_alert_layer),
 )
 
 

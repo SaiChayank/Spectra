@@ -313,6 +313,54 @@ class Store:
     def incident_note_count(self, incident_id: int) -> int:
         return self._incidents.note_count(incident_id)
 
+    # -- incident layer above alerts (membership, rollups, timeline) -----------
+
+    def transition_incident(self, incident_id: int, from_statuses,
+                            *, status: str, actor: str,
+                            extra: dict | None = None) -> bool:
+        """Guarded status transition; False = not in an allowed source state."""
+        return self._incidents.transition(
+            incident_id, tuple(from_statuses), status=status, actor=actor,
+            now=time.time(), extra=extra)
+
+    def set_incident_aggregates(self, incident_id: int, fields: dict) -> bool:
+        """Persist the correlation rollup fields of one incident."""
+        return self._incidents.set_aggregates(incident_id, fields)
+
+    def link_incident_alert(self, incident_id: int, alert_id: str, *,
+                            source: str, added_by: str,
+                            reason: str = "",
+                            score: float | None = None) -> str:
+        """Attach an alert: ``linked`` | ``exists`` (idempotent) | ``claimed``."""
+        return self._incidents.link_alert(
+            incident_id, alert_id, added_at=time.time(), added_by=added_by,
+            source=source, reason=reason, score=score)
+
+    def incident_for_alert(self, alert_id: str) -> int | None:
+        return self._incidents.incident_for_alert(alert_id)
+
+    def incident_alert_ids(self, incident_id: int) -> list[str]:
+        return self._incidents.incident_alert_ids(incident_id)
+
+    def get_incident_alerts(self, incident_id: int) -> list[dict]:
+        return self._incidents.incident_alerts(incident_id)
+
+    def unassigned_alerts(self, limit: int = 500) -> list[dict]:
+        return self._incidents.unassigned_alerts(limit=limit)
+
+    def active_incidents(self, start: float, end: float,
+                         limit: int = 50) -> list[dict]:
+        return self._incidents.active_incidents(start, end, limit=limit)
+
+    def add_incident_event(self, incident_id: int, kind: str, actor: str,
+                           data: dict | None = None,
+                           ts: float | None = None) -> int:
+        return self._incidents.add_event(
+            incident_id, time.time() if ts is None else ts, kind, actor, data)
+
+    def incident_events(self, incident_id: int) -> list[dict]:
+        return self._incidents.events(incident_id)
+
     # -- analyst alerts (threat-classification layer) ---------------------------
 
     def insert_alert(self, alert: dict) -> None:

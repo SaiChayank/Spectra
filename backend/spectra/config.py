@@ -76,6 +76,12 @@ class Config:
     # group into one alert (occurrences++); a longer gap starts a new one.
     alert_group_seconds: float = 600.0
 
+    # incident correlation (spectra.incident_correlation): alerts whose
+    # sighting intervals are at most this many seconds apart may share an
+    # incident; together with shared anchors this is what keeps grouping
+    # conservative instead of time-wide.
+    incident_window_seconds: float = 1800.0
+
     # authentication (spectra.services.auth): local accounts only - one admin
     # is bootstrapped when the users table is empty (env password or a
     # mode-restricted file), sessions are absolute-TTL rows keyed by token

@@ -204,7 +204,22 @@ class SpectraEngine:
         # store-rebinding seam that API tests use, so it is NOT part of the
         # fan-out list in the store setter below.
         self.auth = AuthService(self._store, self.config)
-        self.incidents = IncidentService(self._store)
+        # Incident layer above alerts: correlation decides relatedness
+        # (spectra.incident_correlation), this service owns membership,
+        # state machine and timeline. Audit + graph are injected so no
+        # service imports another service.
+        self.incidents = IncidentService(
+            self._store, self.config, failures=self.failures,
+            audit=self.audit_service,
+            graph_provider=lambda: self.correlation.graph,
+        )
+        # Auto-attach: a durable alert joins the best-matching ACTIVE
+        # incident (OPEN/INVESTIGATING/ACKNOWLEDGED) or refreshes its
+        # rollups. Runs on the publication thread after the alert row is
+        # written; the bus isolates listener errors and observe_alert
+        # guards its own body, so correlation can never break capture.
+        # No incident is ever created from this path.
+        self.events.subscribe(self._incidents_observe_event)
 
     # -- shared state (single owner; setters preserve historical rebinding) ----
 
@@ -376,6 +391,16 @@ class SpectraEngine:
                                capture_id=self.session.capture_id)
         except Exception as exc:  # noqa: BLE001 - history must never break capture
             self._record_failure("store", exc)
+
+    def _incidents_observe_event(self, event: dict) -> None:
+        """Feed alert events to the incident correlator (bus listener).
+
+        The service never raises (it guards its own body and records
+        failures), so this listener is safe on the publication thread; the
+        bus would isolate it regardless.
+        """
+        if str(event.get("type", "")) in ("alert", "alert_updated"):
+            self.incidents.observe_alert(event.get("data") or {})
 
     # -- optional-module resilience ----------------------------------------------
 

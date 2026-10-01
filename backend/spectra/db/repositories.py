@@ -619,7 +619,27 @@ class SessionRepository:
 
 
 class IncidentRepository:
-    """Incident triage rows + their analyst notes (see services.incidents)."""
+    """Incident triage rows + their analyst notes (see services.incidents).
+
+    The incident layer above alerts keeps two extra relations:
+    ``incident_alerts`` (membership with attribution + correlation reason,
+    one incident per alert) and ``incident_events`` (ordered timeline).
+    Column names of the rollup fields match
+    :func:`spectra.incident_correlation.rollup` one-to-one.
+    """
+
+    #: Incident columns whose values are JSON documents (rows -> objects).
+    JSON_FIELDS = ("affected_entities", "related_graph_nodes",
+                   "model_versions")
+    #: Rollup columns ``set_aggregates`` may write (never status/title).
+    AGGREGATE_COLUMNS = (
+        "summary", "severity", "confidence", "first_seen", "last_seen",
+        "affected_entities", "alert_count", "primary_threat_class",
+        "related_graph_nodes", "model_versions", "evidence_summary",
+    )
+    #: Extra columns a transition may set, per action (never user input).
+    TRANSITION_EXTRA = ("acknowledged_by", "acknowledged_at",
+                        "resolved_by", "resolved_at")
 
     def __init__(self, db: Database):
         self._db = db
@@ -636,10 +656,23 @@ class IncidentRepository:
             self._db.commit()
             return int(cur.lastrowid)
 
+    @staticmethod
+    def hydrate(row: dict) -> dict:
+        """One ``incidents`` row: JSON columns back to objects."""
+        out = dict(row)
+        for field in IncidentRepository.JSON_FIELDS:
+            raw = out.get(field)
+            try:
+                out[field] = json.loads(raw) if raw else []
+            except (TypeError, json.JSONDecodeError):  # pragma: no cover
+                out[field] = []
+        out["alert_count"] = int(out.get("alert_count") or 0)
+        return out
+
     def get(self, incident_id: int) -> dict | None:
         rows = self._db.query("SELECT * FROM incidents WHERE id = ?",
                               (incident_id,))
-        return rows[0] if rows else None
+        return self.hydrate(rows[0]) if rows else None
 
     def list(self, limit: int = 50, offset: int = 0,
              status: str | None = None) -> dict:
@@ -657,29 +690,66 @@ class IncidentRepository:
         )
         total = int(self._db.query(
             f"SELECT COUNT(*) AS n FROM incidents {clause}", params)[0]["n"])
-        return {"count": total, "offset": offset, "items": rows}
+        return {"count": total, "offset": offset,
+                "items": [self.hydrate(r) for r in rows]}
 
-    def acknowledge(self, incident_id: int, by: str, now: float) -> bool:
-        """OPEN -> ACKNOWLEDGED (guarded: a resolved incident is terminal)."""
+    def transition(self, incident_id: int, from_statuses: tuple[str, ...],
+                   *, status: str, actor: str, now: float,
+                   extra: dict | None = None) -> bool:
+        """Compare-and-swap status transition (``WHERE status IN (...)``).
+
+        Returns False when the incident is gone or no longer in
+        ``from_statuses`` - the caller turns that into a 409.  ``extra`` sets
+        the per-action attribution columns and is validated against a
+        whitelist (it is built from literals, never user input).
+        """
+        sets = ["status = ?", "updated_by = ?", "updated_at = ?"]
+        params: list = [status, actor, now]
+        for key, value in (extra or {}).items():
+            if key not in IncidentRepository.TRANSITION_EXTRA:
+                raise StoreError(f"unknown transition column: {key}")
+            sets.append(f"{key} = ?")
+            params.append(value)
+        marks = ",".join("?" * len(from_statuses))
         with self._db.lock:
             cur = self._db.execute(
-                """UPDATE incidents
-                   SET status = 'ACKNOWLEDGED', acknowledged_by = ?,
-                       acknowledged_at = ?
-                   WHERE id = ? AND status = 'OPEN'""",
-                (by, now, incident_id),
+                f"UPDATE incidents SET {', '.join(sets)} "
+                f"WHERE id = ? AND status IN ({marks})",
+                (*params, incident_id, *from_statuses),
             )
             self._db.commit()
             return cur.rowcount > 0
 
+    def acknowledge(self, incident_id: int, by: str, now: float) -> bool:
+        """OPEN -> ACKNOWLEDGED (guarded: a resolved incident is terminal)."""
+        return self.transition(
+            incident_id, ("OPEN",), status="ACKNOWLEDGED", actor=by, now=now,
+            extra={"acknowledged_by": by, "acknowledged_at": now})
+
     def resolve(self, incident_id: int, by: str, now: float) -> bool:
-        """OPEN/ACKNOWLEDGED -> RESOLVED (idempotent guard: stays terminal)."""
+        """Active -> RESOLVED (idempotent guard: terminal states stay put)."""
+        return self.transition(
+            incident_id, ("OPEN", "INVESTIGATING", "ACKNOWLEDGED"),
+            status="RESOLVED", actor=by, now=now,
+            extra={"resolved_by": by, "resolved_at": now})
+
+    def set_aggregates(self, incident_id: int, fields: dict) -> bool:
+        """Write the correlation rollup columns of one incident."""
+        unknown = set(fields) - set(IncidentRepository.AGGREGATE_COLUMNS)
+        if unknown:
+            raise StoreError(f"unknown incident aggregate: {sorted(unknown)}")
+        if not fields:
+            return False
+        encoded = dict(fields)
+        for key in ("affected_entities", "related_graph_nodes",
+                    "model_versions"):
+            if key in encoded:
+                encoded[key] = json.dumps(encoded[key] or [])
+        sets = ", ".join(f"{key} = ?" for key in encoded)
         with self._db.lock:
             cur = self._db.execute(
-                """UPDATE incidents
-                   SET status = 'RESOLVED', resolved_by = ?, resolved_at = ?
-                   WHERE id = ? AND status <> 'RESOLVED'""",
-                (by, now, incident_id),
+                f"UPDATE incidents SET {sets} WHERE id = ?",
+                (*encoded.values(), incident_id),
             )
             self._db.commit()
             return cur.rowcount > 0
@@ -707,6 +777,117 @@ class IncidentRepository:
             "SELECT COUNT(*) AS n FROM incident_notes WHERE incident_id = ?",
             (incident_id,),
         )[0]["n"])
+
+    # -- the incident layer above alerts (membership + rollups + timeline) -----
+
+    def link_alert(self, incident_id: int, alert_id: str, *,
+                   added_at: float, added_by: str, source: str,
+                   reason: str = "", score: float | None = None) -> str:
+        """Attach an alert; returns ``linked``, ``exists`` or ``claimed``.
+
+        ``exists`` = the alert is already in this incident (idempotent no-op);
+        ``claimed`` = the alert belongs to a *different* incident (single
+        ownership - the caller surfaces that as a conflict).
+        """
+        with self._db.lock:
+            rows = self._db.query(
+                "SELECT incident_id FROM incident_alerts WHERE alert_id = ?",
+                (alert_id,))
+            if rows:
+                owner = int(rows[0]["incident_id"])
+                return "exists" if owner == incident_id else "claimed"
+            self._db.execute(
+                """INSERT INTO incident_alerts
+                   (incident_id, alert_id, added_at, added_by, source,
+                    reason, score)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (incident_id, alert_id, added_at, added_by, source, reason,
+                 score),
+            )
+            self._db.commit()
+            return "linked"
+
+    def incident_for_alert(self, alert_id: str) -> int | None:
+        rows = self._db.query(
+            "SELECT incident_id FROM incident_alerts WHERE alert_id = ?",
+            (alert_id,))
+        return int(rows[0]["incident_id"]) if rows else None
+
+    def incident_alert_ids(self, incident_id: int) -> list[str]:
+        """Member alert ids, oldest link first (stable for sampling)."""
+        return [str(r["alert_id"]) for r in self._db.query(
+            "SELECT alert_id FROM incident_alerts "
+            "WHERE incident_id = ? ORDER BY added_at ASC, alert_id ASC",
+            (incident_id,),
+        )]
+
+    def incident_alerts(self, incident_id: int) -> list[dict]:
+        """Full member alerts (hydrated), newest activity first."""
+        rows = self._db.query(
+            "SELECT a.* FROM alerts a "
+            "JOIN incident_alerts l ON l.alert_id = a.alert_id "
+            "WHERE l.incident_id = ? "
+            "ORDER BY a.last_seen DESC, a.alert_id ASC",
+            (incident_id,),
+        )
+        return [AlertRepository.hydrate(r) for r in rows]
+
+    def unassigned_alerts(self, limit: int = 500) -> list[dict]:
+        """Alerts not yet claimed by any incident (resolved ones excluded)."""
+        rows = self._db.query(
+            "SELECT a.* FROM alerts a "
+            "WHERE a.status <> 'RESOLVED' "
+            "AND NOT EXISTS (SELECT 1 FROM incident_alerts l "
+            "                WHERE l.alert_id = a.alert_id) "
+            "ORDER BY a.last_seen DESC, a.alert_id DESC LIMIT ?",
+            (min(max(1, limit), 500),),
+        )
+        return [AlertRepository.hydrate(r) for r in rows]
+
+    def active_incidents(self, start: float, end: float,
+                         limit: int = 50) -> list[dict]:
+        """Open incidents whose sighting window overlaps ``[start, end]``.
+
+        Detection-only incidents (no member alerts, NULL window) are skipped:
+        there is nothing to correlate an alert against.
+        """
+        rows = self._db.query(
+            "SELECT * FROM incidents "
+            "WHERE status IN ('OPEN','INVESTIGATING','ACKNOWLEDGED') "
+            "AND alert_count > 0 "
+            "AND first_seen <= ? AND last_seen >= ? "
+            "ORDER BY last_seen DESC, id DESC LIMIT ?",
+            (end, start, min(max(1, limit), 200)),
+        )
+        return [self.hydrate(r) for r in rows]
+
+    def add_event(self, incident_id: int, ts: float, kind: str,
+                  actor: str, data: dict | None = None) -> int:
+        with self._db.lock:
+            cur = self._db.execute(
+                "INSERT INTO incident_events "
+                "(incident_id, ts, kind, actor, data) VALUES (?, ?, ?, ?, ?)",
+                (incident_id, ts, kind, actor,
+                 json.dumps(data or {})),
+            )
+            self._db.commit()
+            return int(cur.lastrowid)
+
+    def events(self, incident_id: int) -> list[dict]:
+        rows = self._db.query(
+            "SELECT * FROM incident_events WHERE incident_id = ? "
+            "ORDER BY id ASC",
+            (incident_id,),
+        )
+        out = []
+        for row in rows:
+            event = dict(row)
+            try:
+                event["data"] = json.loads(event.get("data") or "{}")
+            except (TypeError, json.JSONDecodeError):  # pragma: no cover
+                event["data"] = {}
+            out.append(event)
+        return out
 
 
 #: Alert columns whose values are JSON documents (rows -> objects on read).
