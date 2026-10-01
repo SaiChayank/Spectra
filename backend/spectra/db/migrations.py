@@ -50,6 +50,10 @@ alerts           table (v7) - analyst alerts from the threat classifier:
                  (never instead of) the raw detection; the flow row carries
                  the reverse link ``alert_id`` and ``flow_id`` is
                  ON DELETE SET NULL so retention never eats an alert
+investigation    indexes (v9) - flow endpoints + TLS fingerprints + score,
+                 alert endpoints + severity, incident severity, audit ts:
+                 the investigation bundle, global search and the history
+                 filter routes stay index-backed as the tables grow
 models           deferred: artifacts are joblib files + ``model_runs``
                  lineage; a registry belongs with baseline concern C7
 settings         deferred: configuration is env-driven (``SPECTRA_*``); a
@@ -483,6 +487,34 @@ def _incident_alert_layer(db: Database) -> None:
                "ON incident_events(incident_id, id)")
 
 
+def _investigation_indexes(db: Database) -> None:
+    """v9: index set for the investigation surface (bundle, search, filters).
+
+    Every column the SOC routes filter or match on gets an index: flow
+    endpoints and TLS fingerprints (related-flow lookup in the bundle and
+    the global search), flow score + alert endpoints/severity/incident
+    severity (the history filter set) and ``audit_log.ts`` (time-range
+    pages).  ``IF NOT EXISTS`` keeps the step safe to re-run; the batched
+    flow writer absorbs the extra index entries per row easily.
+    """
+    for stmt in (
+        "CREATE INDEX IF NOT EXISTS idx_flows_src ON flows(src)",
+        "CREATE INDEX IF NOT EXISTS idx_flows_dst ON flows(dst)",
+        "CREATE INDEX IF NOT EXISTS idx_flows_ja3 ON flows(ja3)",
+        "CREATE INDEX IF NOT EXISTS idx_flows_ja4 ON flows(ja4)",
+        "CREATE INDEX IF NOT EXISTS idx_flows_score ON flows(score)",
+        "CREATE INDEX IF NOT EXISTS idx_alerts_source ON alerts(source)",
+        "CREATE INDEX IF NOT EXISTS idx_alerts_destination "
+        "ON alerts(destination)",
+        "CREATE INDEX IF NOT EXISTS idx_alerts_severity "
+        "ON alerts(severity, last_seen)",
+        "CREATE INDEX IF NOT EXISTS idx_incidents_severity "
+        "ON incidents(severity, id)",
+        "CREATE INDEX IF NOT EXISTS idx_audit_ts ON audit_log(ts)",
+    ):
+        db.execute(stmt)
+
+
 MIGRATIONS: tuple[Migration, ...] = (
     Migration(1, "baseline_schema", _baseline),
     Migration(2, "flows_capture_foreign_key", _flows_capture_foreign_key),
@@ -492,6 +524,7 @@ MIGRATIONS: tuple[Migration, ...] = (
     Migration(6, "incidents_and_notes", _incidents_and_notes),
     Migration(7, "alerts", _alerts),
     Migration(8, "incident_alert_layer", _incident_alert_layer),
+    Migration(9, "investigation_indexes", _investigation_indexes),
 )
 
 

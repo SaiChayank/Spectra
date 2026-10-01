@@ -139,13 +139,17 @@ class IncidentService:
     # -- reads ----------------------------------------------------------------
 
     def list(self, status: str | None = None, limit: int = 50,
-             offset: int = 0) -> dict:
+             offset: int = 0, severity: str | None = None,
+             threat_type: str | None = None,
+             since: float | None = None, until: float | None = None) -> dict:
         self._require_store()
         if status is not None and status not in STATUSES:
             raise IncidentValidationError(
                 f"status must be one of {', '.join(STATUSES)}")
         page = self.store.list_incidents(limit=limit, offset=offset,
-                                         status=status)
+                                         status=status, severity=severity,
+                                         threat_type=threat_type,
+                                         since=since, until=until)
         for row in page["items"]:
             row["note_count"] = self.store.incident_note_count(row["id"])
         return page

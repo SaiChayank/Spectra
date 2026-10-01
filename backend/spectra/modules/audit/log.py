@@ -192,11 +192,18 @@ class AuditLog:
             "entry_hash": row["entry_hash"],
         }
 
-    def count(self) -> int:
+    def count(self, kind: str | None = None, *, kind_prefix: str | None = None,
+              since: float | None = None, until: float | None = None,
+              actor: str | None = None) -> int:
         with self._lock:
             if self.store is None:
-                return len(self._mem)
-            return self.store.audit_count()
+                return len(self._filtered(self._mem, kind,
+                                          kind_prefix=kind_prefix,
+                                          since=since, until=until,
+                                          actor=actor))
+            return self.store.audit_count(kind, kind_prefix=kind_prefix,
+                                          since=since, until=until,
+                                          actor=actor)
 
     def head(self) -> dict:
         with self._lock:
@@ -213,17 +220,40 @@ class AuditLog:
             "kind": last["kind"],
         }
 
+    @staticmethod
+    def _filtered(rows, kind: str | None = None, *,
+                  kind_prefix: str | None = None, since: float | None = None,
+                  until: float | None = None,
+                  actor: str | None = None) -> list[dict]:
+        """In-memory twin of the SQL filters (same semantics, same order)."""
+        if kind:
+            rows = [r for r in rows if r["kind"] == kind]
+        if kind_prefix:
+            rows = [r for r in rows if str(r["kind"]).startswith(kind_prefix)]
+        if since is not None:
+            rows = [r for r in rows if (r.get("ts") or 0.0) >= since]
+        if until is not None:
+            rows = [r for r in rows if (r.get("ts") or 0.0) <= until]
+        if actor:
+            rows = [r for r in rows if r.get("actor") == actor]
+        return list(rows)
+
     def entries(self, limit: int = 50, offset: int = 0,
-                kind: str | None = None) -> list[dict]:
+                kind: str | None = None, *, kind_prefix: str | None = None,
+                since: float | None = None, until: float | None = None,
+                actor: str | None = None) -> list[dict]:
         with self._lock:
             if self.store is None:
-                rows = self._mem
-                if kind:
-                    rows = [r for r in rows if r["kind"] == kind]
+                rows = self._filtered(self._mem, kind, kind_prefix=kind_prefix,
+                                      since=since, until=until, actor=actor)
                 rows = sorted(rows, key=lambda r: -r["seq"])
                 return rows[offset:offset + limit]
             return [self._hydrate(r) for r in
-                    self.store.audit_entries(limit=limit, offset=offset, kind=kind)]
+                    self.store.audit_entries(limit=limit, offset=offset,
+                                             kind=kind,
+                                             kind_prefix=kind_prefix,
+                                             since=since, until=until,
+                                             actor=actor)]
 
     def get(self, seq: int) -> dict | None:
         with self._lock:

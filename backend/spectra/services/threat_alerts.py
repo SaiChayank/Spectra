@@ -113,6 +113,13 @@ def _split(addr: object) -> tuple[str, str]:
     return (host, port) if sep else (addr, "")
 
 
+def _endpoint_matches(value: object, query: str) -> bool:
+    """Host-with-any-port or exact endpoint - the in-memory twin of
+    ``col = ? OR col LIKE 'query:%'`` (see db.repositories._endpoint_where)."""
+    text = str(value or "")
+    return text == query or text.startswith(f"{query}:")
+
+
 class ThreatAlertService:
     """Raise, group, persist and stream analyst alerts over flagged flows."""
 
@@ -329,6 +336,10 @@ class ThreatAlertService:
     # -- reads (API worker threads) ----------------------------------------------
 
     def list(self, status: str | None = None, threat_type: str | None = None,
+             severity: str | None = None, protocol: str | None = None,
+             source: str | None = None, destination: str | None = None,
+             since: float | None = None, until: float | None = None,
+             min_score: float | None = None, max_score: float | None = None,
              limit: int = 50, offset: int = 0) -> dict:
         if status is not None and status not in STATUSES:
             raise AlertValidationError(
@@ -336,9 +347,12 @@ class ThreatAlertService:
         limit = min(max(1, limit), 500)
         offset = max(0, offset)
         if self.store is not None:
-            return self.store.list_alerts(limit=limit, offset=offset,
-                                          status=status,
-                                          threat_type=threat_type)
+            return self.store.list_alerts(
+                limit=limit, offset=offset, status=status,
+                threat_type=threat_type, severity=severity,
+                protocol=protocol, source=source, destination=destination,
+                since=since, until=until, min_score=min_score,
+                max_score=max_score)
         with self._lock:
             items = sorted(self._open.values(),
                            key=lambda a: a.get("last_seen") or 0.0,
@@ -347,6 +361,32 @@ class ThreatAlertService:
             items = [a for a in items if a.get("status") == status]
         if threat_type:
             items = [a for a in items if a.get("threat_type") == threat_type]
+        # In-memory fallback mirrors the SQL semantics (endpoints match the
+        # host or the exact ip:port; the time range is overlap).
+        if severity:
+            items = [a for a in items if a.get("severity") == severity]
+        if protocol:
+            items = [a for a in items if a.get("protocol") == protocol]
+        if source:
+            items = [a for a in items
+                     if _endpoint_matches(a.get("source"), source)]
+        if destination:
+            items = [a for a in items
+                     if _endpoint_matches(a.get("destination"), destination)]
+        if since is not None:
+            items = [a for a in items if (a.get("last_seen") or 0.0) >= since]
+        if until is not None:
+            items = [a for a in items
+                     if (a.get("first_seen") or a.get("timestamp") or 0.0)
+                     <= until]
+        if min_score is not None:
+            items = [a for a in items
+                     if a.get("anomaly_score") is not None
+                     and a["anomaly_score"] >= min_score]
+        if max_score is not None:
+            items = [a for a in items
+                     if a.get("anomaly_score") is not None
+                     and a["anomaly_score"] <= max_score]
         return {"count": len(items), "offset": offset,
                 "items": [dict(a) for a in items[offset:offset + limit]]}
 

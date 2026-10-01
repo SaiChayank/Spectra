@@ -30,6 +30,25 @@ def row_to_flow(row: dict) -> dict:
     return out
 
 
+def _like(value: str) -> str:
+    """Escape LIKE wildcards in user input (pair with ``ESCAPE '\\'``)."""
+    return (str(value).replace("\\", "\\\\")
+            .replace("%", "\\%").replace("_", "\\_"))
+
+
+def _endpoint_where(column: str, value: str) -> tuple[str, list]:
+    """``col = value OR col LIKE 'value:%'`` - exact endpoint or host:port.
+
+    ``src``/``dst`` (and the alert endpoint columns) store ``ip:port``; an
+    analyst filtering by ``10.0.0.1`` means that host on *any* port, while
+    ``10.0.0.1:443`` means that exact endpoint.  The prefix cannot leak to a
+    neighbouring address (``10.0.0.1`` never matches ``10.0.0.10:80``)
+    because it is anchored by the literal ``:``.
+    """
+    return (f"({column} = ? OR {column} LIKE ? ESCAPE '\\')",
+            [value, f"{_like(value)}:%"])
+
+
 class FlowRepository:
     """Scored flow rows (detections are flagged rows), bounded by a row cap."""
 
@@ -114,7 +133,10 @@ class FlowRepository:
 
     def query(self, limit: int = 100, offset: int = 0, anomaly_only: bool = False,
               since: float | None = None, until: float | None = None,
-              sni: str | None = None) -> dict:
+              sni: str | None = None, proto: str | None = None,
+              src: str | None = None, dst: str | None = None,
+              min_score: float | None = None, max_score: float | None = None,
+              capture_id: int | None = None) -> dict:
         self._buffer.flush_if_pending()   # read-your-writes
         where, params = [], []
         if anomaly_only:
@@ -126,8 +148,28 @@ class FlowRepository:
             where.append("ts <= ?")
             params.append(until)
         if sni:
-            where.append("sni LIKE ?")
-            params.append(f"%{sni}%")
+            where.append("sni LIKE ? ESCAPE '\\'")
+            params.append(f"%{_like(sni)}%")
+        if proto:
+            where.append("proto = ?")
+            params.append(proto)
+        if src:
+            clause, values = _endpoint_where("src", src)
+            where.append(clause)
+            params.extend(values)
+        if dst:
+            clause, values = _endpoint_where("dst", dst)
+            where.append(clause)
+            params.extend(values)
+        if min_score is not None:
+            where.append("score >= ?")
+            params.append(min_score)
+        if max_score is not None:
+            where.append("score <= ?")
+            params.append(max_score)
+        if capture_id is not None:
+            where.append("capture_id = ?")
+            params.append(capture_id)
         clause = f"WHERE {' AND '.join(where)}" if where else ""
         limit = min(max(1, limit), 1000)
         offset = max(0, offset)
@@ -139,6 +181,108 @@ class FlowRepository:
             f"SELECT COUNT(*) AS n FROM flows {clause}", params)[0]["n"])
         return {"count": total, "offset": offset,
                 "items": [row_to_flow(r) for r in rows]}
+
+    def related(self, *, flow_ids=(), alert_ids=(), hosts=(), snis=(),
+                since: float | None = None, until: float | None = None,
+                limit: int = 100, offset: int = 0) -> dict:
+        """Flows an incident points at: direct links, or endpoints/SNI in window.
+
+        Three bounded branches OR'd together - ``id IN (...)`` (the
+        incident's detection flow), the rows that produced the member
+        alerts (``alert_id`` rides in the record JSON, not a column - the
+        exact ``json.dumps`` serialization is matched, see migration v7),
+        and ``ts BETWEEN ... AND (host match OR SNI match)`` (the activity
+        around them).  Callers cap the input collections so the parameter
+        count stays bounded; with no anchors at all the page is empty
+        instead of scanning the table.
+        """
+        self._buffer.flush_if_pending()
+        branches: list[str] = []
+        params: list = []
+        if flow_ids:
+            ids = [int(f) for f in flow_ids]
+            branches.append(f"id IN ({','.join('?' * len(ids))})")
+            params.extend(ids)
+        if alert_ids:
+            # One LIKE per member against the record JSON: a flow row stores
+            # exactly one alert id, so the separator-exact pattern cannot
+            # collide with another field's value.
+            clauses = []
+            for member in alert_ids:
+                clauses.append("record LIKE ? ESCAPE '\\'")
+                params.append(f'%"alert_id": "{_like(str(member))}"%')
+            branches.append(f"({' OR '.join(clauses)})")
+        # Anchor group (hosts + SNI) keeps its params separate: in the SQL
+        # the window bounds precede the anchors, so they must too.
+        anchor_clauses: list[str] = []
+        anchor_params: list = []
+        for host in hosts:
+            for column in ("src", "dst"):
+                clause, values = _endpoint_where(column, str(host))
+                anchor_clauses.append(clause)
+                anchor_params.extend(values)
+        for sni in snis:
+            anchor_clauses.append("sni = ?")
+            anchor_params.append(str(sni))
+        if anchor_clauses:
+            window: list[str] = []
+            window_params: list = []
+            if since is not None:
+                window.append("ts >= ?")
+                window_params.append(since)
+            if until is not None:
+                window.append("ts <= ?")
+                window_params.append(until)
+            window.append(f"({' OR '.join(anchor_clauses)})")
+            branches.append(f"({' AND '.join(window)})")
+            params.extend(window_params)
+            params.extend(anchor_params)
+        if not branches:
+            return {"count": 0, "offset": max(0, offset), "items": []}
+        clause = f"WHERE ({' OR '.join(branches)})"
+        limit = min(max(1, limit), 1000)
+        offset = max(0, offset)
+        rows = self._db.query(
+            f"SELECT * FROM flows {clause} ORDER BY id DESC LIMIT ? OFFSET ?",
+            (*params, limit, offset),
+        )
+        total = int(self._db.query(
+            f"SELECT COUNT(*) AS n FROM flows {clause}", params)[0]["n"])
+        return {"count": total, "offset": offset,
+                "items": [row_to_flow(r) for r in rows]}
+
+    def search(self, q: str, limit: int = 10, *, endpoint: bool = False,
+               sni: bool = False, fingerprint: bool = False) -> dict:
+        """Global-search hits over one row: OR of the requested matchers.
+
+        Flags come from the query classifier (spectra.entity_search) so the
+        repository never interprets input itself; with no flag the answer is
+        an empty page, never a full scan.  Bound: ``limit`` <= 100 rows.
+        """
+        clauses, params = [], []
+        if endpoint:
+            for column in ("src", "dst"):
+                clause, values = _endpoint_where(column, q)
+                clauses.append(clause)
+                params.extend(values)
+        if sni:
+            clauses.append("sni LIKE ? ESCAPE '\\'")
+            params.append(f"%{_like(q)}%")
+        if fingerprint:
+            for column in ("ja3", "ja4"):
+                clauses.append(f"{column} LIKE ? ESCAPE '\\'")
+                params.append(f"{_like(q)}%")
+        if not clauses:
+            return {"count": 0, "items": []}
+        where = f"WHERE {' OR '.join(clauses)}"
+        limit = min(max(1, limit), 100)
+        rows = self._db.query(
+            f"SELECT * FROM flows {where} ORDER BY id DESC LIMIT ?",
+            (*params, limit),
+        )
+        total = int(self._db.query(
+            f"SELECT COUNT(*) AS n FROM flows {where}", params)[0]["n"])
+        return {"count": total, "items": [row_to_flow(r) for r in rows]}
 
     def stats(self) -> dict:
         self._buffer.flush_if_pending()
@@ -330,10 +474,13 @@ class ModelRunRepository:
             self._db.commit()
             return int(cur.lastrowid)
 
-    def recent(self, limit: int = 20) -> list[dict]:
+    def count(self) -> int:
+        return int(self._db.query("SELECT COUNT(*) AS n FROM model_runs")[0]["n"])
+
+    def recent(self, limit: int = 20, offset: int = 0) -> list[dict]:
         return self._db.query(
-            "SELECT * FROM model_runs ORDER BY id DESC LIMIT ?",
-            (min(limit, 200),),
+            "SELECT * FROM model_runs ORDER BY id DESC LIMIT ? OFFSET ?",
+            (min(max(1, limit), 200), max(0, offset)),
         )
 
 
@@ -367,20 +514,47 @@ class AuditRepository:
             "ORDER BY seq DESC LIMIT 1")
         return rows[0] if rows else None
 
-    def count(self) -> int:
-        return int(self._db.query("SELECT COUNT(*) AS n FROM audit_log")[0]["n"])
-
     def get(self, seq: int) -> dict | None:
         rows = self._db.query("SELECT * FROM audit_log WHERE seq = ?", (seq,))
         return rows[0] if rows else None
 
-    def entries(self, limit: int = 50, offset: int = 0,
-                kind: str | None = None) -> list[dict]:
+    def _where(self, kind: str | None = None, *,
+               kind_prefix: str | None = None, since: float | None = None,
+               until: float | None = None,
+               actor: str | None = None) -> tuple[str, list]:
+        """Shared WHERE builder for count + entries (same filters both)."""
         where, params = [], []
         if kind:
             where.append("kind = ?")
             params.append(kind)
-        clause = f"WHERE {' AND '.join(where)}" if where else ""
+        if kind_prefix:
+            where.append("kind LIKE ? ESCAPE '\\'")
+            params.append(f"{_like(kind_prefix)}%")
+        if since is not None:
+            where.append("ts >= ?")
+            params.append(since)
+        if until is not None:
+            where.append("ts <= ?")
+            params.append(until)
+        if actor:
+            where.append("actor = ?")
+            params.append(actor)
+        return (f"WHERE {' AND '.join(where)}" if where else "", params)
+
+    def count(self, kind: str | None = None, *, kind_prefix: str | None = None,
+              since: float | None = None, until: float | None = None,
+              actor: str | None = None) -> int:
+        clause, params = self._where(kind, kind_prefix=kind_prefix,
+                                     since=since, until=until, actor=actor)
+        return int(self._db.query(
+            f"SELECT COUNT(*) AS n FROM audit_log {clause}", params)[0]["n"])
+
+    def entries(self, limit: int = 50, offset: int = 0,
+                kind: str | None = None, *, kind_prefix: str | None = None,
+                since: float | None = None, until: float | None = None,
+                actor: str | None = None) -> list[dict]:
+        clause, params = self._where(kind, kind_prefix=kind_prefix,
+                                     since=since, until=until, actor=actor)
         return self._db.query(
             f"SELECT * FROM audit_log {clause} ORDER BY seq DESC LIMIT ? OFFSET ?",
             (*params, min(max(1, limit), 1000), max(0, offset)),
@@ -455,12 +629,19 @@ class EventRepository:
         return 0
 
     def query(self, limit: int = 100, offset: int = 0,
-              type: str | None = None) -> dict:
+              type: str | None = None, since: float | None = None,
+              until: float | None = None) -> dict:
         self._buffer.flush_if_pending()
         where, params = [], []
         if type:
             where.append("type = ?")
             params.append(type)
+        if since is not None:
+            where.append("ts >= ?")
+            params.append(since)
+        if until is not None:
+            where.append("ts <= ?")
+            params.append(until)
         clause = f"WHERE {' AND '.join(where)}" if where else ""
         limit = min(max(1, limit), 1000)
         offset = max(0, offset)
@@ -675,11 +856,25 @@ class IncidentRepository:
         return self.hydrate(rows[0]) if rows else None
 
     def list(self, limit: int = 50, offset: int = 0,
-             status: str | None = None) -> dict:
+             status: str | None = None, severity: str | None = None,
+             threat_type: str | None = None,
+             since: float | None = None, until: float | None = None) -> dict:
         where, params = [], []
         if status:
             where.append("status = ?")
             params.append(status)
+        if severity:
+            where.append("severity = ?")
+            params.append(severity)
+        if threat_type:
+            where.append("primary_threat_class = ?")
+            params.append(threat_type)
+        if since is not None:
+            where.append("COALESCE(last_seen, created_at) >= ?")
+            params.append(since)
+        if until is not None:
+            where.append("COALESCE(first_seen, created_at) <= ?")
+            params.append(until)
         clause = f"WHERE {' AND '.join(where)}" if where else ""
         limit = min(max(1, limit), 500)
         offset = max(0, offset)
@@ -692,6 +887,38 @@ class IncidentRepository:
             f"SELECT COUNT(*) AS n FROM incidents {clause}", params)[0]["n"])
         return {"count": total, "offset": offset,
                 "items": [self.hydrate(r) for r in rows]}
+
+    def search(self, q: str, limit: int = 10, *, exact_id: int | None = None,
+               entity: bool = True, title: bool = True) -> dict:
+        """Global-search hits: exact id, quoted entity element, or text.
+
+        ``affected_entities`` holds bare hosts and domains as JSON strings,
+        so the element match is quote-anchored (``%"10.0.0.1"%``) - a
+        substring match would drag ``10.0.0.10`` in on a search for
+        ``10.0.0.1``.  Bound: ``limit`` <= 100 rows.
+        """
+        clauses, params = [], []
+        if exact_id is not None:
+            clauses.append("id = ?")
+            params.append(exact_id)
+        if entity:
+            clauses.append("affected_entities LIKE ? ESCAPE '\\'")
+            params.append(f'%"{_like(q)}"%')
+        if title:
+            clauses.append("(title LIKE ? ESCAPE '\\' "
+                           "OR primary_threat_class LIKE ? ESCAPE '\\')")
+            params.extend([f"%{_like(q)}%", f"%{_like(q)}%"])
+        if not clauses:
+            return {"count": 0, "items": []}
+        where = f"WHERE {' OR '.join(clauses)}"
+        limit = min(max(1, limit), 100)
+        rows = self._db.query(
+            f"SELECT * FROM incidents {where} ORDER BY id DESC LIMIT ?",
+            (*params, limit),
+        )
+        total = int(self._db.query(
+            f"SELECT COUNT(*) AS n FROM incidents {where}", params)[0]["n"])
+        return {"count": total, "items": [self.hydrate(r) for r in rows]}
 
     def transition(self, incident_id: int, from_statuses: tuple[str, ...],
                    *, status: str, actor: str, now: float,
@@ -964,7 +1191,12 @@ class AlertRepository:
 
     def list(self, limit: int = 50, offset: int = 0,
              status: str | None = None,
-             threat_type: str | None = None) -> dict:
+             threat_type: str | None = None,
+             severity: str | None = None, protocol: str | None = None,
+             source: str | None = None, destination: str | None = None,
+             since: float | None = None, until: float | None = None,
+             min_score: float | None = None,
+             max_score: float | None = None) -> dict:
         where, params = [], []
         if status:
             where.append("status = ?")
@@ -972,6 +1204,34 @@ class AlertRepository:
         if threat_type:
             where.append("threat_type = ?")
             params.append(threat_type)
+        if severity:
+            where.append("severity = ?")
+            params.append(severity)
+        if protocol:
+            where.append("protocol = ?")
+            params.append(protocol)
+        if source:
+            clause, values = _endpoint_where("source", source)
+            where.append(clause)
+            params.extend(values)
+        if destination:
+            clause, values = _endpoint_where("destination", destination)
+            where.append(clause)
+            params.extend(values)
+        # Overlap semantics: an alert whose sighting interval intersects
+        # [since, until] belongs to that range (spanning alerts never vanish).
+        if since is not None:
+            where.append("last_seen >= ?")
+            params.append(since)
+        if until is not None:
+            where.append("first_seen <= ?")
+            params.append(until)
+        if min_score is not None:
+            where.append("anomaly_score >= ?")
+            params.append(min_score)
+        if max_score is not None:
+            where.append("anomaly_score <= ?")
+            params.append(max_score)
         clause = f"WHERE {' AND '.join(where)}" if where else ""
         limit = min(max(1, limit), 500)
         offset = max(0, offset)
@@ -984,6 +1244,59 @@ class AlertRepository:
             f"SELECT COUNT(*) AS n FROM alerts {clause}", params)[0]["n"])
         return {"count": total, "offset": offset,
                 "items": [self.hydrate(r) for r in rows]}
+
+    def search(self, q: str, limit: int = 10, *, alert_id: bool = False,
+               endpoint: bool = False, text: bool = False,
+               model: bool = False) -> dict:
+        """Global-search hits over one alert: OR of the requested matchers.
+
+        ``text`` covers metadata JSON (SNI/JA3/JA4 live there) and the
+        threat class, so domain and fingerprint queries resolve through it.
+        Bound: ``limit`` <= 100 rows.
+        """
+        clauses, params = [], []
+        if alert_id:
+            clauses.append("(alert_id = ? OR alert_id LIKE ? ESCAPE '\\')")
+            params.extend([q, f"{_like(q)}%"])
+        if endpoint:
+            for column in ("source", "destination"):
+                clause, values = _endpoint_where(column, q)
+                clauses.append(clause)
+                params.extend(values)
+        if text:
+            clauses.append("(metadata LIKE ? ESCAPE '\\' "
+                           "OR threat_type LIKE ? ESCAPE '\\')")
+            params.extend([f"%{_like(q)}%", f"%{_like(q)}%"])
+        if model:
+            clauses.append("model_id LIKE ? ESCAPE '\\'")
+            params.append(f"%{_like(q)}%")
+        if not clauses:
+            return {"count": 0, "items": []}
+        where = f"WHERE {' OR '.join(clauses)}"
+        limit = min(max(1, limit), 100)
+        rows = self._db.query(
+            f"SELECT * FROM alerts {where} "
+            f"ORDER BY last_seen DESC, alert_id DESC LIMIT ?",
+            (*params, limit),
+        )
+        total = int(self._db.query(
+            f"SELECT COUNT(*) AS n FROM alerts {where}", params)[0]["n"])
+        return {"count": total, "items": [self.hydrate(r) for r in rows]}
+
+    def models(self, q: str, limit: int = 20) -> list[dict]:
+        """Distinct ``id@version`` scoring identities matching ``q``."""
+        rows = self._db.query(
+            "SELECT model_id, model_version, COUNT(*) AS alerts "
+            "FROM alerts "
+            "WHERE (model_id LIKE ? ESCAPE '\\' "
+            "       OR model_version LIKE ? ESCAPE '\\') "
+            "AND model_id IS NOT NULL "
+            "GROUP BY model_id, model_version "
+            "ORDER BY alerts DESC LIMIT ?",
+            (f"%{_like(q)}%", f"%{_like(q)}%", min(max(1, limit), 100)),
+        )
+        return [{"id": r["model_id"], "version": r["model_version"],
+                 "alerts": int(r["alerts"])} for r in rows]
 
     def update_group(self, alert_id: str, *, last_seen: float,
                      updated_at: float, occurrences: int,

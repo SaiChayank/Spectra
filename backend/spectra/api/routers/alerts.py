@@ -22,14 +22,30 @@ router = APIRouter(dependencies=[Depends(require("read"))])
 def alerts_list(
     status: str | None = Query(None, pattern="^(OPEN|ACKNOWLEDGED|RESOLVED)$"),
     threat_type: str | None = Query(None, max_length=64),
+    severity: str | None = Query(None, pattern="^(LOW|MEDIUM|HIGH|CRITICAL)$"),
+    protocol: str | None = Query(None, max_length=16),
+    source: str | None = Query(None, description="host (any port) or ip:port"),
+    destination: str | None = Query(None,
+                                    description="host (any port) or ip:port"),
+    since: float | None = Query(None, description="seen at/after (overlap)"),
+    until: float | None = Query(None, description="seen at/before (overlap)"),
+    min_score: float | None = Query(None, ge=0),
+    max_score: float | None = Query(None, ge=0),
     limit: int = Query(50, ge=1, le=500),
     offset: int = Query(0, ge=0),
 ) -> dict:
-    """Alert page (most recent sighting first), with evidence + severity."""
+    """Alert page (most recent sighting first), with evidence + severity.
+
+    Filters combine (AND); the time range is overlap semantics - an alert
+    whose sighting interval intersects ``[since, until]`` matches.
+    """
     try:
-        return engine.threat_alerts.list(status=status,
-                                         threat_type=threat_type,
-                                         limit=limit, offset=offset)
+        return engine.threat_alerts.list(
+            status=status, threat_type=threat_type, severity=severity,
+            protocol=protocol, source=source, destination=destination,
+            since=since, until=until, min_score=min_score,
+            max_score=max_score, limit=limit, offset=offset,
+        )
     except ThreatAlertError as exc:
         raise auth_error(exc) from exc
 

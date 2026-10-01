@@ -59,6 +59,7 @@ from .services import (
     EventBus,
     FailureTracker,
     IncidentService,
+    InvestigationService,
     ModelService,
     SystemService,
     ThreatAlertService,
@@ -213,6 +214,17 @@ class SpectraEngine:
             audit=self.audit_service,
             graph_provider=lambda: self.correlation.graph,
         )
+        # Investigation read-side (bundle + global search): everything an
+        # analyst needs about an incident in one bounded response. The
+        # graph and the model identity arrive as injected providers so no
+        # service imports another service; the store rebinding seam below
+        # reaches it like every other store-backed service.
+        self.investigation = InvestigationService(
+            self._store, self.config,
+            graph_provider=lambda: self.correlation.graph,
+            model_info=lambda: {"id": os.path.basename(self.model_path),
+                                **self.model.info()},
+        )
         # Auto-attach: a durable alert joins the best-matching ACTIVE
         # incident (OPEN/INVESTIGATING/ACKNOWLEDGED) or refreshes its
         # rollups. Runs on the publication thread after the alert row is
@@ -234,7 +246,7 @@ class SpectraEngine:
         # was constructed with (sessions must not move with test-fixture swaps)
         for name in ("audit_service", "correlation", "threat_alerts",
                      "detection", "capture", "capture_resources", "training",
-                     "system", "incidents"):
+                     "system", "incidents", "investigation"):
             svc = getattr(self, name, None)
             if svc is not None:
                 svc.store = value

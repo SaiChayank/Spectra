@@ -82,6 +82,16 @@ class Config:
     # conservative instead of time-wide.
     incident_window_seconds: float = 1800.0
 
+    # investigation reads (spectra.services.investigation): bounds that keep
+    # every bundle/search response finite no matter how large the tables
+    # grow - a bundle pages ``investigation_flow_limit`` related flows and
+    # aggregates over the newest ``investigation_evidence_rows`` of them,
+    # while /api/search returns at most ``search_section_limit`` rows per
+    # entity section.
+    investigation_flow_limit: int = 100
+    investigation_evidence_rows: int = 500
+    search_section_limit: int = 10
+
     # authentication (spectra.services.auth): local accounts only - one admin
     # is bootstrapped when the users table is empty (env password or a
     # mode-restricted file), sessions are absolute-TTL rows keyed by token

@@ -190,10 +190,32 @@ class Store:
 
     def query_flows(self, limit: int = 100, offset: int = 0,
                     anomaly_only: bool = False, since: float | None = None,
-                    until: float | None = None, sni: str | None = None) -> dict:
+                    until: float | None = None, sni: str | None = None,
+                    proto: str | None = None, src: str | None = None,
+                    dst: str | None = None,
+                    min_score: float | None = None,
+                    max_score: float | None = None,
+                    capture_id: int | None = None) -> dict:
         return self._flows.query(limit=limit, offset=offset,
                                  anomaly_only=anomaly_only, since=since,
-                                 until=until, sni=sni)
+                                 until=until, sni=sni, proto=proto, src=src,
+                                 dst=dst, min_score=min_score,
+                                 max_score=max_score, capture_id=capture_id)
+
+    def related_flows(self, *, flow_ids=(), alert_ids=(), hosts=(), snis=(),
+                      since: float | None = None,
+                      until: float | None = None,
+                      limit: int = 100, offset: int = 0) -> dict:
+        """Flows an incident points at (see FlowRepository.related)."""
+        return self._flows.related(flow_ids=flow_ids, alert_ids=alert_ids,
+                                   hosts=hosts, snis=snis, since=since,
+                                   until=until, limit=limit, offset=offset)
+
+    def search_flows(self, q: str, limit: int = 10, *, endpoint: bool = False,
+                     sni: bool = False, fingerprint: bool = False) -> dict:
+        """Global-search flow hits (see FlowRepository.search)."""
+        return self._flows.search(q, limit=limit, endpoint=endpoint,
+                                  sni=sni, fingerprint=fingerprint)
 
     def detections(self, limit: int = 100, offset: int = 0) -> dict:
         return self._flows.query(limit=limit, offset=offset, anomaly_only=True)
@@ -289,8 +311,21 @@ class Store:
         return dict(row) if row else None
 
     def list_incidents(self, limit: int = 50, offset: int = 0,
-                       status: str | None = None) -> dict:
-        return self._incidents.list(limit=limit, offset=offset, status=status)
+                       status: str | None = None,
+                       severity: str | None = None,
+                       threat_type: str | None = None,
+                       since: float | None = None,
+                       until: float | None = None) -> dict:
+        return self._incidents.list(limit=limit, offset=offset, status=status,
+                                    severity=severity, threat_type=threat_type,
+                                    since=since, until=until)
+
+    def search_incidents(self, q: str, limit: int = 10, *,
+                         exact_id: int | None = None, entity: bool = True,
+                         title: bool = True) -> dict:
+        """Global-search incident hits (see IncidentRepository.search)."""
+        return self._incidents.search(q, limit=limit, exact_id=exact_id,
+                                      entity=entity, title=title)
 
     def acknowledge_incident(self, incident_id: int, by: str) -> bool:
         return self._incidents.acknowledge(incident_id, by, now=time.time())
@@ -372,9 +407,32 @@ class Store:
 
     def list_alerts(self, limit: int = 50, offset: int = 0,
                     status: str | None = None,
-                    threat_type: str | None = None) -> dict:
+                    threat_type: str | None = None,
+                    severity: str | None = None,
+                    protocol: str | None = None,
+                    source: str | None = None,
+                    destination: str | None = None,
+                    since: float | None = None,
+                    until: float | None = None,
+                    min_score: float | None = None,
+                    max_score: float | None = None) -> dict:
         return self._alerts.list(limit=limit, offset=offset, status=status,
-                                 threat_type=threat_type)
+                                 threat_type=threat_type, severity=severity,
+                                 protocol=protocol, source=source,
+                                 destination=destination, since=since,
+                                 until=until, min_score=min_score,
+                                 max_score=max_score)
+
+    def search_alerts(self, q: str, limit: int = 10, *, alert_id: bool = False,
+                      endpoint: bool = False, text: bool = False,
+                      model: bool = False) -> dict:
+        """Global-search alert hits (see AlertRepository.search)."""
+        return self._alerts.search(q, limit=limit, alert_id=alert_id,
+                                   endpoint=endpoint, text=text, model=model)
+
+    def alert_models(self, q: str, limit: int = 20) -> list[dict]:
+        """Distinct scoring identities whose id/version matches ``q``."""
+        return self._alerts.models(q, limit)
 
     def update_alert_group(self, alert_id: str, **fields) -> bool:
         """Persist a grouped re-sighting of an existing alert."""
@@ -396,8 +454,10 @@ class Store:
             time.time() if ts is None else ts, type, payload, capture_id)
 
     def query_events(self, limit: int = 100, offset: int = 0,
-                     type: str | None = None) -> dict:
-        return self._events_repo.query(limit=limit, offset=offset, type=type)
+                     type: str | None = None, since: float | None = None,
+                     until: float | None = None) -> dict:
+        return self._events_repo.query(limit=limit, offset=offset, type=type,
+                                       since=since, until=until)
 
     # -- model lineage --------------------------------------------------------
 
@@ -405,8 +465,11 @@ class Store:
                       metrics: dict) -> int:
         return self._runs.add(pcap, n_train, contamination, metrics)
 
-    def model_runs(self, limit: int = 20) -> list[dict]:
-        return self._runs.recent(limit)
+    def model_runs(self, limit: int = 20, offset: int = 0) -> list[dict]:
+        return self._runs.recent(limit, offset=offset)
+
+    def model_run_count(self) -> int:
+        return self._runs.count()
 
     # -- Module 5: audit log (immediate, never pruned) ------------------------
 
@@ -420,15 +483,26 @@ class Store:
     def audit_head(self) -> dict | None:
         return self._audit.head()
 
-    def audit_count(self) -> int:
-        return self._audit.count()
+    def audit_count(self, kind: str | None = None, *,
+                    kind_prefix: str | None = None,
+                    since: float | None = None,
+                    until: float | None = None,
+                    actor: str | None = None) -> int:
+        return self._audit.count(kind, kind_prefix=kind_prefix, since=since,
+                                 until=until, actor=actor)
 
     def audit_get(self, seq: int) -> dict | None:
         return self._audit.get(seq)
 
     def audit_entries(self, limit: int = 50, offset: int = 0,
-                      kind: str | None = None) -> list[dict]:
-        return self._audit.entries(limit=limit, offset=offset, kind=kind)
+                      kind: str | None = None, *,
+                      kind_prefix: str | None = None,
+                      since: float | None = None,
+                      until: float | None = None,
+                      actor: str | None = None) -> list[dict]:
+        return self._audit.entries(limit=limit, offset=offset, kind=kind,
+                                   kind_prefix=kind_prefix, since=since,
+                                   until=until, actor=actor)
 
     def audit_range(self, start: int, end: int) -> list[dict]:
         return self._audit.range(start, end)

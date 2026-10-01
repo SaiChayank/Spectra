@@ -44,12 +44,22 @@ class IncidentNoteCreate(BaseModel):
 @router.get("/api/incidents")
 def incidents_list(
     status: str | None = Query(None, pattern=_STATUS_PATTERN),
+    severity: str | None = Query(None, pattern="^(LOW|MEDIUM|HIGH|CRITICAL)$"),
+    threat_type: str | None = Query(None, max_length=64),
+    since: float | None = Query(None, description="active at/after (overlap)"),
+    until: float | None = Query(None, description="active at/before (overlap)"),
     limit: int = Query(50, ge=1, le=500),
     offset: int = Query(0, ge=0),
 ) -> dict:
-    """Incident page (newest first) with per-incident note counts."""
+    """Incident page (newest first) with per-incident note counts.
+
+    Filters combine (AND); the time range is overlap semantics over the
+    incident's sighting interval (falling back to creation time).
+    """
     try:
-        return engine.incidents.list(status=status, limit=limit, offset=offset)
+        return engine.incidents.list(status=status, severity=severity,
+                                     threat_type=threat_type, since=since,
+                                     until=until, limit=limit, offset=offset)
     except IncidentError as exc:
         raise auth_error(exc) from exc
 
