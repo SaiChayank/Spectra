@@ -23,3 +23,6 @@ export const prettyFeature = (name: string): string =>
     .replace(/_s$/, " (s)")
     .replace(/_ms$/, " (ms)")
     .replace(/_/g, " ");
+
+export const prettyThreat = (threatType: string): string =>
+  threatType === "UNKNOWN_ANOMALY" ? "unknown" : threatType.replace(/_/g, " ");

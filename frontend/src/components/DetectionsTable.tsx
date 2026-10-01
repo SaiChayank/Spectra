@@ -1,5 +1,15 @@
-import type { Detection } from "../lib/api";
-import { formatClock, prettyFeature, scoreClass } from "../lib/format";
+import type { Detection, ThreatAssessment } from "../lib/api";
+import { formatClock, prettyFeature, prettyThreat, scoreClass } from "../lib/format";
+
+/** Tooltip text: supporting signals, then contradicting ones, then a candidate. */
+function threatTitle(t: ThreatAssessment): string {
+  const parts = [
+    ...t.supporting.map((s) => `✓ ${s.detail}`),
+    ...t.contradicting.map((s) => `✗ ${s.detail}`),
+  ];
+  if (t.candidate) parts.push(`candidate: ${prettyThreat(t.candidate)}`);
+  return parts.join("\n") || "no behavioural evidence either way";
+}
 
 export default function DetectionsTable({ items }: { items: Detection[] }) {
   return (
@@ -17,6 +27,7 @@ export default function DetectionsTable({ items }: { items: Detection[] }) {
                 <th>Time</th>
                 <th>Flow</th>
                 <th>SNI</th>
+                <th>Threat</th>
                 <th>Why it was flagged</th>
               </tr>
             </thead>
@@ -54,6 +65,19 @@ export default function DetectionsTable({ items }: { items: Detection[] }) {
                     {d.proto} {d.src} → {d.dst}
                   </td>
                   <td className="mono">{d.sni ?? <span className="dim">no TLS</span>}</td>
+                  <td>
+                    {d.threat ? (
+                      <span
+                        className={d.threat.threat_type === "UNKNOWN_ANOMALY" ? "tag dim" : "tag"}
+                        title={threatTitle(d.threat)}
+                      >
+                        {prettyThreat(d.threat.threat_type)}
+                        <span className="dim"> {Math.round(d.threat.confidence * 100)}%</span>
+                      </span>
+                    ) : (
+                      <span className="dim">—</span>
+                    )}
+                  </td>
                   <td>
                     {d.reasons.length === 0 ? (
                       <span className="dim">—</span>

@@ -28,6 +28,7 @@ from ..modules.pqc import PQCInventory, assess_handshake, screen_flows
 from ..modules.pqc.roadmap import generate_roadmap
 from ..parse.flow import Flow
 from ..store import Store
+from ..threats import THREAT_WINDOW, classify_threat, unknown_threat
 from .alerts import AlertService
 from .correlation import CorrelationService
 from .events import EventBus
@@ -212,8 +213,10 @@ class DetectionService:
 
         record["score"] = score
         record["anomaly"] = anomaly
+        # ``feats`` rides along so the publication stage can classify the
+        # threat (see spectra.threats) without re-extracting the flow.
         return {"record": record, "score": score, "anomaly": anomaly,
-                "reasons": reasons}
+                "reasons": reasons, "feats": feats}
 
     def publish_flow(self, scored: dict) -> None:
         """Publication stage: record, publish and persist one scored flow."""
@@ -222,9 +225,25 @@ class DetectionService:
         anomaly = scored["anomaly"]
         reasons = scored["reasons"]
 
+        # Threat classification (spectra.threats): anomalies only, with the
+        # context window of *prior* flows — captured before this record joins
+        # the buffer — and the verdict lands on the record before it is
+        # observed, emitted and persisted.  A classifier failure degrades to
+        # an explicit UNKNOWN_ANOMALY instead of stopping publication.
+        window = list(self.flows)[-THREAT_WINDOW:] if anomaly else None
+
         # Module 5: this flow becomes a Merkle leaf of the session's evidence
         self.session.add_leaf(record, AUDIT_MAX_LEAVES)
         self.flows.append(record)
+
+        if anomaly:
+            threat = self.failures.guard(
+                "threats",
+                lambda: classify_threat(record, scored.get("feats"), window),
+                default=None,
+            )
+            record["threat"] = threat if threat is not None else unknown_threat()
+
         self._correlation.observe(record)
         self._events.emit(
             {"type": "flow", "data": {**record, "score": score,

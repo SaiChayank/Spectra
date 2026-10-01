@@ -29,6 +29,32 @@ export interface FlowRecord {
   snn_score?: number | null;
   /** Module 6: swarm quorum flag for this flow. */
   swarm_flag?: boolean;
+  /** Threat classification (anomalies only): explainable behavioural verdict. */
+  threat?: ThreatAssessment;
+}
+
+export interface ThreatSignal {
+  /** Stable machine-readable signal id (e.g. periodic_forward_timing). */
+  signal: string;
+  /** Evidence weight — 0.3 weak, 0.4 moderate, 0.5 strong. */
+  weight: number;
+  /** Human-readable explanation of what was observed. */
+  detail: string;
+}
+
+export interface ThreatAssessment {
+  /** Specific category, or UNKNOWN_ANOMALY when evidence is insufficient. */
+  threat_type: string;
+  /** 0-1 evidence share (unknown verdicts always stay below 0.5). */
+  confidence: number;
+  /** Signals supporting the classification. */
+  supporting: ThreatSignal[];
+  /** Signals that argue against it (lower the confidence). */
+  contradicting: ThreatSignal[];
+  /** Closest sub-threshold category (unknown verdicts only). */
+  candidate?: string;
+  /** True while no category met its evidence threshold. */
+  insufficient_evidence?: boolean;
 }
 
 export interface ImmuneAnnotation {

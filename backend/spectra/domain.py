@@ -57,6 +57,9 @@ class FlowRecord(TypedDict, total=False):
     snn_score: float | None
     swarm_flag: bool | None
     pqc: dict | None
+    #: Anomalies only: explainable threat verdict (spectra.threats) —
+    #: ``threat_type``/``confidence`` plus supporting/contradicting signals.
+    threat: dict | None
 
 
 class DetectionRecord(TypedDict, total=False):
