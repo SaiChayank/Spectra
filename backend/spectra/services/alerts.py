@@ -53,6 +53,16 @@ class AlertService:
         self.drift_alerted = False
         self.score_watch = ScoreWindow(contamination=self._contamination)
 
+    def update_contamination(self, contamination: float) -> None:
+        """Repoint the evasion watch at an activated model's contamination.
+
+        Score distributions are percentiles, so the history stays valid -
+        only the percentile boundary (and the stored value behind reset)
+        moves with the model.  Called by the model-activation hook.
+        """
+        self._contamination = float(contamination)
+        self.score_watch.contamination = float(contamination)
+
     @property
     def evasion_active(self) -> bool:
         return bool(self.score_watch.alerted)

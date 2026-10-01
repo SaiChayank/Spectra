@@ -1340,3 +1340,159 @@ class AlertRepository:
             )
             self._db.commit()
             return cur.rowcount > 0
+
+
+class ModelRegistryRepository:
+    """Model registry rows (Prompt 14): artifact lineage + status machine.
+
+    The lifecycle is CANDIDATE -> VALIDATED -> ACTIVE -> RETIRED with FAILED
+    reachable from the validation gate; transitions are validated in the
+    registry service, the invariants here are:
+
+    * **one ACTIVE** - the partial unique index ``idx_models_single_active``
+      rejects a second one, and :meth:`activate` retires the current holder
+      and promotes the target inside one ``BEGIN IMMEDIATE`` transaction so
+      no reader ever sees zero or two active models;
+    * **rollback cursor** - ``last_activated_at`` is written on every
+      promotion; the previous model is the RETIRED row with the greatest
+      value below the current one's.
+    """
+
+    #: Columns whose values are JSON documents (rows -> objects).
+    JSON_FIELDS = ("metrics",)
+
+    def __init__(self, db: Database):
+        self._db = db
+
+    def hydrate(self, row: dict) -> dict:
+        out = dict(row)
+        for key in self.JSON_FIELDS:
+            value = out.get(key)
+            if isinstance(value, str):
+                try:
+                    out[key] = json.loads(value)
+                except (TypeError, ValueError):
+                    out[key] = {}
+        return out
+
+    def add(self, fields: dict) -> dict:
+        columns = (
+            "model_id", "created_at", "source", "artifact",
+            "artifact_sha256", "status", "trained_at", "n_train",
+            "contamination", "n_features", "feature_schema",
+            "model_version", "threshold", "metrics",
+        )
+        unknown = set(fields) - set(columns)
+        if unknown:
+            raise StoreError(f"unknown registry fields: {sorted(unknown)}")
+        values = dict(fields)
+        if isinstance(values.get("metrics"), (dict, list)):
+            values["metrics"] = json.dumps(values["metrics"])
+        with self._db.lock:
+            placeholders = ", ".join("?" * len(columns))
+            cur = self._db.execute(
+                f"INSERT INTO model_registry ({', '.join(columns)}) "
+                f"VALUES ({placeholders})",
+                tuple(values.get(c) for c in columns),
+            )
+            self._db.commit()
+            model_id = str(values["model_id"])
+        row = self.get(model_id)
+        assert row is not None  # just inserted under the same lock
+        _ = cur
+        return row
+
+    def get(self, model_id: str) -> dict | None:
+        rows = self._db.query(
+            "SELECT * FROM model_registry WHERE model_id = ?", (model_id,))
+        return self.hydrate(rows[0]) if rows else None
+
+    def count(self) -> int:
+        return int(self._db.query(
+            "SELECT COUNT(*) AS n FROM model_registry")[0]["n"])
+
+    def list(self, limit: int = 100, offset: int = 0) -> dict:
+        limit = min(max(1, limit), 500)
+        offset = max(0, offset)
+        rows = self._db.query(
+            "SELECT * FROM model_registry "
+            "ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?",
+            (limit, offset),
+        )
+        total = self.count()
+        return {"count": total, "offset": offset,
+                "items": [self.hydrate(r) for r in rows]}
+
+    def active(self) -> dict | None:
+        rows = self._db.query(
+            "SELECT * FROM model_registry WHERE status = 'ACTIVE'")
+        return self.hydrate(rows[0]) if rows else None
+
+    def previous_active(self, before_ts: float) -> dict | None:
+        """The rollback target: RETIRED model activated closest before."""
+        rows = self._db.query(
+            "SELECT * FROM model_registry "
+            "WHERE status = 'RETIRED' AND last_activated_at IS NOT NULL "
+            "AND last_activated_at < ? "
+            "ORDER BY last_activated_at DESC LIMIT 1",
+            (before_ts,),
+        )
+        return self.hydrate(rows[0]) if rows else None
+
+    def set_status(self, model_id: str, status: str, *,
+                   metrics: dict | None = None, error: str | None = None,
+                   clear_error: bool = False,
+                   retired_at: float | None = None) -> dict | None:
+        """Write a non-active status transition (validate / retire)."""
+        sets = ["status = ?"]
+        params: list = [status]
+        if metrics is not None:
+            sets.append("metrics = ?")
+            params.append(json.dumps(metrics))
+        if clear_error:
+            sets.append("error = NULL")
+        if error is not None:
+            sets.append("error = ?")
+            params.append(error)
+        if retired_at is not None:
+            sets.append("retired_at = ?")
+            params.append(retired_at)
+        params.append(model_id)
+        with self._db.lock:
+            cur = self._db.execute(
+                f"UPDATE model_registry SET {', '.join(sets)} "
+                "WHERE model_id = ?",
+                tuple(params),
+            )
+            self._db.commit()
+            if cur.rowcount == 0:
+                return None
+        return self.get(model_id)
+
+    def activate(self, model_id: str, now: float) -> dict:
+        """Retire the current ACTIVE and promote ``model_id`` atomically.
+
+        Both statements run in one ``BEGIN IMMEDIATE`` transaction: concurrent
+        activations serialise on the write lock, and the partial unique index
+        backstops the invariant if the promote's status guard ever misfires
+        (the transaction rolls back and the caller sees a StoreError).
+        """
+        with self._db.transaction():
+            self._db.execute(
+                "UPDATE model_registry SET status = 'RETIRED', retired_at = ? "
+                "WHERE status = 'ACTIVE'",
+                (now,),
+            )
+            cur = self._db.execute(
+                "UPDATE model_registry SET status = 'ACTIVE', "
+                "last_activated_at = ?, retired_at = NULL, "
+                "activated_count = activated_count + 1 "
+                "WHERE model_id = ? AND status IN ('VALIDATED', 'RETIRED')",
+                (now, model_id),
+            )
+            if cur.rowcount != 1:
+                raise StoreError(
+                    f"cannot activate {model_id}: not VALIDATED/RETIRED")
+        row = self.get(model_id)
+        assert row is not None  # updated in the transaction above
+        return row

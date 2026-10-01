@@ -269,6 +269,12 @@ class SpectraDetector:
         det = blob["detector"]
         if not isinstance(det, cls):  # pragma: no cover - defensive
             raise ValueError("unexpected object in model file")
+        # Trust rule: only artifacts built on the *current* feature schema
+        # load (the registry's validation gate relies on this check, and a
+        # silently wider/narrower matrix would mis-score every flow).
+        if list(getattr(det, "feature_names", None) or []) != list(FEATURE_NAMES):
+            raise ValueError(
+                "model feature schema mismatch - retrain the model")
         return det
 
     def info(self) -> dict:

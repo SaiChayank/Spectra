@@ -21,6 +21,7 @@ from .events import EventBus, Listener
 from .incidents import IncidentService
 from .investigation import InvestigationService
 from .model import ModelService
+from .model_registry import ModelRegistryService
 from .resilience import FailureTracker
 from .system import SystemService
 from .threat_alerts import ThreatAlertService
@@ -39,6 +40,7 @@ __all__ = [
     "IncidentService",
     "InvestigationService",
     "Listener",
+    "ModelRegistryService",
     "ModelService",
     "SystemService",
     "ThreatAlertService",

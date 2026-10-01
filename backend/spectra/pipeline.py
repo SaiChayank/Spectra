@@ -60,6 +60,7 @@ from .services import (
     FailureTracker,
     IncidentService,
     InvestigationService,
+    ModelRegistryService,
     ModelService,
     SystemService,
     ThreatAlertService,
@@ -117,10 +118,32 @@ class SpectraEngine:
         else:
             self._store = None
 
+        # -- Model registry (Prompt 14) -------------------------------------
+        # Constructed before the detector load: with rows in the registry the
+        # ACTIVE artifact is authoritative for this engine's *deployed* path
+        # (engines constructed with a custom model_path - the test-suite's
+        # isolation pattern - keep legacy load semantics so shared-DB registry
+        # rows never override their explicit artifact choice).
+        self.registry = ModelRegistryService(self.config, self._store)
+        self._registry_authoritative = (
+            self._store is not None
+            and os.path.abspath(self.model_path)
+            == os.path.abspath(self.config.model_path)
+        )
+
         # Core artifact: loaded once here so every service shares one instance
         # and rebinding ``engine.detector`` stays a single-point operation.
         detector = SpectraDetector()
-        if os.path.isfile(self.model_path):
+        if self._registry_authoritative and self.registry.count() > 0:
+            # Registry rows exist -> ACTIVE row's artifact only: untrained
+            # when there is no active model or its trust checks fail (no
+            # legacy fallback - the registry is authoritative once populated).
+            active = self.registry.active_detector()
+            if active is not None:
+                detector, active_row = active
+                log.info("loaded ACTIVE model %s (%d training flows)",
+                         active_row["model_id"], detector.n_train)
+        elif os.path.isfile(self.model_path):
             try:
                 detector = SpectraDetector.load(self.model_path)
                 log.info("loaded model from %s (%d training flows)",
@@ -166,6 +189,10 @@ class SpectraEngine:
         # -- application services (leaf -> root) -----------------------------
         self.events = EventBus()
         self.failures = FailureTracker(self.status)
+        # Registry bindings the constructor could not take yet (the startup
+        # load above runs before the failure tracker exists - trust failures
+        # there degrade to a warning log inside active_detector()).
+        self.registry.failures = self.failures
         # Durable system-event feed: everything except flow/detection events
         # (those are already stored as flow rows) and alert events (those are
         # stored in the alerts table). Low volume by construction -
@@ -173,6 +200,7 @@ class SpectraEngine:
         self.events.subscribe(self._persist_event)
         self.audit_service = AuditService(self._store, self.model_path,
                                           self.failures)
+        self.registry.audit = self.audit_service
         self.alerts = AlertService(
             self.config, self.events, self.audit_service, self.failures,
             contamination=getattr(detector, "contamination", 0.02),
@@ -183,6 +211,10 @@ class SpectraEngine:
             self.alerts, self.events, self.audit_service, self.failures,
             recent_feats,
         )
+        # Activation side effects live on the engine (swap, deploy, attest,
+        # watch, event) - injected as a hook so the registry never imports
+        # another service.
+        self.registry.on_activate = self._apply_activation
         self.correlation = CorrelationService(CorrelationGraph(), self._store,
                                               self.failures)
         # Analyst alerts (spectra.services.threat_alerts): correlated verdicts
@@ -210,7 +242,7 @@ class SpectraEngine:
         self.training = TrainingService(
             self.config, self.idle_timeout, self._store, self.model,
             self.detection, self.capture, self.audit_service, self.events,
-            self.status,
+            self.status, registry=self.registry,
         )
         self.system = SystemService(
             self.status, self.config, self._store, self.model,
@@ -267,7 +299,7 @@ class SpectraEngine:
         # was constructed with (sessions must not move with test-fixture swaps)
         for name in ("audit_service", "correlation", "threat_alerts",
                      "detection", "capture", "capture_resources", "training",
-                     "system", "incidents", "investigation"):
+                     "system", "incidents", "investigation", "registry"):
             svc = getattr(self, name, None)
             if svc is not None:
                 svc.store = value
@@ -499,9 +531,79 @@ class SpectraEngine:
 
     # -- training ------------------------------------------------------------------
 
-    def train_from_pcap(self, path: str, contamination: float | None = None) -> dict:
-        """Train the detector on the benign baseline contained in a PCAP."""
-        return self.training.train_from_pcap(path, contamination=contamination)
+    def train_from_pcap(self, path: str, contamination: float | None = None,
+                        *, activate: bool = True,
+                        actor: str | None = None) -> dict:
+        """Train the detector on the benign baseline contained in a PCAP.
+
+        With persistence the fit registers a registry CANDIDATE; the audited
+        register -> validate -> activate chain runs when ``activate`` is set
+        (the default), so training keeps its contract of an immediately
+        usable session model.  See TrainingService.train_from_pcap.
+        """
+        return self.training.train_from_pcap(
+            path, contamination=contamination, activate=activate,
+            actor=actor)
+
+    # -- model registry (Prompt 14) -------------------------------------------------
+
+    def _apply_activation(self, detector: SpectraDetector, row: dict,
+                          action: str) -> None:
+        """Session side effects of a registry activation (injected hook).
+
+        Swaps the live detector, syncs the deployed copy every consumer
+        reads (TEE enclave, compliance certificates, legacy loads - on a
+        deployed engine ``engine.model_path`` *is* ``config.model_path``, a
+        custom-path engine only ever writes its own file), re-measures TEE,
+        repoints the evasion watch at the new contamination, updates the
+        status document and emits the ``model`` event.  Any failure
+        propagates to the registry, which records it and reports
+        ``applied: false`` instead of rolling back the promotion.
+        """
+        src = self.registry.artifact_path(row)
+        target = os.path.abspath(self.model_path)
+        if os.path.abspath(src) != target:
+            tmp = f"{target}.activating"
+            try:
+                with open(src, "rb") as fin, open(tmp, "wb") as fout:
+                    for chunk in iter(lambda: fin.read(1 << 20), b""):
+                        fout.write(chunk)
+                os.replace(tmp, target)
+            except Exception:
+                try:
+                    os.remove(tmp)
+                except OSError:
+                    pass
+                raise
+        self.model.detector = detector
+        self.status["model_trained"] = detector.is_trained
+        self.alerts.update_contamination(
+            float(getattr(detector, "contamination", 0.02)))
+        self.model.remeasure_tee()
+        self.events.emit({"type": "model", "data": detector.info()})
+
+    def adopt_model(self) -> dict | None:
+        """Registry adoption, called at app import (see REGISTRY_PLAN).
+
+        Empty registry + a trained deployed model -> register, validate and
+        activate that artifact as the first ACTIVE row (audited with
+        ``adopted: true``), giving an existing deployment an explicit
+        lineage without re-training.  Deployed engines only: an engine built
+        with a custom model_path never adopts (that path is an explicit
+        override, not the deployment).
+        """
+        if not getattr(self, "_registry_authoritative", False):
+            return None
+        if not self.registry.enabled or self.registry.count() > 0:
+            return None
+        if not (os.path.isfile(self.model_path)
+                and self.model.detector.is_trained):
+            return None
+        row = self.registry.adopt(self.model_path)
+        if row is not None:
+            log.info("adopted deployed model as %s (%s)",
+                     row["model_id"], row["status"])
+        return row
 
     # -- Module 3: adversarial resilience ------------------------------------------
 

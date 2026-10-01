@@ -16,6 +16,8 @@ Durability rules by table:
 
 * ``flows`` / ``events``  - batched (see above)
 * ``captures`` / ``model_runs`` - immediate (ids must exist right away)
+* ``model_registry``         - immediate (audited status transitions; one
+                               row per immutable artifact)
 * ``audit_log``           - immediate (hash-chain integrity) and never pruned
 * ``users`` / ``sessions`` - immediate (login must observe its own row now)
 * ``incidents`` / ``incident_notes`` - immediate (triage writes are rare)
@@ -38,6 +40,7 @@ from .db import (
     EventRepository,
     FlowRepository,
     IncidentRepository,
+    ModelRegistryRepository,
     ModelRunRepository,
     RetentionPolicy,
     SessionRepository,
@@ -90,6 +93,7 @@ class Store:
                                             max_rows=event_max_rows)
         self._captures = CaptureRepository(self._db)
         self._runs = ModelRunRepository(self._db)
+        self._models = ModelRegistryRepository(self._db)
         self._audit = AuditRepository(self._db)
         self._users = UserRepository(self._db)
         self._sessions = SessionRepository(self._db)
@@ -470,6 +474,41 @@ class Store:
 
     def model_run_count(self) -> int:
         return self._runs.count()
+
+    # -- model registry (Prompt 14: lineage + single ACTIVE) ------------------
+
+    def model_registry_add(self, fields: dict) -> dict:
+        """Insert one CANDIDATE row for a freshly saved artifact."""
+        return self._models.add(fields)
+
+    def model_registry_get(self, model_id: str) -> dict | None:
+        return self._models.get(model_id)
+
+    def model_registry_list(self, limit: int = 100,
+                             offset: int = 0) -> dict:
+        return self._models.list(limit, offset=offset)
+
+    def model_registry_count(self) -> int:
+        return self._models.count()
+
+    def model_registry_active(self) -> dict | None:
+        return self._models.active()
+
+    def model_registry_previous_active(self, before_ts: float) -> dict | None:
+        return self._models.previous_active(before_ts)
+
+    def model_registry_set_status(self, model_id: str, status: str, *,
+                                  metrics: dict | None = None,
+                                  error: str | None = None,
+                                  clear_error: bool = False,
+                                  retired_at: float | None = None) -> dict | None:
+        return self._models.set_status(
+            model_id, status, metrics=metrics, error=error,
+            clear_error=clear_error, retired_at=retired_at)
+
+    def model_registry_activate(self, model_id: str, now: float) -> dict:
+        """Atomic retire-current + promote-target (single ACTIVE)."""
+        return self._models.activate(model_id, now)
 
     # -- Module 5: audit log (immediate, never pruned) ------------------------
 

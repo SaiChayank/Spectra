@@ -87,6 +87,14 @@ try:
 except Exception:  # noqa: BLE001 - a bootstrap failure must not block serving
     log.exception("auth bootstrap failed; logins will be unavailable")
 
+# Model registry adoption (Prompt 14): an empty registry with a trained
+# deployed model registers that artifact as the first ACTIVE row - explicit,
+# audited lineage for models that predate the registry. Never blocks serving.
+try:
+    engine.adopt_model()
+except Exception:  # noqa: BLE001 - adoption is opportunistic
+    log.exception("model registry adoption failed")
+
 
 @app.websocket("/ws/events")
 async def ws_events(ws: WebSocket) -> None:

@@ -9,9 +9,10 @@ Public surface:
 * :class:`Database` / :class:`StoreError` - connection + transactions
 * :func:`migrate` / :class:`Migration` - versioned schema migrations
 * repositories: :class:`FlowRepository`, :class:`CaptureRepository`,
-  :class:`ModelRunRepository`, :class:`AuditRepository`, :class:`EventRepository`,
-  :class:`UserRepository`, :class:`SessionRepository`, :class:`IncidentRepository`,
-  :class:`AlertRepository`
+  :class:`ModelRunRepository`, :class:`ModelRegistryRepository`,
+  :class:`AuditRepository`, :class:`EventRepository`,
+  :class:`UserRepository`, :class:`SessionRepository`,
+  :class:`IncidentRepository`, :class:`AlertRepository`
 * :class:`WriteBuffer` - batched flow/event commits
 * :class:`RetentionPolicy` / :func:`apply_retention` - bounded retention
 """
@@ -35,6 +36,7 @@ from .repositories import (
     EventRepository,
     FlowRepository,
     IncidentRepository,
+    ModelRegistryRepository,
     ModelRunRepository,
     SessionRepository,
     UserRepository,
@@ -53,6 +55,7 @@ __all__ = [
     "IncidentRepository",
     "MIGRATIONS",
     "Migration",
+    "ModelRegistryRepository",
     "ModelRunRepository",
     "RetentionPolicy",
     "SessionRepository",

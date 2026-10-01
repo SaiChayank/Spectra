@@ -1,5 +1,12 @@
 # Model registry (Prompt 14) — design notes
 
+**Status: implemented.** Schema migration 10 (`model_registry` + the partial
+single-ACTIVE index), `spectra.services.model_registry`,
+`/api/model/registry*` routes, train → register/validate/activate, startup
+ACTIVE load (deployed engines only; custom `model_path` engines keep legacy
+semantics so test fixtures stay isolated), app-import adoption. Pinned by
+`backend/tests/test_model_registry.py`.
+
 ## State machine
 CANDIDATE -> VALIDATED -> ACTIVE -> RETIRED (superseded/retired)
 CANDIDATE -> FAILED (validation gate)          RETIRED -> ACTIVE (re-activate/rollback)

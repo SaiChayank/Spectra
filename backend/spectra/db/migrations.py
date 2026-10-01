@@ -54,8 +54,12 @@ investigation    indexes (v9) - flow endpoints + TLS fingerprints + score,
                  alert endpoints + severity, incident severity, audit ts:
                  the investigation bundle, global search and the history
                  filter routes stay index-backed as the tables grow
-models           deferred: artifacts are joblib files + ``model_runs``
-                 lineage; a registry belongs with baseline concern C7
+models           table (v10) - the model registry: one row per artifact
+                 (joblib files in ``<data_dir>/model_artifacts``, sha256
+                 recorded here) with the CANDIDATE/VALIDATED/ACTIVE/
+                 RETIRED/FAILED lifecycle, a partial unique index enforcing
+                 a single ACTIVE, and ``last_activated_at`` as the rollback
+                 cursor; ``model_runs`` stays the training-lineage feed
 settings         deferred: configuration is env-driven (``SPECTRA_*``); a
                  settings table needs a settings API nobody consumes yet
 ===============  =========================================================
@@ -515,6 +519,54 @@ def _investigation_indexes(db: Database) -> None:
         db.execute(stmt)
 
 
+def _model_registry(db: Database) -> None:
+    """v10: model registry - artifact lineage + the single-active invariant.
+
+    One row per trained/adopted model artifact (Prompt 14).  ``status`` walks
+    CANDIDATE -> VALIDATED -> ACTIVE -> RETIRED (plus FAILED from the
+    validation gate); the partial unique index below is the database-level
+    half of "exactly one ACTIVE", the ``BEGIN IMMEDIATE`` promote/retire pair
+    in :mod:`spectra.db.repositories` the other half.  ``last_activated_at``
+    is the rollback cursor: the previous active model is the RETIRED row with
+    the greatest value below the current one's.
+
+    JSON columns (``metrics``) are parsed by the repository on read; the
+    artifact bytes live in ``<data_dir>/model_artifacts/`` (joblib files,
+    immutable), never in the database - this row records name + sha256.
+    """
+    db.execute(
+        """CREATE TABLE IF NOT EXISTS model_registry (
+            id                INTEGER PRIMARY KEY AUTOINCREMENT,
+            model_id          TEXT NOT NULL UNIQUE,
+            created_at        REAL NOT NULL,
+            source            TEXT,
+            artifact          TEXT NOT NULL,
+            artifact_sha256   TEXT NOT NULL,
+            status            TEXT NOT NULL DEFAULT 'CANDIDATE',
+            trained_at        REAL,
+            n_train           INTEGER,
+            contamination     REAL,
+            n_features        INTEGER,
+            feature_schema    TEXT,
+            model_version     TEXT,
+            threshold         REAL,
+            metrics           TEXT,
+            error             TEXT,
+            activated_count   INTEGER NOT NULL DEFAULT 0,
+            last_activated_at REAL,
+            retired_at        REAL
+        )"""
+    )
+    db.execute(
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_models_single_active "
+        "ON model_registry(status) WHERE status = 'ACTIVE'"
+    )
+    db.execute(
+        "CREATE INDEX IF NOT EXISTS idx_models_status "
+        "ON model_registry(status, created_at)"
+    )
+
+
 MIGRATIONS: tuple[Migration, ...] = (
     Migration(1, "baseline_schema", _baseline),
     Migration(2, "flows_capture_foreign_key", _flows_capture_foreign_key),
@@ -525,6 +577,7 @@ MIGRATIONS: tuple[Migration, ...] = (
     Migration(7, "alerts", _alerts),
     Migration(8, "incident_alert_layer", _incident_alert_layer),
     Migration(9, "investigation_indexes", _investigation_indexes),
+    Migration(10, "model_registry", _model_registry),
 )
 
 
