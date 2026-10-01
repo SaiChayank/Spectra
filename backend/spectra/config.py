@@ -71,6 +71,11 @@ class Config:
     # detection model
     contamination: float = 0.02    # expected anomaly fraction when training
 
+    # analyst alerts (spectra.services.threat_alerts): sightings of the same
+    # behaviour (threat type + endpoint pair) within this flow-time window
+    # group into one alert (occurrences++); a longer gap starts a new one.
+    alert_group_seconds: float = 600.0
+
     # authentication (spectra.services.auth): local accounts only - one admin
     # is bootstrapped when the users table is empty (env password or a
     # mode-restricted file), sessions are absolute-TTL rows keyed by token

@@ -34,6 +34,7 @@ from .correlation import CorrelationService
 from .events import EventBus
 from .model import ModelService
 from .resilience import FailureTracker
+from .threat_alerts import ThreatAlertService
 
 log = logging.getLogger("spectra.engine")
 
@@ -42,8 +43,8 @@ class DetectionService:
     def __init__(self, status: dict, config: Config, store: Store | None,
                  model: ModelService, events: EventBus,
                  correlation: CorrelationService, alerts: AlertService,
-                 session: CaptureSession, failures: FailureTracker,
-                 recent_feats: deque) -> None:
+                 threat_alerts: ThreatAlertService, session: CaptureSession,
+                 failures: FailureTracker, recent_feats: deque) -> None:
         self.status = status
         self.config = config
         self.store = store
@@ -51,6 +52,7 @@ class DetectionService:
         self._events = events
         self._correlation = correlation
         self._alerts = alerts
+        self.threat_alerts = threat_alerts
         self.session = session
         self.failures = failures
         self.recent_feats = recent_feats
@@ -243,6 +245,24 @@ class DetectionService:
                 default=None,
             )
             record["threat"] = threat if threat is not None else unknown_threat()
+
+            # Analyst alert (spectra.services.threat_alerts): the
+            # classification may raise a grouped, persisted, streamed alert —
+            # strictly on top of the raw detection, never instead of it.  The
+            # alert id is stamped onto the record *before* persistence, so the
+            # stored flow row names the alert it produced.  A failure here
+            # degrades to "no alert" instead of stopping publication.
+            alert = None
+            if self.threat_alerts is not None:
+                alert = self.failures.guard(
+                    "threat_alerts",
+                    lambda: self.threat_alerts.observe(
+                        record, record["threat"], score=score,
+                        capture_id=self.session.capture_id),
+                    default=None,
+                )
+            if alert is not None:
+                record["alert_id"] = alert["alert_id"]
 
         self._correlation.observe(record)
         self._events.emit(

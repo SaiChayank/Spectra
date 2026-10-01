@@ -10,7 +10,10 @@ behavioural signals accumulate enough evidence.  Everything else stays
 Evidence model
 --------------
 Each category is a small set of named signals with fixed weights (0.3 weak,
-0.4 moderate, 0.5 strong).  A category qualifies when
+0.4 moderate, 0.5 strong); a signal also carries the machine-readable
+``value``/``unit`` behind it when one exists (the alert layer turns those
+into structured evidence — see :mod:`spectra.evidence`).  A category
+qualifies when
 
 * its weighted support reaches the category minimum (see ``_MINIMUMS``), **and**
 * at least two distinct signals fired — one strong number alone never
@@ -70,9 +73,24 @@ _STANDARD_QUIC = frozenset({"QUIC v1", "QUIC v2"})
 
 # -- small helpers ------------------------------------------------------------
 
-def _sig(signal: str, weight: float, detail: str) -> dict:
-    """One named piece of evidence for/against a category."""
-    return {"signal": signal, "weight": float(weight), "detail": detail}
+def _sig(signal: str, weight: float, detail: str,
+         value: float | str | bool | None = None,
+         unit: str | None = None) -> dict:
+    """One named piece of evidence for/against a category.
+
+    ``value``/``unit`` make the signal machine-readable for the alert layer's
+    structured evidence (see :mod:`spectra.evidence`); ``detail`` stays the
+    human phrasing either way.
+    """
+    out: dict = {"signal": signal, "weight": float(weight), "detail": detail}
+    if value is not None:
+        if isinstance(value, bool) or isinstance(value, str):
+            out["value"] = value
+        else:
+            out["value"] = round(float(value), 4)
+    if value is not None and unit is not None:
+        out["unit"] = unit
+    return out
 
 
 def _features(feats: Any) -> dict[str, float]:
@@ -202,13 +220,16 @@ def _rule_c2(rec: dict, f: dict[str, float], ctx: dict) -> tuple[list, list]:
     if mean_iat >= 0.1 and ratio <= 0.2:
         sup.append(_sig("periodic_forward_timing", 0.5,
                         f"forward IAT mad/mean {ratio:.2f} over {mean_iat:.2f}s "
-                        f"spacing (steady cadence)"))
+                        f"spacing (steady cadence)",
+                        value=mean_iat, unit="s"))
     if mean_iat > 0 and mad <= 0.05:
         sup.append(_sig("low_timing_mad", 0.3,
-                        f"forward IAT mad {mad:.3f}s (near-constant interval)"))
+                        f"forward IAT mad {mad:.3f}s (near-constant interval)",
+                        value=mad, unit="s"))
     if ctx["pair_count"] >= 3:
         sup.append(_sig("repeated_destination", 0.4,
-                        f"same src->dst pair seen {ctx['pair_count']} times before"))
+                        f"same src->dst pair seen {ctx['pair_count']} times before",
+                        value=ctx["pair_count"], unit="count"))
     b_mean = _f(f, "bytes_mean")
     within_cv = (_f(f, "bytes_std") / b_mean) if b_mean > 0 else 1.0
     cross = (list(ctx["dst_bytes"]) + [_rfloat(rec, "bytes")]
@@ -217,17 +238,22 @@ def _rule_c2(rec: dict, f: dict[str, float], ctx: dict) -> tuple[list, list]:
         detail = f"within-flow size cv {within_cv:.2f}"
         if cross:
             detail += f", cross-session size cv {_cv(cross):.2f}"
-        sup.append(_sig("similar_packet_sizes", 0.3, detail))
+        sup.append(_sig("similar_packet_sizes", 0.3, detail,
+                        value=within_cv, unit="ratio"))
     if ctx["dst_small"] >= 3:
         sup.append(_sig("repeated_small_sessions", 0.4,
-                        f"{ctx['dst_small']} prior <=10KB sessions to this host"))
+                        f"{ctx['dst_small']} prior <=10KB sessions to this host",
+                        value=ctx["dst_small"], unit="count"))
     if mean_iat >= 0.1 and ratio > 0.5:
         opp.append(_sig("irregular_timing", 0.3,
-                        f"forward IAT mad/mean {ratio:.2f} (no steady cadence)"))
+                        f"forward IAT mad/mean {ratio:.2f} (no steady cadence)",
+                        value=ratio if ratio != float("inf") else None,
+                        unit="ratio"))
     if _rfloat(rec, "bytes") >= 1_000_000:
         opp.append(_sig("bulk_transfer", 0.3,
                         f"{_rfloat(rec, 'bytes') / 1e6:.1f} MB exchange (bulk, "
-                        f"not a heartbeat)"))
+                        f"not a heartbeat)",
+                        value=_rfloat(rec, "bytes") / 1e6, unit="MB"))
     return sup, opp
 
 
@@ -237,29 +263,37 @@ def _rule_recon(rec: dict, f: dict[str, float], ctx: dict) -> tuple[list, list]:
     opp: list[dict] = []
     if len(ctx["src_hosts"]) >= 8:
         sup.append(_sig("destination_fanout", 0.5,
-                        f"{len(ctx['src_hosts'])} distinct dst hosts from one source"))
+                        f"{len(ctx['src_hosts'])} distinct dst hosts from one source",
+                        value=len(ctx["src_hosts"]), unit="count"))
     if len(ctx["src_ports"]) >= 8:
         sup.append(_sig("port_fanout", 0.4,
-                        f"{len(ctx['src_ports'])} distinct dst ports from one source"))
+                        f"{len(ctx['src_ports'])} distinct dst ports from one source",
+                        value=len(ctx["src_ports"]), unit="count"))
     if ctx["src_flows"] >= 5 and ctx["src_short"] / ctx["src_flows"] >= 0.6:
         sup.append(_sig("many_short_flows", 0.4,
                         f"{ctx['src_short']}/{ctx['src_flows']} prior flows were "
-                        f"short (<=0.5s, <=4 packets)"))
+                        f"short (<=0.5s, <=4 packets)",
+                        value=round(ctx["src_short"] / ctx["src_flows"], 3),
+                        unit="ratio"))
     if ctx["endpoint_count"] >= 3:
         sup.append(_sig("repeated_attempts", 0.4,
-                        f"{ctx['endpoint_count']} attempts to this host:port before"))
+                        f"{ctx['endpoint_count']} attempts to this host:port before",
+                        value=ctx["endpoint_count"], unit="count"))
     if _f(f, "rst_count") >= 1 and _f(f, "payload_ratio") <= 0.1:
         sup.append(_sig("reset_without_payload", 0.3,
                         f"RST with negligible payload (ratio "
-                        f"{_f(f, 'payload_ratio'):.2f})"))
+                        f"{_f(f, 'payload_ratio'):.2f})",
+                        value=_f(f, "payload_ratio"), unit="ratio"))
     if ctx["src_flows"] >= 5 and len(ctx["src_hosts"]) <= 2:
         opp.append(_sig("low_fanout", 0.3,
                         f"only {len(ctx['src_hosts'])} dst hosts across "
-                        f"{ctx['src_flows']} flows"))
+                        f"{ctx['src_flows']} flows",
+                        value=len(ctx["src_hosts"]), unit="count"))
     if ctx["src_flows"] >= 3 and _mean(ctx["src_durations"]) >= 5.0:
         opp.append(_sig("long_lived_flows", 0.3,
                         f"prior flows average {_mean(ctx['src_durations']):.1f}s "
-                        f"(conversations, not probes)"))
+                        f"(conversations, not probes)",
+                        value=_mean(ctx["src_durations"]), unit="s"))
     return sup, opp
 
 
@@ -271,28 +305,34 @@ def _rule_exfil(rec: dict, f: dict[str, float], ctx: dict) -> tuple[list, list]:
     bwd = _f(f, "bytes_bwd")
     if fwd >= 3 * bwd and fwd >= 50_000:
         sup.append(_sig("outbound_dominance", 0.5,
-                        f"{fwd / 1000:.0f}KB out vs {bwd / 1000:.0f}KB back"))
+                        f"{fwd / 1000:.0f}KB out vs {bwd / 1000:.0f}KB back",
+                        value=fwd / max(bwd, 1), unit="ratio"))
     dur = _f(f, "duration_s")
     if dur >= 5 and fwd / dur >= 20_000:
         sup.append(_sig("sustained_transfer", 0.4,
-                        f"{fwd / dur / 1000:.0f}KB/s outbound held for {dur:.1f}s"))
+                        f"{fwd / dur / 1000:.0f}KB/s outbound held for {dur:.1f}s",
+                        value=round(fwd / dur / 1000, 1), unit="KB/s"))
     if ctx["pair_count"] == 0 and ctx["window_len"] >= 10:
         sup.append(_sig("unusual_destination", 0.4,
                         f"src->dst pair unseen in the last "
-                        f"{ctx['window_len']} flows"))
+                        f"{ctx['window_len']} flows",
+                        value=True, unit=None))
     total = _rfloat(rec, "bytes") or _f(f, "bytes_total")
     baseline = _mean(ctx["src_bytes"])
     if len(ctx["src_bytes"]) >= 5 and baseline > 0 and total >= 5 * baseline:
         sup.append(_sig("baseline_deviation", 0.4,
                         f"{total / 1000:.0f}KB vs {baseline / 1000:.0f}KB "
-                        f"typical for this source"))
+                        f"typical for this source",
+                        value=round(total / baseline, 2), unit="ratio"))
     if bwd >= 3 * fwd and bwd >= 50_000:
         opp.append(_sig("inbound_dominant", 0.3,
                         f"{bwd / 1000:.0f}KB in vs {fwd / 1000:.0f}KB out "
-                        f"(download, not upload)"))
+                        f"(download, not upload)",
+                        value=bwd / max(fwd, 1), unit="ratio"))
     if total < 10_000:
         opp.append(_sig("tiny_transfer", 0.3,
-                        f"{total / 1000:.0f}KB total (negligible)"))
+                        f"{total / 1000:.0f}KB total (negligible)",
+                        value=round(total / 1000, 1), unit="KB"))
     return sup, opp
 
 
@@ -309,34 +349,43 @@ def _rule_tls(rec: dict, f: dict[str, float], ctx: dict) -> tuple[list, list]:
     alpn = list(rec.get("alpn") or [])
     ja3, ja4 = rec.get("ja3"), rec.get("ja4")
     if not has_sni:
-        sup.append(_sig("missing_sni", 0.4, "TLS handshake carried no SNI"))
+        sup.append(_sig("missing_sni", 0.4, "TLS handshake carried no SNI",
+                        value=True))
     if version in _LEGACY_TLS:
-        sup.append(_sig("legacy_version", 0.4, f"{version} negotiated"))
+        sup.append(_sig("legacy_version", 0.4, f"{version} negotiated",
+                        value=version))
     if ctx["tls_flows"] >= 10 and (
             (ja3 and ctx["ja3"].get(ja3, 0) <= 1)
             or (ja4 and ctx["ja4"].get(ja4, 0) <= 1)):
         sup.append(_sig("rare_fingerprint", 0.4,
                         f"fingerprint rare among {ctx['tls_flows']} TLS flows "
-                        f"in the window"))
+                        f"in the window",
+                        value=ctx["tls_flows"], unit="count"))
     slow = max(_f(f, "handshake_ms"), _f(f, "server_hello_ms"))
     if slow > 1500:
-        sup.append(_sig("slow_handshake", 0.4, f"handshake took {slow:.0f}ms"))
+        sup.append(_sig("slow_handshake", 0.4, f"handshake took {slow:.0f}ms",
+                        value=round(slow, 1), unit="ms"))
     ciphers = _f(f, "tls_cipher_count")
     if 0 < ciphers <= 2:
         sup.append(_sig("narrow_cipher_offering", 0.3,
-                        f"only {ciphers:.0f} cipher offered/selected"))
+                        f"only {ciphers:.0f} cipher offered/selected",
+                        value=int(ciphers), unit="count"))
     if not alpn and _f(f, "tls_present") >= 0.5:
-        sup.append(_sig("no_alpn", 0.3, "handshake carried no ALPN"))
+        sup.append(_sig("no_alpn", 0.3, "handshake carried no ALPN",
+                        value=True))
     if ja3 and ctx["ja3"].get(ja3, 0) >= 5:
         opp.append(_sig("common_fingerprint", 0.3,
                         f"this ja3 seen {ctx['ja3'][ja3]}x before (ordinary "
-                        f"client)"))
+                        f"client)",
+                        value=ctx["ja3"][ja3], unit="count"))
     if 0 < _f(f, "handshake_ms") < 500 and has_sni and alpn:
         opp.append(_sig("healthy_handshake", 0.3,
                         f"fast handshake ({_f(f, 'handshake_ms'):.0f}ms) with "
-                        f"SNI + ALPN"))
+                        f"SNI + ALPN",
+                        value=round(_f(f, "handshake_ms"), 1), unit="ms"))
     if version == "TLS 1.3":
-        opp.append(_sig("modern_version", 0.3, "TLS 1.3 negotiated"))
+        opp.append(_sig("modern_version", 0.3, "TLS 1.3 negotiated",
+                        value=version))
     return sup, opp
 
 
@@ -350,20 +399,27 @@ def _rule_quic(rec: dict, f: dict[str, float], ctx: dict) -> tuple[list, list]:
     alpn = [str(a) for a in (rec.get("alpn") or [])]
     if version.startswith("QUIC 0x"):
         sup.append(_sig("unknown_version", 0.5,
-                        f"unpublished QUIC version {version}"))
+                        f"unpublished QUIC version {version}",
+                        value=version))
     if "draft" in version or version == "version negotiation":
-        sup.append(_sig("draft_or_negotiation", 0.4, f"{version} in use"))
+        sup.append(_sig("draft_or_negotiation", 0.4, f"{version} in use",
+                        value=version))
     if not rec.get("sni"):
-        sup.append(_sig("missing_sni", 0.4, "QUIC handshake carried no SNI"))
+        sup.append(_sig("missing_sni", 0.4, "QUIC handshake carried no SNI",
+                        value=True))
     if alpn and not any(a.lower().startswith("h3") for a in alpn):
         sup.append(_sig("non_h3_alpn", 0.35,
-                        f"ALPN {','.join(alpn)} (not HTTP/3)"))
+                        f"ALPN {','.join(alpn)} (not HTTP/3)",
+                        value=",".join(alpn)))
     if not alpn:
-        sup.append(_sig("no_alpn", 0.3, "handshake carried no ALPN"))
+        sup.append(_sig("no_alpn", 0.3, "handshake carried no ALPN",
+                        value=True))
     if version in _STANDARD_QUIC:
-        opp.append(_sig("standard_version", 0.3, f"{version} (published)"))
+        opp.append(_sig("standard_version", 0.3, f"{version} (published)",
+                        value=version))
     if any(a.lower().startswith("h3") for a in alpn):
-        opp.append(_sig("h3_alpn", 0.3, "HTTP/3 negotiated normally"))
+        opp.append(_sig("h3_alpn", 0.3, "HTTP/3 negotiated normally",
+                        value=",".join(alpn)))
     return sup, opp
 
 
@@ -375,21 +431,27 @@ def _rule_volumetric(rec: dict, f: dict[str, float], ctx: dict) -> tuple[list, l
     pps = _f(f, "packets_per_s")
     total = _rfloat(rec, "bytes") or _f(f, "bytes_total")
     if bps >= 500_000:
-        sup.append(_sig("extreme_throughput", 0.5, f"{bps / 1e6:.1f} MB/s"))
+        sup.append(_sig("extreme_throughput", 0.5, f"{bps / 1e6:.1f} MB/s",
+                        value=round(bps / 1e6, 2), unit="MB/s"))
     if pps >= 2_000:
-        sup.append(_sig("high_packet_rate", 0.4, f"{pps:.0f} packets/s"))
+        sup.append(_sig("high_packet_rate", 0.4, f"{pps:.0f} packets/s",
+                        value=round(pps, 1), unit="packets/s"))
     if total >= 5_000_000:
-        sup.append(_sig("large_transfer", 0.4, f"{total / 1e6:.1f} MB in one flow"))
+        sup.append(_sig("large_transfer", 0.4, f"{total / 1e6:.1f} MB in one flow",
+                        value=round(total / 1e6, 2), unit="MB"))
     baseline = _mean(ctx["src_rates"])
     if len(ctx["src_rates"]) >= 5 and baseline > 0 and bps >= 5 * baseline:
         sup.append(_sig("volume_deviation", 0.3,
                         f"{bps / 1000:.0f}KB/s vs {baseline / 1000:.0f}KB/s "
-                        f"typical for this source"))
+                        f"typical for this source",
+                        value=round(bps / baseline, 2), unit="ratio"))
     if bps < 10_000 and pps < 100:
         opp.append(_sig("low_rate", 0.3,
-                        f"{bps / 1000:.1f}KB/s, {pps:.0f} packets/s"))
+                        f"{bps / 1000:.1f}KB/s, {pps:.0f} packets/s",
+                        value=round(bps / 1000, 1), unit="KB/s"))
     if total < 50_000:
-        opp.append(_sig("small_transfer", 0.3, f"{total / 1000:.0f}KB total"))
+        opp.append(_sig("small_transfer", 0.3, f"{total / 1000:.0f}KB total",
+                        value=round(total / 1000, 1), unit="KB"))
     return sup, opp
 
 
@@ -404,27 +466,33 @@ def _rule_endpoint(rec: dict, f: dict[str, float], ctx: dict) -> tuple[list, lis
                                         or total <= 0.2 * baseline):
         sup.append(_sig("behavior_change", 0.5,
                         f"{total / 1000:.0f}KB vs {baseline / 1000:.0f}KB "
-                        f"typical for this endpoint"))
+                        f"typical for this endpoint",
+                        value=round(total / baseline, 3), unit="ratio"))
     if (prior >= 3 and ctx["dst_port"]
             and ctx["dst_port"] not in ctx["dst_ports_seen"]):
         sup.append(_sig("unexpected_service_port", 0.4,
                         f"port {ctx['dst_port']} never used on this host in "
-                        f"{prior} prior flows"))
+                        f"{prior} prior flows",
+                        value=ctx["dst_port"]))
     if ctx["pair_count"] == 0 and ctx["window_len"] >= 20:
         sup.append(_sig("rare_endpoint", 0.3,
                         f"no prior traffic to this host in the last "
-                        f"{ctx['window_len']} flows"))
+                        f"{ctx['window_len']} flows",
+                        value=ctx["pair_count"], unit="count"))
     if _rfloat(rec, "score") >= 95:
         sup.append(_sig("extreme_score", 0.3,
                         f"detector score {_rfloat(rec, 'score'):.0f} "
-                        f"(top of range)"))
+                        f"(top of range)",
+                        value=_rfloat(rec, "score")))
     if (ctx["pair_count"] >= 5 and baseline > 0
             and 0.5 * baseline <= total <= 2 * baseline):
         opp.append(_sig("known_endpoint", 0.3,
-                        f"ordinary size for a host seen {ctx['pair_count']}x"))
+                        f"ordinary size for a host seen {ctx['pair_count']}x",
+                        value=ctx["pair_count"], unit="count"))
     if ctx["endpoint_count"] >= 3:
         opp.append(_sig("expected_port", 0.3,
-                        f"this host:port used {ctx['endpoint_count']}x before"))
+                        f"this host:port used {ctx['endpoint_count']}x before",
+                        value=ctx["endpoint_count"], unit="count"))
     return sup, opp
 
 

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import AlertsPanel from "./components/AlertsPanel";
 import BioPanel from "./components/BioPanel";
 import CapturePanel from "./components/CapturePanel";
 import DetectionsTable from "./components/DetectionsTable";
@@ -14,6 +15,7 @@ import {
   type FlowRecord,
   type Identity,
   type Snapshot,
+  type ThreatAlert,
   type WsEvent,
 } from "./lib/api";
 import { useEvents } from "./lib/useEvents";
@@ -36,6 +38,7 @@ export default function App() {
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [flows, setFlows] = useState<FlowRecord[]>([]);
   const [detections, setDetections] = useState<Detection[]>([]);
+  const [alerts, setAlerts] = useState<ThreatAlert[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("overview");
@@ -59,14 +62,16 @@ export default function App() {
 
   const refresh = useCallback(async () => {
     try {
-      const [stats, flowList, detList] = await Promise.all([
+      const [stats, flowList, detList, alertList] = await Promise.all([
         api.stats(),
         api.flows(60),
         api.detections(40),
+        api.alerts(40),
       ]);
       setSnapshot(stats);
       setFlows(flowList.items);
       setDetections(detList.items);
+      setAlerts(alertList.items);
       setError(null);
     } catch (err) {
       setError(
@@ -93,6 +98,19 @@ export default function App() {
       setSnapshot((prev) => (prev ? { ...prev, status: event.data } : prev));
     } else if (event.type === "model") {
       setSnapshot((prev) => (prev ? { ...prev, model: event.data } : prev));
+    } else if (event.type === "alert") {
+      // New alert: dedupe by id (a re-sighting may already be listed).
+      setAlerts((prev) =>
+        [event.data, ...prev.filter((a) => a.alert_id !== event.data.alert_id)].slice(0, 40),
+      );
+    } else if (event.type === "alert_updated") {
+      // Repeat sighting or status change: replace in place, most recent first.
+      setAlerts((prev) =>
+        [
+          event.data,
+          ...prev.filter((a) => a.alert_id !== event.data.alert_id),
+        ].slice(0, 40),
+      );
     }
   }, identity !== null);
 
@@ -102,6 +120,7 @@ export default function App() {
   const canManage = can("capture:manage") && can("model:manage");
   const canRun = can("investigate");
   const canConfig = can("config:manage");
+  const canTriage = can("incidents:manage");
 
   const signOut = async () => {
     try {
@@ -110,6 +129,23 @@ export default function App() {
       /* the session may already be gone server-side */
     }
     setIdentity(null);
+  };
+
+  // -- alert triage (OPEN -> ACKNOWLEDGED -> RESOLVED) ------------------------
+  const triage = async (
+    alertId: string,
+    action: (id: string) => Promise<ThreatAlert>,
+  ) => {
+    try {
+      const updated = await action(alertId);
+      setAlerts((prev) =>
+        prev.map((a) => (a.alert_id === alertId ? updated : a)),
+      );
+    } catch (err) {
+      setError(
+        `Alert transition failed — ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
   };
 
   const status = snapshot?.status;
@@ -219,6 +255,15 @@ export default function App() {
 
           <div style={{ marginBottom: 16 }}>
             <Timeline points={snapshot?.timeline ?? []} />
+          </div>
+
+          <div style={{ marginBottom: 16 }}>
+            <AlertsPanel
+              items={alerts}
+              canTriage={canTriage}
+              onAcknowledge={(id) => triage(id, api.acknowledgeAlert)}
+              onResolve={(id) => triage(id, api.resolveAlert)}
+            />
           </div>
 
           <div className="grid two-col" style={{ marginBottom: 16 }}>

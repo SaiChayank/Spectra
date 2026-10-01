@@ -29,6 +29,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .. import __version__
 from .routers import (
+    alerts,
     audit,
     auth,
     bio,
@@ -70,7 +71,7 @@ app.add_middleware(
 for _router in (core.router, captures.router, model.router, history.router,
                 graph.router, pqc.router, audit.router, twin.router,
                 bio.router, tee.router, edge.router, auth.router,
-                users.router, incidents.router):
+                users.router, incidents.router, alerts.router):
     app.include_router(_router)
 
 try:

@@ -19,6 +19,8 @@ Durability rules by table:
 * ``audit_log``           - immediate (hash-chain integrity) and never pruned
 * ``users`` / ``sessions`` - immediate (login must observe its own row now)
 * ``incidents`` / ``incident_notes`` - immediate (triage writes are rare)
+* ``alerts``              - immediate (verdict writes are rare; an alert must
+                            be durable the moment it is streamed)
 * ``schema_migrations``   - written by the migration runner only
 """
 
@@ -29,6 +31,7 @@ import logging
 import time
 
 from .db import (
+    AlertRepository,
     AuditRepository,
     CaptureRepository,
     Database,
@@ -91,6 +94,7 @@ class Store:
         self._users = UserRepository(self._db)
         self._sessions = SessionRepository(self._db)
         self._incidents = IncidentRepository(self._db)
+        self._alerts = AlertRepository(self._db)
         self.retention = retention if retention is not None else RetentionPolicy()
         self._lock = self._db.lock           # compat: historical attribute
         # Startup sweep: close sessions a crashed process left open and apply
@@ -308,6 +312,31 @@ class Store:
 
     def incident_note_count(self, incident_id: int) -> int:
         return self._incidents.note_count(incident_id)
+
+    # -- analyst alerts (threat-classification layer) ---------------------------
+
+    def insert_alert(self, alert: dict) -> None:
+        """Persist one newly raised alert (immediate single commit)."""
+        self._alerts.insert(alert)
+
+    def get_alert(self, alert_id: str) -> dict | None:
+        return self._alerts.get(alert_id)
+
+    def list_alerts(self, limit: int = 50, offset: int = 0,
+                    status: str | None = None,
+                    threat_type: str | None = None) -> dict:
+        return self._alerts.list(limit=limit, offset=offset, status=status,
+                                 threat_type=threat_type)
+
+    def update_alert_group(self, alert_id: str, **fields) -> bool:
+        """Persist a grouped re-sighting of an existing alert."""
+        return self._alerts.update_group(alert_id, **fields)
+
+    def acknowledge_alert(self, alert_id: str) -> bool:
+        return self._alerts.acknowledge(alert_id, now=time.time())
+
+    def resolve_alert(self, alert_id: str) -> bool:
+        return self._alerts.resolve(alert_id, now=time.time())
 
     # -- system events --------------------------------------------------------
 

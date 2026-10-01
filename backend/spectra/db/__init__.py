@@ -10,7 +10,8 @@ Public surface:
 * :func:`migrate` / :class:`Migration` - versioned schema migrations
 * repositories: :class:`FlowRepository`, :class:`CaptureRepository`,
   :class:`ModelRunRepository`, :class:`AuditRepository`, :class:`EventRepository`,
-  :class:`UserRepository`, :class:`SessionRepository`, :class:`IncidentRepository`
+  :class:`UserRepository`, :class:`SessionRepository`, :class:`IncidentRepository`,
+  :class:`AlertRepository`
 * :class:`WriteBuffer` - batched flow/event commits
 * :class:`RetentionPolicy` / :func:`apply_retention` - bounded retention
 """
@@ -27,6 +28,8 @@ from .migrations import (
     schema_version,
 )
 from .repositories import (
+    ALERT_JSON_FIELDS,
+    AlertRepository,
     AuditRepository,
     CaptureRepository,
     EventRepository,
@@ -40,6 +43,8 @@ from .repositories import (
 from .retention import RetentionPolicy, apply_retention
 
 __all__ = [
+    "ALERT_JSON_FIELDS",
+    "AlertRepository",
     "AuditRepository",
     "CaptureRepository",
     "Database",

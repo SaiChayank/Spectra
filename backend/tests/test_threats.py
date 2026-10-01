@@ -66,8 +66,14 @@ def assert_valid(out: dict) -> None:
     assert isinstance(out["supporting"], list)
     assert isinstance(out["contradicting"], list)
     for signal in out["supporting"] + out["contradicting"]:
-        assert set(signal) == {"signal", "weight", "detail"}
+        # value/unit are optional machine-readable enrichments on top of the
+        # original contract (the alert layer turns them into evidence items).
+        assert {"signal", "weight", "detail"} <= set(signal)
+        assert set(signal) <= {"signal", "weight", "detail", "value", "unit"}
         assert 0.0 < signal["weight"] <= 1.0
+        if "value" in signal:
+            assert isinstance(signal["value"], (bool, float, int, str))
+            assert signal.get("unit") is None or isinstance(signal["unit"], str)
     if out["threat_type"] == UNKNOWN:
         assert out["confidence"] < 0.5
         assert out.get("insufficient_evidence") is True

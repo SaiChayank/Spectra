@@ -60,6 +60,9 @@ class FlowRecord(TypedDict, total=False):
     #: Anomalies only: explainable threat verdict (spectra.threats) —
     #: ``threat_type``/``confidence`` plus supporting/contradicting signals.
     threat: dict | None
+    #: Anomalies that produced an alert: the alert's id (reverse link; the
+    #: alert itself references the flow — see spectra.services.threat_alerts).
+    alert_id: str | None
 
 
 class DetectionRecord(TypedDict, total=False):
@@ -80,6 +83,77 @@ class AlertRecord(TypedDict, total=False):
     level: str
     near_miss_rate: float
     reasons: list
+
+
+class EvidenceItem(TypedDict, total=False):
+    """One technical evidence item on an alert (machine + human readable).
+
+    ``key``/``value``/``unit`` are the machine-readable form (e.g.
+    ``periodicity = 30.2 s``); ``label``/``detail`` phrase it for an analyst.
+    ``value`` is ``None`` when the signal carries no direct measurement.
+    """
+
+    key: str
+    value: float | str | bool | None
+    unit: str | None
+    label: str
+    detail: str
+
+
+class Evidence(TypedDict, total=False):
+    """Structured evidence document carried by :class:`ThreatAlert`."""
+
+    supporting: list[EvidenceItem]
+    contradicting: list[EvidenceItem]
+    #: One plain-sentence analyst explanation of the behaviour.
+    summary: str
+
+
+class ThreatAlert(TypedDict, total=False):
+    """The analyst-facing alert, separate from the raw detection.
+
+    Carries the four concepts side by side, deliberately independent:
+    ``anomaly_score`` (detector percentile), ``confidence`` (classifier
+    evidence share), ``severity`` (ordinal triage level from
+    :mod:`spectra.severity`, with its derivation in ``severity_factors``),
+    and ``threat_type`` (behaviour category).  ``metadata`` holds related
+    flow context, ``module_annotations`` the per-module verdicts.
+    """
+
+    #: Stable id (``alrt_<hex>``); also stamped onto the source flow record.
+    alert_id: str
+    #: Source flow row id when its durable id is known at alert time
+    #: (batched flow writes often leave this ``None`` — the flow row carries
+    #: ``alert_id`` as the reverse link either way).
+    flow_id: int | None
+    capture_id: int | None
+    #: Wall-clock time the alert was created.
+    timestamp: float
+    #: Flow-observation time of the first / latest grouped sighting.
+    first_seen: float
+    last_seen: float
+    updated_at: float
+    source: str
+    destination: str
+    protocol: str
+    threat_type: str
+    anomaly_score: float | None
+    confidence: float
+    #: LOW | MEDIUM | HIGH | CRITICAL (ordinal — see spectra.severity).
+    severity: str
+    #: Every severity input's contribution, human-readable.
+    severity_factors: list[str]
+    model_id: str | None
+    model_version: str | None
+    evidence: Evidence
+    #: Related flow context (sni, ports, size, sector, slice, ...).
+    metadata: dict
+    #: Per-module verdicts riding the source flow (immune/snn/swarm/pqc).
+    module_annotations: dict
+    #: OPEN -> ACKNOWLEDGED -> RESOLVED (terminal).
+    status: str
+    #: How many sightings are grouped into this alert.
+    occurrences: int
 
 
 class EvidenceRecord(FlowRecord, total=False):

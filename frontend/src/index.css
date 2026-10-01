@@ -354,6 +354,75 @@ tbody tr:hover {
   font-family: "JetBrains Mono", Consolas, monospace;
 }
 
+/* ---------- alert severity (ordinal triage level, NOT the score) ---------- */
+
+.severity {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  border: 1px solid transparent;
+  font-family: "JetBrains Mono", Consolas, monospace;
+}
+
+.severity.sev-low {
+  background: rgba(61, 220, 151, 0.13);
+  color: var(--ok);
+  border-color: rgba(61, 220, 151, 0.35);
+}
+
+.severity.sev-medium {
+  background: rgba(255, 179, 71, 0.13);
+  color: var(--warn);
+  border-color: rgba(255, 179, 71, 0.35);
+}
+
+.severity.sev-high {
+  background: rgba(255, 77, 109, 0.16);
+  color: #ff8098;
+  border-color: rgba(255, 77, 109, 0.45);
+}
+
+.severity.sev-critical {
+  background: #ff4d6d;
+  color: #ffffff;
+  border-color: #ff6b85;
+  box-shadow: 0 0 8px rgba(255, 77, 109, 0.35);
+}
+
+/* ---------- alert lifecycle status ---------- */
+
+.status {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-size: 10.5px;
+  font-weight: 700;
+  border: 1px solid transparent;
+  margin-right: 5px;
+  font-family: "JetBrains Mono", Consolas, monospace;
+}
+
+.status.open {
+  background: rgba(255, 179, 71, 0.13);
+  color: var(--warn);
+  border-color: rgba(255, 179, 71, 0.35);
+}
+
+.status.acknowledged {
+  background: rgba(124, 92, 255, 0.14);
+  color: #b9a8ff;
+  border-color: rgba(124, 92, 255, 0.35);
+}
+
+.status.resolved {
+  background: rgba(61, 220, 151, 0.13);
+  color: var(--ok);
+  border-color: rgba(61, 220, 151, 0.35);
+}
+
 .empty {
   color: var(--text-dim);
   font-size: 13px;

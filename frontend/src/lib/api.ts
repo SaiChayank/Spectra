@@ -78,6 +78,62 @@ export interface Detection extends FlowRecord {
   detected_at: number;
 }
 
+/* ---------- Module 4b: analyst alerts (over detections, never instead) ---------- */
+
+export interface EvidenceItem {
+  /** Stable machine-readable key (e.g. `periodicity`). */
+  key: string;
+  /** Measured value — number, string or boolean; null when not measured. */
+  value: number | string | boolean | null;
+  unit: string | null;
+  /** Human label for the item (e.g. "Periodicity"). */
+  label: string;
+  /** Original human phrasing of the observation. */
+  detail: string;
+}
+
+export interface Evidence {
+  /** Technical items supporting the classification. */
+  supporting: EvidenceItem[];
+  /** Technical items arguing against it (kept visible, never dropped). */
+  contradicting: EvidenceItem[];
+  /** One plain-sentence analyst explanation of the behaviour. */
+  summary: string;
+}
+
+export type AlertSeverity = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+export type AlertStatus = "OPEN" | "ACKNOWLEDGED" | "RESOLVED";
+
+export interface ThreatAlert {
+  alert_id: string;
+  flow_id: number | null;
+  capture_id: number | null;
+  timestamp: number;
+  first_seen: number;
+  last_seen: number;
+  updated_at: number;
+  source: string;
+  destination: string;
+  protocol: string;
+  threat_type: string;
+  /** Detector percentile (0-100) — independent of the fields below. */
+  anomaly_score: number | null;
+  /** Classifier evidence share (0-1) for the chosen threat type. */
+  confidence: number;
+  /** Ordinal triage level — calculated separately, see severity_factors. */
+  severity: AlertSeverity;
+  /** Every severity input's contribution, human-readable. */
+  severity_factors: string[];
+  model_id: string | null;
+  model_version: string | null;
+  evidence: Evidence;
+  metadata: Record<string, unknown>;
+  module_annotations: Record<string, unknown>;
+  status: AlertStatus;
+  /** Sightings grouped into this alert (repeats, not duplicates). */
+  occurrences: number;
+}
+
 export interface IfaceDetail {
   id: string;
   name: string;
@@ -166,7 +222,9 @@ export type WsEvent =
   | { type: "flow"; data: FlowRecord & { score: number | null; anomaly: boolean } }
   | { type: "detection"; data: Detection }
   | { type: "status"; data: CaptureStatus }
-  | { type: "model"; data: ModelInfo };
+  | { type: "model"; data: ModelInfo }
+  | { type: "alert"; data: ThreatAlert }
+  | { type: "alert_updated"; data: ThreatAlert };
 
 /* ---------- Module 6: bio-inspired immunity ---------- */
 
@@ -363,6 +421,14 @@ export const api = {
   flows: (limit = 100) => request<{ count: number; items: FlowRecord[] }>(`/api/flows?limit=${limit}`),
   detections: (limit = 100) =>
     request<{ count: number; items: Detection[] }>(`/api/detections?limit=${limit}`),
+  alerts: (limit = 40) =>
+    request<{ count: number; offset: number; items: ThreatAlert[] }>(
+      `/api/alerts?limit=${limit}`,
+    ),
+  acknowledgeAlert: (alertId: string) =>
+    request<ThreatAlert>(`/api/alerts/${alertId}/acknowledge`, { method: "POST" }),
+  resolveAlert: (alertId: string) =>
+    request<ThreatAlert>(`/api/alerts/${alertId}/resolve`, { method: "POST" }),
   model: () => request<ModelInfo>("/api/model"),
   interfaces: () =>
     request<{ interfaces: string[]; details?: IfaceDetail[]; error?: string }>("/api/interfaces"),

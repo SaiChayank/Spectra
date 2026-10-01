@@ -26,3 +26,18 @@ export const prettyFeature = (name: string): string =>
 
 export const prettyThreat = (threatType: string): string =>
   threatType === "UNKNOWN_ANOMALY" ? "unknown" : threatType.replace(/_/g, " ");
+
+/** Ordinal alert severity → CSS variant (independent of the score badge). */
+export const severityClass = (severity: string | null | undefined): string => {
+  if (severity === "CRITICAL") return "sev-critical";
+  if (severity === "HIGH") return "sev-high";
+  if (severity === "MEDIUM") return "sev-medium";
+  return "sev-low";
+};
+
+/** Alert lifecycle → CSS variant. */
+export const statusClass = (status: string): string => {
+  if (status === "RESOLVED") return "resolved";
+  if (status === "ACKNOWLEDGED") return "acknowledged";
+  return "open";
+};

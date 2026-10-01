@@ -18,8 +18,9 @@ before it:
 
     EventBus / FailureTracker / CaptureSession        (shared leaves)
     AuditService -> AlertService -> ModelService
-    CorrelationService -> DetectionService -> CaptureService
-    -> CaptureResourceService -> TrainingService -> SystemService
+    CorrelationService + ThreatAlertService (store/events/model identity)
+    -> DetectionService -> CaptureService -> CaptureResourceService
+    -> TrainingService -> SystemService
 
 Historical rebinding of engine attributes from tests (``engine.detector = ...``)
 keeps working: every attribute below is a property whose setter re-points the
@@ -60,6 +61,7 @@ from .services import (
     IncidentService,
     ModelService,
     SystemService,
+    ThreatAlertService,
     TrainingService,
 )
 from .store import Store
@@ -147,8 +149,9 @@ class SpectraEngine:
         self.events = EventBus()
         self.failures = FailureTracker(self.status)
         # Durable system-event feed: everything except flow/detection events
-        # (those are already stored as flow rows). Low volume by construction -
-        # status/alert/drift/model fire on lifecycle edges, not per packet.
+        # (those are already stored as flow rows) and alert events (those are
+        # stored in the alerts table). Low volume by construction -
+        # status/evasion/drift/model fire on lifecycle edges, not per packet.
         self.events.subscribe(self._persist_event)
         self.audit_service = AuditService(self._store, self.model_path,
                                           self.failures)
@@ -164,9 +167,17 @@ class SpectraEngine:
         )
         self.correlation = CorrelationService(CorrelationGraph(), self._store,
                                               self.failures)
+        # Analyst alerts (spectra.services.threat_alerts): correlated verdicts
+        # over flagged flows, carrying the scoring model's identity.
+        self.threat_alerts = ThreatAlertService(
+            self._store, self.config, self.events, self.failures,
+            model_info=lambda: {"id": os.path.basename(self.model_path),
+                                **self.model.info()},
+        )
         self.detection = DetectionService(
             self.status, self.config, self._store, self.model, self.events,
-            self.correlation, self.alerts, session, self.failures, recent_feats,
+            self.correlation, self.alerts, self.threat_alerts, session,
+            self.failures, recent_feats,
         )
         self.capture = CaptureService(
             self.config, self.idle_timeout, self._store, self.events,
@@ -206,8 +217,9 @@ class SpectraEngine:
         self._store = value
         # auth is deliberately absent: AuthService stays bound to the store it
         # was constructed with (sessions must not move with test-fixture swaps)
-        for name in ("audit_service", "correlation", "detection", "capture",
-                     "capture_resources", "training", "system", "incidents"):
+        for name in ("audit_service", "correlation", "threat_alerts",
+                     "detection", "capture", "capture_resources", "training",
+                     "system", "incidents"):
             svc = getattr(self, name, None)
             if svc is not None:
                 svc.store = value
@@ -347,15 +359,17 @@ class SpectraEngine:
         """Durably record one system event (bus listener, never raises).
 
         ``flow``/``detection`` events are skipped - they are already stored as
-        flow rows - so the store only sees the low-volume lifecycle feed
-        (status, evasion, drift, model). The bus isolates listener errors, but
-        failures are recorded here too so they show up in ``status``.
+        flow rows - and so are ``alert``/``alert_updated`` events, whose
+        durable copy is the alerts table. The store therefore only sees the
+        low-volume lifecycle feed (status, evasion, drift, model). The bus
+        isolates listener errors, but failures are recorded here too so they
+        show up in ``status``.
         """
         store = self._store
         if store is None:
             return
         etype = str(event.get("type", ""))
-        if etype in ("flow", "detection"):
+        if etype in ("flow", "detection", "alert", "alert_updated"):
             return
         try:
             store.record_event(etype, event.get("data") or {},

@@ -22,6 +22,7 @@ from .incidents import IncidentService
 from .model import ModelService
 from .resilience import FailureTracker
 from .system import SystemService
+from .threat_alerts import ThreatAlertService
 from .training import TrainingService
 
 __all__ = [
@@ -38,5 +39,6 @@ __all__ = [
     "Listener",
     "ModelService",
     "SystemService",
+    "ThreatAlertService",
     "TrainingService",
 ]

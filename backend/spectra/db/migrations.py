@@ -38,13 +38,15 @@ incidents        table (v6) - analyst triage workflow (OPEN -> ACKNOWLEDGED
                  -> RESOLVED), optionally referencing the flagged flow that
                  raised it
 analyst notes    table (v6) - author-attributed comments on an incident
+alerts           table (v7) - analyst alerts from the threat classifier:
+                 severity/evidence/lifecycle grouped per behaviour, next to
+                 (never instead of) the raw detection; the flow row carries
+                 the reverse link ``alert_id`` and ``flow_id`` is
+                 ON DELETE SET NULL so retention never eats an alert
 models           deferred: artifacts are joblib files + ``model_runs``
                  lineage; a registry belongs with baseline concern C7
 settings         deferred: configuration is env-driven (``SPECTRA_*``); a
                  settings table needs a settings API nobody consumes yet
-alerts           no separate table: durable alert history = ``events`` rows
-                 of alert types plus hash-chained audit entries; a managed
-                 alerts table becomes useful with ack/silence workflows
 ===============  =========================================================
 """
 
@@ -335,6 +337,54 @@ def _incidents_and_notes(db: Database) -> None:
                "ON incident_notes(incident_id, id)")
 
 
+def _alerts(db: Database) -> None:
+    """v7: analyst alerts - correlated, persisted verdicts over detections.
+
+    An alert is the analyst-facing object produced by the threat classifier
+    (severity, evidence, lifecycle); the raw detection stays a flagged flow
+    row.  ``flow_id`` points at the source detection *when its durable id is
+    known* (batched flow writes may leave it NULL — the flow row carries the
+    reverse link ``alert_id`` in its record JSON either way), and retention
+    pruning the flow must never eat the alert, hence ``ON DELETE SET NULL``.
+    Evidence, severity derivation, related metadata and module annotations
+    are read-mostly JSON documents, not queryable columns.
+    """
+    db.execute(
+        """CREATE TABLE IF NOT EXISTS alerts (
+            alert_id         TEXT PRIMARY KEY,
+            flow_id          INTEGER REFERENCES flows(id) ON DELETE SET NULL,
+            capture_id       INTEGER,
+            timestamp        REAL NOT NULL,
+            first_seen       REAL NOT NULL,
+            last_seen        REAL NOT NULL,
+            updated_at       REAL NOT NULL,
+            source           TEXT NOT NULL,
+            destination      TEXT NOT NULL,
+            protocol         TEXT NOT NULL,
+            threat_type      TEXT NOT NULL,
+            anomaly_score    REAL,
+            confidence       REAL NOT NULL,
+            severity         TEXT NOT NULL
+                             CHECK (severity IN ('LOW','MEDIUM','HIGH','CRITICAL')),
+            model_id         TEXT,
+            model_version    TEXT,
+            evidence         TEXT NOT NULL,
+            severity_factors TEXT NOT NULL,
+            metadata         TEXT NOT NULL,
+            module_annotations TEXT NOT NULL,
+            status           TEXT NOT NULL DEFAULT 'OPEN'
+                             CHECK (status IN ('OPEN','ACKNOWLEDGED','RESOLVED')),
+            occurrences      INTEGER NOT NULL DEFAULT 1
+        )"""
+    )
+    db.execute("CREATE INDEX IF NOT EXISTS idx_alerts_last_seen "
+               "ON alerts(last_seen)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_alerts_status "
+               "ON alerts(status, last_seen)")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_alerts_threat "
+               "ON alerts(threat_type, last_seen)")
+
+
 MIGRATIONS: tuple[Migration, ...] = (
     Migration(1, "baseline_schema", _baseline),
     Migration(2, "flows_capture_foreign_key", _flows_capture_foreign_key),
@@ -342,6 +392,7 @@ MIGRATIONS: tuple[Migration, ...] = (
     Migration(4, "capture_resources", _capture_resources),
     Migration(5, "auth_users_sessions", _auth_users_sessions),
     Migration(6, "incidents_and_notes", _incidents_and_notes),
+    Migration(7, "alerts", _alerts),
 )
 
 

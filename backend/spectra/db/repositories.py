@@ -707,3 +707,138 @@ class IncidentRepository:
             "SELECT COUNT(*) AS n FROM incident_notes WHERE incident_id = ?",
             (incident_id,),
         )[0]["n"])
+
+
+#: Alert columns whose values are JSON documents (rows -> objects on read).
+ALERT_JSON_FIELDS = ("evidence", "severity_factors", "metadata",
+                     "module_annotations")
+
+
+class AlertRepository:
+    """Analyst alert rows (see services.threat_alerts).
+
+    Column names match :class:`spectra.domain.ThreatAlert` one-to-one, so a
+    hydrated row *is* the alert dict; only the JSON documents are parsed.
+    Writes are immediate single commits — alerts are rare next to flows.
+    """
+
+    def __init__(self, db: Database):
+        self._db = db
+
+    _COLUMNS = ("alert_id, flow_id, capture_id, timestamp, first_seen, "
+                "last_seen, updated_at, source, destination, protocol, "
+                "threat_type, anomaly_score, confidence, severity, model_id, "
+                "model_version, evidence, severity_factors, metadata, "
+                "module_annotations, status, occurrences")
+
+    @staticmethod
+    def hydrate(row: dict) -> dict:
+        """One ``alerts`` row: JSON columns back to objects."""
+        out = dict(row)
+        for field in ALERT_JSON_FIELDS:
+            raw = out.get(field)
+            try:
+                out[field] = json.loads(raw) if raw else None
+            except (TypeError, json.JSONDecodeError):  # pragma: no cover
+                out[field] = None
+        out["occurrences"] = int(out.get("occurrences") or 1)
+        return out
+
+    def insert(self, alert: dict) -> None:
+        with self._db.lock:
+            self._db.execute(
+                f"INSERT INTO alerts ({self._COLUMNS}) "
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (
+                    alert["alert_id"],
+                    alert.get("flow_id"),
+                    alert.get("capture_id"),
+                    float(alert["timestamp"]),
+                    float(alert["first_seen"]),
+                    float(alert["last_seen"]),
+                    float(alert.get("updated_at") or alert["timestamp"]),
+                    alert.get("source") or "",
+                    alert.get("destination") or "",
+                    alert.get("protocol") or "",
+                    alert["threat_type"],
+                    alert.get("anomaly_score"),
+                    float(alert.get("confidence") or 0.0),
+                    alert["severity"],
+                    alert.get("model_id"),
+                    alert.get("model_version"),
+                    json.dumps(alert.get("evidence") or {}),
+                    json.dumps(alert.get("severity_factors") or []),
+                    json.dumps(alert.get("metadata") or {}),
+                    json.dumps(alert.get("module_annotations") or {}),
+                    alert.get("status") or "OPEN",
+                    int(alert.get("occurrences") or 1),
+                ),
+            )
+            self._db.commit()
+
+    def get(self, alert_id: str) -> dict | None:
+        rows = self._db.query("SELECT * FROM alerts WHERE alert_id = ?",
+                              (alert_id,))
+        return self.hydrate(rows[0]) if rows else None
+
+    def list(self, limit: int = 50, offset: int = 0,
+             status: str | None = None,
+             threat_type: str | None = None) -> dict:
+        where, params = [], []
+        if status:
+            where.append("status = ?")
+            params.append(status)
+        if threat_type:
+            where.append("threat_type = ?")
+            params.append(threat_type)
+        clause = f"WHERE {' AND '.join(where)}" if where else ""
+        limit = min(max(1, limit), 500)
+        offset = max(0, offset)
+        rows = self._db.query(
+            f"SELECT * FROM alerts {clause} "
+            f"ORDER BY last_seen DESC, alert_id DESC LIMIT ? OFFSET ?",
+            (*params, limit, offset),
+        )
+        total = int(self._db.query(
+            f"SELECT COUNT(*) AS n FROM alerts {clause}", params)[0]["n"])
+        return {"count": total, "offset": offset,
+                "items": [self.hydrate(r) for r in rows]}
+
+    def update_group(self, alert_id: str, *, last_seen: float,
+                     updated_at: float, occurrences: int,
+                     anomaly_score: float | None, severity: str,
+                     severity_factors: list) -> bool:
+        """Persist a grouped re-sighting (newest sighting + re-scored severity)."""
+        with self._db.lock:
+            cur = self._db.execute(
+                """UPDATE alerts
+                   SET last_seen = ?, updated_at = ?, occurrences = ?,
+                       anomaly_score = ?, severity = ?, severity_factors = ?
+                   WHERE alert_id = ?""",
+                (last_seen, updated_at, occurrences, anomaly_score, severity,
+                 json.dumps(severity_factors), alert_id),
+            )
+            self._db.commit()
+            return cur.rowcount > 0
+
+    def acknowledge(self, alert_id: str, now: float) -> bool:
+        """OPEN -> ACKNOWLEDGED (guarded: resolved stays terminal)."""
+        with self._db.lock:
+            cur = self._db.execute(
+                "UPDATE alerts SET status = 'ACKNOWLEDGED', updated_at = ? "
+                "WHERE alert_id = ? AND status = 'OPEN'",
+                (now, alert_id),
+            )
+            self._db.commit()
+            return cur.rowcount > 0
+
+    def resolve(self, alert_id: str, now: float) -> bool:
+        """OPEN/ACKNOWLEDGED -> RESOLVED (terminal)."""
+        with self._db.lock:
+            cur = self._db.execute(
+                "UPDATE alerts SET status = 'RESOLVED', updated_at = ? "
+                "WHERE alert_id = ? AND status <> 'RESOLVED'",
+                (now, alert_id),
+            )
+            self._db.commit()
+            return cur.rowcount > 0
