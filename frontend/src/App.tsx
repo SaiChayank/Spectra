@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import AlertsPanel from "./components/AlertsPanel";
 import BioPanel from "./components/BioPanel";
+import CapabilityStrip from "./components/CapabilityStrip";
 import CapturePanel from "./components/CapturePanel";
 import DetectionsTable from "./components/DetectionsTable";
 import EdgePanel from "./components/EdgePanel";
@@ -252,6 +253,15 @@ export default function App() {
               />
             </div>
           )}
+
+          {/* Every advanced module: maturity (real vs simulated) and live
+              availability straight from GET /api/capabilities. */}
+          <div style={{ marginBottom: 16 }}>
+            <section className="panel">
+              <h2>Advanced module capabilities</h2>
+              <CapabilityStrip showPolicy />
+            </section>
+          </div>
 
           <div style={{ marginBottom: 16 }}>
             <Timeline points={snapshot?.timeline ?? []} />

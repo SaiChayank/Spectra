@@ -351,6 +351,44 @@ export interface EdgeSliceResult {
   note: string | null;
 }
 
+/** Maturity ladder served by GET /api/capabilities (backend capabilities.py). */
+export type CapabilityStatus =
+  | "REAL"
+  | "LOCAL"
+  | "SIMULATED"
+  | "EXPERIMENTAL"
+  | "HARDWARE_BACKED"
+  | "UNAVAILABLE";
+
+/**
+ * One advanced module's integration contract + live availability.
+ * `available` is null when no probe ran ("unknown", not "down").
+ */
+export interface CapabilityModule {
+  title: string;
+  status: CapabilityStatus;
+  /** Always false in this build — nothing is hardware-backed. */
+  hardware_backed: boolean;
+  note: string;
+  consumes: string;
+  produces: string;
+  /** Never true here: modules contribute evidence, never move scores. */
+  affects_alert_scoring: boolean;
+  evidence_only: boolean;
+  failure: string;
+  available: boolean | null;
+  detail: string | null;
+  failures: number | null;
+}
+
+export interface CapabilityReport {
+  statuses: CapabilityStatus[];
+  definitions: Record<string, string>;
+  scoring_policy: string;
+  modules: Record<string, CapabilityModule>;
+  hardware_backed_count: number;
+}
+
 /** 401: no session, or the session is no longer valid. */
 export class AuthError extends Error {
   readonly status: number;
@@ -418,6 +456,8 @@ export const api = {
   logout: () => request<{ ok: boolean }>("/api/auth/logout", { method: "POST" }),
 
   stats: () => request<Snapshot>("/api/stats"),
+  /** Module maturity + live availability — real vs simulated, per module. */
+  capabilities: () => request<CapabilityReport>("/api/capabilities"),
   flows: (limit = 100) => request<{ count: number; items: FlowRecord[] }>(`/api/flows?limit=${limit}`),
   detections: (limit = 100) =>
     request<{ count: number; items: Detection[] }>(`/api/detections?limit=${limit}`),

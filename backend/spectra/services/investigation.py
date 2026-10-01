@@ -31,6 +31,7 @@ import time
 from collections import Counter
 from typing import Callable
 
+from ..capabilities import SCORING_POLICY, capability_contracts
 from ..entity_search import (
     DOMAIN,
     IP,
@@ -66,6 +67,11 @@ _MAX_AUDIT_SCAN = 500        # audit rows scanned per prefix
 _MAX_AUDIT_ITEMS = 100
 _MAX_GRAPH_NODES = 100
 _MAX_GRAPH_EDGES = 200
+_MAX_MODULE_EVENTS = 50      # robustness observations per kind + window
+
+#: Robustness event kinds the adversarial module emits (persisted by the
+#: engine's event hook); counted as contributing context per investigation.
+_ROBUSTNESS_EVENT_KINDS = ("evasion", "drift")
 
 _SECTIONS = ("incidents", "alerts", "flows", "captures",
              "hosts", "domains", "models")
@@ -102,7 +108,8 @@ class InvestigationService:
 
     def __init__(self, store: Store | None, config=None, *,
                  graph_provider: Callable[[], object] | None = None,
-                 model_info: Callable[[], dict] | None = None) -> None:
+                 model_info: Callable[[], dict] | None = None,
+                 capability_provider: Callable[[], dict] | None = None) -> None:
         self.store = store
         self.config = config
         #: Callable returning the live CorrelationGraph (or None) - injected
@@ -111,6 +118,10 @@ class InvestigationService:
         self._graph_provider = graph_provider
         #: Current scoring-model identity (id/version), guarded on call.
         self._model_info = model_info
+        #: Live per-module capability status (SpectraEngine.capability_
+        #: status), guarded on call; absent in pure/offline constructions
+        #: where ``available`` stays None ("not probed").
+        self._capability_provider = capability_provider
 
     # -- reads: the bundle ----------------------------------------------------
 
@@ -138,6 +149,9 @@ class InvestigationService:
 
         graph = self._graph()
         graph_section = self._graph_section(incident, alerts, anchors, graph)
+        annotations = _annotations(window_rows, alerts)
+        twin_section = self._twin(graph, graph_section)
+        audit_section = self._audit_refs(incident, alerts)
 
         return {
             "incident": incident,
@@ -153,11 +167,13 @@ class InvestigationService:
             "evidence": self._evidence(incident, alerts, window_rows),
             "hosts": _related_hosts(window_rows)[:_MAX_SECTION_ROWS],
             "domains": _related_domains(window_rows)[:_MAX_SECTION_ROWS],
-            "annotations": _annotations(window_rows, alerts),
+            "annotations": annotations,
             "graph": graph_section,
-            "twin": self._twin(graph, graph_section),
-            "audit": self._audit_refs(incident, alerts),
+            "twin": twin_section,
+            "audit": audit_section,
             "models": self._models(incident, alerts),
+            "modules": self._module_status(window, annotations, graph_section,
+                                           twin_section, audit_section),
             "generated_at": time.time(),
         }
 
@@ -486,6 +502,104 @@ class InvestigationService:
         except Exception as exc:  # noqa: BLE001 - model identity is optional
             log.warning("investigation model info failed: %s", exc)
             return {}
+
+    def _capability_status(self) -> dict:
+        """Live module availability; an absent/failing probe degrades to
+        ``available: None`` ("not probed"), never to an error."""
+        if self._capability_provider is None:
+            return {}
+        try:
+            return dict(self._capability_provider() or {})
+        except Exception as exc:  # noqa: BLE001 - status is optional
+            log.warning("investigation capability probe failed: %s", exc)
+            return {}
+
+    def _robustness_observations(self, since: float, until: float) -> int:
+        """Evasion/drift events inside the incident window (bounded)."""
+        total = 0
+        for kind in _ROBUSTNESS_EVENT_KINDS:
+            try:
+                page = self.store.query_events(type=kind, since=since,
+                                               until=until,
+                                               limit=_MAX_MODULE_EVENTS)
+                total += int(page.get("count", 0))
+            except Exception as exc:  # noqa: BLE001 - context is optional
+                log.warning("investigation robustness events failed: %s", exc)
+        return total
+
+    def _module_status(self, window: tuple, annotations: dict,
+                       graph_section: dict, twin_section: dict,
+                       audit_section: dict) -> dict:
+        """Every advanced module's maturity, live availability and its
+        contribution to THIS investigation - the transparent "who added
+        what" view.  Contributions are counts of evidence already
+        rendered elsewhere in the bundle; nothing here can change a score
+        (see capabilities.SCORING_POLICY)."""
+        contracts = capability_contracts()
+        live = self._capability_status()
+        counts = annotations.get("counts") or {}
+        robustness = self._robustness_observations(float(window[0]),
+                                                   float(window[1]))
+        tee_detail = (live.get("tee") or {}).get("detail") or "not probed"
+        graph_nodes = len(graph_section.get("nodes") or []) \
+            if graph_section.get("available") else 0
+        twin_nodes = int((twin_section.get("summary") or {}).get("nodes", 0)) \
+            if twin_section.get("available") else 0
+        audit_refs = int(audit_section.get("count", 0))
+
+        contributed = {
+            "pqc": counts.get("pqc", 0),
+            "adversarial": robustness,
+            "correlation": graph_nodes,
+            "audit": audit_refs,
+            "bio": counts.get("bio", 0),
+            "tee": 0,
+            "federated": 0,
+            "twin": 1 if twin_section.get("available") else 0,
+            "edge": counts.get("edge", 0),
+            "edge_deployment": 0,
+        }
+        summaries = {
+            "pqc": f"{contributed['pqc']} quantum-readiness annotation(s) "
+                   f"on this incident's evidence",
+            "adversarial": f"{robustness} evasion/drift observation(s) "
+                           f"inside the incident window",
+            "correlation": (f"{graph_nodes} related graph node(s) in the "
+                            f"bundle slice" if graph_nodes
+                            else "graph slice unavailable"),
+            "audit": f"{audit_refs} audit integrity reference(s) for this "
+                     f"incident",
+            "bio": f"{contributed['bio']} behavioural annotation(s) "
+                   f"(immune/SNN/swarm)",
+            "tee": "on-demand simulated attestation status only; no "
+                   f"per-alert evidence ({tee_detail})",
+            "federated": "on-demand simulated aggregation only; no "
+                         "per-alert evidence",
+            "twin": (f"simulated blast radius over {twin_nodes} topology "
+                     f"node(s)" if twin_nodes
+                     else "twin context unavailable"),
+            "edge": f"{contributed['edge']} slice tag(s) on flows/alerts",
+            "edge_deployment": "simulated deployment registry; not "
+                               "incident evidence",
+        }
+
+        items = []
+        for key, contract in contracts.items():
+            probe = live.get(key) or {}
+            items.append({
+                "key": key,
+                "title": contract["title"],
+                "status": contract["status"],
+                "hardware_backed": contract["hardware_backed"],
+                "evidence_only": contract["evidence_only"],
+                "affects_alert_scoring": contract["affects_alert_scoring"],
+                "available": probe.get("available"),
+                "detail": probe.get("detail"),
+                "failures": probe.get("failures"),
+                "contributed": int(contributed.get(key, 0)),
+                "summary": summaries.get(key, ""),
+            })
+        return {"scoring_policy": SCORING_POLICY, "items": items}
 
     def _tls_summary(self, rows: list[dict], total: int) -> dict:
         tls: Counter = Counter()

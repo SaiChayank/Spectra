@@ -72,6 +72,21 @@ log = logging.getLogger("spectra.engine")
 
 Listener = Callable[[dict], None]
 
+#: FailureTracker component(s) behind each capability key so live status
+#: can report how often a module degraded instead of guessing.
+_CAPABILITY_FAILURE_COMPONENTS: dict[str, tuple[str, ...]] = {
+    "pqc": ("pqc",),
+    "adversarial": ("adversarial_watch",),
+    "correlation": ("correlation",),
+    "audit": ("audit",),
+    "bio": ("bio",),
+    "edge": ("edge_slice",),
+    "edge_deployment": ("edge_slice",),
+    "tee": (),
+    "federated": (),
+    "twin": (),
+}
+
 
 class SpectraEngine:
     def __init__(self, model_path: str | None = None,
@@ -216,14 +231,16 @@ class SpectraEngine:
         )
         # Investigation read-side (bundle + global search): everything an
         # analyst needs about an incident in one bounded response. The
-        # graph and the model identity arrive as injected providers so no
-        # service imports another service; the store rebinding seam below
-        # reaches it like every other store-backed service.
+        # graph, the model identity and the live module capability status
+        # arrive as injected providers so no service imports another
+        # service; the store rebinding seam below reaches it like every
+        # other store-backed service.
         self.investigation = InvestigationService(
             self._store, self.config,
             graph_provider=lambda: self.correlation.graph,
             model_info=lambda: {"id": os.path.basename(self.model_path),
                                 **self.model.info()},
+            capability_provider=lambda: self.capability_status(),
         )
         # Auto-attach: a durable alert joins the best-matching ACTIVE
         # incident (OPEN/INVESTIGATING/ACKNOWLEDGED) or refreshes its
@@ -627,6 +644,102 @@ class SpectraEngine:
         """Secure aggregation: explicit deltas or the live window's means."""
         return self.model.tee_federate(deltas=deltas,
                                        shareholders=shareholders, seed=seed)
+
+    # -- advanced-module capability status -----------------------------------
+
+    def capability_status(self) -> dict:
+        """Live availability per advanced module; every probe is guarded.
+
+        A failing probe reports ``available: false`` and counts a failure -
+        transparency must never become a new failure path for its callers
+        (``/api/capabilities`` and the investigation bundle).
+        """
+        counts = self.failures.counts
+        out: dict[str, dict] = {}
+
+        def probe(key: str, fn: Callable[[], dict]) -> None:
+            components = _CAPABILITY_FAILURE_COMPONENTS.get(key, (key,))
+            try:
+                info = fn() or {}
+                out[key] = {"available": bool(info.get("available", True)),
+                            "detail": str(info.get("detail") or "")}
+            except Exception as exc:  # noqa: BLE001 - probe must not raise
+                self.failures.record(components[0] if components else key, exc)
+                out[key] = {"available": False,
+                            "detail": f"probe failed: {type(exc).__name__}"}
+
+        def edge_probe() -> dict:
+            report = self.edge_report()
+            return {"available": True,
+                    "detail": f"link {report['link']['link']}, micro "
+                              f"trained={report['micro']['trained']}"}
+
+        def deployment_probe() -> dict:
+            report = self.edge_report()
+            return {"available": True,
+                    "detail": f"{len(report['deployments'])} simulated "
+                              f"deployment(s) registered (no MEC/5G "
+                              f"control plane)"}
+
+        def adversarial_probe() -> dict:
+            trained = bool(self.model.info().get("trained"))
+            watch = self.alerts.evasion_report()
+            state = "active" if watch.get("available") else "warming up"
+            return {"available": trained,
+                    "detail": f"evasion watch {state}; "
+                              + ("model trained" if trained
+                                 else "needs a trained model")}
+
+        def twin_probe() -> dict:
+            topology = build_topology(self.correlation.graph, min_flows=1)
+            return {"available": True,
+                    "detail": f"local simulator over "
+                              f"{len(topology.get('nodes') or [])} "
+                              f"topology node(s)"}
+
+        # evidence producers on the detection path
+        probe("pqc", lambda: {
+            "available": True,
+            "detail": f"{self.pqc.summary().get('endpoints', 0)} "
+                      f"endpoints assessed",
+        })
+        probe("bio", lambda: {
+            "available": bool(self.bio.available),
+            "detail": "trained" if self.bio.available
+                      else "not trained - run 'spectra train'",
+        })
+        probe("edge", edge_probe)
+        probe("edge_deployment", deployment_probe)
+        # context providers off the detection path
+        probe("correlation", lambda: {
+            "available": True,
+            "detail": (lambda s: f"{s.get('nodes', 0)} nodes / "
+                                 f"{s.get('edges', 0)} edges observed")(
+                self.correlation.summary()),
+        })
+        probe("audit", lambda: {
+            "available": True,
+            "detail": f"hash chain at seq "
+                      f"{self.audit_service.head().get('seq', 0)}",
+        })
+        probe("adversarial", adversarial_probe)
+        probe("tee", lambda: {
+            "available": self.model.tee is not None,
+            "detail": "local simulated enclave (never hardware-backed)"
+                      if self.model.tee is not None
+                      else "disabled - model artifact unavailable",
+        })
+        probe("federated", lambda: {
+            "available": True,
+            "detail": "simulated parties; secret sharing verified locally",
+        })
+        probe("twin", twin_probe)
+
+        for key, components in _CAPABILITY_FAILURE_COMPONENTS.items():
+            if key in out:
+                out[key]["failures"] = sum(
+                    int(counts.get(component, 0)) for component in components)
+        return out
 
     # -- reporting --------------------------------------------------------------------
 

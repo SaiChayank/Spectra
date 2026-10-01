@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import CapabilityStrip from "./CapabilityStrip";
 import { api, type EdgeReport, type EdgeSliceResult } from "../lib/api";
 
 const LINK_ORDER = ["terrestrial", "uav", "leo_satellite", "geostationary"];
@@ -99,11 +100,15 @@ export default function EdgePanel({ canRun, canConfig, onError, onNotice }: {
 
   return (
     <div className="grid two-col">
-      <p className="note" style={{ gridColumn: "1 / -1" }}>
-        Capability: LOCAL scoring · SIMULATED deployment — slice and
-        micro-detector logic runs locally; NTN link profiles and MEC
-        deployments are simulations, not a real 5G control plane.
-      </p>
+      <div style={{ gridColumn: "1 / -1" }}>
+        {/* data-driven maturity badges (GET /api/capabilities): LOCAL scoring
+            and SIMULATED deployment come from the contract, not a hardcode */}
+        <CapabilityStrip keys={["edge", "edge_deployment"]} />
+        <p className="note">
+          Slice and micro-detector logic runs locally; NTN link profiles and MEC
+          deployments are simulations, not a real 5G control plane.
+        </p>
+      </div>
       <section className="panel">
         <h2>NTN backhaul link</h2>
         <div className="kv">

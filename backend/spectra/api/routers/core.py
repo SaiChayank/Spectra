@@ -85,8 +85,12 @@ def interfaces() -> dict:
 @router.get("/api/capabilities",
            dependencies=[Depends(require("read"))])
 def capabilities() -> dict:
-    """Capability maturity per advanced module (REAL / LOCAL / SIMULATED / ...)."""
-    return module_capabilities()
+    """Maturity, contract and live availability per advanced module."""
+    try:
+        live = engine.capability_status()
+    except Exception:  # noqa: BLE001 - transparency must never 500
+        live = None
+    return module_capabilities(live)
 
 
 @router.get("/api/metrics", response_class=PlainTextResponse,

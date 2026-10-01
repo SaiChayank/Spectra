@@ -20,6 +20,7 @@ from fastapi.testclient import TestClient
 
 from spectra.api.app import app
 from spectra.api.runtime import engine
+from spectra.capabilities import CAPABILITIES, capability_contracts
 from spectra.config import Config
 from spectra.entity_search import (
     ALERT_ID,
@@ -55,7 +56,7 @@ BASE_TS = 1_700_000_000.0
 BUNDLE_KEYS = {
     "incident", "notes", "note_count", "timeline", "alerts", "flows",
     "window", "tls", "evidence", "hosts", "domains", "annotations",
-    "graph", "twin", "audit", "models", "generated_at",
+    "graph", "twin", "audit", "models", "modules", "generated_at",
 }
 SEARCH_SECTIONS = {"incidents", "alerts", "flows", "captures",
                    "hosts", "domains", "models"}
@@ -78,8 +79,16 @@ def make_env(tmp_path):
                                 model_info=model_info)
     incidents = IncidentService(store, cfg, failures=failures, audit=audit,
                                 graph_provider=lambda: graph)
+    # Live capability probes: a canned full-status provider so the bundle's
+    # module section renders probed values (a raising provider is covered
+    # by test_bundle_module_status_degrades_when_probe_fails).
+    capability_provider = lambda: {  # noqa: E731
+        key: {"available": True, "detail": "test probe", "failures": 0}
+        for key in capability_contracts()
+    }
     investigation = InvestigationService(
-        store, cfg, graph_provider=lambda: graph, model_info=model_info)
+        store, cfg, graph_provider=lambda: graph, model_info=model_info,
+        capability_provider=capability_provider)
 
     def _to_correlator(event: dict) -> None:
         if str(event.get("type", "")) in ("alert", "alert_updated"):
@@ -465,6 +474,63 @@ def test_bundle_paging_and_errors(env):
         no_store.bundle(1)
     with pytest.raises(InvestigationUnavailable):
         no_store.search("10.0.0.1")
+
+
+def test_bundle_module_status_section(env):
+    """Every advanced module: maturity, availability, and contribution."""
+    incident, _ = seed_incident(env)
+    # adversarial context: one robustness observation inside the window
+    env.store.record_event("evasion", {"boundary": 1.0}, ts=BASE_TS + 40)
+    bundle = env.investigation.bundle(incident["id"])
+
+    modules = bundle["modules"]
+    assert modules["scoring_policy"].startswith("No advanced module")
+    items = {entry["key"]: entry for entry in modules["items"]}
+    assert set(items) == set(capability_contracts())
+    for entry in modules["items"]:
+        assert entry["status"] in CAPABILITIES
+        assert entry["hardware_backed"] is False
+        assert entry["affects_alert_scoring"] is False
+        assert entry["evidence_only"] is True
+        assert entry["available"] is True
+        assert entry["detail"] == "test probe"
+        assert entry["summary"]
+
+    counts = bundle["annotations"]["counts"]
+    assert items["pqc"]["contributed"] == counts["pqc"]
+    assert items["bio"]["contributed"] == counts["bio"]
+    assert items["edge"]["contributed"] == counts["edge"]
+    assert items["adversarial"]["contributed"] >= 1   # the recorded event
+    assert items["correlation"]["contributed"] == len(bundle["graph"]["nodes"])
+    assert items["audit"]["contributed"] == bundle["audit"]["count"]
+    assert items["twin"]["contributed"] == (1 if bundle["twin"]["available"]
+                                            else 0)
+    # status-only modules contribute no per-alert evidence, by contract
+    assert items["tee"]["contributed"] == 0
+    assert items["federated"]["contributed"] == 0
+    assert items["edge_deployment"]["contributed"] == 0
+
+
+def test_bundle_module_status_degrades_when_probe_fails(env):
+    """A failing capability probe never breaks the bundle."""
+    incident, _ = seed_incident(env, host="10.56.0.1",
+                                domain="probe-c2.example.net")
+
+    def boom():
+        raise RuntimeError("capability probe outage")
+
+    broken = InvestigationService(
+        env.store, env.cfg, graph_provider=lambda: env.graph,
+        capability_provider=boom)
+    bundle = broken.bundle(incident["id"])
+    items = {entry["key"]: entry for entry in bundle["modules"]["items"]}
+    assert set(items) == set(capability_contracts())
+    # unprobed = None ("unknown"), not an error
+    assert all(entry["available"] is None
+               for entry in bundle["modules"]["items"])
+    # contributions still render without live status
+    assert items["pqc"]["contributed"] == bundle["annotations"]["counts"]["pqc"]
+    assert items["adversarial"]["contributed"] == 0
 
 
 # -- 4. global search (isolated service) --------------------------------------
