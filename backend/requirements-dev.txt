@@ -1,0 +1,3 @@
+# Verification tooling for the Spectra backend (not needed to run the app).
+#   pip install -r requirements-dev.txt
+pytest>=8.0

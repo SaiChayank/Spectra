@@ -583,7 +583,7 @@ class SpectraEngine:
         self.events.emit({"type": "model", "data": detector.info()})
 
     def adopt_model(self) -> dict | None:
-        """Registry adoption, called at app import (see REGISTRY_PLAN).
+        """Registry adoption, called at app import (see ``services.model_registry``).
 
         Empty registry + a trained deployed model -> register, validate and
         activate that artifact as the first ACTIVE row (audited with

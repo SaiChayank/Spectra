@@ -9,12 +9,26 @@ Three target verticals: **Fintech · Healthcare · Smart City Infrastructure**.
 > Product strategy and the eight strategic modules are documented in
 > [`Spectra documentation (extracted).md`](./Spectra%20documentation%20(extracted).md).
 
+## Documentation
+
+| Document | Contents |
+|---|---|
+| [`docs/architecture.md`](./docs/architecture.md) | capture → flows → parsing → features → inference → classification → alerts → incidents → persistence → audit → API/WS → frontend |
+| [`docs/local-setup.md`](./docs/local-setup.md) | toolchain, dependencies, environment variables, backend/frontend startup, first admin, Npcap |
+| [`docs/capabilities.md`](./docs/capabilities.md) | every capability classified REAL / LOCAL / SIMULATED / EXPERIMENTAL / FUTURE |
+| [`docs/ml.md`](./docs/ml.md) | the 39-feature schema, baseline, training, model lifecycle, score/confidence/severity interpretation |
+| [`docs/security.md`](./docs/security.md) | auth, RBAC, managed captures, artifact integrity, audit chain, local-only assumptions |
+| [`docs/testing.md`](./docs/testing.md) | 496 tests · 156 acceptance checks · performance · live-capture validation |
+| [`docs/limitations.md`](./docs/limitations.md) | detection, classification, TEE/twin/edge, metadata-only analysis, operational caveats |
+| [`docs/readiness-report.md`](./docs/readiness-report.md) | final readiness report (completed / partial / future / known limitations) |
+| [`docs/hardening-report.md`](./docs/hardening-report.md) · [`docs/acceptance-report.md`](./docs/acceptance-report.md) | engineering evidence: fixes, performance baselines, live capture |
+
 ---
 
 ## Status
 
 Backend **complete** (Phases 0–6): detection core, all 8 strategic modules, REST API,
-CLI, and the React dashboard — with **338 passing tests**. Local authentication
+CLI, and the React dashboard — with **496 passing tests**. Local authentication
 (login, sessions, RBAC) gates the API, WebSocket, and dashboard.
 
 | Layer | State |
@@ -24,10 +38,10 @@ CLI, and the React dashboard — with **338 passing tests**. Local authenticatio
 | Feature extraction (39-feature vector per flow) | ✅ |
 | ML anomaly detector (IsolationForest + scaler, 0–100 scoring, σ-explanations) | ✅ trained from a benign baseline |
 | 8 strategic modules (see matrix below) | ✅ |
-| API (77 HTTP routes + WebSocket, default-deny auth) + CLI (12 commands) | ✅ |
+| API (92 HTTP routes + WebSocket, default-deny auth) + CLI (12 commands) | ✅ |
 | Persistence (SQLite: migration-driven schema, batched writes, bounded retention) | ✅ |
 | React dashboard | ✅ live (local login, role-aware UI) |
-| Automated tests (pytest) | ✅ 338 passing |
+| Automated tests (pytest) | ✅ 496 passing |
 | Authentication & RBAC (ADMIN / ANALYST / VIEWER) | ✅ scrypt + sessions |
 | Live capture on Windows | ✅ validated with [Npcap](https://nmap.org/npcap/) (driver required) |
 
@@ -76,6 +90,9 @@ bio layer never creates detections on its own**.
 
 ## Quickstart
 
+Full instructions (toolchain versions, environment variables, first admin,
+Npcap, troubleshooting): [`docs/local-setup.md`](./docs/local-setup.md).
+
 ```bash
 cd backend
 python -m venv .venv && .venv\Scripts\activate     # optional
@@ -98,6 +115,9 @@ cd frontend
 npm install
 npm run dev          # http://localhost:5173
 ```
+
+Or run both with the convenience script: `.\start.ps1` (PowerShell, optional —
+it prints what it does and stops the backend on `Ctrl+C`).
 
 ### First sign-in
 
@@ -134,7 +154,7 @@ out-of-distribution (validated in
 
 ## API
 
-77 HTTP routes + 1 WebSocket, grouped by module:
+92 HTTP routes + 1 WebSocket, grouped by module:
 
 | Group | Routes |
 |---|---|
@@ -153,7 +173,7 @@ out-of-distribution (validated in
 | Bio (M6) | `GET /api/bio/status`, `POST /api/bio/assess` |
 | TEE (M2) | `POST /api/tee/{attest,verify,infer,federate}` |
 | Edge (M8) | `GET /api/edge/report`, `POST /api/edge/{link,deploy,slice}` |
-| Events | `WS /ws/events` — `flow` / `detection` / `status` / `model` events |
+| Events | `WS /ws/events` — `flow` / `detection` / `status` / `model` / `capture` / `alert` / `drift` events |
 
 No route accepts a server filesystem path. Files enter through `POST /api/captures`,
 which validates the filename (basename only), extension (`.pcap`/`.pcapng`), magic
@@ -176,8 +196,9 @@ route checks a permission from `spectra/authz.py`.
 | `ANALYST` | investigate detections/incidents, acknowledge/resolve incidents, add analyst notes, inspect network/correlation/audit data |
 | `VIEWER` | read-only dashboard and reports |
 
-- **Hashing** — `hashlib.scrypt` (n=16384, r=8, p=1, per-user salt). Hashes are
-  never returned by any endpoint or log. The password policy (≥ 8 chars) is
+- **Hashing** — `hashlib.scrypt` (n=65536, r=8, p=1, per-user salt, parameters
+  upgraded in place on the next successful login). Hashes are never returned by
+  any endpoint or log. The password policy (≥ 8 chars) is
   enforced only when a password is *set*, never at login, so a failed login is
   indistinguishable (`401 invalid username or password` for unknown user and
   wrong password alike — no user enumeration).
@@ -214,18 +235,27 @@ route checks a permission from `spectra/authz.py`.
 
 ```bash
 cd backend
-python -m pytest tests -q      # 338 tests
+python -m pytest tests -q      # 496 tests
 ```
+
+Full verification workflow (pytest + acceptance runner + performance + build):
+[`docs/testing.md`](./docs/testing.md).
 
 The suite covers TLS/QUIC parsing, flow tracking, feature extraction, filters, the
 detector, PQC, correlation, adversarial, twin, audit, bio, TEE, edge, the persistence
-layer (6 migrations, repositories, batched writes, retention), managed capture
+layer (11 migrations, repositories, batched writes, retention), managed capture
 resources (import validation, lifecycle, path-traversal rejection, delete safety),
 local authentication and RBAC (login success/failure, session expiry and revocation,
 role matrices, default-deny route sweep, WebSocket authorization, incidents
-lifecycle), the API (including 400-paths), and end-to-end capture runs. Synthetic PCAPs are built with
-hand-crafted TLS ClientHello/ServerHello messages; a model is trained on a benign
-baseline and beacon flows must be flagged.
+lifecycle), the API (including 400-paths), a dedicated hardening regression suite
+(`test_hardening.py`, 28 tests), and end-to-end capture runs. Synthetic PCAPs are
+built with hand-crafted TLS ClientHello/ServerHello messages; a model is trained on
+a benign baseline and beacon flows must be flagged.
+
+Against a running server, `python scripts/acceptance.py` replays the whole surface
+as **156 checks** (every route group, WebSocket, negative paths, CLI sweep, live
+capture when Npcap is present); `python scripts/perf.py` records the performance
+numbers in [`docs/testing.md`](./docs/testing.md §3).
 
 ## Project layout
 
@@ -239,16 +269,18 @@ backend/
     modules/        # eight strategic modules (pqc, tee, adv, twin, audit, bio, corr, edge)
     auth/           # password policy + scrypt hashing
     authz.py        # RBAC matrix (ADMIN / ANALYST / VIEWER → permissions)
-    api/            # FastAPI: 77 HTTP routes + WebSocket event stream (auth gate)
-    db/             # SQLite layer: 6 migrations, repositories, batched writes, retention
+    api/            # FastAPI: 92 HTTP routes + WebSocket event stream (auth gate)
+    db/             # SQLite layer: 11 migrations, repositories, batched writes, retention
     filters.py      # pure-Python BPF-style filters (no libpcap needed)
     streaming.py    # bounded staged capture runtime (queues, overload policy, telemetry)
     pipeline.py     # engine wiring capture → detection → annotation → events
     cli.py          # 12 CLI commands
     demo.py         # synthetic PCAP generators (tests + demos)
-  tests/            # 338 unit/integration tests
+  tests/            # 496 unit/integration tests
   demo_pcaps/       # committed fixture captures
 frontend/           # React + TypeScript dashboard (Vite)
+docs/               # as-built documentation + evidence reports
+start.ps1           # optional convenience launcher (backend + frontend)
 ```
 
 ## Privacy invariants
@@ -260,6 +292,10 @@ frontend/           # React + TypeScript dashboard (Vite)
 
 ## Version
 
-`1.0.0` — all tracks accepted: PCAP + **live NIC capture** (Npcap 1.88,
-validated 2026-09-29), full API/CLI/dashboard coverage, 294 tests, 106-check
-acceptance run (2026-09-30). See [`docs/acceptance-report.md`](./docs/acceptance-report.md).
+`1.0.0` — PCAP + **live NIC capture** (Npcap 1.88, validated 2026-09-29),
+92-route API + WebSocket, CLI, React console, model registry with integrity
+checks: **496 tests**, **156/156 acceptance checks**, performance at or better
+than the recorded baseline. Evidence:
+[`docs/acceptance-report.md`](./docs/acceptance-report.md),
+[`docs/hardening-report.md`](./docs/hardening-report.md),
+[`docs/readiness-report.md`](./docs/readiness-report.md).
