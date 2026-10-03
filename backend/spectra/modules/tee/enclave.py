@@ -33,6 +33,15 @@ from ..audit.curve import schnorr_keypair, schnorr_sign, schnorr_verify
 QUOTE_DOMAIN = "spectra.tee.quote.v1"
 RECEIPT_DOMAIN = "spectra.tee.receipt.v1"
 QUOTE_MAX_AGE_S = 600.0
+#: Every quote this build emits is produced by a *software* enclave (a key
+#: file, not a hardware root of trust), so the label travels inside the
+#: signed body: no consumer can mistake a SPECTRA quote for hardware
+#: attestation, and tampering with the label breaks the signature.
+#: ``/api/capabilities`` reports the same SIMULATED status for Module 2.
+QUOTE_ENVIRONMENT = "SIMULATED"
+#: Owner-only permissions for the attestation key file (POSIX mode bits;
+#: ``os.chmod`` is best effort where the platform has none).
+KEY_FILE_MODE = 0o600
 
 
 class TeeError(ValueError):
@@ -80,6 +89,19 @@ def _verify_receipt(pub: str, body: dict, signature: str) -> bool:
     return schnorr_verify(pub, msg, signature)
 
 
+def _restrict_to_owner(path: str) -> None:
+    """Best-effort ``chmod 600`` on a secret file.
+
+    Windows exposes no POSIX mode bits (``os.chmod`` there only toggles the
+    read-only flag), so a failure is ignored - the key is still never
+    echoed anywhere, and on POSIX this is what keeps it owner-only.
+    """
+    try:
+        os.chmod(path, KEY_FILE_MODE)
+    except OSError:  # pragma: no cover - unsupported filesystem
+        pass
+
+
 class TeeEnclave:
     """Simulated enclave: holds the attestation key and the model measurement."""
 
@@ -101,6 +123,7 @@ class TeeEnclave:
             if os.path.isfile(self.key_path):
                 with open(self.key_path, encoding="utf-8") as fh:
                     sk, pk = fh.read().split()
+                _restrict_to_owner(self.key_path)  # older builds wrote it 0644
                 return sk, pk
         except (OSError, ValueError):
             pass  # unreadable key -> mint a fresh enclave identity
@@ -110,6 +133,8 @@ class TeeEnclave:
                         exist_ok=True)
             with open(self.key_path, "w", encoding="utf-8") as fh:
                 fh.write(f"{sk} {pk}")
+            # The signing secret: owner-only, never group/world readable.
+            _restrict_to_owner(self.key_path)
         except OSError:  # pragma: no cover - read-only filesystem
             pass
         return sk, pk
@@ -135,6 +160,7 @@ class TeeEnclave:
             raise TeeError(f"model artifact missing: {self.model_path}")
         body = {
             "domain": QUOTE_DOMAIN,
+            "environment": QUOTE_ENVIRONMENT,
             "measurement": self._measurement,
             "nonce": nonce or uuid.uuid4().hex,
             "ts": round(time.time(), 3),
@@ -152,8 +178,8 @@ class TeeEnclave:
         def check(name: str, ok: bool, detail: str) -> None:
             checks.append({"name": name, "ok": bool(ok), "detail": detail})
 
-        required = ("domain", "measurement", "nonce", "ts", "service",
-                    "pubkey", "signature")
+        required = ("domain", "environment", "measurement", "nonce", "ts",
+                    "service", "pubkey", "signature")
         missing = [k for k in required if k not in quote]
         check("structure", not missing,
               "all quote fields present" if not missing
@@ -165,6 +191,9 @@ class TeeEnclave:
         body = {k: quote[k] for k in required if k != "signature"}
         check("domain", body.get("domain") == QUOTE_DOMAIN,
               "quote carries the spectra quote domain")
+        check("environment", body.get("environment") == QUOTE_ENVIRONMENT,
+              f"quote labels itself {QUOTE_ENVIRONMENT} - software "
+              "attestation, never hardware-backed")
         sig_ok = _verify(str(quote["pubkey"]), body, str(quote["signature"]))
         check("signature", sig_ok, "issuer Schnorr signature over the quote")
         check("provenance", quote["pubkey"] == self._pk,
@@ -190,6 +219,7 @@ class TeeEnclave:
         return {
             "ok": all(c["ok"] for c in checks),
             "checks": checks,
+            "environment": quote.get("environment"),
             "measurement": quote["measurement"],
             "expected_measurement": expected,
             "age_s": round(age, 3) if age != float("inf") else None,
@@ -215,8 +245,14 @@ class TeeEnclave:
         if not getattr(detector, "is_trained", False):
             raise TeeError("model not trained - nothing to attest")
 
-        score = float(detector.score(x)[0])
-        flagged = bool(detector.predict(x)[0])
+        # one inference pass for score + verdict; detector-like objects that
+        # only expose the pair (test doubles, foreign models) keep working
+        if hasattr(detector, "score_and_predict"):
+            scores, flags = detector.score_and_predict(x)
+        else:
+            scores, flags = detector.score(x), detector.predict(x)
+        score = float(scores[0])
+        flagged = bool(flags[0])
         output = {"score": round(score, 2), "flagged": flagged}
 
         in_digest = digest_features(x.tolist())

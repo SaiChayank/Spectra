@@ -144,8 +144,10 @@ class DetectionService:
 
         detector = self._model.detector
         if detector.is_trained:
-            score = float(detector.score(feats)[0])
-            anomaly = bool(detector.predict(feats)[0])
+            # one inference pass for score + verdict (see score_and_predict)
+            scores, flags = detector.score_and_predict(feats)
+            score = float(scores[0])
+            anomaly = bool(flags[0])
             if anomaly:
                 reasons = detector.explain(feats)
 

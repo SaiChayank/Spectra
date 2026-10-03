@@ -124,7 +124,14 @@ class Config:
 
     @classmethod
     def from_env(cls) -> "Config":
-        """Build a config, coercing numeric env overrides."""
+        """Build a config, coercing numeric/boolean/list env overrides.
+
+        Annotations are strings (PEP 563), so the type checks compare
+        against both the string and the type object; list-valued fields
+        (``cors_origins``) are comma-split so ``SPECTRA_CORS_ORIGINS`` can
+        never hand CORSMiddleware a bare string (which would make origin
+        matching iterate characters instead of origins).
+        """
         cfg = cls()
         for f in fields(cls):
             raw = os.environ.get(f"SPECTRA_{f.name.upper()}")
@@ -136,6 +143,9 @@ class Config:
                 setattr(cfg, f.name, int(raw))
             elif f.type in ("bool", bool):
                 setattr(cfg, f.name, raw.lower() in ("1", "true", "yes", "on"))
+            elif f.type in ("list[str]", list[str]):
+                setattr(cfg, f.name,
+                        [v.strip() for v in raw.split(",") if v.strip()])
             else:
                 setattr(cfg, f.name, raw)
         return cfg

@@ -50,6 +50,11 @@ MAGIC_NUMBERS: tuple[bytes, ...] = (
 #: Upper bound for a display filename (ext4/NTFS component limit).
 MAX_NAME_LENGTH = 255
 
+#: Minimum plausible capture size: a classic PCAP global header is exactly
+#: 24 bytes, a PCAPNG section header block is larger.  A file that is only
+#: a magic number passes the signature check but can hold no packets.
+_MIN_CAPTURE_BYTES = 24
+
 
 class CaptureFileError(ValueError):
     """The client-supplied file was rejected (routers map this to HTTP 400)."""
@@ -164,6 +169,12 @@ class CaptureStorage:
             if head not in MAGIC_NUMBERS:
                 raise CaptureFileError(
                     "file does not start with a PCAP/PCAPNG signature")
+            if total < _MIN_CAPTURE_BYTES:
+                # A classic PCAP global header alone is 24 bytes; anything
+                # shorter is a magic-only stub that cannot hold one packet.
+                raise CaptureFileError(
+                    f"capture file is too small to be a PCAP "
+                    f"({total} < {_MIN_CAPTURE_BYTES} bytes)")
             # The stored extension comes from the *content* (the signature
             # that validated it), never from anything the client sent.
             ext = ".pcapng" if head == b"\x0a\x0d\x0d\x0a" else ".pcap"

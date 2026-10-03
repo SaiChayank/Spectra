@@ -38,6 +38,7 @@ import time
 from ..auth import (
     check_password_policy,
     hash_password,
+    password_needs_rehash,
     verify_dummy,
     verify_password,
 )
@@ -123,12 +124,103 @@ def hash_token(token: str) -> str:
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
+class LoginThrottle:
+    """Sliding-window failed-login meter (per client ip + username).
+
+    Online password guessing is the one attack the local account store
+    cannot answer with key material, so repeated failures from one source
+    are shed with 429 + ``Retry-After`` before any scrypt work runs.
+    Keys are the *(ip, username)* pair - a spray across many usernames from
+    one ip is capped by the per-ip bucket, while distinct sources each get
+    their own budget (no shared-lockout amplification against a victim).
+    Counts only :class:`CredentialsError`: policy/unavailability failures
+    never lock anyone out, and a successful login clears its key.  Memory
+    is bounded: buckets expire with the window and the table is pruned on
+    every check.
+    """
+
+    def __init__(self, limit: int = 10, ip_limit: int = 40,
+                 window: float = 60.0):
+        self.limit = limit
+        self.ip_limit = ip_limit
+        self.window = window
+        self._failures: dict[tuple[str, str], list[float]] = {}
+        self._ip_failures: dict[str, list[float]] = {}
+
+    @staticmethod
+    def _prune(bucket: list[float], now: float, window: float) -> list[float]:
+        cutoff = now - window
+        kept = [t for t in bucket if t > cutoff]
+        return kept
+
+    def retry_after(self, ip: str, username: str) -> float | None:
+        """Seconds to wait when blocked, else ``None`` (allowed to try)."""
+        now = time.monotonic()
+        key = (ip, username.casefold())
+        self._failures[key] = self._prune(
+            self._failures.get(key, []), now, self.window)
+        self._ip_failures[ip] = self._prune(
+            self._ip_failures.get(ip, []), now, self.window)
+        waits = [self._unblock_time(self._failures[key], self.limit, now),
+                 self._unblock_time(self._ip_failures[ip], self.ip_limit, now)]
+        blocked = [w for w in waits if w is not None]
+        if not blocked:
+            return None
+        # Both buckets must fall under their limits; wait for the slower one.
+        return max(1.0, max(blocked))
+
+    def _unblock_time(self, bucket: list[float], limit: int,
+                      now: float) -> float | None:
+        """When ``bucket`` drops below ``limit`` entries, or ``None``."""
+        if len(bucket) < limit:
+            return None
+        # Ascending timestamps: dropping len-limit+1 oldest entries frees the
+        # bucket, i.e. when the entry at index len-limit slides out of window.
+        return max(1.0, bucket[len(bucket) - limit] + self.window - now)
+
+    def record_failure(self, ip: str, username: str) -> None:
+        now = time.monotonic()
+        key = (ip, username.casefold())
+        self._failures.setdefault(key, []).append(now)
+        self._ip_failures.setdefault(ip, []).append(now)
+        if len(self._failures) > 4096:  # table bound (hostile key spraying)
+            self._prune_table(now)
+
+    def record_success(self, ip: str, username: str) -> None:
+        self._failures.pop((ip, username.casefold()), None)
+
+    def reset(self) -> None:
+        """Drop all state (test/fixture hygiene)."""
+        self._failures.clear()
+        self._ip_failures.clear()
+
+    def _prune_table(self, now: float) -> None:
+        expired = []
+        for key, value in self._failures.items():
+            self._failures[key] = pruned = self._prune(
+                value, now, self.window)
+            if not pruned:
+                expired.append(key)
+        for key in expired:
+            del self._failures[key]
+        expired_ips = []
+        for ip, value in self._ip_failures.items():
+            self._ip_failures[ip] = pruned = self._prune(
+                value, now, self.window)
+            if not pruned:
+                expired_ips.append(ip)
+        for ip in expired_ips:
+            del self._ip_failures[ip]
+
+
 class AuthService:
     """Login/session/user lifecycle for the local accounts (see module doc)."""
 
     def __init__(self, store: Store | None, config: Config | None = None):
         self.store = store
         self.config = config or get_config()
+        #: Failed-login limiter consulted by the login route *before* scrypt.
+        self.throttle = LoginThrottle()
 
     # -- availability / session lifetime --------------------------------------
 
@@ -219,6 +311,19 @@ class AuthService:
             raise CredentialsError()
         if not verify_password(password, creds["password_hash"]):
             raise CredentialsError()
+        if password_needs_rehash(creds["password_hash"]):
+            # Store-level write (no session revocation): the row is upgraded
+            # in place to the current work factor right after its own proof,
+            # so pre-hardening accounts reach the stronger parameters on the
+            # first successful login instead of never.
+            try:
+                self.store.update_user(
+                    creds["id"], password_hash=hash_password(password))
+                log.info("upgraded password hash parameters for '%s'",
+                         creds["username"])
+            except StoreError:  # pragma: no cover - login must not fail here
+                log.warning("password rehash failed for '%s'",
+                            creds["username"], exc_info=True)
         now = time.time()
         self.store.purge_expired_sessions(now)  # opportunistic housekeeping
         token = secrets.token_urlsafe(32)
@@ -332,6 +437,10 @@ class AuthService:
                 "nothing to update: provide a role and/or a password")
         if role is not None and role not in ROLES:
             raise UserPolicyError(f"role must be one of {', '.join(ROLES)}")
+        if (role is not None and role != "ADMIN"
+                and user["role"] == "ADMIN"
+                and self.store.count_admin_users() <= 1):
+            raise UserGuardError("cannot demote the last ADMIN account")
         password_hash = None
         if password is not None:
             try:

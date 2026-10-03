@@ -7,14 +7,22 @@ server filesystem path - see :func:`spectra.api.routers.capture_pcap_path`.
 
 from __future__ import annotations
 
+import logging
+import os
+from contextlib import contextmanager
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from ...capture import CaptureError
+from ...services.model import AnalysisBusy
 from ...services.model_registry import RegistryError
+from ...tools import FlowBudgetError
 from ..runtime import engine
 from ..security import require
 from . import capture_pcap_path
+
+log = logging.getLogger("spectra.api")
 
 #: Info + registry reads are any signed-in role; drift/evasion/robustness are
 #: investigation probes (ANALYST+); training and every registry transition
@@ -57,10 +65,16 @@ def model_train(req: TrainRequest,
         return engine.training.train_from_pcap(
             path, contamination=req.contamination, activate=req.activate,
             actor=principal["username"])
+    except AnalysisBusy as exc:
+        # the single-flight slot is held by another fit/analysis run
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     except CaptureError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
-    except FileNotFoundError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except FileNotFoundError:
+        # str(exc) would quote the server-side storage path.
+        log.exception("training capture file missing")
+        raise HTTPException(status_code=404,
+                            detail="capture file not found") from None
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -90,12 +104,24 @@ def model_robustness(req: RobustnessRequest) -> dict:
     path = (capture_pcap_path(req.capture_id)
             if req.capture_id is not None else None)
     try:
-        return engine.model.robustness(pcap=path,
-                                       max_features=req.max_features,
-                                       max_rounds=req.max_rounds)
-    except Exception as exc:  # noqa: BLE001 - surface attack failures
+        result = engine.model.robustness(pcap=path,
+                                         max_features=req.max_features,
+                                         max_rounds=req.max_rounds)
+    except AnalysisBusy as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except FlowBudgetError as exc:
+        # a client-chosen capture exceeded the offline flow budget: 400, not
+        # an internal failure (this branch would otherwise be a generic 500).
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception:  # noqa: BLE001 - surface attack failures
+        log.exception("robustness evaluation failed")
         raise HTTPException(status_code=500,
-                            detail=f"robustness evaluation failed: {exc}") from exc
+                            detail="robustness evaluation failed") from None
+    if path is not None and result.get("source") == path:
+        # the service echoes its input source: basename only, never a
+        # server-side storage path in an API response.
+        result["source"] = os.path.basename(path)
+    return result
 
 
 # -- model registry (Prompt 14) -------------------------------------------------
@@ -106,6 +132,29 @@ def model_robustness(req: RobustnessRequest) -> dict:
 
 def _registry_error(exc: RegistryError) -> HTTPException:
     return HTTPException(status_code=exc.status_code, detail=str(exc))
+
+
+@contextmanager
+def _registry_call():
+    """Map every registry failure onto a JSON HTTP error.
+
+    ``RegistryError`` carries its own status (404/409/503).  An internal
+    ``ValueError`` (metric parsing, artifact metadata) becomes a generic
+    400, and anything else is logged then answered with a generic 500 so no
+    exception text - which may quote a storage path - reaches the body.
+    """
+    try:
+        yield
+    except RegistryError as exc:
+        raise _registry_error(exc) from exc
+    except ValueError:
+        log.exception("registry request rejected")
+        raise HTTPException(status_code=400,
+                            detail="invalid registry request") from None
+    except Exception:
+        log.exception("registry operation failed")
+        raise HTTPException(status_code=500,
+                            detail="registry operation failed") from None
 
 
 @router.get("/api/model/registry")
@@ -121,18 +170,14 @@ def model_registry_list() -> dict:
 @router.get("/api/model/registry/compare")
 def model_registry_compare(a: str, b: str) -> dict:
     """Field-by-field diff of two registry models (lineage evidence)."""
-    try:
+    with _registry_call():
         return engine.registry.compare(a, b)
-    except RegistryError as exc:
-        raise _registry_error(exc) from exc
 
 
 @router.get("/api/model/registry/{model_id}")
 def model_registry_get(model_id: str) -> dict:
-    try:
+    with _registry_call():
         return engine.registry.get(model_id)
-    except RegistryError as exc:
-        raise _registry_error(exc) from exc
 
 
 @router.post("/api/model/registry/{model_id}/validate",
@@ -141,11 +186,9 @@ def model_registry_validate(model_id: str,
                             principal: dict = Depends(
                                 require("model:manage"))) -> dict:
     """CANDIDATE -> VALIDATED (or FAILED with the failing checks recorded)."""
-    try:
+    with _registry_call():
         return engine.registry.validate(model_id,
                                         actor=principal["username"])
-    except RegistryError as exc:
-        raise _registry_error(exc) from exc
 
 
 @router.post("/api/model/registry/{model_id}/activate",
@@ -154,10 +197,8 @@ def model_registry_activate(model_id: str,
                             principal: dict = Depends(
                                 require("model:manage"))) -> dict:
     """VALIDATED/RETIRED -> ACTIVE: swaps the session model (audited)."""
-    try:
+    with _registry_call():
         return engine.registry.activate(model_id, actor=principal["username"])
-    except RegistryError as exc:
-        raise _registry_error(exc) from exc
 
 
 @router.post("/api/model/registry/{model_id}/retire",
@@ -166,10 +207,8 @@ def model_registry_retire(model_id: str,
                           principal: dict = Depends(
                               require("model:manage"))) -> dict:
     """CANDIDATE/VALIDATED -> RETIRED (the ACTIVE model cannot retire)."""
-    try:
+    with _registry_call():
         return engine.registry.retire(model_id, actor=principal["username"])
-    except RegistryError as exc:
-        raise _registry_error(exc) from exc
 
 
 @router.post("/api/model/registry/rollback",
@@ -177,7 +216,5 @@ def model_registry_retire(model_id: str,
 def model_registry_rollback(
         principal: dict = Depends(require("model:manage"))) -> dict:
     """Re-activate the most recently superseded model (audited rollback)."""
-    try:
+    with _registry_call():
         return engine.registry.rollback(actor=principal["username"])
-    except RegistryError as exc:
-        raise _registry_error(exc) from exc

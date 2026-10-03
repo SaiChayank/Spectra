@@ -9,11 +9,15 @@ dashboard already reads.
 
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from ...store import StoreError
 from ..runtime import engine
 from ..security import require
+
+log = logging.getLogger("spectra.api")
 
 router = APIRouter(dependencies=[Depends(require("read"))])
 
@@ -45,8 +49,11 @@ def history_flows(
             until=until, sni=sni, proto=proto, src=src, dst=dst,
             min_score=min_score, max_score=max_score, capture_id=capture_id,
         )
-    except StoreError as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    except StoreError:
+        # The underlying error can quote SQL/paths: log it, answer generic.
+        log.exception("flow history query failed")
+        raise HTTPException(status_code=500,
+                            detail="storage error") from None
 
 
 @router.get("/api/history/detections")
@@ -68,8 +75,11 @@ def history_detections(
             until=until, proto=proto, src=src, dst=dst,
             min_score=min_score, max_score=max_score,
         )
-    except StoreError as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    except StoreError:
+        # The underlying error can quote SQL/paths: log it, answer generic.
+        log.exception("detections history query failed")
+        raise HTTPException(status_code=500,
+                            detail="storage error") from None
 
 
 @router.get("/api/history/captures")
@@ -115,5 +125,8 @@ def history_events(
             limit=limit, offset=offset, type=event_type,
             since=since, until=until,
         )
-    except StoreError as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+    except StoreError:
+        # The underlying error can quote SQL/paths: log it, answer generic.
+        log.exception("events history query failed")
+        raise HTTPException(status_code=500,
+                            detail="storage error") from None

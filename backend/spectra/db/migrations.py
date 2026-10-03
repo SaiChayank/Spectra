@@ -567,6 +567,25 @@ def _model_registry(db: Database) -> None:
     )
 
 
+def _lookup_indexes(db: Database) -> None:
+    """v11: indexes for the two lookup columns that still had none.
+
+    ``audit_log.actor`` drives the actor-filtered audit page (equality
+    predicate combined with the ``seq`` sort - same shape as
+    ``idx_audit_kind``), and ``captures.content_hash`` is the
+    duplicate-import gate (:meth:`~spectra.db.repositories.`
+    ``CaptureRepository.by_hash`` runs one equality per upload, so a table
+    scan there grows with every import).  ``IF NOT EXISTS`` keeps the step
+    safe to re-run against an existing database.
+    """
+    for stmt in (
+        "CREATE INDEX IF NOT EXISTS idx_audit_actor ON audit_log(actor, seq)",
+        "CREATE INDEX IF NOT EXISTS idx_captures_hash "
+        "ON captures(content_hash)",
+    ):
+        db.execute(stmt)
+
+
 MIGRATIONS: tuple[Migration, ...] = (
     Migration(1, "baseline_schema", _baseline),
     Migration(2, "flows_capture_foreign_key", _flows_capture_foreign_key),
@@ -578,6 +597,7 @@ MIGRATIONS: tuple[Migration, ...] = (
     Migration(8, "incident_alert_layer", _incident_alert_layer),
     Migration(9, "investigation_indexes", _investigation_indexes),
     Migration(10, "model_registry", _model_registry),
+    Migration(11, "lookup_indexes", _lookup_indexes),
 )
 
 

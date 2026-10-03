@@ -10,7 +10,10 @@ from __future__ import annotations
 
 import logging
 import os
+import threading
 from collections import deque
+from contextlib import contextmanager
+from typing import Iterator
 
 import numpy as np
 
@@ -30,6 +33,15 @@ from .resilience import FailureTracker
 log = logging.getLogger("spectra.engine")
 
 
+class AnalysisBusy(RuntimeError):
+    """Another CPU-heavy run over the live detector is already in progress.
+
+    Raised by the single-flight guard (see :meth:`ModelService.analysis_slot`);
+    routers translate it to HTTP 409 so a burst of requests is refused
+    immediately instead of queueing worker threads behind a fit.
+    """
+
+
 class ModelService:
     def __init__(self, config: Config, model_path: str, idle_timeout: float,
                  detector: SpectraDetector, alerts: AlertService,
@@ -45,12 +57,34 @@ class ModelService:
         self._audit = audit
         self._failures = failures
 
+        #: Single-flight guard shared by every CPU-heavy run that reads or
+        #: replaces the live detector (robustness, shadow, training).
+        self.analysis_lock = threading.Lock()
+
         # Module 2: TEE attestation over the model artifact
         try:
             self.tee = TeeEnclave(model_path)
         except Exception as exc:  # noqa: BLE001 - attestation must not block
             log.warning("tee disabled: %s", exc)
             self.tee = None  # type: ignore[assignment]
+
+    @contextmanager
+    def analysis_slot(self) -> Iterator[None]:
+        """Hold the single-flight slot for one analysis run.
+
+        Non-blocking: a second concurrent caller gets :class:`AnalysisBusy`
+        at once, so request bursts cannot pile up model fits (each fit is
+        seconds of CPU) behind FastAPI's thread pool.  Released on every
+        exit path, including errors.
+        """
+        if not self.analysis_lock.acquire(blocking=False):
+            raise AnalysisBusy(
+                "another model analysis is already running "
+                "- try again shortly")
+        try:
+            yield
+        finally:
+            self.analysis_lock.release()
 
     # -- identity -------------------------------------------------------------
 
@@ -105,56 +139,66 @@ class ModelService:
 
     def robustness(self, pcap: str | None = None, max_features: int = 12,
                    max_rounds: int = 6) -> dict:
-        """Run evasion attacks against detected flows (PCAP or recent window)."""
-        if not self.detector.is_trained:
-            return {"available": False, "reason": "model not trained"}
-        if pcap:
-            flows = collect_flows(pcap, idle_timeout=self.idle_timeout)
-            X = flows_to_matrix(flows) if flows else np.empty((0, 0))
-            source = pcap
-        else:
-            if not self.recent_feats:
-                return {"available": False, "reason": "no scored flows yet"}
-            X = np.vstack([np.asarray(f, dtype=np.float64)
-                           for f in self.recent_feats])
-            source = "live window"
-        if len(X) == 0:
-            return {"available": False, "reason": "no flows to evaluate"}
-        result = attack_batch(self.detector, X, max_features=max_features,
-                              max_rounds=max_rounds)
-        result["available"] = True
-        result["source"] = source
-        return result
+        """Run evasion attacks against detected flows (PCAP or recent window).
+
+        Single-flight: a concurrent run is refused with :class:`AnalysisBusy`
+        instead of piling a second attack sweep onto the same detector.
+        """
+        with self.analysis_slot():
+            if not self.detector.is_trained:
+                return {"available": False, "reason": "model not trained"}
+            if pcap:
+                flows = collect_flows(pcap, idle_timeout=self.idle_timeout)
+                X = flows_to_matrix(flows) if flows else np.empty((0, 0))
+                source = pcap
+            else:
+                if not self.recent_feats:
+                    return {"available": False, "reason": "no scored flows yet"}
+                X = np.vstack([np.asarray(f, dtype=np.float64)
+                               for f in self.recent_feats])
+                source = "live window"
+            if len(X) == 0:
+                return {"available": False, "reason": "no flows to evaluate"}
+            result = attack_batch(self.detector, X, max_features=max_features,
+                                  max_rounds=max_rounds)
+            result["available"] = True
+            result["source"] = source
+            return result
 
     # -- Module 4: shadow mode -------------------------------------------------
 
     def shadow(self, pcap: str | None = None, contamination: float = 0.05,
                threshold: float = 3.5, retrain: bool = True) -> dict:
-        """Module 4 shadow mode: quantify lift over a legacy z-score rule."""
-        if not self.detector.is_trained:
-            return {"available": False, "reason": "model not trained"}
-        if pcap:
-            flows = collect_flows(pcap, idle_timeout=self.idle_timeout)
-            X = flows_to_matrix(flows) if flows else np.empty((0, 0))
-            source = pcap
-        else:
-            if not self.recent_feats:
-                return {"available": False, "reason": "no scored flows yet"}
-            X = np.vstack([np.asarray(f, dtype=np.float64)
-                           for f in self.recent_feats])
-            source = "live window"
-        if len(X) == 0:
-            return {"available": False, "reason": "no flows to evaluate"}
-        candidate = None
-        if retrain:
-            candidate = SpectraDetector(contamination=contamination,
-                                        random_state=42)
-            candidate.fit(X)
-        result = run_shadow(self.detector, X, candidate=candidate,
-                            feature_names=self.detector.feature_names,
-                            threshold=threshold)
-        result["source"] = source
-        return result
+        """Module 4 shadow mode: quantify lift over a legacy z-score rule.
+
+        Single-flight, same slot as :meth:`robustness` and training: the
+        optional ``retrain`` fits a candidate for the whole call.
+        """
+        with self.analysis_slot():
+            if not self.detector.is_trained:
+                return {"available": False, "reason": "model not trained"}
+            if pcap:
+                flows = collect_flows(pcap, idle_timeout=self.idle_timeout)
+                X = flows_to_matrix(flows) if flows else np.empty((0, 0))
+                source = pcap
+            else:
+                if not self.recent_feats:
+                    return {"available": False, "reason": "no scored flows yet"}
+                X = np.vstack([np.asarray(f, dtype=np.float64)
+                               for f in self.recent_feats])
+                source = "live window"
+            if len(X) == 0:
+                return {"available": False, "reason": "no flows to evaluate"}
+            candidate = None
+            if retrain:
+                candidate = SpectraDetector(contamination=contamination,
+                                            random_state=42)
+                candidate.fit(X)
+            result = run_shadow(self.detector, X, candidate=candidate,
+                                feature_names=self.detector.feature_names,
+                                threshold=threshold)
+            result["source"] = source
+            return result
 
     # -- Module 2: confidential computing -------------------------------------
 

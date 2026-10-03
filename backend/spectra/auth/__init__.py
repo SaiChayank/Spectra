@@ -12,6 +12,7 @@ from .passwords import (
     MIN_PASSWORD_LENGTH,
     check_password_policy,
     hash_password,
+    password_needs_rehash,
     verify_dummy,
     verify_password,
 )
@@ -21,6 +22,7 @@ __all__ = [
     "MIN_PASSWORD_LENGTH",
     "check_password_policy",
     "hash_password",
+    "password_needs_rehash",
     "verify_dummy",
     "verify_password",
 ]

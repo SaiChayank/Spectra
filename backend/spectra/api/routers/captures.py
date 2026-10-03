@@ -8,6 +8,7 @@ Live capture start/stop lives on ``/api/capture/start|stop`` (live mode only).
 
 from __future__ import annotations
 
+import logging
 from contextlib import contextmanager
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
@@ -22,6 +23,8 @@ from ...services.captures import (
 from ...store import StoreError
 from ..runtime import engine
 from ..security import require
+
+log = logging.getLogger("spectra.api")
 
 #: Reads are any signed-in role; mutating routes (import/process/delete) are
 #: gated per-route with ``capture:manage`` (ADMIN).
@@ -49,9 +52,11 @@ def _translate():
         raise HTTPException(status_code=413, detail=str(exc)) from exc
     except CaptureFileError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
-    except StoreError as exc:
+    except StoreError:
+        # str(exc) can quote SQL and storage paths: log it, answer generic.
+        log.exception("capture persistence failure")
         raise HTTPException(status_code=500,
-                            detail=f"persistence failure: {exc}") from exc
+                            detail="persistence failure") from None
 
 
 @router.post("/api/captures",

@@ -32,9 +32,11 @@ from __future__ import annotations
 import hashlib
 import logging
 import os
+import threading
 import time
 import uuid
 from datetime import datetime
+from functools import wraps
 
 from ..config import Config
 from ..features.extractor import FEATURE_NAMES, feature_schema_digest
@@ -96,6 +98,12 @@ class ModelRegistryService:
         #: ``fn(detector, row, action)`` - engine hook for session side effects.
         self.on_activate = None
         self.artifacts_dir = os.path.join(config.data_dir, "model_artifacts")
+        #: Serializes every row transition (register/validate/activate/...).
+        #: Reentrant because ``rollback`` re-enters ``activate`` and the
+        #: engine's ``on_activate`` hook may call back into the registry;
+        #: without it two concurrent transitions could observe the same
+        #: CANDIDATE and race past the status gate.
+        self.lock = threading.RLock()
 
     # -- capability -----------------------------------------------------------
 
@@ -125,6 +133,23 @@ class ModelRegistryService:
             self.failures.record(component, exc)
         except Exception:  # noqa: BLE001 - telemetry is best effort
             pass
+
+    @staticmethod
+    def _serialized(method):
+        """Run a registry transition under the service's reentrant lock.
+
+        Applied to every status-changing entry point so a check-then-write
+        (``status == CANDIDATE`` -> ``VALIDATED``) cannot interleave with a
+        concurrent transition.  ``RLock`` keeps nested calls (``rollback``
+        -> ``activate``, ``adopt`` -> ``register``) on the same thread safe.
+        """
+
+        @wraps(method)
+        def wrapper(self, *args, **kwargs):
+            with self.lock:
+                return method(self, *args, **kwargs)
+
+        return wrapper
 
     # -- artifact trust -------------------------------------------------------
 
@@ -228,6 +253,7 @@ class ModelRegistryService:
 
     # -- lifecycle ------------------------------------------------------------
 
+    @_serialized
     def register(self, detector: SpectraDetector, *, source: str,
                  metrics: dict | None = None,
                  actor: str | None = None) -> dict:
@@ -265,6 +291,7 @@ class ModelRegistryService:
         }, actor)
         return row
 
+    @_serialized
     def validate(self, model_id: str, *, actor: str | None = None) -> dict:
         """Validation gate: CANDIDATE -> VALIDATED, or -> FAILED with reasons."""
         store = self._require_store()
@@ -339,6 +366,7 @@ class ModelRegistryService:
             }, actor)
         return store.model_registry_get(model_id)
 
+    @_serialized
     def activate(self, model_id: str, *, actor: str | None = None,
                  action: str = "activate",
                  adopted: bool = False) -> dict:
@@ -387,6 +415,7 @@ class ModelRegistryService:
             result["hook_error"] = hook_error
         return result
 
+    @_serialized
     def rollback(self, *, actor: str | None = None) -> dict:
         """RETIRED -> ACTIVE for the most recently superseded model."""
         store = self._require_store()
@@ -402,6 +431,7 @@ class ModelRegistryService:
         return self.activate(previous["model_id"], actor=actor,
                              action="rollback")
 
+    @_serialized
     def retire(self, model_id: str, *, actor: str | None = None) -> dict:
         """CANDIDATE/VALIDATED -> RETIRED (the ACTIVE model can't retire)."""
         store = self._require_store()
@@ -424,6 +454,7 @@ class ModelRegistryService:
         }, actor)
         return updated
 
+    @_serialized
     def adopt(self, deployed_path: str, *, actor: str = "system") -> dict | None:
         """First startup: register + validate + activate the legacy artifact.
 

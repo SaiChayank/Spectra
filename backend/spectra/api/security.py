@@ -148,17 +148,26 @@ async def auth_gate(request: Request, call_next):
     path = request.url.path
     if path.startswith(_PUBLIC_PREFIXES) or \
             (request.method, path) in PUBLIC_ROUTES:
-        return await call_next(request)
+        return _no_store(await call_next(request), path)
     if not path.startswith("/api/"):
         return await call_next(request)  # not API surface (docs, 404s, ...)
     try:
         principal = resolve_principal(request)
     except AuthError as exc:
-        return _error_response(exc.status_code, exc.detail)
+        return _no_store(_error_response(exc.status_code, exc.detail), path)
     if principal is None:
-        return _error_response(401, UNAUTHENTICATED,
-                               headers={"WWW-Authenticate": "Bearer"})
-    return await call_next(request)
+        return _no_store(
+            _error_response(401, UNAUTHENTICATED,
+                            headers={"WWW-Authenticate": "Bearer"}),
+            path)
+    return _no_store(await call_next(request), path)
+
+
+def _no_store(response, path: str):
+    """Identity responses must never be cached (login, logout, ``me``)."""
+    if path.startswith("/api/auth/"):
+        response.headers["Cache-Control"] = "no-store"
+    return response
 
 
 # -- response shaping (identity without secrets) -------------------------------

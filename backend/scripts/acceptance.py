@@ -730,7 +730,7 @@ def run_tee() -> None:
         return
     st, v = req("POST", "/api/tee/verify", {"quote": q, "nonce": "acc-1"})
     checks_ok = all(c.get("ok") for c in v.get("checks", []))
-    check(g, "POST /api/tee/verify (7 checks)", st == 200 and v.get("ok") and checks_ok,
+    check(g, "POST /api/tee/verify (8 checks)", st == 200 and v.get("ok") and checks_ok,
           f"HTTP {st} ok={v.get('ok')}")
     st, v2 = req("POST", "/api/tee/verify", {"quote": q, "measurement": "0" * 64})
     check(g, "verify rejects wrong measurement", st == 200 and v2.get("ok") is False,

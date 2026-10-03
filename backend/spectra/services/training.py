@@ -54,16 +54,28 @@ class TrainingService:
 
         Persistence off: legacy behaviour - fit the live session detector and
         write ``model_path`` (the lifecycle is a persistence feature).
+
+        Single-flight (``ModelService.analysis_slot``): a concurrent train,
+        robustness or shadow run is refused with ``AnalysisBusy`` instead of
+        two fits racing the same detector/registry.
         """
         if self._capture.running:
             raise CaptureError("stop the active capture before training")
+        with self._model.analysis_slot():
+            return self._train_locked(path, contamination,
+                                      activate=activate, actor=actor)
+
+    def _train_locked(self, path: str, contamination: float | None,
+                      *, activate: bool, actor: str | None) -> dict:
+        """Body of :meth:`train_from_pcap` (runs with the slot held)."""
         if contamination is None:
             contamination = self.config.contamination
         flows = collect_flows(path, idle_timeout=self.idle_timeout,
                               bucket=self.config.bucket_seconds)
         if len(flows) < 10:
             raise ValueError(
-                f"{path} yielded only {len(flows)} complete flows; need >= 10"
+                f"{os.path.basename(str(path))} yielded only {len(flows)} "
+                "complete flows; need >= 10"
             )
         X = flows_to_matrix(flows)
 

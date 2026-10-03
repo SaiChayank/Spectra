@@ -202,8 +202,11 @@ class CaptureResourceService:
         stored = row["stored_name"]
         path = self.storage.path_for(stored)
         if not os.path.isfile(path):
-            self.store.mark_capture_failed(capture_id,
-                                           "stored file is missing")
+            try:
+                self.store.mark_capture_failed(capture_id,
+                                               "stored file is missing")
+            except Exception:  # noqa: BLE001 - repair is best effort
+                log.warning("could not mark capture %s failed", capture_id)
             raise CaptureConflict(
                 f"stored file for capture {capture_id} is missing")
         label = row.get("original_name") or stored

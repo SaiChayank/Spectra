@@ -20,13 +20,15 @@ import hashlib
 import hmac
 import secrets
 
-#: scrypt work factors (n=16384 => ~16 MiB and ~50-100 ms per hash on
-#: commodity hardware: strong for a local service without slowing logins).
-_N = 2 ** 14
+#: scrypt work factors (n=65536 => ~64 MiB and ~200 ms per hash on
+#: commodity hardware: OWASP-aligned work factor for a local service;
+#: verification reads the stored n, so older rows keep working and are
+#: transparently upgraded on next login - see password_needs_rehash).
+_N = 2 ** 16
 _R = 8
 _P = 1
 _DKLEN = 32
-_MAXMEM = 64 * 1024 * 1024  # explicit headroom over the 16 MiB the KDF needs
+_MAXMEM = 128 * 1024 * 1024  # explicit headroom over the 64 MiB the KDF needs
 
 #: Password policy bounds (enforced when a password is *set*, never at login -
 #: the login path must not reveal policy details to an unauthenticated caller).
@@ -80,6 +82,23 @@ def verify_dummy(password: str) -> bool:
     if _DUMMY_ENCODED is None:
         _DUMMY_ENCODED = hash_password("spectra-dummy-credential")
     return verify_password(password, _DUMMY_ENCODED)
+
+
+def password_needs_rehash(encoded: str) -> bool:
+    """True when a stored hash used weaker parameters than the current ones.
+
+    The encoding is self-describing, so verification always uses the stored
+    n/r/p; this predicate lets the login path upgrade a pre-hardening row
+    (or a future parameter bump) in place, without invalidating sessions.
+    A malformed encoding needs no rehash - :func:`verify_password` already
+    refused it and login failed before this is consulted.
+    """
+    try:
+        algo, n, r, p, *_ = encoded.split("$")
+        return (algo != _FORMAT or int(n) < _N
+                or int(r) < _R or int(p) < _P)
+    except (ValueError, TypeError):
+        return False
 
 
 def check_password_policy(password: str) -> None:

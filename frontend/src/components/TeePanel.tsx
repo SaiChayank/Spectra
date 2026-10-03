@@ -135,7 +135,7 @@ export default function TeePanel({ canRun, onError, onNotice }: {
       <section className="panel">
         <h2>Verification</h2>
         {!verify ? (
-          <div className="empty">Verify a quote to see its seven checks.</div>
+          <div className="empty">Verify a quote to see its verification checks.</div>
         ) : (
           <>
             <div className={`kv verdict ${verify.ok ? "ok" : "bad"}`}>

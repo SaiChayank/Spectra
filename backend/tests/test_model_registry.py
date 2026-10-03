@@ -429,9 +429,14 @@ def test_api_registry_candidate_flow_and_rollback(client, upload_capture,
     res = client.get("/api/model/registry")
     assert res.json()["active"]["model_id"] == model_id
 
-    # Second model supersedes it; rollback returns to the first.
+    # Second model supersedes it; rollback returns to the first. Train it on
+    # *different* settings: training is deterministic (random_state=42) and
+    # `trained_at` only carries second resolution, so the same capture with the
+    # same contamination can yield a byte-identical artifact - compare() would
+    # then correctly report same_artifact and this assertion would depend on
+    # whether the two fits straddled a wall-clock second.
     res = client.post("/api/model/train", json={
-        "capture_id": capture_id, "contamination": 0.05})
+        "capture_id": capture_id, "contamination": 0.10})
     assert res.status_code == 200, res.text
     reg2 = res.json()["registry"]
     assert reg2["activated"] is True

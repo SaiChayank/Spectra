@@ -177,15 +177,29 @@ class SpectraDetector:
 
     def score(self, X: np.ndarray) -> np.ndarray:
         """0-100 anomaly score (percentile rank against the training set)."""
-        raw = self._raw(X)
-        train = self._train_raw
-        idx = np.searchsorted(train, raw, side="left")
-        pct = 100.0 * idx / max(1, len(train) - 1)
-        return np.clip(np.round(pct, 2), 0.0, 100.0)
+        return self._from_raw(self._raw(X))
 
     def predict(self, X: np.ndarray) -> np.ndarray:
         """Boolean anomaly labels using the training-derived threshold."""
         return self._raw(X) > self._threshold
+
+    def score_and_predict(self, X: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        """Score **and** label from a single inference pass.
+
+        ``score()`` and ``predict()`` each run ``_raw`` (scale + walk), so
+        the streaming hot path that needs both was paying for inference
+        twice per flow.  Returns ``(scores, flags)`` with exactly the values
+        the two separate calls would produce.
+        """
+        raw = self._raw(X)
+        return self._from_raw(raw), raw > self._threshold
+
+    def _from_raw(self, raw: np.ndarray) -> np.ndarray:
+        """Percentile rank of raw anomaly scores against the training set."""
+        train = self._train_raw
+        idx = np.searchsorted(train, raw, side="left")
+        pct = 100.0 * idx / max(1, len(train) - 1)
+        return np.clip(np.round(pct, 2), 0.0, 100.0)
 
     def explain(self, x: np.ndarray, top: int = 3) -> list[dict]:
         """Top features driving the anomaly score, by z-score magnitude."""

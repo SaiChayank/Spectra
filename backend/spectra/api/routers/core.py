@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 
@@ -26,7 +26,7 @@ class CaptureRequest(BaseModel):
     """
     mode: str = Field(pattern="^live$")
     iface: str | None = None
-    bpf_filter: str = ""
+    bpf_filter: str = Field("", max_length=1024)
 
 
 @router.get("/api/health")
@@ -60,13 +60,16 @@ def stats() -> dict:
 
 @router.get("/api/flows",
            dependencies=[Depends(require("read"))])
-def flows(limit: int = 100) -> dict:
+def flows(limit: int = Query(100, ge=1, le=1000)) -> dict:
+    """Recent in-memory flows; ``limit`` is bounded so one request cannot
+    serialize an unbounded buffer."""
     return engine.detection.recent_flows(limit)
 
 
 @router.get("/api/detections",
            dependencies=[Depends(require("read"))])
-def detections(limit: int = 100) -> dict:
+def detections(limit: int = Query(100, ge=1, le=1000)) -> dict:
+    """Recent in-memory detections (bounded ``limit``, same as /api/flows)."""
     return engine.detection.recent_detections(limit)
 
 

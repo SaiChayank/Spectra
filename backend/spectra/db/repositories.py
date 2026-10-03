@@ -1132,16 +1132,49 @@ class AlertRepository:
     Column names match :class:`spectra.domain.ThreatAlert` one-to-one, so a
     hydrated row *is* the alert dict; only the JSON documents are parsed.
     Writes are immediate single commits — alerts are rare next to flows.
+
+    Growth is bounded by a newest-kept row cap rather than an age policy:
+    grouped alerts dedupe repeats, but the distinct group keys (endpoint
+    pair x threat type) are attacker-influenced, so the table must stay
+    bounded even when every ``SPECTRA_*_RETENTION_DAYS`` policy is off.
     """
 
-    def __init__(self, db: Database):
+    def __init__(self, db: Database, max_rows: int = 50_000):
         self._db = db
+        self.max_rows = max(1, int(max_rows))
+        self._rows = self.count()
 
     _COLUMNS = ("alert_id, flow_id, capture_id, timestamp, first_seen, "
                 "last_seen, updated_at, source, destination, protocol, "
                 "threat_type, anomaly_score, confidence, severity, model_id, "
                 "model_version, evidence, severity_factors, metadata, "
                 "module_annotations, status, occurrences")
+
+    def count(self) -> int:
+        return int(self._db.query("SELECT COUNT(*) AS n FROM alerts")[0]["n"])
+
+    @property
+    def rows(self) -> int:
+        """Locally tracked row count (refreshed by :meth:`resync`)."""
+        return self._rows
+
+    def resync(self) -> None:
+        """Recount after retention or another process changed the table."""
+        self._rows = self.count()
+
+    def _prune(self) -> None:
+        """Row cap: drop the least recently seen rows beyond ``max_rows``."""
+        overflow = self._rows - self.max_rows
+        if overflow <= 0:
+            return
+        with self._db.transaction():
+            self._db.conn.execute(
+                """DELETE FROM alerts WHERE alert_id IN (
+                       SELECT alert_id FROM alerts
+                       ORDER BY last_seen ASC, alert_id ASC LIMIT ?)""",
+                (overflow,),
+            )
+        self._rows = self.count()
 
     @staticmethod
     def hydrate(row: dict) -> dict:
@@ -1187,6 +1220,8 @@ class AlertRepository:
                 ),
             )
             self._db.commit()
+            self._rows += 1
+            self._prune()
 
     def get(self, alert_id: str) -> dict | None:
         rows = self._db.query("SELECT * FROM alerts WHERE alert_id = ?",

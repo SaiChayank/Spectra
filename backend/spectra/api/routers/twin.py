@@ -2,12 +2,19 @@
 
 from __future__ import annotations
 
+import logging
+import os
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from ...services.model import AnalysisBusy
+from ...tools import FlowBudgetError
 from ..runtime import engine
 from ..security import require
 from . import capture_pcap_path
+
+log = logging.getLogger("spectra.api")
 
 router = APIRouter(dependencies=[Depends(require("investigate"))])
 
@@ -111,8 +118,21 @@ def twin_shadow(req: ShadowRequest) -> dict:
     path = (capture_pcap_path(req.capture_id)
             if req.capture_id is not None else None)
     try:
-        return engine.model.shadow(pcap=path, contamination=req.contamination,
-                                   threshold=req.threshold, retrain=req.retrain)
-    except Exception as exc:  # noqa: BLE001 - surface shadow failures
+        result = engine.model.shadow(pcap=path,
+                                     contamination=req.contamination,
+                                     threshold=req.threshold,
+                                     retrain=req.retrain)
+    except AnalysisBusy as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except FlowBudgetError as exc:
+        # client-chosen capture exceeded the offline flow budget: 400
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception:  # noqa: BLE001 - surface shadow failures
+        log.exception("shadow run failed")
         raise HTTPException(status_code=500,
-                            detail=f"shadow run failed: {exc}") from exc
+                            detail="shadow run failed") from None
+    if path is not None and result.get("source") == path:
+        # basename only: the service echoes its input source, and a server
+        # storage path must never reach an API response.
+        result["source"] = os.path.basename(path)
+    return result

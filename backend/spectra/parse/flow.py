@@ -19,6 +19,13 @@ from .tls import TlsMetadata, TlsStreamParser, parse_handshake
 
 DEFAULT_IDLE_TIMEOUT = 120.0
 DEFAULT_MAX_PACKETS = 10000
+# Recently-completed 5-tuple cache bounds (see FlowTracker._remember_completed):
+# above the soft cap the cache is swept for entries outside the recent window;
+# if the *window itself* is saturated (busy capture: more than the soft cap of
+# flows finishing inside one window) the oldest are evicted down to the floor,
+# so memory stays bounded however many flows complete per second.
+COMPLETED_SOFT_CAP = 8192
+COMPLETED_HARD_FLOOR = 4096
 FLOW_TCP = 6
 FLOW_UDP = 17
 
@@ -411,9 +418,23 @@ class FlowTracker:
         rev = (flow.proto, flow.dst_ip, flow.dst_port, flow.src_ip, flow.src_port)
         self._completed[fwd] = flow.last_ts
         self._completed[rev] = flow.last_ts
-        if len(self._completed) > 8192:  # bound memory on busy captures
-            cutoff = flow.last_ts - self._completed_window
-            self._completed = {k: v for k, v in self._completed.items() if v >= cutoff}
+        if len(self._completed) <= COMPLETED_SOFT_CAP:
+            return
+        # Sweep out entries older than the window first (the normal case: the
+        # cache only crossed the cap because old entries were never pruned).
+        cutoff = flow.last_ts - self._completed_window
+        self._completed = {k: v for k, v in self._completed.items()
+                           if v >= cutoff}
+        if len(self._completed) <= COMPLETED_SOFT_CAP:
+            return
+        # The window itself is saturated: every entry is still "fresh", so the
+        # time filter cannot shrink it.  Evict the oldest-completed entries
+        # down to the floor - dict order is completion order here - otherwise
+        # a busy capture grows this cache (and rebuilds it on every insert)
+        # without bound.
+        excess = len(self._completed) - COMPLETED_HARD_FLOOR
+        for key in list(self._completed)[:excess]:
+            del self._completed[key]
 
     def _complete(self, flow: Flow) -> None:
         self._flows.pop(flow.key, None)
