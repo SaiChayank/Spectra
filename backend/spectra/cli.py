@@ -74,6 +74,145 @@ def cmd_demo(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_dataset(args: argparse.Namespace) -> int:
+    from .config import get_config
+    from .datasets import DatasetError, import_artifact, list_artifacts, verify
+
+    cfg = get_config()
+    try:
+        if args.dataset_cmd == "list":
+            out = list_artifacts(cfg, dataset=args.name)
+            if args.json:
+                print(json.dumps(out, indent=2))
+                return 0
+            print("dataset catalog:")
+            for d in out["catalog"]:
+                mark = "labeled" if d["labeled"] else "reference-only"
+                print(f"  {d['name']:<12} [{mark}] {d['title']}")
+            print("\nimported artifacts:")
+            if not out["artifacts"]:
+                print("  (none - use `spectra dataset import <file> --as <name>`)")
+            for a in out["artifacts"]:
+                state = "ok" if a["present"] else "MISSING"
+                print(f"  {a['dataset']:<12} {a['filename']:<40} "
+                      f"{a['size'] / (1 << 20):>10.1f} MiB  {state}")
+            return 0
+
+        if args.dataset_cmd == "import":
+            entry = import_artifact(cfg, args.file, args.dataset,
+                                    source_note=args.note or "",
+                                    rename=args.rename)
+            print(f"imported {entry.filename} as {entry.dataset}")
+            print(f"  sha256: {entry.sha256}")
+            print(f"  size  : {entry.size} bytes")
+            return 0
+
+        if args.dataset_cmd == "verify":
+            out = verify(cfg, dataset=args.name)
+            if args.json:
+                print(json.dumps(out, indent=2))
+            else:
+                print(f"verified {out['entries']} artifact(s): "
+                      f"{out['ok']} ok, {out['missing']} missing, "
+                      f"{out['changed']} changed")
+                for r in out["results"]:
+                    if r["status"] != "ok":
+                        print(f"  {r['status'].upper()}: {r['filename']}")
+            return 0 if (out["missing"] == 0 and out["changed"] == 0) else 1
+    except DatasetError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    return 1
+
+
+def cmd_eval(args: argparse.Namespace) -> int:
+    from .config import get_config
+    from .datasets import artifact_path, load_manifest
+    from .eval import EvalParams, load_labels, run_eval
+    from .eval.report import compare
+    from .ml.model import SpectraDetector
+
+    if args.eval_cmd == "compare":
+        with open(args.a, "r", encoding="utf-8") as fa, \
+                open(args.b, "r", encoding="utf-8") as fb:
+            out = compare(json.load(fa), json.load(fb))
+        print(json.dumps(out, indent=2))
+        return 0
+
+    if args.eval_cmd == "run":
+        cfg = get_config()
+        # resolve the PCAP: explicit path, or a dataset artifact name
+        if args.pcap:
+            pcap = args.pcap
+        elif args.dataset_artifact:
+            entries = [e for e in load_manifest(cfg)
+                       if e.filename == args.dataset_artifact]
+            if not entries:
+                print(f"error: artifact {args.dataset_artifact!r} not in the "
+                      "manifest - import it first", file=sys.stderr)
+                return 2
+            pcap = artifact_path(entries[0], cfg)
+        else:
+            print("error: pass --pcap or --dataset-artifact", file=sys.stderr)
+            return 2
+
+        if not args.labels:
+            print("error: --labels <label.csv> is required "
+                  "(see docs/evaluation.md §3)", file=sys.stderr)
+            return 2
+        labels = load_labels(args.labels)
+
+        detector = SpectraDetector.load(args.model) if args.model \
+            else SpectraDetector()
+        if not detector.is_trained:
+            print("error: no trained model - pass --model <path> or run "
+                  "`spectra train` first", file=sys.stderr)
+            return 2
+
+        name = args.dataset_name
+        if not name and args.dataset_artifact:
+            name = args.dataset_artifact.split("--", 1)[0]
+        report = run_eval(
+            detector, pcap, labels,
+            dataset_name=name or "ad-hoc",
+            model_path=args.model or cfg.model_path,
+            params=EvalParams(
+                idle_timeout=args.idle_timeout,
+                join_tolerance_s=args.tolerance,
+            ),
+        )
+        if args.out:
+            with open(args.out, "w", encoding="utf-8") as f:
+                json.dump(report, f, indent=2)
+            print(f"report written to {args.out}")
+        if args.json:
+            print(json.dumps(report, indent=2))
+            return 0
+
+        ov = report["overall"]
+        print(f"evaluation: {report['dataset']['name']} "
+              f"({report['flows']['total']} flows, "
+              f"{report['flows']['anomalous']} anomalous)")
+        print(f"  parser coverage: {report['parser_coverage']['ratio']}")
+        print("  per-category (precision / recall / f1):")
+        for cat, s in report["per_category"].items():
+            def fmt(v):
+                return f"{v:.2f}" if v is not None else "  -"
+            print(f"    {cat:<30} p={fmt(s['precision'])} "
+                  f"r={fmt(s['recall'])} f1={fmt(s['f1'])} "
+                  f"(support={s['support']})")
+        print(f"  overall: p={ov['precision']} r={ov['recall']} f1={ov['f1']} "
+              f"fpr={ov['benign_fpr']}")
+        if report["invisible_joined"]:
+            print(f"  METADATA_INVISIBLE joined (not scored): "
+                  f"{report['invisible_joined']}")
+        print("  caveats:")
+        for c in report["caveats"]:
+            print(f"    - {c}")
+        return 0
+    return 1
+
+
 def cmd_pqc(args: argparse.Namespace) -> int:
     from .modules.pqc.scan import scan_pcap
 
@@ -770,6 +909,56 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--train", action="store_true", help="train the model on the baseline")
     p.add_argument("--model", default=None, help="model path (with --train)")
     p.set_defaults(func=cmd_demo)
+
+    # -- dataset registry (Phase 7: evaluation provenance) -----------------
+
+    p = sub.add_parser("dataset",
+                       help="evaluation dataset registry: catalog, import, verify")
+    dsub = p.add_subparsers(dest="dataset_cmd", required=True)
+
+    q = dsub.add_parser("list", help="show the dataset catalog + imported artifacts")
+    q.add_argument("--name", default=None, help="filter by dataset name")
+    q.add_argument("--json", action="store_true")
+    q.set_defaults(func=cmd_dataset)
+
+    q = dsub.add_parser("import", help="import an on-disk artifact + record its hash")
+    q.add_argument("file", help="path to the artifact file (pcap/csv)")
+    q.add_argument("--as", dest="dataset", required=True,
+                   help="dataset name (cicids2017|ctu13|vpn2016|mawi|sslbl_ja3|synthetic)")
+    q.add_argument("--note", default=None, help="provenance note (source URL, etc.)")
+    q.add_argument("--rename", default=None, help="override the stored filename")
+    q.set_defaults(func=cmd_dataset)
+
+    q = dsub.add_parser("verify", help="re-hash artifacts and report integrity")
+    q.add_argument("--name", default=None, help="filter by dataset name")
+    q.add_argument("--json", action="store_true")
+    q.set_defaults(func=cmd_dataset)
+
+    # -- evaluation (Phase 7: measured precision/recall) --------------------
+
+    p = sub.add_parser("eval",
+                       help="ground-truth evaluation: run pipeline over labeled PCAP")
+    esub = p.add_subparsers(dest="eval_cmd", required=True)
+
+    q = esub.add_parser("run", help="evaluate a detector against a labeled PCAP")
+    q.add_argument("--pcap", default=None, help="path to the PCAP to evaluate")
+    q.add_argument("--dataset-artifact", default=None,
+                   help="imported artifact filename (from `spectra dataset list`)")
+    q.add_argument("--labels", required=True, help="label CSV (docs/evaluation.md §3)")
+    q.add_argument("--model", default=None,
+                   help="model artifact (default: untrained - will error)")
+    q.add_argument("--dataset-name", default=None, help="override the dataset name")
+    q.add_argument("--tolerance", type=float, default=10.0,
+                   help="join tolerance in seconds (default 10)")
+    q.add_argument("--idle-timeout", type=float, default=30.0)
+    q.add_argument("--out", default=None, help="write the report JSON here")
+    q.add_argument("--json", action="store_true", help="print full report JSON")
+    q.set_defaults(func=cmd_eval)
+
+    q = esub.add_parser("compare", help="diff two evaluation reports (A/B)")
+    q.add_argument("a", help="report A (JSON)")
+    q.add_argument("b", help="report B (JSON)")
+    q.set_defaults(func=cmd_eval)
 
     p = sub.add_parser("pqc", help="Module 1: post-quantum readiness report for a PCAP")
     p.add_argument("pcap", help="path to PCAP to analyse")
