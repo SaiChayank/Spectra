@@ -109,6 +109,29 @@ def _f(f: dict[str, float], name: str) -> float:
     return f.get(name, 0.0)
 
 
+def _intel_signals(rec: dict) -> list[dict]:
+    """Threat-intel hits on this flow -> supporting signals.
+
+    A JA3/JA4/SNI match against the operator's local lists (spectra.intel)
+    is evidence *independent* of the anomaly score: it comes from a
+    curated list, not from the detector's own statistics.  Weight 0.5 -
+    strong, but below the two-signal minimum so intel alone never
+    classifies (one strong signal alone never classifies, see _MIN_SIGNALS).
+    """
+    hits = rec.get("intel")
+    if not isinstance(hits, list) or not hits:
+        return []
+    out: list[dict] = []
+    for hit in hits:
+        if not isinstance(hit, dict):
+            continue
+        kind = str(hit.get("list") or "")
+        value = str(hit.get("value") or "")
+        detail = str(hit.get("detail") or f"{kind} intel match")
+        out.append(_sig(f"intel_{kind}_match", 0.5, detail, value=value))
+    return out
+
+
 def _rfloat(rec: dict, key: str) -> float:
     try:
         return float(rec.get(key) or 0.0)
@@ -214,6 +237,9 @@ def _rule_c2(rec: dict, f: dict[str, float], ctx: dict) -> tuple[list, list]:
     """Beaconing: a steady, small, repeated cadence to one destination."""
     sup: list[dict] = []
     opp: list[dict] = []
+    # A listed JA3/JA4/SNI (local intel) on this flow is C2 evidence when
+    # combined with cadence signals below - independent of the score.
+    sup.extend(_intel_signals(rec))
     mean_iat = _f(f, "iat_fwd_mean_s")
     mad = _f(f, "iat_fwd_mad_s")
     ratio = (mad / mean_iat) if mean_iat > 0 else float("inf")
@@ -348,6 +374,9 @@ def _rule_tls(rec: dict, f: dict[str, float], ctx: dict) -> tuple[list, list]:
     version = rec.get("tls_version") or ""
     alpn = list(rec.get("alpn") or [])
     ja3, ja4 = rec.get("ja3"), rec.get("ja4")
+    # Local intel match: listed fingerprint/SNI is direct TLS evidence
+    # (independent of the detector's rarity statistics).
+    sup.extend(_intel_signals(rec))
     if not has_sni:
         sup.append(_sig("missing_sni", 0.4, "TLS handshake carried no SNI",
                         value=True))
@@ -396,6 +425,9 @@ def _rule_quic(rec: dict, f: dict[str, float], ctx: dict) -> tuple[list, list]:
         return [], []
     sup: list[dict] = []
     opp: list[dict] = []
+    # SNI/JA4 intel hits also apply to QUIC (handshake metadata is parsed
+    # from the Initial packet's CRYPTO frames).
+    sup.extend(_intel_signals(rec))
     alpn = [str(a) for a in (rec.get("alpn") or [])]
     if version.startswith("QUIC 0x"):
         sup.append(_sig("unknown_version", 0.5,

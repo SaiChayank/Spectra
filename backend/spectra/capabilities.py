@@ -233,6 +233,25 @@ _MODULE_CAPABILITIES: dict[str, dict] = {
         "failure": "Off the detection path: validation errors return "
                    "HTTP 400 on its own routes only.",
     },
+    "intel": {
+        "title": "Local threat intel (JA3/JA4/SNI lists)",
+        "status": LOCAL,
+        "hardware_backed": False,
+        "note": "Operator-maintained file lists matched against parsed "
+                "handshake metadata; a hit is evidence, never an "
+                "auto-verdict.",
+        "consumes": "ja3/ja4/sni fields already parsed from TLS/QUIC "
+                    "handshakes (never payload) plus the list files under "
+                    "the intel directory.",
+        "produces": "intel_* classification signals (spectra.threats), "
+                    "record['intel'] hits on flows, and list provenance "
+                    "on GET /api/model/intel.",
+        "affects_alert_scoring": False,
+        "evidence_only": True,
+        "failure": "Guarded (component 'intel'): a bad directory or list "
+                   "degrades to empty lists with a counted failure; "
+                   "capture and scoring continue without intel.",
+    },
 }
 
 

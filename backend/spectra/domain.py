@@ -60,6 +60,10 @@ class FlowRecord(TypedDict, total=False):
     #: Anomalies only: explainable threat verdict (spectra.threats) —
     #: ``threat_type``/``confidence`` plus supporting/contradicting signals.
     threat: dict | None
+    #: Local threat-intel hits (spectra.intel): JA3/JA4/SNI matches against
+    #: the operator's list files; consumed as an independent classification
+    #: signal and rendered as alert evidence. Absent when no list matches.
+    intel: list
     #: Anomalies that produced an alert: the alert's id (reverse link; the
     #: alert itself references the flow — see spectra.services.threat_alerts).
     alert_id: str | None

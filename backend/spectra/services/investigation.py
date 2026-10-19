@@ -558,6 +558,9 @@ class InvestigationService:
             "twin": 1 if twin_section.get("available") else 0,
             "edge": counts.get("edge", 0),
             "edge_deployment": 0,
+            # intel hits are rendered inside threat verdicts/evidence
+            # (intel_* signals), not as a separate annotation list
+            "intel": 0,
         }
         summaries = {
             "pqc": f"{contributed['pqc']} quantum-readiness annotation(s) "
@@ -581,6 +584,9 @@ class InvestigationService:
             "edge": f"{contributed['edge']} slice tag(s) on flows/alerts",
             "edge_deployment": "simulated deployment registry; not "
                                "incident evidence",
+            "intel": "JA3/JA4/SNI list hits render inside threat "
+                     "classification signals and alert evidence "
+                     "(intel_* signals), not as a separate list",
         }
 
         items = []

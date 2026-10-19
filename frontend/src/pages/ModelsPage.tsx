@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { Fragment, useState, type FormEvent } from "react";
 import {
   Empty,
   ErrorBox,
@@ -10,6 +10,9 @@ import {
   api,
   type CaptureResource,
   type DriftReport,
+  type EvalReport,
+  type EvalReportList,
+  type IntelStatus,
   type ModelInfo,
   type ModelRun,
   type RegistryCompare,
@@ -110,11 +113,21 @@ export default function ModelsPage({ can, onError, onNotice }: Props) {
     () => api.historyModelRuns({ limit: 10 }),
     [],
   );
+  const intel = useFetch<IntelStatus>(() => api.modelIntel(), []);
+  const evals = useFetch<EvalReportList>(() => api.modelEvalList(), []);
+  const [openEval, setOpenEval] = useState<string | null>(null);
+  const evalDetail = useFetch<EvalReport>(
+    () => api.modelEvalGet(openEval as string),
+    [openEval],
+    { enabled: openEval !== null },
+  );
 
   const refreshAll = () => {
     registry.reload();
     model.reload();
     runs.reload();
+    intel.reload();
+    evals.reload();
   };
 
   /** Run one registry transition with a per-row busy key. */
@@ -610,6 +623,230 @@ export default function ModelsPage({ can, onError, onNotice }: Props) {
                       </tr>
                     );
                   })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      </div>
+
+      <div className="grid two-col" style={{ marginBottom: 16 }}>
+        <section className="panel">
+          <h2>Threat intel (JA3 / JA4 / SNI lists)</h2>
+          {intel.loading && !intel.data && (
+            <Loading label="Loading intel lists…" />
+          )}
+          {intel.error && (
+            <ErrorBox message={intel.error} onRetry={intel.reload} />
+          )}
+          {intel.data && !intel.data.available && (
+            <Empty
+              message={intel.data.error ? "Intel lists failed to load" : "Intel is off"}
+              hint={
+                intel.data.error ??
+                "No list files — copy backend/examples/intel/* into data/intel/ or run: spectra intel load"
+              }
+            />
+          )}
+          {intel.data?.available && (
+            <>
+              <KV k="ja3 entries">{formatNum(intel.data.counts.ja3)}</KV>
+              <KV k="ja4 entries">{formatNum(intel.data.counts.ja4)}</KV>
+              <KV k="sni entries">{formatNum(intel.data.counts.sni)}</KV>
+              <KV k="loaded at">{intel.data.loaded_at ?? "—"}</KV>
+              <div className="table-wrap" style={{ marginTop: 8 }}>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>File</th>
+                      <th>Entries</th>
+                      <th>SHA-256</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {intel.data.sources.map((src) => (
+                      <tr key={src.file}>
+                        <td className="mono">{src.file}</td>
+                        <td>
+                          {formatNum(src.entries)}
+                          {src.rejected ? (
+                            <span className="dim"> (+{src.rejected} rejected)</span>
+                          ) : null}
+                        </td>
+                        <td className="mono">{shortHash(src.sha256, 16)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="note">
+                A hit is evidence on an alert, never an automatic verdict —
+                maintain lists on disk (docs/intel.md).
+              </p>
+            </>
+          )}
+        </section>
+
+        <section className="panel">
+          <h2>
+            Evaluation reports {evals.data ? `(${evals.data.count})` : ""}
+          </h2>
+          {evals.loading && !evals.data && <Loading label="Loading reports…" />}
+          {evals.error && (
+            <ErrorBox message={evals.error} onRetry={evals.reload} />
+          )}
+          {evals.data && evals.data.count === 0 && (
+            <Empty
+              message="No evaluation reports yet"
+              hint="Run `spectra eval run` against a labeled PCAP (docs/evaluation.md)."
+            />
+          )}
+          {evals.data && evals.data.count > 0 && (
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Dataset</th>
+                    <th>Run</th>
+                    <th>F1</th>
+                    <th>FPR</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {evals.data.reports.map((row) => (
+                    <Fragment key={row.name}>
+                      <tr>
+                        <td className="mono">
+                          {row.corrupt ? (
+                            <span className="badge state-unavailable">corrupt</span>
+                          ) : (
+                            row.dataset ?? row.name
+                          )}
+                        </td>
+                        <td className="dim" title={row.created_at ?? ""}>
+                          {row.created_at
+                            ? new Date(row.created_at).toLocaleString()
+                            : "—"}
+                        </td>
+                        <td>
+                          {row.overall?.f1 == null ? (
+                            "—"
+                          ) : (
+                            <span
+                              className={`badge ${
+                                row.overall.f1 >= 0.7
+                                  ? "state-healthy"
+                                  : row.overall.f1 >= 0.4
+                                    ? "state-degraded"
+                                    : "state-unavailable"
+                              }`}
+                            >
+                              {row.overall.f1.toFixed(3)}
+                            </span>
+                          )}
+                        </td>
+                        <td>
+                          {row.overall?.benign_fpr == null
+                            ? "—"
+                            : row.overall.benign_fpr.toFixed(4)}
+                        </td>
+                        <td>
+                          <button
+                            className="ghost"
+                            disabled={row.corrupt}
+                            onClick={() =>
+                              setOpenEval(openEval === row.name ? null : row.name)
+                            }
+                          >
+                            {openEval === row.name ? "Close" : "Details"}
+                          </button>
+                        </td>
+                      </tr>
+                      {openEval === row.name && (
+                        <tr>
+                          <td colSpan={5}>
+                            {evalDetail.loading && !evalDetail.data && (
+                              <Loading label="Loading report…" />
+                            )}
+                            {evalDetail.error && (
+                              <ErrorBox
+                                message={evalDetail.error}
+                                onRetry={evalDetail.reload}
+                              />
+                            )}
+                            {evalDetail.data && !evalDetail.loading && (
+                              <>
+                                <KV k="flows">
+                                  {formatNum(evalDetail.data.flows.total)} total ·{" "}
+                                  {formatNum(evalDetail.data.flows.anomalous)} anomalous ·{" "}
+                                  {formatNum(evalDetail.data.flows.unlabeled)} unlabeled
+                                </KV>
+                                <KV k="parser coverage">
+                                  {evalDetail.data.parser_coverage.ratio == null
+                                    ? "—"
+                                    : `${(evalDetail.data.parser_coverage.ratio * 100).toFixed(1)}%`}
+                                </KV>
+                                <KV k="invisible (not scored)">
+                                  {formatNum(evalDetail.data.invisible_joined)}
+                                </KV>
+                                <KV k="model sha256">
+                                  <span className="mono">
+                                    {shortHash(evalDetail.data.model.sha256, 20)}
+                                  </span>
+                                </KV>
+                                <div
+                                  className="table-wrap"
+                                  style={{ marginTop: 8 }}
+                                >
+                                  <table>
+                                    <thead>
+                                      <tr>
+                                        <th>Category</th>
+                                        <th>Precision</th>
+                                        <th>Recall</th>
+                                        <th>F1</th>
+                                        <th>Support</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {Object.entries(
+                                        evalDetail.data.per_category,
+                                      ).map(([cat, m]) => (
+                                        <tr key={cat}>
+                                          <td>{cat}</td>
+                                          <td>
+                                            {m.precision == null
+                                              ? "—"
+                                              : m.precision.toFixed(3)}
+                                          </td>
+                                          <td>
+                                            {m.recall == null
+                                              ? "—"
+                                              : m.recall.toFixed(3)}
+                                          </td>
+                                          <td>
+                                            {m.f1 == null
+                                              ? "—"
+                                              : m.f1.toFixed(3)}
+                                          </td>
+                                          <td>{m.support}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                                <p className="note">
+                                  <strong>Caveats:</strong>{" "}
+                                  {evalDetail.data.caveats.join(" ")}
+                                </p>
+                              </>
+                            )}
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  ))}
                 </tbody>
               </table>
             </div>

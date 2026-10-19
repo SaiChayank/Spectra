@@ -83,6 +83,7 @@ _CAPABILITY_FAILURE_COMPONENTS: dict[str, tuple[str, ...]] = {
     "bio": ("bio",),
     "edge": ("edge_slice",),
     "edge_deployment": ("edge_slice",),
+    "intel": ("intel",),
     "tee": (),
     "federated": (),
     "twin": (),
@@ -803,6 +804,21 @@ class SpectraEngine:
                               f"{len(topology.get('nodes') or [])} "
                               f"topology node(s)"}
 
+        def intel_probe() -> dict:
+            svc = self.detection.intel
+            if svc is None:
+                return {"available": False,
+                        "detail": "intel service unavailable (load failure)"}
+            st = svc.status()
+            if st.get("error"):
+                return {"available": False,
+                        "detail": f"list load error: {st['error']}"}
+            n = int(st.get("counts", {}).get("total", 0))
+            return {"available": n > 0,
+                    "detail": f"{n} entr{'y' if n == 1 else 'ies'} loaded "
+                              f"from {st.get('directory')}"
+                              if n else "no list files - intel is off"}
+
         # evidence producers on the detection path
         probe("pqc", lambda: {
             "available": True,
@@ -840,6 +856,7 @@ class SpectraEngine:
             "detail": "simulated parties; secret sharing verified locally",
         })
         probe("twin", twin_probe)
+        probe("intel", intel_probe)
 
         for key, components in _CAPABILITY_FAILURE_COMPONENTS.items():
             if key in out:

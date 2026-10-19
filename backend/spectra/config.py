@@ -40,6 +40,10 @@ class Config:
     capture_store_dir: str = ""    # resolved in __post_init__ (data/captures)
     capture_max_bytes: int = 256 * 1024 * 1024  # per-import size cap
 
+    # local threat intel (spectra/intel.py): operator-maintained JA3/JA4/SNI
+    # list files; a hit is evidence on the alert, never an auto-verdict.
+    intel_dir: str = ""            # resolved in __post_init__ (data/intel)
+
     # streaming runtime: bounded in-process stages.  Overload never blocks
     # packet acquisition - a full queue sheds internal work under an explicit
     # policy and the loss is counted (status["pipeline"] + /api/metrics).
@@ -121,6 +125,9 @@ class Config:
         if not self.capture_store_dir:
             self.capture_store_dir = _env(
                 "CAPTURE_STORE_DIR", os.path.join(self.data_dir, "captures"))
+        if not self.intel_dir:
+            self.intel_dir = _env(
+                "INTEL_DIR", os.path.join(self.data_dir, "intel"))
 
     @classmethod
     def from_env(cls) -> "Config":

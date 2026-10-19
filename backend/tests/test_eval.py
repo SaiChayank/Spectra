@@ -9,6 +9,7 @@ attacks are never scored, absent benign labels never become fpr=0.
 from __future__ import annotations
 
 import json
+import os
 
 import pytest
 
@@ -347,3 +348,101 @@ def test_score_flows_and_run_eval_shape(tmp_path, monkeypatch):
     assert rep["dataset"]["sha256"] is not None
     # json-serialisable end to end
     json.dumps(rep)
+
+
+# -- report store ---------------------------------------------------------------
+
+def _store_cfg(tmp_path):
+    from spectra.config import Config
+    c = Config()
+    c.data_dir = str(tmp_path / "data")
+    return c
+
+
+def test_store_save_load_roundtrip(tmp_path):
+    from spectra.eval.store import load, save
+    rep = _mini_report()
+    path = save(rep, name="unit.json", config=_store_cfg(tmp_path))
+    assert path.endswith("unit.json")
+    loaded = load("unit.json", config=_store_cfg(tmp_path))
+    assert loaded["report_version"] == 1
+    assert loaded["dataset"]["name"] == "synthetic"
+
+
+def test_store_default_name_from_dataset(tmp_path):
+    from spectra.eval.store import default_name
+    name = default_name(_mini_report())
+    assert name.startswith("synthetic-") and name.endswith(".json")
+
+
+def test_store_rejects_unsafe_names(tmp_path):
+    from spectra.eval.store import ReportStoreError, load, save
+    for bad in ("../evil.json", "a/b.json", "..\\x.json", "no-ext"):
+        with pytest.raises(ReportStoreError):
+            save(_mini_report(), name=bad, config=_store_cfg(tmp_path))
+        with pytest.raises(ReportStoreError):
+            load(bad, config=_store_cfg(tmp_path))
+    # empty name means "default" on save, but is never a valid lookup
+    with pytest.raises(ReportStoreError):
+        load("", config=_store_cfg(tmp_path))
+
+
+def test_store_load_unknown_report(tmp_path):
+    from spectra.eval.store import ReportStoreError, load
+    with pytest.raises(ReportStoreError, match="not found"):
+        load("ghost.json", config=_store_cfg(tmp_path))
+
+
+def test_store_list_summarises_and_flags_corrupt(tmp_path):
+    from spectra.eval.store import list_reports, reports_dir, save
+    cfg = _store_cfg(tmp_path)
+    save(_mini_report(), name="good.json", config=cfg)
+    os.makedirs(reports_dir(cfg), exist_ok=True)
+    with open(os.path.join(reports_dir(cfg), "bad.json"), "w",
+              encoding="utf-8") as f:
+        f.write("{not json")
+    out = list_reports(cfg)
+    assert out["count"] == 2
+    by_name = {r["name"]: r for r in out["reports"]}
+    assert by_name["good.json"]["corrupt"] is False
+    assert by_name["good.json"]["dataset"] == "synthetic"
+    assert by_name["good.json"]["overall"] is not None
+    assert by_name["bad.json"]["corrupt"] is True   # flagged, not hidden
+
+
+def test_store_list_empty_dir(tmp_path):
+    from spectra.eval.store import list_reports
+    out = list_reports(_store_cfg(tmp_path))
+    assert out == {"directory": out["directory"], "count": 0, "reports": []}
+
+
+# -- eval read API routes ---------------------------------------------------------
+
+def test_eval_list_and_get_routes(client, tmp_path, monkeypatch):
+    from spectra.eval.store import reports_dir, save
+    # the store resolves its directory from SPECTRA_DATA_DIR (from_env),
+    # so the env var - not engine.config - is what routes read
+    monkeypatch.setenv("SPECTRA_DATA_DIR", str(tmp_path / "data"))
+    save(_mini_report(), name="sample.json")
+    assert os.path.isfile(os.path.join(reports_dir(), "sample.json"))
+
+    res = client.get("/api/model/eval")
+    assert res.status_code == 200
+    body = res.json()
+    assert body["count"] == 1
+    assert body["reports"][0]["name"] == "sample.json"
+    assert body["reports"][0]["corrupt"] is False
+
+    res = client.get("/api/model/eval/sample.json")
+    assert res.status_code == 200
+    assert res.json()["report_version"] == 1
+    assert res.json()["caveats"]
+
+
+def test_eval_get_missing_is_404(client):
+    assert client.get("/api/model/eval/ghost.json").status_code == 404
+
+
+def test_eval_routes_need_auth(raw_client):
+    assert raw_client.get("/api/model/eval").status_code == 401
+    assert raw_client.get("/api/model/eval/x.json").status_code == 401

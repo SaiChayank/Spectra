@@ -863,6 +863,86 @@ export interface DriftReport {
   features?: DriftFeature[];
 }
 
+/* ---------- local threat intel (Phase 7) ---------- */
+
+export interface IntelSource {
+  file: string;
+  sha256: string;
+  entries: number;
+  lines: number;
+  rejected?: number;
+}
+
+export interface IntelStatus {
+  available: boolean;
+  directory: string | null;
+  counts: { ja3: number; ja4: number; sni: number; total: number };
+  sources: IntelSource[];
+  loaded_at: string | null;
+  error: string | null;
+  failures: number;
+}
+
+/* ---------- evaluation reports (Phase 7) ---------- */
+
+export interface EvalCategoryMetrics {
+  tp: number;
+  fp: number;
+  fn: number;
+  precision: number | null;
+  recall: number | null;
+  f1: number | null;
+  anomaly_auc: number | null;
+  benign_fpr: number | null;
+  support: number;
+  hits: number;
+  misses: number;
+}
+
+export interface EvalReportSummary {
+  name: string;
+  path?: string;
+  size?: number;
+  report_version: number | null;
+  created_at: string | null;
+  dataset: string | null;
+  model_sha256: string | null;
+  feature_schema_version: number | null;
+  overall: { precision: number | null; recall: number | null;
+             f1: number | null; benign_fpr: number | null } | null;
+  flows: { total: number; anomalous: number; joined: number;
+           unlabeled: number } | null;
+  parser_coverage: { ratio: number | null } | null;
+  caveats: number;
+  corrupt: boolean;
+}
+
+export interface EvalReportList {
+  directory: string;
+  count: number;
+  reports: EvalReportSummary[];
+}
+
+export interface EvalReport {
+  report_version: number;
+  created_at: string;
+  dataset: { name: string; artifact: string; sha256: string | null };
+  model: { path: string; sha256: string | null; trained_flows: number;
+           contamination: number | null; feature_schema_version: number };
+  params: Record<string, unknown>;
+  flows: { total: number; anomalous: number; joined: number;
+           unlabeled: number };
+  parser_coverage: { total: number; parseable: number; ratio: number | null };
+  per_category: Record<string, EvalCategoryMetrics>;
+  overall: { precision: number | null; recall: number | null;
+             f1: number | null; anomaly_auc: number | null;
+             benign_fpr: number | null };
+  invisible_joined: number;
+  benign_flows: number;
+  labels: Record<string, unknown>;
+  caveats: string[];
+}
+
 /* ---------- model registry (Prompt 14) ---------- */
 
 export type RegistryStatus =
@@ -1040,6 +1120,12 @@ export const api = {
   model: () => request<ModelInfo>("/api/model"),
   /** PSI drift of recent traffic against the training baseline (ANALYST+). */
   modelDrift: () => request<DriftReport>("/api/model/drift"),
+  /** Local threat-intel list status: counts, provenance, load errors. */
+  modelIntel: () => request<IntelStatus>("/api/model/intel"),
+  /** Stored evaluation reports (newest first, summary rows). */
+  modelEvalList: () => request<EvalReportList>("/api/model/eval"),
+  /** One full evaluation report by stored filename. */
+  modelEvalGet: (name: string) => request<EvalReport>(`/api/model/eval/${encodeURIComponent(name)}`),
   interfaces: () =>
     request<{ interfaces: string[]; details?: IfaceDetail[]; error?: string }>("/api/interfaces"),
   /** Live capture only — file-based starts were replaced by importCapture. */

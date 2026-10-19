@@ -74,6 +74,51 @@ def cmd_demo(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_intel(args: argparse.Namespace) -> int:
+    from .config import get_config
+    from .intel import IntelService
+
+    cfg = get_config()
+    svc = IntelService(cfg.intel_dir)
+
+    if args.intel_cmd == "status":
+        st = svc.status()
+        if args.json:
+            print(json.dumps(st, indent=2))
+            return 0
+        print(f"threat intel ({st['directory']}):")
+        if st["error"]:
+            print(f"  ERROR: {st['error']}")
+            return 1
+        c = st["counts"]
+        print(f"  ja3={c['ja3']}  ja4={c['ja4']}  sni={c['sni']}  "
+              f"total={c['total']}")
+        if not st["sources"]:
+            print("  (no list files - drop ja3.txt / ja4.txt / sni.txt "
+                  "into the directory above)")
+        for s in st["sources"]:
+            rej = f", {s['rejected']} rejected" if s.get("rejected") else ""
+            print(f"  {s['file']}: {s['entries']} entries{rej} "
+                  f"({s['sha256'][:12]}...)")
+        if st["loaded_at"]:
+            print(f"  loaded at {st['loaded_at']}")
+        return 0
+
+    if args.intel_cmd == "load":
+        # (re)read from disk and report; --ja3/--ja4/--sni additionally
+        # checks one handshake's fields against the loaded lists
+        st = svc.reload()
+        if args.ja3 or args.ja4 or args.sni:
+            hits = svc.match({"ja3": args.ja3, "ja4": args.ja4,
+                              "sni": args.sni})
+            print(json.dumps({"hits": hits, "status": st}, indent=2))
+            return 0
+        print(f"loaded {st['counts']['total']} intel entries from "
+              f"{st['directory']}")
+        return 0 if not st["error"] else 1
+    return 1
+
+
 def cmd_dataset(args: argparse.Namespace) -> int:
     from .config import get_config
     from .datasets import DatasetError, import_artifact, list_artifacts, verify
@@ -185,6 +230,11 @@ def cmd_eval(args: argparse.Namespace) -> int:
             with open(args.out, "w", encoding="utf-8") as f:
                 json.dump(report, f, indent=2)
             print(f"report written to {args.out}")
+        # every run is also stored in the conventional report store
+        # (<data_dir>/eval/) so GET /api/model/eval can serve it.
+        from .eval.store import save as save_report
+        stored = save_report(report, config=cfg)
+        print(f"report stored at {stored}")
         if args.json:
             print(json.dumps(report, indent=2))
             return 0
@@ -959,6 +1009,22 @@ def build_parser() -> argparse.ArgumentParser:
     q.add_argument("a", help="report A (JSON)")
     q.add_argument("b", help="report B (JSON)")
     q.set_defaults(func=cmd_eval)
+
+    # -- local threat intel (Phase 7: JA3/JA4/SNI list matching) -------------
+
+    p = sub.add_parser("intel",
+                       help="local threat intel: JA3/JA4/SNI list status + load")
+    isub = p.add_subparsers(dest="intel_cmd", required=True)
+
+    q = isub.add_parser("status", help="list counts, provenance, load errors")
+    q.add_argument("--json", action="store_true")
+    q.set_defaults(func=cmd_intel)
+
+    q = isub.add_parser("load", help="(re)read the list files from disk")
+    q.add_argument("--ja3", default=None, help="check one JA3 hash")
+    q.add_argument("--ja4", default=None, help="check one JA4 value")
+    q.add_argument("--sni", default=None, help="check one SNI / hostname")
+    q.set_defaults(func=cmd_intel)
 
     p = sub.add_parser("pqc", help="Module 1: post-quantum readiness report for a PCAP")
     p.add_argument("pcap", help="path to PCAP to analyse")

@@ -21,6 +21,7 @@ import numpy as np
 from ..config import Config
 from ..domain import CaptureSession, FlowRecord  # noqa: F401  (FlowRecord documents output)
 from ..features.extractor import extract_features
+from ..intel import IntelService
 from ..modules.audit.log import MAX_LEAVES as AUDIT_MAX_LEAVES
 from ..modules.bio import RESPONSES, BioSystem
 from ..modules.edge import SLICES, EdgeSystem, apply_slice_policy, classify_slice
@@ -59,6 +60,11 @@ class DetectionService:
 
         # Module 1: quantum posture inventory
         self.pqc = PQCInventory()
+
+        # Local threat intel (spectra.intel): operator-maintained JA3/JA4/SNI
+        # lists; hits ride on the record as evidence for the classifier.
+        self.intel = self.failures.guard(
+            "intel", lambda: IntelService(config.intel_dir), default=None)
 
         # Module 6: bio-inspired layer (immune + SNN + swarm)
         self.bio = BioSystem(contamination=model.contamination)
@@ -129,6 +135,15 @@ class DetectionService:
         score: float | None = None
         anomaly = False
         reasons: list[dict] = []
+
+        # Local threat intel: a JA3/JA4/SNI hit is attached to the record
+        # *before* classification so the rules can consume it as an
+        # independent signal (guarded: intel failure never blocks scoring).
+        if self.intel is not None:
+            intel_hits = self.failures.guard(
+                "intel", lambda: self.intel.match(record), default=None)
+            if intel_hits:
+                record["intel"] = intel_hits
 
         # Module 1: quantum-risk verdict on this conversation's handshake.
         pqc_assessment = self.failures.guard(

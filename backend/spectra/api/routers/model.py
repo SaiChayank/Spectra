@@ -50,6 +50,43 @@ def model_info() -> dict:
     return engine.model.info()
 
 
+@router.get("/api/model/intel")
+def model_intel_status() -> dict:
+    """Local threat-intel status: list counts, provenance, load failures.
+
+    Read-only by design: list files are maintained on disk by the
+    operator (spectra intel load / drop files in data/intel/); the API
+    never accepts an upload or a path.
+    """
+    intel = getattr(engine.detection, "intel", None)
+    if intel is None:
+        return {"available": False, "directory": None, "counts": {},
+                "sources": [], "loaded_at": None,
+                "error": "intel service unavailable", "failures": -1}
+    return intel.status()
+
+
+@router.get("/api/model/eval")
+def model_eval_list() -> dict:
+    """Stored evaluation reports (newest first), summary rows only.
+
+    Read-only: reports are produced offline by ``spectra eval run`` and
+    live on disk (<data_dir>/eval/); this route lists, it never evaluates.
+    """
+    from ...eval.store import list_reports
+    return list_reports()
+
+
+@router.get("/api/model/eval/{name}")
+def model_eval_get(name: str) -> dict:
+    """One full evaluation report (metrics + caveats) by stored name."""
+    from ...eval.store import ReportStoreError, load
+    try:
+        return load(name)
+    except ReportStoreError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from None
+
+
 @router.post("/api/model/train",
              dependencies=[Depends(require("model:manage"))])
 def model_train(req: TrainRequest,

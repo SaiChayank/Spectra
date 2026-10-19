@@ -1,0 +1,21 @@
+# Spectra seed JA3 blacklist - sample material for getting started.
+#
+# Provenance: abuse.ch SSLBL JA3 Fingerprint Blacklist (CC0).
+#   https://sslbl.abuse.ch/blacklist/
+# The SSLBL list is frozen in 2021; refresh from the URL above if you need
+# current data (their ToS: regenerate at most every 5 minutes).
+#
+# SSLBL's own caution applies verbatim in spirit: these fingerprints come
+# from malware PCAP analysis and were NOT tested against known-good traffic
+# - a match is "investigate", never "block".
+#
+# Format: one 32-hex JA3 MD5 digest per line. # starts a comment.
+
+# Tofsee botnet
+8f6c918dcb585ebbea05e2cc94530e3d
+1d095e68489d3c535297cd8dffb06cb9
+f22bdd57e3a52de86cda40da2d84e83b
+0cc1e84568e471aa1d62ad4158ade6b5
+
+# Adware families
+fb58831f892190644fe44e25bc830b45
