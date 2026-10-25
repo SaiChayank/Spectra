@@ -50,6 +50,12 @@ def build_report(*, dataset_name: str, artifact_path: str,
         caveats.append(
             f"Parser coverage is {coverage['ratio']:.0%} - metrics describe "
             "the parseable subset, not the full capture.")
+    if flows.get("truncated"):
+        caveats.append(
+            f"Run truncated at max_flows={params.get('max_flows')} - only "
+            f"the first {flows.get('total', 0)} completed flows were scored; "
+            "metrics describe that prefix of the capture, not the whole "
+            "file (raise --max-flows for full coverage).")
     if metrics.get("benign_flows") == 0:
         caveats.append(
             "No benign labels in this dataset - benign_fpr is null "

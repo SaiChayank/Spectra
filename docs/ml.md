@@ -4,7 +4,8 @@ What the model is, what it needs, how it is trained and versioned, and — most
 importantly — **what its numbers mean and what they do not mean.**
 
 Code: `backend/spectra/features/extractor.py`, `backend/spectra/ml/model.py`,
-`backend/spectra/services/training.py`, `backend/spectra/services/model_registry.py`.
+`backend/spectra/services/training.py`, `backend/spectra/services/model_registry.py`,
+`backend/spectra/eval/` (offline labeled evaluation — see [evaluation.md](./evaluation.md)).
 
 ---
 
@@ -143,10 +144,33 @@ Reading a detection in the console:
   `> 0.25` significant — above that, scores are no longer calibrated and the
   recommendation is retrain.
 
-## 6. Limitations (short form — full list in [limitations.md](./limitations.md))
+## 6. Offline evaluation (Phase 7)
 
-1. **Unsupervised.** Trained on benign data only; there is no labelled
-   precision/recall, no calibrated false-positive rate.
+The detector can be trained and scored against labeled ground truth without
+touching the serving path:
+
+```powershell
+python -m spectra.cli eval train --labels <labels.csv> --pcap <pcap> --out model.joblib
+python -m spectra.cli eval run   --model <model.joblib> --labels <labels.csv> --pcap <pcap>
+python -m spectra.cli eval compare <a.json> <b.json>
+```
+
+* `eval train` fits a baseline **only on flows that join to explicitly
+  benign-labeled windows** — attack-joined and unlabeled flows are excluded
+  and the exclusion breakdown is printed; below 10 benign flows it refuses.
+* `eval run` executes the real pipeline offline and emits a versioned JSON
+  report (per-category precision/recall/F1, AUC, benign FPR, parser
+  coverage, caveats, model + feature-schema hashes). Reports are stored in
+  `<data_dir>/eval/` and surfaced on the Models page.
+* Datasets, adapters and fetch workflow: [datasets.md](./datasets.md).
+  Mapping table: [evaluation.md §4](./evaluation.md). Measured results and
+  their caveats: [evaluation-report.md](./evaluation-report.md).
+
+## 7. Limitations (short form — full list in [limitations.md](./limitations.md))
+
+1. **Unsupervised training; dataset-scoped metrics.** Fitted on benign data
+   only; offline evaluation (§6) measures precision/recall/FPR on labeled
+   datasets — those numbers do not calibrate production precision.
 2. **Baseline-dependent.** A baseline from another network flags ordinary
    traffic (measured: 472 real flows ≈ 97.6 on the synthetic baseline vs
    3.6 % flagged on a matching 70 s baseline).

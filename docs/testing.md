@@ -12,13 +12,13 @@ written; commands reproduce them exactly.
 ```powershell
 cd backend
 pip install -r requirements-dev.txt     # pytest>=8
-python -m pytest tests -q               # → 496 passed
+python -m pytest tests -q               # → 593 passed
 ```
 
 | | |
 |---|---|
-| Result | **496 passed, 0 failed, 0 skipped-by-default** (~70–82 s) |
-| Files | 33 test modules (+ `conftest.py`) |
+| Result | **593 passed, 0 failed, 0 skipped-by-default** (~86 s) |
+| Files | 37 test modules (+ `conftest.py`) |
 | Style | hermetic: `conftest.py` points `SPECTRA_DATA_DIR` at a temp dir **before** importing `spectra`, sets a test-only admin password, runs migrations + bootstrap, and logs in once — no server, no network, no shared state |
 | Policy | no test is skipped to make the suite green; the only conditional sections are capability-gated (live capture) and are reported as such |
 
@@ -30,6 +30,7 @@ python -m pytest tests -q               # → 496 passed
 | Runtime & persistence | `test_streaming` (bounded queues, overload, shutdown), `test_store`, `test_repositories`, `test_migrations` (11 migrations, idempotency, adoption) |
 | Security | `test_auth` (login/session/RBAC/default-deny sweep/WS), **`test_hardening`** (28 regression tests: body limits, throttle, scrypt work factor, WS origin + revalidation, 422/500 shaping, runtime budgets, persistence caps, crafted PCAPs) |
 | Modules | `test_pqc`, `test_tee`, `test_adv`, `test_twin`, `test_audit`, `test_bio`, `test_corr`, `test_edge_native` |
+| Evaluation & intel (Phase 7) | `test_eval` (label schema, indexed join, honesty rules, streaming eval, `eval train`), `test_adapters` (CTU-13 ×2 layouts + CICIDS2017 label adapters, tz derivation), `test_datasets` (artifact registry, manifest integrity), `test_intel` (file-based lists, evidence-signal semantics) |
 | Contracts & honesty | `test_module_contracts` (no false availability/scoring claims), `test_integrity` (federated privacy, metrics format, failure isolation) |
 | API & end-to-end | `test_api`, `test_capture_resources`, `test_health`, `test_end_to_end` (train → detect) |
 
@@ -116,7 +117,7 @@ previous commit, not single runs — that analysis showed −1.3 % … +2.6 %
 
 | Claim | Where it is proven |
 |---|---|
-| 496 tests pass | `python -m pytest tests -q` |
+| 593 tests pass | `python -m pytest tests -q` |
 | 156/156 acceptance | `python scripts/acceptance.py` against a running server |
 | Every route authorised | `test_auth.py` default-deny sweep + acceptance route groups |
 | No performance regression | `docs/hardening-report.md` §4.2 (interleaved A/B) |

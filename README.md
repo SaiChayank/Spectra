@@ -16,7 +16,10 @@ Three target verticals: **Fintech · Healthcare · Smart City Infrastructure**.
 | [`docs/architecture.md`](./docs/architecture.md) | capture → flows → parsing → features → inference → classification → alerts → incidents → persistence → audit → API/WS → frontend |
 | [`docs/local-setup.md`](./docs/local-setup.md) | toolchain, dependencies, environment variables, backend/frontend startup, first admin, Npcap |
 | [`docs/capabilities.md`](./docs/capabilities.md) | every capability classified REAL / LOCAL / SIMULATED / EXPERIMENTAL / FUTURE |
-| [`docs/ml.md`](./docs/ml.md) | the 39-feature schema, baseline, training, model lifecycle, score/confidence/severity interpretation |
+| [`docs/ml.md`](./docs/ml.md) | the 39-feature schema, baseline, training, model lifecycle, offline evaluation, score/confidence/severity interpretation |
+| [`docs/evaluation.md`](./docs/evaluation.md) | ground-truth evaluation: label schema, dataset→category mapping, join rules, metrics, honesty rules |
+| [`docs/datasets.md`](./docs/datasets.md) | evaluation datasets: catalog, operator fetch, label generation, manifest integrity |
+| [`docs/intel.md`](./docs/intel.md) | local threat intel: file-based JA3/JA4/SNI lists, evidence-signal semantics, FP caution |
 | [`docs/security.md`](./docs/security.md) | auth, RBAC, managed captures, artifact integrity, audit chain, local-only assumptions |
 | [`docs/testing.md`](./docs/testing.md) | 496 tests · 156 acceptance checks · performance · live-capture validation |
 | [`docs/limitations.md`](./docs/limitations.md) | detection, classification, TEE/twin/edge, metadata-only analysis, operational caveats |
@@ -27,8 +30,9 @@ Three target verticals: **Fintech · Healthcare · Smart City Infrastructure**.
 
 ## Status
 
-Backend **complete** (Phases 0–6): detection core, all 8 strategic modules, REST API,
-CLI, and the React dashboard — with **496 passing tests**. Local authentication
+Backend **complete** (Phases 0–7): detection core, all 8 strategic modules, REST API,
+CLI, the React dashboard, local threat intel and the labeled evaluation harness —
+with the passing pytest suite below. Local authentication
 (login, sessions, RBAC) gates the API, WebSocket, and dashboard.
 
 | Layer | State |
@@ -38,10 +42,12 @@ CLI, and the React dashboard — with **496 passing tests**. Local authenticatio
 | Feature extraction (39-feature vector per flow) | ✅ |
 | ML anomaly detector (IsolationForest + scaler, 0–100 scoring, σ-explanations) | ✅ trained from a benign baseline |
 | 8 strategic modules (see matrix below) | ✅ |
-| API (92 HTTP routes + WebSocket, default-deny auth) + CLI (12 commands) | ✅ |
+| API (95 HTTP routes + WebSocket, default-deny auth) + CLI (15 commands) | ✅ |
 | Persistence (SQLite: migration-driven schema, batched writes, bounded retention) | ✅ |
 | React dashboard | ✅ live (local login, role-aware UI) |
-| Automated tests (pytest) | ✅ 496 passing |
+| Local threat intel (JA3/JA4/SNI lists, `spectra intel`) | ✅ file-based, evidence signal only |
+| Labeled offline evaluation (`spectra eval run/train/compare`) | ✅ honesty-gated metrics, versioned reports |
+| Automated tests (pytest) | ✅ passing |
 | Authentication & RBAC (ADMIN / ANALYST / VIEWER) | ✅ scrypt + sessions |
 | Live capture on Windows | ✅ validated with [Npcap](https://nmap.org/npcap/) (driver required) |
 

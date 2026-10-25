@@ -80,8 +80,9 @@ DATASET_CATALOG: tuple[DatasetSpec, ...] = (
     DatasetSpec(
         name="mawi",
         title="MAWI Working Group daily traces (WIDE backbone)",
-        purpose="Real-world benign FPR reference + parser coverage under "
-                "payload truncation",
+        purpose="Parser coverage under real payload truncation + an "
+                "observational (unscored) anomaly rate; MAWI has no "
+                "ground truth, so it is never an FPR or recall source",
         source="https://mawi.wide.ad.jp/mawi/",
         license_note="MAWI trace use policy applies; anonymised backbone data",
         filename_hints=("mawi", "samplepoint", "daily"),

@@ -60,8 +60,13 @@ t_start,t_end,src_ip,src_port,dst_ip,dst_port,proto,dataset_label,mapped_categor
 | `mapped_category` | one of `THREAT_TYPES` ∪ `METADATA_INVISIBLE` | see §4 |
 
 Label files are generated per dataset from the dataset's own ground-truth
-artifacts (see `backend/scripts/` per-dataset adapters) and stored next to
-the dataset under `backend/data/datasets/` — never in git.
+artifacts by `backend/scripts/make_labels.py` (adapters in
+`spectra/eval/adapters.py` for CTU-13's two published layouts and
+CICIDS2017's flow CSV) and stored next to the dataset under
+`backend/data/datasets/` — never in git.  Dataset timestamps are naive
+*local* time; the adapter derives the UTC offset from the capture's first
+packet (rounded to whole hours) or takes it from an explicit argument, and
+always records the derivation in its JSON summary.
 
 ## 4. Dataset → `THREAT_TYPES` mapping
 
@@ -76,12 +81,17 @@ re-running; each mapping revision is stamped in the report.
 | `PortScan` | `RECONNAISSANCE` | SYN-scan pattern is visible in flags/ports/IAT |
 | `FTP-BruteForce` / `SSH-Bruteforce` | `RECONNAISSANCE` | auth-abuse shows as repeated short flows to one port |
 | `DoS slowloris`, `DoS GoldenEye`, `DoS Hulk`, `DoS slowhttptest`, `DoS SYN` | `VOLUMETRIC_ANOMALY` | rate/size/IAT signatures |
+| `DDoS` | `VOLUMETRIC_ANOMALY` | SYN-flood volume/rate signature |
 | `Bot` | `C2_BEACONING` | periodic low-rate C2-ish conversations |
 | `Infiltration` | `DATA_EXFILTRATION_SUSPECTED` | *weak* — mostly internal-lateral, timing-only evidence |
 | `Web Attack …` | `METADATA_INVISIBLE` | payload-level (HTTP request content) |
 | `Heartbleed` | `METADATA_INVISIBLE` | payload-level exploit evidence |
-| `FTPS Patator` | `METADATA_INVISIBLE` | encrypted content; only the TLS handshake is visible |
+| `FTP-Patator` / `SSH-Patator` | `RECONNAISSANCE` | patator is a brute-force tool — same repeated short-flow signature as the brute-force rows (mapping revision: an earlier draft row named a "FTPS Patator" label the dataset does not contain) |
 | `Email Bounce` / Benign | (benign) | FPR reference when labeled benign |
+
+Only explicitly benign-labeled rows ever form an FPR window; a CICIDS flow
+labeled `BENIGN` inside a time range the dataset itself calls benign is the
+*only* honest FPR source for this dataset.
 
 ### CTU-13 (botnet scenarios)
 
@@ -102,7 +112,7 @@ re-running; each mapping revision is stamped in the report.
 
 | Dataset label | Mapped category | Rationale |
 |---|---|---|
-| (no attack labels) | (benign) | FPR reference only — backbone traffic, not a monitored endpoint network |
+| *(no labels at all)* | — | **not scoreable**: MAWI publishes no ground truth, so it can never be an FPR or recall source. It contributes the parser-coverage % and an *observational* anomaly rate, both explicitly unscored. |
 
 ## 5. Join rules (flow ↔ label)
 
@@ -184,7 +194,7 @@ instructions. Quick map of what this phase evaluates:
 | CICIDS2017 (Mon benign + Fri attacks) | primary precision/recall benchmark |
 | CTU-13 (2 botnet scenarios) | `C2_BEACONING` recall on a purpose-built benchmark |
 | ISCX VPN-nonVPN 2016 (subset) | encrypted-app / VPN behaviour (FPR + `UNUSUAL_ENDPOINT_BEHAVIOR`) |
-| MAWI (one daily trace) | real-world benign FPR + parser coverage under truncation |
+| MAWI (one daily trace) | parser coverage under payload truncation + observational (unscored) anomaly rate on real backbone traffic |
 | synthetic (`spectra demo`) | CI-safe harness self-test, no external data |
 
 ## 9. Limitations of this evaluation
@@ -197,5 +207,6 @@ instructions. Quick map of what this phase evaluates:
 - One run per report: no repeated-trial confidence intervals (the model is
   deterministic given artifact + inputs).
 - CICIDS2017's synthetic benign background (B-Profile) is unlike production
-  traffic; FPR on it does not transfer — MAWI is included precisely to give a
-  second, real-traffic FPR reference.
+  traffic; FPR on it does not transfer.  MAWI is real backbone traffic but
+  has **no labels**, so it cannot supply a replacement FPR — it is reported
+  only as parser coverage + an observational anomaly rate, never scored.

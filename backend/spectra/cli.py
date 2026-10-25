@@ -173,7 +173,7 @@ def cmd_dataset(args: argparse.Namespace) -> int:
 def cmd_eval(args: argparse.Namespace) -> int:
     from .config import get_config
     from .datasets import artifact_path, load_manifest
-    from .eval import EvalParams, load_labels, run_eval
+    from .eval import EvalParams, load_labels, run_eval, train_from_labels
     from .eval.report import compare
     from .ml.model import SpectraDetector
 
@@ -184,7 +184,7 @@ def cmd_eval(args: argparse.Namespace) -> int:
         print(json.dumps(out, indent=2))
         return 0
 
-    if args.eval_cmd == "run":
+    if args.eval_cmd in ("run", "train"):
         cfg = get_config()
         # resolve the PCAP: explicit path, or a dataset artifact name
         if args.pcap:
@@ -207,6 +207,42 @@ def cmd_eval(args: argparse.Namespace) -> int:
             return 2
         labels = load_labels(args.labels)
 
+        name = args.dataset_name
+        if not name and args.dataset_artifact:
+            name = args.dataset_artifact.split("--", 1)[0]
+
+        if args.eval_cmd == "train":
+            try:
+                summary = train_from_labels(
+                    pcap, labels,
+                    out_path=args.out,
+                    dataset_name=name or "ad-hoc",
+                    contamination=args.contamination,
+                    params=EvalParams(
+                        idle_timeout=args.idle_timeout,
+                        join_tolerance_s=args.tolerance,
+                        max_flows=args.max_flows,
+                    ),
+                )
+            except ValueError as exc:
+                print(f"error: {exc}", file=sys.stderr)
+                return 2
+            if args.json:
+                print(json.dumps(summary, indent=2))
+                return 0
+            f = summary["flows"]
+            print(f"baseline trained on {summary['n_train']} benign-labeled "
+                  f"flows -> {summary['model_path']}")
+            print(f"  flows seen: {f['flows']} "
+                  f"(benign-joined: {f['benign_joined']}, "
+                  f"attack-excluded: {f['attack_joined']}, "
+                  f"unlabeled-excluded: {f['unlabeled']})")
+            if f["truncated"]:
+                print(f"  WARNING: read truncated at max_flows="
+                      f"{args.max_flows} - the baseline saw only the first "
+                      "flows")
+            return 0
+
         detector = SpectraDetector.load(args.model) if args.model \
             else SpectraDetector()
         if not detector.is_trained:
@@ -214,9 +250,6 @@ def cmd_eval(args: argparse.Namespace) -> int:
                   "`spectra train` first", file=sys.stderr)
             return 2
 
-        name = args.dataset_name
-        if not name and args.dataset_artifact:
-            name = args.dataset_artifact.split("--", 1)[0]
         report = run_eval(
             detector, pcap, labels,
             dataset_name=name or "ad-hoc",
@@ -224,6 +257,7 @@ def cmd_eval(args: argparse.Namespace) -> int:
             params=EvalParams(
                 idle_timeout=args.idle_timeout,
                 join_tolerance_s=args.tolerance,
+                max_flows=args.max_flows,
             ),
         )
         if args.out:
@@ -1001,8 +1035,31 @@ def build_parser() -> argparse.ArgumentParser:
     q.add_argument("--tolerance", type=float, default=10.0,
                    help="join tolerance in seconds (default 10)")
     q.add_argument("--idle-timeout", type=float, default=30.0)
+    q.add_argument("--max-flows", type=int, default=250_000,
+                   help="score at most this many completed flows; the "
+                        "report flags flows.truncated + a caveat when the "
+                        "capture held more (default 250000)")
     q.add_argument("--out", default=None, help="write the report JSON here")
     q.add_argument("--json", action="store_true", help="print full report JSON")
+    q.set_defaults(func=cmd_eval)
+
+    q = esub.add_parser("train",
+                        help="train a detector on the benign-labeled flows "
+                             "of a labeled PCAP (never attack/unlabeled)")
+    q.add_argument("--pcap", default=None, help="path to the training PCAP")
+    q.add_argument("--dataset-artifact", default=None,
+                   help="imported artifact filename (from `spectra dataset list`)")
+    q.add_argument("--labels", required=True, help="label CSV (docs/evaluation.md §3)")
+    q.add_argument("--out", required=True, help="where to write the trained model")
+    q.add_argument("--dataset-name", default=None, help="recorded in the summary")
+    q.add_argument("--contamination", type=float, default=None,
+                   help="contamination for the fit (default: detector default)")
+    q.add_argument("--tolerance", type=float, default=10.0,
+                   help="join tolerance in seconds (default 10)")
+    q.add_argument("--idle-timeout", type=float, default=30.0)
+    q.add_argument("--max-flows", type=int, default=250_000,
+                   help="read at most this many completed flows (default 250000)")
+    q.add_argument("--json", action="store_true", help="print full summary JSON")
     q.set_defaults(func=cmd_eval)
 
     q = esub.add_parser("compare", help="diff two evaluation reports (A/B)")

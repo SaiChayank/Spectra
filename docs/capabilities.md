@@ -41,9 +41,11 @@ context only (`SCORING_POLICY`).
 | Incident correlation | **REAL** | Anchor/threat/proximity scoring with a minimum score, auto-attachment, explicit state machine |
 | Persistence | **REAL** | SQLite (WAL), 11 migrations, batched writes, row caps, read-your-writes flush |
 | Audit trail | **EXPERIMENTAL** | Real hash chain + Merkle/Schnorr, but pure-Python research-grade crypto; see module row below |
-| REST API + WebSocket | **REAL** | 92 routes + `WS /ws/events`, default-deny auth, body limits, structured logs with credential redaction |
+| REST API + WebSocket | **REAL** | 95 routes + `WS /ws/events`, default-deny auth, body limits, structured logs with credential redaction |
 | Authentication & RBAC | **REAL** | scrypt, server-side sessions, three roles, login throttling, default-deny middleware ([security.md](./security.md)) |
 | Model registry lifecycle | **REAL** | CANDIDATE→VALIDATED→ACTIVE→RETIRED, sha256 integrity, single-ACTIVE index, validate/rollback |
+| Local threat intel (JA3/JA4/SNI lists) | **REAL** | File-based lists under `data/intel/`, never fetched at runtime; a match is an evidence *signal* (weight 0.5), never an auto-verdict ([intel.md](./intel.md)) |
+| Ground-truth evaluation harness | **REAL** | Offline labeled evaluation (`spectra eval run/train/compare`): the real pipeline over public datasets, honesty-gated metrics, versioned reports ([evaluation.md](./evaluation.md), [datasets.md](./datasets.md)) |
 | React console | **REAL** | 9 sections, role-aware UI, live WS, no token in JS |
 | Health & observability | **REAL** | Per-subsystem states, runtime metrics, failure counters, request ids |
 

@@ -22,10 +22,15 @@ strictly passive/read-only — Spectra never transmits packets.
 
 ## 2. Anomaly detection limitations
 
-* **Unsupervised.** IsolationForest is fitted on benign data only. There are no
-  labels, therefore **no precision/recall, no ROC, no calibrated false-positive
-  rate**. "0.2 % of baseline flows are anomalous" is what `contamination`
-  asserts, not a measured production FPR.
+* **Unsupervised training; measured-but-dataset-scoped metrics.** The model
+  is fitted on benign data only — there are no training labels. Since
+  Phase 7, precision/recall/FPR **are measured offline** against labeled
+  public datasets (`spectra eval`, [evaluation.md](./evaluation.md)); the
+  honesty rules there (unlabeled time is never benign, `METADATA_INVISIBLE`
+  is never scored, the mapping is fixed and stamped) bound what those
+  numbers may claim. They are *dataset* results, not a calibrated
+  production FPR. "0.2 % of baseline flows are anomalous" is what
+  `contamination` asserts, not a measured production FPR.
 * **The score is a percentile, not a probability.** Score 99 means "more
   deviant than 99 % of training flows", not "99 % likely malicious".
 * **Threshold ≠ calibration.** `SPECTRA_CONTAMINATION` moves the decision
@@ -86,6 +91,16 @@ ran inside an enclave.
   4/112 (3.6 %). Always retrain on a benign capture of *your* network.
 * Baselines are assumed **benign**; poisoning the baseline is not defended
   against (training is ADMIN-only and audited, but there is no robust training).
+* **Threat intel is file-based and signal-only** (`spectra intel`): local
+  JA3/JA4/SNI lists the operator drops into `data/intel/`, never fetched at
+  runtime. The seed SSLBL JA3 list stopped updating in 2021 — a match is an
+  evidence signal, never an automatic verdict ([intel.md](./intel.md)).
+* **Offline evaluation is only as honest as its join and its labels.** Recall
+  is measured at label-row level through an endpoint-pair + time-window join
+  (10 s tolerance): dataset flow definitions are not reproduced, concurrent
+  flows between the same hosts tie-break on time
+  ([evaluation.md §9](./evaluation.md)). A dataset without labels (MAWI) can
+  only report parser coverage, never FPR or recall.
 * History is bounded by **row caps** (flows 200 k, events 50 k, alerts 50 k),
   so what exists is *newest-kept* — old rows are pruned, not archived.
 * Legacy capture rows created before the managed-resource model (and finished
