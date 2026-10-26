@@ -7,7 +7,6 @@ Phase 1/2/3 legend).
 
 from __future__ import annotations
 
-from ...sectors import SectorClassifier, get_classifier
 
 
 def _item(item_id, title, priority, effort, affected, rationale, actions=None,

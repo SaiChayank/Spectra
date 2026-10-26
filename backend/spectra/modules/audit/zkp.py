@@ -22,7 +22,6 @@ from __future__ import annotations
 import secrets
 
 from .curve import (
-    DLOG_DST,
     G,
     N,
     CurveError,

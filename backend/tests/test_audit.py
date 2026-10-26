@@ -32,7 +32,6 @@ from spectra.modules.audit import (
 from spectra.modules.audit.curve import (
     G,
     N,
-    P,
     decompress,
     hash_to_curve,
     is_on_curve,

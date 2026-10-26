@@ -17,9 +17,7 @@ from sklearn.preprocessing import StandardScaler
 
 from ..features.extractor import (
     FEATURE_NAMES,
-    FEATURE_SCHEMA_VERSION,
     N_FEATURES,
-    feature_schema_digest,
 )
 
 MODEL_VERSION = 1

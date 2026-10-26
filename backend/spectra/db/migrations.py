@@ -50,7 +50,6 @@ alerts           no separate table: durable alert history = ``events`` rows
 
 from __future__ import annotations
 
-import sqlite3
 import time
 from dataclasses import dataclass
 from typing import Callable

@@ -9,7 +9,6 @@ comparison and the Module 2 confidential-computing facade.
 from __future__ import annotations
 
 import logging
-import os
 from collections import deque
 
 import numpy as np
