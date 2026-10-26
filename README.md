@@ -23,7 +23,7 @@ Three target verticals: **Fintech · Healthcare · Smart City Infrastructure**.
 ## Status
 
 Backend **complete** (Phases 0–6): detection core, all 8 strategic modules, REST API,
-CLI, and the React dashboard — with **338 passing tests**. Local authentication
+CLI, and the React dashboard — with **341 passing tests**. Local authentication
 (login, sessions, RBAC) gates the API, WebSocket, and dashboard.
 
 | Layer | State |
@@ -33,10 +33,10 @@ CLI, and the React dashboard — with **338 passing tests**. Local authenticatio
 | Feature extraction (39-feature vector per flow) | ✅ |
 | ML anomaly detector (IsolationForest + scaler, 0–100 scoring, σ-explanations) | ✅ trained from a benign baseline |
 | 8 strategic modules (see matrix below) | ✅ |
-| API (77 HTTP routes + WebSocket, default-deny auth) + CLI (12 commands) | ✅ |
+| API (73 HTTP routes + WebSocket, default-deny auth) + CLI (12 commands) | ✅ |
 | Persistence (SQLite: migration-driven schema, batched writes, bounded retention) | ✅ |
 | React dashboard | ✅ live (local login, role-aware UI) |
-| Automated tests (pytest) | ✅ 338 passing |
+| Automated tests (pytest) | ✅ 341 passing |
 | Authentication & RBAC (ADMIN / ANALYST / VIEWER) | ✅ scrypt + sessions |
 | Live capture on Windows | ✅ validated with [Npcap](https://nmap.org/npcap/) (driver required) |
 
@@ -143,7 +143,7 @@ out-of-distribution (validated in
 
 ## API
 
-77 HTTP routes + 1 WebSocket, grouped by module:
+73 HTTP routes + 1 WebSocket, grouped by module:
 
 | Group | Routes |
 |---|---|
@@ -223,7 +223,7 @@ route checks a permission from `spectra/authz.py`.
 
 ```bash
 cd backend
-python -m pytest tests -q      # 338 tests
+python -m pytest tests -q      # 341 tests
 ```
 
 The suite covers TLS/QUIC parsing, flow tracking, feature extraction, filters, the
@@ -248,14 +248,14 @@ backend/
     modules/        # eight strategic modules (pqc, tee, adv, twin, audit, bio, corr, edge)
     auth/           # password policy + scrypt hashing
     authz.py        # RBAC matrix (ADMIN / ANALYST / VIEWER → permissions)
-    api/            # FastAPI: 77 HTTP routes + WebSocket event stream (auth gate)
+    api/            # FastAPI: 73 HTTP routes + WebSocket event stream (auth gate)
     db/             # SQLite layer: 6 migrations, repositories, batched writes, retention
     filters.py      # pure-Python BPF-style filters (no libpcap needed)
     streaming.py    # bounded staged capture runtime (queues, overload policy, telemetry)
     pipeline.py     # engine wiring capture → detection → annotation → events
     cli.py          # 12 CLI commands
     demo.py         # synthetic PCAP generators (tests + demos)
-  tests/            # 338 unit/integration tests
+  tests/            # 341 unit/integration tests
   demo_pcaps/       # committed fixture captures
 frontend/           # React + TypeScript dashboard (Vite)
 ```
