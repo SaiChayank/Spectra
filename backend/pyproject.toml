@@ -18,6 +18,9 @@ dependencies = [
     "cryptography>=50.0.0,<51",
 ]
 
+[project.optional-dependencies]
+dev = ["pytest", "httpx", "ruff", "pip-audit"]
+
 [project.scripts]
 spectra = "spectra.cli:main"
 
