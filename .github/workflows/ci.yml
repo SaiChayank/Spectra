@@ -18,6 +18,7 @@ jobs:
       - run: uv pip install --require-hashes -r backend/requirements.lock
       - run: .venv/bin/ruff check backend/spectra backend/tests
       - run: cd backend && ../.venv/bin/python -m pytest -q
+      - run: cd backend && SPECTRA_DATA_DIR=$(mktemp -d) ../.venv/bin/python scripts/check_readme_counts.py
   security:
     runs-on: ubuntu-latest
     steps:
