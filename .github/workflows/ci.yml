@@ -16,6 +16,7 @@ jobs:
       - uses: astral-sh/setup-uv@v5
       - run: uv venv --python ${{ matrix.python }} .venv
       - run: uv pip install --require-hashes -r backend/requirements.lock
+      - run: .venv/bin/ruff check backend/spectra backend/tests
       - run: cd backend && ../.venv/bin/python -m pytest -q
   security:
     runs-on: ubuntu-latest
