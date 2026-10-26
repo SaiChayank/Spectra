@@ -302,7 +302,7 @@ def test_engine_tee_methods(tmp_path):
     feed = [[0.1, 0.2], [0.3, 0.4]]
     report = engine.tee_federate(deltas=feed, shareholders=2)
     assert report["exact"] is True
-    with pytest.raises(Exception):
+    with pytest.raises(FederatedError):
         engine.tee_federate(deltas=[[0.1]])            # one party -> error
 
 
