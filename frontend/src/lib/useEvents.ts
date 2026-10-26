@@ -8,14 +8,13 @@ import { WS_URL, type WsEvent } from "../lib/api";
  */
 export function useEvents(onEvent: (event: WsEvent) => void, enabled = true) {
   const handler = useRef(onEvent);
-  handler.current = onEvent;
+  useEffect(() => {
+    handler.current = onEvent;
+  });
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    if (!enabled) {
-      setConnected(false);
-      return;
-    }
+    if (!enabled) return;
     let ws: WebSocket | null = null;
     let closed = false;
     let retry: ReturnType<typeof setTimeout>;
@@ -42,6 +41,7 @@ export function useEvents(onEvent: (event: WsEvent) => void, enabled = true) {
       closed = true;
       clearTimeout(retry);
       ws?.close();
+      setConnected(false);
     };
   }, [enabled]);
 

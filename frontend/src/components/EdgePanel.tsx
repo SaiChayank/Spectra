@@ -28,13 +28,13 @@ export default function EdgePanel({ canRun, canConfig, onError, onNotice }: {
   const [node, setNode] = useState("mec-01");
   const [depSlice, setDepSlice] = useState("urllc");
 
-  const load = useCallback(async () => {
-    try {
-      setReport(await api.edgeReport());
-    } catch (err) {
-      onError(err instanceof Error ? err.message : String(err));
-    }
-  }, [onError]);
+  const load = useCallback(
+    () =>
+      api.edgeReport().then(setReport, (err: unknown) =>
+        onError(err instanceof Error ? err.message : String(err)),
+      ),
+    [onError],
+  );
 
   useEffect(() => {
     load();

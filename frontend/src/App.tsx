@@ -57,24 +57,21 @@ export default function App() {
     return () => window.removeEventListener("spectra:unauthorized", onUnauthorized);
   }, []);
 
-  const refresh = useCallback(async () => {
-    try {
-      const [stats, flowList, detList] = await Promise.all([
-        api.stats(),
-        api.flows(60),
-        api.detections(40),
-      ]);
-      setSnapshot(stats);
-      setFlows(flowList.items);
-      setDetections(detList.items);
-      setError(null);
-    } catch (err) {
-      setError(
-        `Backend unreachable (http://localhost:8787) — ${
-          err instanceof Error ? err.message : String(err)
-        }`,
-      );
-    }
+  const refresh = useCallback(() => {
+    Promise.all([api.stats(), api.flows(60), api.detections(40)])
+      .then(([stats, flowList, detList]) => {
+        setSnapshot(stats);
+        setFlows(flowList.items);
+        setDetections(detList.items);
+        setError(null);
+      })
+      .catch((err: unknown) => {
+        setError(
+          `Backend unreachable (http://localhost:8787) — ${
+            err instanceof Error ? err.message : String(err)
+          }`,
+        );
+      });
   }, []);
 
   useEffect(() => {
