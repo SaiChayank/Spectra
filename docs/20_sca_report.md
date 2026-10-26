@@ -1,3 +1,4 @@
+> STATUS: TEMPLATE — no real evidence recorded yet (see HANDOFF.md, Phase 10).
 # Software Composition Analysis (SCA) — Strategy & Report Template
 ## Spectra
 

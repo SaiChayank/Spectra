@@ -1,3 +1,4 @@
+> STATUS: TEMPLATE — no real evidence recorded yet (see HANDOFF.md, Phase 10).
 # Security Sign-Off / Approval Record — Template
 ## Spectra
 

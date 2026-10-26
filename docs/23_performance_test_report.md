@@ -1,3 +1,4 @@
+> STATUS: TEMPLATE — no real evidence recorded yet (see HANDOFF.md, Phase 10).
 # Performance Test Report — Plan & Template
 ## Spectra
 

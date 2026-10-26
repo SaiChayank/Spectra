@@ -1,3 +1,4 @@
+> STATUS: TEMPLATE — no real evidence recorded yet (see HANDOFF.md, Phase 10).
 # Static Application Security Testing (SAST) — Strategy & Report Template
 ## Spectra
 

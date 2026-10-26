@@ -1,3 +1,4 @@
+> STATUS: TEMPLATE — no real evidence recorded yet (see HANDOFF.md, Phase 10).
 # Vulnerability Assessment & Penetration Testing (VAPT) — Engagement Plan & Report Template
 ## Spectra
 
