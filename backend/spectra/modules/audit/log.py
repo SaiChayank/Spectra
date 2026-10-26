@@ -405,7 +405,7 @@ class AuditLog:
         check("merkle_root", root == declared_root, "recomputed covered-root")
         chain_ok = all(
             cur["prev_hash"] == prev["entry_hash"]
-            for prev, cur in zip(entries, entries[1:])
+            for prev, cur in zip(entries, entries[1:], strict=False)
         )
         check("chain_links", chain_ok, "prev_hash links across covered range")
         # stored entry hashes must still match their payloads (tamper check)

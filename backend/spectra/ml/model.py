@@ -154,7 +154,7 @@ class SpectraDetector:
         trees, dpls, apls, denom, offset = self._fast
         x = z_row.tolist()
         depths = 0.0
-        for (cl, cr, ft, th), dpl, apl in zip(trees, dpls, apls):
+        for (cl, cr, ft, th), dpl, apl in zip(trees, dpls, apls, strict=False):
             node = 0
             while cl[node] != -1:
                 node = cl[node] if x[ft[node]] <= th[node] else cr[node]

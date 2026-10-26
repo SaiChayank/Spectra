@@ -407,7 +407,7 @@ def cmd_bio(args: argparse.Namespace) -> int:
             return 2
         X = flows_to_matrix(flows)
         results = []
-        for i, (flow, feats) in enumerate(zip(flows, X)):
+        for i, (flow, feats) in enumerate(zip(flows, X, strict=False)):
             score = None
             anomaly = False
             if engine.detector.is_trained:

@@ -199,7 +199,7 @@ def _ecb_encrypt(key: bytes, block: bytes) -> bytes:
 
 def _nonce(iv: bytes, pn_bytes: bytes) -> bytes:
     padded = pn_bytes.rjust(len(iv), b"\x00")
-    return bytes(a ^ b for a, b in zip(iv, padded))
+    return bytes(a ^ b for a, b in zip(iv, padded, strict=False))
 
 
 def open_initial(payload: bytes, keys: dict, hdr: dict | None = None) -> dict | None:
