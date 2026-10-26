@@ -85,17 +85,15 @@ def run_shadow(reference, X: np.ndarray, candidate=None,
     base_ms = (time.perf_counter() - t1) * 1000
 
     cand_flags = None
-    cand_scores = None
     cand_ms = None
     if candidate is not None:
         t2 = time.perf_counter()
         if getattr(candidate, "is_trained", True):
             cand_flags = np.asarray(candidate.predict(X)).astype(int)
-            cand_scores = np.asarray(candidate.score(X), dtype=np.float64)
+            np.asarray(candidate.score(X), dtype=np.float64)  # call kept: external detector, output still validated
         else:
             cand = ZScoreDetector(threshold=threshold * 0.75).fit(X)
             cand_flags = cand.predict(X).astype(int)
-            cand_scores = cand.score(X)
         cand_ms = (time.perf_counter() - t2) * 1000
 
     n = len(X)

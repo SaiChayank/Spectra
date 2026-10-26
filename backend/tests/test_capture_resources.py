@@ -67,7 +67,7 @@ def test_import_sanitizes_traversal_filename(tmp_path, upload_capture):
 def test_import_rejects_bad_name_extension_and_signature(tmp_path):
     good = make_baseline_pcap(str(tmp_path / "b.pcap"), n_flows=5)
     with open(good, "rb") as fh:
-        data = fh.read()
+        fh.read()
 
     cases = [
         ("notes.txt", b"hello", "text/plain"),           # extension

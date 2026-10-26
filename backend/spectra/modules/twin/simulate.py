@@ -146,7 +146,6 @@ def simulate(topology: dict, initial: list[str] | None = None, seed: int = 7,
 
     adj = _adjacency(topology)
     zone = {n["id"]: n["zone"] for n in topology["nodes"]}
-    crit = {n["id"]: n["criticality"] for n in topology["nodes"]}
     assets = set(topology["assets"])
     by_domain = topology.get("by_domain", {})
 
