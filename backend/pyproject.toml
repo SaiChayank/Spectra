@@ -30,3 +30,10 @@ include = ["spectra*"]
 
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F", "B"]
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = [
+    "fastapi.Depends", "fastapi.Query", "fastapi.File", "fastapi.Form",
+    "fastapi.Header", "fastapi.Body", "fastapi.Path",
+    "spectra.api.security.require",
+]
