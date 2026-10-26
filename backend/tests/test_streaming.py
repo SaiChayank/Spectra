@@ -195,7 +195,7 @@ def test_flow_tracker_per_flow_packet_budget_is_kept():
 
     tracker = FlowTracker(max_packets=3)
     ts = BASE
-    for seq in range(6):
+    for _ in range(6):
         tracker.process(_syn(5000, ts), ts)
         ts += 1
     flow = next(iter(tracker.flush_all()))

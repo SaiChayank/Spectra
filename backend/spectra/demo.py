@@ -203,7 +203,7 @@ def tls_flow_packets(
     pkts.append(_pkt(dst, src, dport, sport, "PA", sseq + 1, cseq + 1, sh, t=t))
     sseq += len(sh)
 
-    for i in range(n_data):
+    for _ in range(n_data):
         t += 0.05 + rng.uniform(0, 0.05)
         size = max(1, int(data_size * rng.uniform(0.7, 1.3)))
         pkts.append(_pkt(src, dst, sport, dport, "PA", cseq + 1, sseq + 1,
@@ -319,7 +319,7 @@ def beacon_flow_packets(
     cseq += 1
     sseq += 1
 
-    for i in range(n_beacons):
+    for _ in range(n_beacons):
         t += 1.0  # perfectly periodic - unnatural
         pkts.append(_pkt(src, dst, sport, dport, "PA", cseq + 1, sseq + 1,
                          b"\x00\x01\x02\x03", t=t))
