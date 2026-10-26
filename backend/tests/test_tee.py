@@ -4,6 +4,7 @@ federated aggregation."""
 from __future__ import annotations
 
 import json
+import os
 import time
 
 import numpy as np
@@ -63,6 +64,24 @@ def test_measurement_tracks_artifact_bytes(tmp_path):
     make_model(tmp_path, b"weights-B (tampered)")
     assert measure_file(path) != first
     assert measure_file(str(tmp_path / "missing.bin")) is None
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX file modes")
+def test_new_key_is_owner_only(tmp_path):
+    key_path = tmp_path / "k.key"
+    TeeEnclave(make_model(tmp_path), key_path=str(key_path))
+    assert (os.stat(key_path).st_mode & 0o077) == 0
+
+
+@pytest.mark.skipif(os.name == "nt", reason="POSIX file modes")
+def test_loose_existing_key_is_tightened(tmp_path):
+    key_path = tmp_path / "k.key"
+    model = make_model(tmp_path)
+    first = TeeEnclave(model, key_path=str(key_path))
+    os.chmod(key_path, 0o644)
+    second = TeeEnclave(model, key_path=str(key_path))
+    assert (os.stat(key_path).st_mode & 0o077) == 0
+    assert first.pubkey == second.pubkey
 
 
 def test_quote_roundtrip(tee):

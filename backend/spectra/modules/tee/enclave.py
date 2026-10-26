@@ -20,6 +20,7 @@ what the Module 5 ZK certificate claims.
 from __future__ import annotations
 
 import hashlib
+import logging
 import os
 import time
 import uuid
@@ -29,6 +30,8 @@ import numpy as np
 from ...features.extractor import N_FEATURES
 from ..audit import canonical_json
 from ..audit.curve import schnorr_keypair, schnorr_sign, schnorr_verify
+
+log = logging.getLogger(__name__)
 
 QUOTE_DOMAIN = "spectra.tee.quote.v1"
 RECEIPT_DOMAIN = "spectra.tee.receipt.v1"
@@ -101,6 +104,12 @@ class TeeEnclave:
             if os.path.isfile(self.key_path):
                 with open(self.key_path, encoding="utf-8") as fh:
                     sk, pk = fh.read().split()
+                if os.name != "nt":
+                    try:  # tighten keys written with a looser umask earlier
+                        os.chmod(self.key_path, 0o600)
+                    except OSError:
+                        log.warning("could not restrict TEE key permissions: %s",
+                                    self.key_path)
                 return sk, pk
         except (OSError, ValueError):
             pass  # unreadable key -> mint a fresh enclave identity
@@ -108,8 +117,12 @@ class TeeEnclave:
         try:
             os.makedirs(os.path.dirname(os.path.abspath(self.key_path)),
                         exist_ok=True)
-            with open(self.key_path, "w", encoding="utf-8") as fh:
+            # 0600 at creation; chmod also covers a rewritten pre-existing file.
+            fd = os.open(self.key_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+            with os.fdopen(fd, "w", encoding="utf-8") as fh:
                 fh.write(f"{sk} {pk}")
+            if os.name != "nt":
+                os.chmod(self.key_path, 0o600)
         except OSError:  # pragma: no cover - read-only filesystem
             pass
         return sk, pk
