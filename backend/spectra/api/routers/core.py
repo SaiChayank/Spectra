@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 
@@ -26,12 +26,24 @@ class CaptureRequest(BaseModel):
     """
     mode: str = Field(pattern="^live$")
     iface: str | None = None
-    bpf_filter: str = ""
+    bpf_filter: str = Field("", max_length=1024)
 
 
 @router.get("/api/health")
 def health() -> dict:
     return engine.system.health()
+
+
+@router.get("/api/health/system",
+            dependencies=[Depends(require("read"))])
+def system_health() -> dict:
+    """System Health: per-subsystem state + reason + runtime metrics.
+
+    The frontend's health panel reads this; ``/api/health`` stays the
+    public liveness probe. States: HEALTHY / DEGRADED / UNAVAILABLE /
+    SIMULATED (see spectra.health for the rules and thresholds).
+    """
+    return engine.system.health_report()
 
 
 @router.get("/api/status",
@@ -48,13 +60,16 @@ def stats() -> dict:
 
 @router.get("/api/flows",
            dependencies=[Depends(require("read"))])
-def flows(limit: int = 100) -> dict:
+def flows(limit: int = Query(100, ge=1, le=1000)) -> dict:
+    """Recent in-memory flows; ``limit`` is bounded so one request cannot
+    serialize an unbounded buffer."""
     return engine.detection.recent_flows(limit)
 
 
 @router.get("/api/detections",
            dependencies=[Depends(require("read"))])
-def detections(limit: int = 100) -> dict:
+def detections(limit: int = Query(100, ge=1, le=1000)) -> dict:
+    """Recent in-memory detections (bounded ``limit``, same as /api/flows)."""
     return engine.detection.recent_detections(limit)
 
 
@@ -85,8 +100,12 @@ def interfaces() -> dict:
 @router.get("/api/capabilities",
            dependencies=[Depends(require("read"))])
 def capabilities() -> dict:
-    """Capability maturity per advanced module (REAL / LOCAL / SIMULATED / ...)."""
-    return module_capabilities()
+    """Maturity, contract and live availability per advanced module."""
+    try:
+        live = engine.capability_status()
+    except Exception:  # noqa: BLE001 - transparency must never 500
+        live = None
+    return module_capabilities(live)
 
 
 @router.get("/api/metrics", response_class=PlainTextResponse,

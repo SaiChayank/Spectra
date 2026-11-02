@@ -57,6 +57,16 @@ class FlowRecord(TypedDict, total=False):
     snn_score: float | None
     swarm_flag: bool | None
     pqc: dict | None
+    #: Anomalies only: explainable threat verdict (spectra.threats) —
+    #: ``threat_type``/``confidence`` plus supporting/contradicting signals.
+    threat: dict | None
+    #: Local threat-intel hits (spectra.intel): JA3/JA4/SNI matches against
+    #: the operator's list files; consumed as an independent classification
+    #: signal and rendered as alert evidence. Absent when no list matches.
+    intel: list
+    #: Anomalies that produced an alert: the alert's id (reverse link; the
+    #: alert itself references the flow — see spectra.services.threat_alerts).
+    alert_id: str | None
 
 
 class DetectionRecord(TypedDict, total=False):
@@ -77,6 +87,139 @@ class AlertRecord(TypedDict, total=False):
     level: str
     near_miss_rate: float
     reasons: list
+
+
+class EvidenceItem(TypedDict, total=False):
+    """One technical evidence item on an alert (machine + human readable).
+
+    ``key``/``value``/``unit`` are the machine-readable form (e.g.
+    ``periodicity = 30.2 s``); ``label``/``detail`` phrase it for an analyst.
+    ``value`` is ``None`` when the signal carries no direct measurement.
+    """
+
+    key: str
+    value: float | str | bool | None
+    unit: str | None
+    label: str
+    detail: str
+
+
+class Evidence(TypedDict, total=False):
+    """Structured evidence document carried by :class:`ThreatAlert`."""
+
+    supporting: list[EvidenceItem]
+    contradicting: list[EvidenceItem]
+    #: One plain-sentence analyst explanation of the behaviour.
+    summary: str
+
+
+class ThreatAlert(TypedDict, total=False):
+    """The analyst-facing alert, separate from the raw detection.
+
+    Carries the four concepts side by side, deliberately independent:
+    ``anomaly_score`` (detector percentile), ``confidence`` (classifier
+    evidence share), ``severity`` (ordinal triage level from
+    :mod:`spectra.severity`, with its derivation in ``severity_factors``),
+    and ``threat_type`` (behaviour category).  ``metadata`` holds related
+    flow context, ``module_annotations`` the per-module verdicts.
+    """
+
+    #: Stable id (``alrt_<hex>``); also stamped onto the source flow record.
+    alert_id: str
+    #: Source flow row id when its durable id is known at alert time
+    #: (batched flow writes often leave this ``None`` — the flow row carries
+    #: ``alert_id`` as the reverse link either way).
+    flow_id: int | None
+    capture_id: int | None
+    #: Wall-clock time the alert was created.
+    timestamp: float
+    #: Flow-observation time of the first / latest grouped sighting.
+    first_seen: float
+    last_seen: float
+    updated_at: float
+    source: str
+    destination: str
+    protocol: str
+    threat_type: str
+    anomaly_score: float | None
+    confidence: float
+    #: LOW | MEDIUM | HIGH | CRITICAL (ordinal — see spectra.severity).
+    severity: str
+    #: Every severity input's contribution, human-readable.
+    severity_factors: list[str]
+    model_id: str | None
+    model_version: str | None
+    evidence: Evidence
+    #: Related flow context (sni, ports, size, sector, slice, ...).
+    metadata: dict
+    #: Per-module verdicts riding the source flow (immune/snn/swarm/pqc).
+    module_annotations: dict
+    #: OPEN -> ACKNOWLEDGED -> RESOLVED (terminal).
+    status: str
+    #: How many sightings are grouped into this alert.
+    occurrences: int
+
+
+class Incident(TypedDict, total=False):
+    """An incident: related security activity above individual alerts.
+
+    Groups alerts that share anchors (spectra.incident_correlation) or points
+    at the flagged flow raised by hand.  The rollup fields (severity,
+    confidence, first/last seen, affected entities, alert count, primary
+    threat class, related graph nodes, model versions, evidence summary) are
+    re-derived from member alerts on every membership change — severity is
+    the ordinal max of members, confidence belongs to the primary (most
+    severe) member's verdict, never an average.
+    """
+
+    #: Durable incident id (row id, assigned on create).
+    id: int
+    title: str
+    #: Optional free-text investigation summary (analyst- or correlation-set).
+    summary: str | None
+    #: Optional flagged-flow anchor that raised this incident by hand.
+    detection_id: int | None
+    #: OPEN | INVESTIGATING | ACKNOWLEDGED | RESOLVED | FALSE_POSITIVE.
+    status: str
+    created_by: str
+    created_at: float
+    updated_by: str | None
+    updated_at: float | None
+    acknowledged_by: str | None
+    acknowledged_at: float | None
+    resolved_by: str | None
+    resolved_at: float | None
+    #: Ordinal max (LOW..CRITICAL) of the member alerts' severities.
+    severity: str | None
+    #: Confidence of the primary threat verdict (see rollup).
+    confidence: float | None
+    first_seen: float | None
+    last_seen: float | None
+    #: Hosts/domains the incident touches (bounded, deduplicated).
+    affected_entities: list[str]
+    #: Number of linked alerts (the IncidentAlert relation size).
+    alert_count: int
+    primary_threat_class: str | None
+    #: Correlation-graph node ids of the members' endpoints (present ones).
+    related_graph_nodes: list[str]
+    #: Unique ``model_id@model_version`` pairs that scored the members.
+    model_versions: list[str]
+    #: One plain sentence: member count + primary threat + its evidence.
+    evidence_summary: str | None
+
+
+class IncidentEvent(TypedDict, total=False):
+    """One ordered entry of an incident's timeline (the local history)."""
+
+    id: int
+    incident_id: int
+    ts: float
+    #: created | alert_added | status_changed | note_added.
+    kind: str
+    #: Username for analyst actions, ``spectra`` for automatic correlation.
+    actor: str
+    #: Kind-specific payload (from/to/action, alert_id/source/score, ...).
+    data: dict
 
 
 class EvidenceRecord(FlowRecord, total=False):

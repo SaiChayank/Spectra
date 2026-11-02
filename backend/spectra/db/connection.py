@@ -16,8 +16,14 @@ from __future__ import annotations
 import os
 import sqlite3
 import threading
+import time
 from contextlib import contextmanager
 from typing import Iterator
+
+from ..health import LatencyReservoir
+
+#: Statement verbs that make ``execute`` a write (reads are not timed).
+_WRITE_VERBS = frozenset({"INSERT", "UPDATE", "DELETE", "REPLACE"})
 
 
 class StoreError(RuntimeError):
@@ -25,7 +31,12 @@ class StoreError(RuntimeError):
 
 
 class Database:
-    """One guarded connection plus transaction/exec helpers."""
+    """One guarded connection plus transaction/exec helpers.
+
+    Also owns write telemetry for the health layer: a bounded reservoir of
+    recent write/commit durations (ms) and a lifetime error counter - both
+    cheap enough to sit on the hot path and never raise.
+    """
 
     def __init__(self, path: str, timeout: float = 5.0):
         self.path = path
@@ -33,6 +44,9 @@ class Database:
         # Explicit transactions committed through this layer (batch flushes,
         # migrations, retention). Used as evidence for write-throughput work.
         self.commit_count = 0
+        # Health telemetry: recent write/commit latency + SQL error count.
+        self.write_latency = LatencyReservoir()
+        self.error_count = 0
         try:
             if path != ":memory:":
                 os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
@@ -61,29 +75,46 @@ class Database:
                 f"PRAGMA foreign_keys={'ON' if enabled else 'OFF'}"
             )
 
+    @staticmethod
+    def _is_write(sql: str) -> bool:
+        parts = sql.lstrip().split(None, 1)
+        return bool(parts) and parts[0].upper() in _WRITE_VERBS
+
+    def _observe_write(self, started: float) -> None:
+        self.write_latency.observe((time.perf_counter() - started) * 1000.0)
+
     def execute(self, sql: str, params: tuple = ()) -> sqlite3.Cursor:
         with self.lock:
+            started = time.perf_counter()
             try:
-                return self._conn.execute(sql, params)
+                cursor = self._conn.execute(sql, params)
             except sqlite3.Error as exc:
+                self.error_count += 1
                 raise StoreError(str(exc)) from exc
+            if self._is_write(sql):
+                self._observe_write(started)
+            return cursor
 
     def query(self, sql: str, params: tuple = ()) -> list[dict]:
         with self.lock:
             try:
                 rows = self._conn.execute(sql, params).fetchall()
             except sqlite3.Error as exc:
+                self.error_count += 1
                 raise StoreError(str(exc)) from exc
         return [dict(r) for r in rows]
 
     def commit(self) -> None:
         """Durability point for a single-statement write (no-op under autocommit)."""
         with self.lock:
+            started = time.perf_counter()
             try:
                 self._conn.commit()
             except sqlite3.Error as exc:
+                self.error_count += 1
                 raise StoreError(str(exc)) from exc
             self.commit_count += 1
+            self._observe_write(started)
 
     @contextmanager
     def transaction(self) -> Iterator[None]:
@@ -97,6 +128,7 @@ class Database:
             try:
                 self._conn.execute("BEGIN IMMEDIATE")
             except sqlite3.Error as exc:
+                self.error_count += 1
                 raise StoreError(str(exc)) from exc
             try:
                 yield
@@ -107,15 +139,18 @@ class Database:
                     pass
                 raise
             else:
+                started = time.perf_counter()
                 try:
                     self._conn.execute("COMMIT")
                 except sqlite3.Error as exc:
+                    self.error_count += 1
                     try:
                         self._conn.execute("ROLLBACK")
                     except sqlite3.Error:
                         pass
                     raise StoreError(str(exc)) from exc
                 self.commit_count += 1
+                self._observe_write(started)
 
     def close(self) -> None:
         with self.lock:

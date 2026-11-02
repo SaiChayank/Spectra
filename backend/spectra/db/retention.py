@@ -3,8 +3,9 @@
 Policies are **off by default** (``0`` = keep): nothing here destroys existing
 history unless the operator opts in with ``SPECTRA_*`` configuration. Growth is
 still bounded without them - the flow row cap lives in
-:class:`~spectra.db.repositories.FlowRepository` and the event row cap in
-:class:`~spectra.db.repositories.EventRepository`.
+:class:`~spectra.db.repositories.FlowRepository`, the event row cap in
+:class:`~spectra.db.repositories.EventRepository` and the alert row cap in
+:class:`~spectra.db.repositories.AlertRepository`.
 
 Audit data follows *separate integrity rules*: ``audit_log`` is deliberately
 absent from every policy below. Its hash chain and Merkle checkpoints require

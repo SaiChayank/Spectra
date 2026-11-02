@@ -18,8 +18,9 @@ before it:
 
     EventBus / FailureTracker / CaptureSession        (shared leaves)
     AuditService -> AlertService -> ModelService
-    CorrelationService -> DetectionService -> CaptureService
-    -> CaptureResourceService -> TrainingService -> SystemService
+    CorrelationService + ThreatAlertService (store/events/model identity)
+    -> DetectionService -> CaptureService -> CaptureResourceService
+    -> TrainingService -> SystemService
 
 Historical rebinding of engine attributes from tests (``engine.detector = ...``)
 keeps working: every attribute below is a property whose setter re-points the
@@ -58,8 +59,11 @@ from .services import (
     EventBus,
     FailureTracker,
     IncidentService,
+    InvestigationService,
+    ModelRegistryService,
     ModelService,
     SystemService,
+    ThreatAlertService,
     TrainingService,
 )
 from .store import Store
@@ -68,6 +72,22 @@ from .streaming import initial_stream_status
 log = logging.getLogger("spectra.engine")
 
 Listener = Callable[[dict], None]
+
+#: FailureTracker component(s) behind each capability key so live status
+#: can report how often a module degraded instead of guessing.
+_CAPABILITY_FAILURE_COMPONENTS: dict[str, tuple[str, ...]] = {
+    "pqc": ("pqc",),
+    "adversarial": ("adversarial_watch",),
+    "correlation": ("correlation",),
+    "audit": ("audit",),
+    "bio": ("bio",),
+    "edge": ("edge_slice",),
+    "edge_deployment": ("edge_slice",),
+    "intel": ("intel",),
+    "tee": (),
+    "federated": (),
+    "twin": (),
+}
 
 
 class SpectraEngine:
@@ -99,10 +119,32 @@ class SpectraEngine:
         else:
             self._store = None
 
+        # -- Model registry (Prompt 14) -------------------------------------
+        # Constructed before the detector load: with rows in the registry the
+        # ACTIVE artifact is authoritative for this engine's *deployed* path
+        # (engines constructed with a custom model_path - the test-suite's
+        # isolation pattern - keep legacy load semantics so shared-DB registry
+        # rows never override their explicit artifact choice).
+        self.registry = ModelRegistryService(self.config, self._store)
+        self._registry_authoritative = (
+            self._store is not None
+            and os.path.abspath(self.model_path)
+            == os.path.abspath(self.config.model_path)
+        )
+
         # Core artifact: loaded once here so every service shares one instance
         # and rebinding ``engine.detector`` stays a single-point operation.
         detector = SpectraDetector()
-        if os.path.isfile(self.model_path):
+        if self._registry_authoritative and self.registry.count() > 0:
+            # Registry rows exist -> ACTIVE row's artifact only: untrained
+            # when there is no active model or its trust checks fail (no
+            # legacy fallback - the registry is authoritative once populated).
+            active = self.registry.active_detector()
+            if active is not None:
+                detector, active_row = active
+                log.info("loaded ACTIVE model %s (%d training flows)",
+                         active_row["model_id"], detector.n_train)
+        elif os.path.isfile(self.model_path):
             try:
                 detector = SpectraDetector.load(self.model_path)
                 log.info("loaded model from %s (%d training flows)",
@@ -136,6 +178,8 @@ class SpectraEngine:
             # capture, kept after the session so drops stay inspectable
             "pipeline": initial_stream_status(
                 self.config, idle_timeout=self.idle_timeout),
+            # event-websocket telemetry (spectra.api.app owns the counters)
+            "websocket": {"clients": 0, "slow_client_drops": 0},
             # cumulative optional-module failure counts (component -> n)
             "failures": {},
         }
@@ -146,12 +190,18 @@ class SpectraEngine:
         # -- application services (leaf -> root) -----------------------------
         self.events = EventBus()
         self.failures = FailureTracker(self.status)
+        # Registry bindings the constructor could not take yet (the startup
+        # load above runs before the failure tracker exists - trust failures
+        # there degrade to a warning log inside active_detector()).
+        self.registry.failures = self.failures
         # Durable system-event feed: everything except flow/detection events
-        # (those are already stored as flow rows). Low volume by construction -
-        # status/alert/drift/model fire on lifecycle edges, not per packet.
+        # (those are already stored as flow rows) and alert events (those are
+        # stored in the alerts table). Low volume by construction -
+        # status/evasion/drift/model fire on lifecycle edges, not per packet.
         self.events.subscribe(self._persist_event)
         self.audit_service = AuditService(self._store, self.model_path,
                                           self.failures)
+        self.registry.audit = self.audit_service
         self.alerts = AlertService(
             self.config, self.events, self.audit_service, self.failures,
             contamination=getattr(detector, "contamination", 0.02),
@@ -162,11 +212,23 @@ class SpectraEngine:
             self.alerts, self.events, self.audit_service, self.failures,
             recent_feats,
         )
+        # Activation side effects live on the engine (swap, deploy, attest,
+        # watch, event) - injected as a hook so the registry never imports
+        # another service.
+        self.registry.on_activate = self._apply_activation
         self.correlation = CorrelationService(CorrelationGraph(), self._store,
                                               self.failures)
+        # Analyst alerts (spectra.services.threat_alerts): correlated verdicts
+        # over flagged flows, carrying the scoring model's identity.
+        self.threat_alerts = ThreatAlertService(
+            self._store, self.config, self.events, self.failures,
+            model_info=lambda: {"id": os.path.basename(self.model_path),
+                                **self.model.info()},
+        )
         self.detection = DetectionService(
             self.status, self.config, self._store, self.model, self.events,
-            self.correlation, self.alerts, session, self.failures, recent_feats,
+            self.correlation, self.alerts, self.threat_alerts, session,
+            self.failures, recent_feats,
         )
         self.capture = CaptureService(
             self.config, self.idle_timeout, self._store, self.events,
@@ -181,11 +243,13 @@ class SpectraEngine:
         self.training = TrainingService(
             self.config, self.idle_timeout, self._store, self.model,
             self.detection, self.capture, self.audit_service, self.events,
-            self.status,
+            self.status, registry=self.registry,
         )
         self.system = SystemService(
             self.status, self.config, self._store, self.model,
             self.detection, self.failures,
+            events=self.events,
+            capability_provider=lambda: self.capability_status(),
         )
         # Local authentication (login/session/user lifecycle) and incident
         # triage. AuthService keeps the construction-time store on purpose -
@@ -193,7 +257,35 @@ class SpectraEngine:
         # store-rebinding seam that API tests use, so it is NOT part of the
         # fan-out list in the store setter below.
         self.auth = AuthService(self._store, self.config)
-        self.incidents = IncidentService(self._store)
+        # Incident layer above alerts: correlation decides relatedness
+        # (spectra.incident_correlation), this service owns membership,
+        # state machine and timeline. Audit + graph are injected so no
+        # service imports another service.
+        self.incidents = IncidentService(
+            self._store, self.config, failures=self.failures,
+            audit=self.audit_service,
+            graph_provider=lambda: self.correlation.graph,
+        )
+        # Investigation read-side (bundle + global search): everything an
+        # analyst needs about an incident in one bounded response. The
+        # graph, the model identity and the live module capability status
+        # arrive as injected providers so no service imports another
+        # service; the store rebinding seam below reaches it like every
+        # other store-backed service.
+        self.investigation = InvestigationService(
+            self._store, self.config,
+            graph_provider=lambda: self.correlation.graph,
+            model_info=lambda: {"id": os.path.basename(self.model_path),
+                                **self.model.info()},
+            capability_provider=lambda: self.capability_status(),
+        )
+        # Auto-attach: a durable alert joins the best-matching ACTIVE
+        # incident (OPEN/INVESTIGATING/ACKNOWLEDGED) or refreshes its
+        # rollups. Runs on the publication thread after the alert row is
+        # written; the bus isolates listener errors and observe_alert
+        # guards its own body, so correlation can never break capture.
+        # No incident is ever created from this path.
+        self.events.subscribe(self._incidents_observe_event)
 
     # -- shared state (single owner; setters preserve historical rebinding) ----
 
@@ -206,8 +298,9 @@ class SpectraEngine:
         self._store = value
         # auth is deliberately absent: AuthService stays bound to the store it
         # was constructed with (sessions must not move with test-fixture swaps)
-        for name in ("audit_service", "correlation", "detection", "capture",
-                     "capture_resources", "training", "system", "incidents"):
+        for name in ("audit_service", "correlation", "threat_alerts",
+                     "detection", "capture", "capture_resources", "training",
+                     "system", "incidents", "investigation", "registry"):
             svc = getattr(self, name, None)
             if svc is not None:
                 svc.store = value
@@ -347,21 +440,33 @@ class SpectraEngine:
         """Durably record one system event (bus listener, never raises).
 
         ``flow``/``detection`` events are skipped - they are already stored as
-        flow rows - so the store only sees the low-volume lifecycle feed
-        (status, evasion, drift, model). The bus isolates listener errors, but
-        failures are recorded here too so they show up in ``status``.
+        flow rows - and so are ``alert``/``alert_updated`` events, whose
+        durable copy is the alerts table. The store therefore only sees the
+        low-volume lifecycle feed (status, evasion, drift, model). The bus
+        isolates listener errors, but failures are recorded here too so they
+        show up in ``status``.
         """
         store = self._store
         if store is None:
             return
         etype = str(event.get("type", ""))
-        if etype in ("flow", "detection"):
+        if etype in ("flow", "detection", "alert", "alert_updated"):
             return
         try:
             store.record_event(etype, event.get("data") or {},
                                capture_id=self.session.capture_id)
         except Exception as exc:  # noqa: BLE001 - history must never break capture
             self._record_failure("store", exc)
+
+    def _incidents_observe_event(self, event: dict) -> None:
+        """Feed alert events to the incident correlator (bus listener).
+
+        The service never raises (it guards its own body and records
+        failures), so this listener is safe on the publication thread; the
+        bus would isolate it regardless.
+        """
+        if str(event.get("type", "")) in ("alert", "alert_updated"):
+            self.incidents.observe_alert(event.get("data") or {})
 
     # -- optional-module resilience ----------------------------------------------
 
@@ -427,9 +532,79 @@ class SpectraEngine:
 
     # -- training ------------------------------------------------------------------
 
-    def train_from_pcap(self, path: str, contamination: float | None = None) -> dict:
-        """Train the detector on the benign baseline contained in a PCAP."""
-        return self.training.train_from_pcap(path, contamination=contamination)
+    def train_from_pcap(self, path: str, contamination: float | None = None,
+                        *, activate: bool = True,
+                        actor: str | None = None) -> dict:
+        """Train the detector on the benign baseline contained in a PCAP.
+
+        With persistence the fit registers a registry CANDIDATE; the audited
+        register -> validate -> activate chain runs when ``activate`` is set
+        (the default), so training keeps its contract of an immediately
+        usable session model.  See TrainingService.train_from_pcap.
+        """
+        return self.training.train_from_pcap(
+            path, contamination=contamination, activate=activate,
+            actor=actor)
+
+    # -- model registry (Prompt 14) -------------------------------------------------
+
+    def _apply_activation(self, detector: SpectraDetector, row: dict,
+                          action: str) -> None:
+        """Session side effects of a registry activation (injected hook).
+
+        Swaps the live detector, syncs the deployed copy every consumer
+        reads (TEE enclave, compliance certificates, legacy loads - on a
+        deployed engine ``engine.model_path`` *is* ``config.model_path``, a
+        custom-path engine only ever writes its own file), re-measures TEE,
+        repoints the evasion watch at the new contamination, updates the
+        status document and emits the ``model`` event.  Any failure
+        propagates to the registry, which records it and reports
+        ``applied: false`` instead of rolling back the promotion.
+        """
+        src = self.registry.artifact_path(row)
+        target = os.path.abspath(self.model_path)
+        if os.path.abspath(src) != target:
+            tmp = f"{target}.activating"
+            try:
+                with open(src, "rb") as fin, open(tmp, "wb") as fout:
+                    for chunk in iter(lambda: fin.read(1 << 20), b""):
+                        fout.write(chunk)
+                os.replace(tmp, target)
+            except Exception:
+                try:
+                    os.remove(tmp)
+                except OSError:
+                    pass
+                raise
+        self.model.detector = detector
+        self.status["model_trained"] = detector.is_trained
+        self.alerts.update_contamination(
+            float(getattr(detector, "contamination", 0.02)))
+        self.model.remeasure_tee()
+        self.events.emit({"type": "model", "data": detector.info()})
+
+    def adopt_model(self) -> dict | None:
+        """Registry adoption, called at app import (see ``services.model_registry``).
+
+        Empty registry + a trained deployed model -> register, validate and
+        activate that artifact as the first ACTIVE row (audited with
+        ``adopted: true``), giving an existing deployment an explicit
+        lineage without re-training.  Deployed engines only: an engine built
+        with a custom model_path never adopts (that path is an explicit
+        override, not the deployment).
+        """
+        if not getattr(self, "_registry_authoritative", False):
+            return None
+        if not self.registry.enabled or self.registry.count() > 0:
+            return None
+        if not (os.path.isfile(self.model_path)
+                and self.model.detector.is_trained):
+            return None
+        row = self.registry.adopt(self.model_path)
+        if row is not None:
+            log.info("adopted deployed model as %s (%s)",
+                     row["model_id"], row["status"])
+        return row
 
     # -- Module 3: adversarial resilience ------------------------------------------
 
@@ -576,6 +751,118 @@ class SpectraEngine:
         """Secure aggregation: explicit deltas or the live window's means."""
         return self.model.tee_federate(deltas=deltas,
                                        shareholders=shareholders, seed=seed)
+
+    # -- advanced-module capability status -----------------------------------
+
+    def capability_status(self) -> dict:
+        """Live availability per advanced module; every probe is guarded.
+
+        A failing probe reports ``available: false`` and counts a failure -
+        transparency must never become a new failure path for its callers
+        (``/api/capabilities`` and the investigation bundle).
+        """
+        counts = self.failures.counts
+        out: dict[str, dict] = {}
+
+        def probe(key: str, fn: Callable[[], dict]) -> None:
+            components = _CAPABILITY_FAILURE_COMPONENTS.get(key, (key,))
+            try:
+                info = fn() or {}
+                out[key] = {"available": bool(info.get("available", True)),
+                            "detail": str(info.get("detail") or "")}
+            except Exception as exc:  # noqa: BLE001 - probe must not raise
+                self.failures.record(components[0] if components else key, exc)
+                out[key] = {"available": False,
+                            "detail": f"probe failed: {type(exc).__name__}"}
+
+        def edge_probe() -> dict:
+            report = self.edge_report()
+            return {"available": True,
+                    "detail": f"link {report['link']['link']}, micro "
+                              f"trained={report['micro']['trained']}"}
+
+        def deployment_probe() -> dict:
+            report = self.edge_report()
+            return {"available": True,
+                    "detail": f"{len(report['deployments'])} simulated "
+                              f"deployment(s) registered (no MEC/5G "
+                              f"control plane)"}
+
+        def adversarial_probe() -> dict:
+            trained = bool(self.model.info().get("trained"))
+            watch = self.alerts.evasion_report()
+            state = "active" if watch.get("available") else "warming up"
+            return {"available": trained,
+                    "detail": f"evasion watch {state}; "
+                              + ("model trained" if trained
+                                 else "needs a trained model")}
+
+        def twin_probe() -> dict:
+            topology = build_topology(self.correlation.graph, min_flows=1)
+            return {"available": True,
+                    "detail": f"local simulator over "
+                              f"{len(topology.get('nodes') or [])} "
+                              f"topology node(s)"}
+
+        def intel_probe() -> dict:
+            svc = self.detection.intel
+            if svc is None:
+                return {"available": False,
+                        "detail": "intel service unavailable (load failure)"}
+            st = svc.status()
+            if st.get("error"):
+                return {"available": False,
+                        "detail": f"list load error: {st['error']}"}
+            n = int(st.get("counts", {}).get("total", 0))
+            return {"available": n > 0,
+                    "detail": f"{n} entr{'y' if n == 1 else 'ies'} loaded "
+                              f"from {st.get('directory')}"
+                              if n else "no list files - intel is off"}
+
+        # evidence producers on the detection path
+        probe("pqc", lambda: {
+            "available": True,
+            "detail": f"{self.pqc.summary().get('endpoints', 0)} "
+                      f"endpoints assessed",
+        })
+        probe("bio", lambda: {
+            "available": bool(self.bio.available),
+            "detail": "trained" if self.bio.available
+                      else "not trained - run 'spectra train'",
+        })
+        probe("edge", edge_probe)
+        probe("edge_deployment", deployment_probe)
+        # context providers off the detection path
+        probe("correlation", lambda: {
+            "available": True,
+            "detail": (lambda s: f"{s.get('nodes', 0)} nodes / "
+                                 f"{s.get('edges', 0)} edges observed")(
+                self.correlation.summary()),
+        })
+        probe("audit", lambda: {
+            "available": True,
+            "detail": f"hash chain at seq "
+                      f"{self.audit_service.head().get('seq', 0)}",
+        })
+        probe("adversarial", adversarial_probe)
+        probe("tee", lambda: {
+            "available": self.model.tee is not None,
+            "detail": "local simulated enclave (never hardware-backed)"
+                      if self.model.tee is not None
+                      else "disabled - model artifact unavailable",
+        })
+        probe("federated", lambda: {
+            "available": True,
+            "detail": "simulated parties; secret sharing verified locally",
+        })
+        probe("twin", twin_probe)
+        probe("intel", intel_probe)
+
+        for key, components in _CAPABILITY_FAILURE_COMPONENTS.items():
+            if key in out:
+                out[key]["failures"] = sum(
+                    int(counts.get(component, 0)) for component in components)
+        return out
 
     # -- reporting --------------------------------------------------------------------
 

@@ -64,6 +64,11 @@ class CaptureService:
         self._explicit_stop = False
         self._source: CaptureSource | None = None
         self.pipeline: StreamingPipeline | None = None
+        #: Single-flight for ``start()``: the ``running`` check alone is a
+        #: TOCTOU race across FastAPI's worker threads, and two supervisors
+        #: would share one session/status.  Held only for the opening
+        #: critical section, never for the capture's lifetime.
+        self._start_lock = threading.Lock()
 
     @property
     def running(self) -> bool:
@@ -79,9 +84,28 @@ class CaptureService:
         of inserting a new session row (the import workflow owns that row);
         ``source_label`` is the name shown in status/audit for managed runs,
         so no server path ever leaks into API responses.
+
+        Single-flight: a concurrent start is refused with the same
+        ``CaptureError`` as an already-running capture instead of racing the
+        ``running`` check and spawning a second supervisor thread.
         """
-        if self.running:
+        if not self._start_lock.acquire(blocking=False):
             raise CaptureError("a capture is already running - stop it first")
+        try:
+            if self.running:
+                raise CaptureError(
+                    "a capture is already running - stop it first")
+            return self._open_session(
+                mode, path=path, iface=iface, bpf_filter=bpf_filter,
+                capture_id=capture_id, source_label=source_label)
+        finally:
+            self._start_lock.release()
+
+    def _open_session(self, mode: str, path: str | None = None,
+                      iface: str | None = None, bpf_filter: str = "",
+                      *, capture_id: int | None = None,
+                      source_label: str | None = None) -> dict:
+        """Opening half of :meth:`start` (runs with the start lock held)."""
         source = open_source(mode, path=path, iface=iface, bpf_filter=bpf_filter)
         self._source = source
         self._stop.clear()

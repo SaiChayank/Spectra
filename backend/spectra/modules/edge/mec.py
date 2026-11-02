@@ -22,6 +22,7 @@ import joblib
 import numpy as np
 
 from ...features.extractor import FEATURE_NAMES
+from ...ml.integrity import digest_ok, write_digest
 
 EDGE_VERSION = 1
 MICRO_FEATURES = (
@@ -242,9 +243,12 @@ class EdgeSystem:
             "link": self.link,
             "deployments": self.deployments,
         }, path)
+        write_digest(path)
 
     def load(self, path: str) -> bool:
         if not os.path.isfile(path):
+            return False
+        if not digest_ok(path):
             return False
         blob = joblib.load(path)
         if blob.get("version") != EDGE_VERSION:

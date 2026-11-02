@@ -16,9 +16,13 @@ Durability rules by table:
 
 * ``flows`` / ``events``  - batched (see above)
 * ``captures`` / ``model_runs`` - immediate (ids must exist right away)
+* ``model_registry``         - immediate (audited status transitions; one
+                               row per immutable artifact)
 * ``audit_log``           - immediate (hash-chain integrity) and never pruned
 * ``users`` / ``sessions`` - immediate (login must observe its own row now)
 * ``incidents`` / ``incident_notes`` - immediate (triage writes are rare)
+* ``alerts``              - immediate (verdict writes are rare; an alert must
+                            be durable the moment it is streamed)
 * ``schema_migrations``   - written by the migration runner only
 """
 
@@ -29,12 +33,14 @@ import logging
 import time
 
 from .db import (
+    AlertRepository,
     AuditRepository,
     CaptureRepository,
     Database,
     EventRepository,
     FlowRepository,
     IncidentRepository,
+    ModelRegistryRepository,
     ModelRunRepository,
     RetentionPolicy,
     SessionRepository,
@@ -87,10 +93,12 @@ class Store:
                                             max_rows=event_max_rows)
         self._captures = CaptureRepository(self._db)
         self._runs = ModelRunRepository(self._db)
+        self._models = ModelRegistryRepository(self._db)
         self._audit = AuditRepository(self._db)
         self._users = UserRepository(self._db)
         self._sessions = SessionRepository(self._db)
         self._incidents = IncidentRepository(self._db)
+        self._alerts = AlertRepository(self._db)
         self.retention = retention if retention is not None else RetentionPolicy()
         self._lock = self._db.lock           # compat: historical attribute
         # Startup sweep: close sessions a crashed process left open and apply
@@ -186,10 +194,32 @@ class Store:
 
     def query_flows(self, limit: int = 100, offset: int = 0,
                     anomaly_only: bool = False, since: float | None = None,
-                    until: float | None = None, sni: str | None = None) -> dict:
+                    until: float | None = None, sni: str | None = None,
+                    proto: str | None = None, src: str | None = None,
+                    dst: str | None = None,
+                    min_score: float | None = None,
+                    max_score: float | None = None,
+                    capture_id: int | None = None) -> dict:
         return self._flows.query(limit=limit, offset=offset,
                                  anomaly_only=anomaly_only, since=since,
-                                 until=until, sni=sni)
+                                 until=until, sni=sni, proto=proto, src=src,
+                                 dst=dst, min_score=min_score,
+                                 max_score=max_score, capture_id=capture_id)
+
+    def related_flows(self, *, flow_ids=(), alert_ids=(), hosts=(), snis=(),
+                      since: float | None = None,
+                      until: float | None = None,
+                      limit: int = 100, offset: int = 0) -> dict:
+        """Flows an incident points at (see FlowRepository.related)."""
+        return self._flows.related(flow_ids=flow_ids, alert_ids=alert_ids,
+                                   hosts=hosts, snis=snis, since=since,
+                                   until=until, limit=limit, offset=offset)
+
+    def search_flows(self, q: str, limit: int = 10, *, endpoint: bool = False,
+                     sni: bool = False, fingerprint: bool = False) -> dict:
+        """Global-search flow hits (see FlowRepository.search)."""
+        return self._flows.search(q, limit=limit, endpoint=endpoint,
+                                  sni=sni, fingerprint=fingerprint)
 
     def detections(self, limit: int = 100, offset: int = 0) -> dict:
         return self._flows.query(limit=limit, offset=offset, anomaly_only=True)
@@ -285,8 +315,21 @@ class Store:
         return dict(row) if row else None
 
     def list_incidents(self, limit: int = 50, offset: int = 0,
-                       status: str | None = None) -> dict:
-        return self._incidents.list(limit=limit, offset=offset, status=status)
+                       status: str | None = None,
+                       severity: str | None = None,
+                       threat_type: str | None = None,
+                       since: float | None = None,
+                       until: float | None = None) -> dict:
+        return self._incidents.list(limit=limit, offset=offset, status=status,
+                                    severity=severity, threat_type=threat_type,
+                                    since=since, until=until)
+
+    def search_incidents(self, q: str, limit: int = 10, *,
+                         exact_id: int | None = None, entity: bool = True,
+                         title: bool = True) -> dict:
+        """Global-search incident hits (see IncidentRepository.search)."""
+        return self._incidents.search(q, limit=limit, exact_id=exact_id,
+                                      entity=entity, title=title)
 
     def acknowledge_incident(self, incident_id: int, by: str) -> bool:
         return self._incidents.acknowledge(incident_id, by, now=time.time())
@@ -309,6 +352,102 @@ class Store:
     def incident_note_count(self, incident_id: int) -> int:
         return self._incidents.note_count(incident_id)
 
+    # -- incident layer above alerts (membership, rollups, timeline) -----------
+
+    def transition_incident(self, incident_id: int, from_statuses,
+                            *, status: str, actor: str,
+                            extra: dict | None = None) -> bool:
+        """Guarded status transition; False = not in an allowed source state."""
+        return self._incidents.transition(
+            incident_id, tuple(from_statuses), status=status, actor=actor,
+            now=time.time(), extra=extra)
+
+    def set_incident_aggregates(self, incident_id: int, fields: dict) -> bool:
+        """Persist the correlation rollup fields of one incident."""
+        return self._incidents.set_aggregates(incident_id, fields)
+
+    def link_incident_alert(self, incident_id: int, alert_id: str, *,
+                            source: str, added_by: str,
+                            reason: str = "",
+                            score: float | None = None) -> str:
+        """Attach an alert: ``linked`` | ``exists`` (idempotent) | ``claimed``."""
+        return self._incidents.link_alert(
+            incident_id, alert_id, added_at=time.time(), added_by=added_by,
+            source=source, reason=reason, score=score)
+
+    def incident_for_alert(self, alert_id: str) -> int | None:
+        return self._incidents.incident_for_alert(alert_id)
+
+    def incident_alert_ids(self, incident_id: int) -> list[str]:
+        return self._incidents.incident_alert_ids(incident_id)
+
+    def get_incident_alerts(self, incident_id: int) -> list[dict]:
+        return self._incidents.incident_alerts(incident_id)
+
+    def unassigned_alerts(self, limit: int = 500) -> list[dict]:
+        return self._incidents.unassigned_alerts(limit=limit)
+
+    def active_incidents(self, start: float, end: float,
+                         limit: int = 50) -> list[dict]:
+        return self._incidents.active_incidents(start, end, limit=limit)
+
+    def add_incident_event(self, incident_id: int, kind: str, actor: str,
+                           data: dict | None = None,
+                           ts: float | None = None) -> int:
+        return self._incidents.add_event(
+            incident_id, time.time() if ts is None else ts, kind, actor, data)
+
+    def incident_events(self, incident_id: int) -> list[dict]:
+        return self._incidents.events(incident_id)
+
+    # -- analyst alerts (threat-classification layer) ---------------------------
+
+    def insert_alert(self, alert: dict) -> None:
+        """Persist one newly raised alert (immediate single commit)."""
+        self._alerts.insert(alert)
+
+    def get_alert(self, alert_id: str) -> dict | None:
+        return self._alerts.get(alert_id)
+
+    def list_alerts(self, limit: int = 50, offset: int = 0,
+                    status: str | None = None,
+                    threat_type: str | None = None,
+                    severity: str | None = None,
+                    protocol: str | None = None,
+                    source: str | None = None,
+                    destination: str | None = None,
+                    since: float | None = None,
+                    until: float | None = None,
+                    min_score: float | None = None,
+                    max_score: float | None = None) -> dict:
+        return self._alerts.list(limit=limit, offset=offset, status=status,
+                                 threat_type=threat_type, severity=severity,
+                                 protocol=protocol, source=source,
+                                 destination=destination, since=since,
+                                 until=until, min_score=min_score,
+                                 max_score=max_score)
+
+    def search_alerts(self, q: str, limit: int = 10, *, alert_id: bool = False,
+                      endpoint: bool = False, text: bool = False,
+                      model: bool = False) -> dict:
+        """Global-search alert hits (see AlertRepository.search)."""
+        return self._alerts.search(q, limit=limit, alert_id=alert_id,
+                                   endpoint=endpoint, text=text, model=model)
+
+    def alert_models(self, q: str, limit: int = 20) -> list[dict]:
+        """Distinct scoring identities whose id/version matches ``q``."""
+        return self._alerts.models(q, limit)
+
+    def update_alert_group(self, alert_id: str, **fields) -> bool:
+        """Persist a grouped re-sighting of an existing alert."""
+        return self._alerts.update_group(alert_id, **fields)
+
+    def acknowledge_alert(self, alert_id: str) -> bool:
+        return self._alerts.acknowledge(alert_id, now=time.time())
+
+    def resolve_alert(self, alert_id: str) -> bool:
+        return self._alerts.resolve(alert_id, now=time.time())
+
     # -- system events --------------------------------------------------------
 
     def record_event(self, type: str, data: dict, ts: float | None = None,
@@ -319,8 +458,10 @@ class Store:
             time.time() if ts is None else ts, type, payload, capture_id)
 
     def query_events(self, limit: int = 100, offset: int = 0,
-                     type: str | None = None) -> dict:
-        return self._events_repo.query(limit=limit, offset=offset, type=type)
+                     type: str | None = None, since: float | None = None,
+                     until: float | None = None) -> dict:
+        return self._events_repo.query(limit=limit, offset=offset, type=type,
+                                       since=since, until=until)
 
     # -- model lineage --------------------------------------------------------
 
@@ -328,8 +469,46 @@ class Store:
                       metrics: dict) -> int:
         return self._runs.add(pcap, n_train, contamination, metrics)
 
-    def model_runs(self, limit: int = 20) -> list[dict]:
-        return self._runs.recent(limit)
+    def model_runs(self, limit: int = 20, offset: int = 0) -> list[dict]:
+        return self._runs.recent(limit, offset=offset)
+
+    def model_run_count(self) -> int:
+        return self._runs.count()
+
+    # -- model registry (Prompt 14: lineage + single ACTIVE) ------------------
+
+    def model_registry_add(self, fields: dict) -> dict:
+        """Insert one CANDIDATE row for a freshly saved artifact."""
+        return self._models.add(fields)
+
+    def model_registry_get(self, model_id: str) -> dict | None:
+        return self._models.get(model_id)
+
+    def model_registry_list(self, limit: int = 100,
+                             offset: int = 0) -> dict:
+        return self._models.list(limit, offset=offset)
+
+    def model_registry_count(self) -> int:
+        return self._models.count()
+
+    def model_registry_active(self) -> dict | None:
+        return self._models.active()
+
+    def model_registry_previous_active(self, before_ts: float) -> dict | None:
+        return self._models.previous_active(before_ts)
+
+    def model_registry_set_status(self, model_id: str, status: str, *,
+                                  metrics: dict | None = None,
+                                  error: str | None = None,
+                                  clear_error: bool = False,
+                                  retired_at: float | None = None) -> dict | None:
+        return self._models.set_status(
+            model_id, status, metrics=metrics, error=error,
+            clear_error=clear_error, retired_at=retired_at)
+
+    def model_registry_activate(self, model_id: str, now: float) -> dict:
+        """Atomic retire-current + promote-target (single ACTIVE)."""
+        return self._models.activate(model_id, now)
 
     # -- Module 5: audit log (immediate, never pruned) ------------------------
 
@@ -343,15 +522,26 @@ class Store:
     def audit_head(self) -> dict | None:
         return self._audit.head()
 
-    def audit_count(self) -> int:
-        return self._audit.count()
+    def audit_count(self, kind: str | None = None, *,
+                    kind_prefix: str | None = None,
+                    since: float | None = None,
+                    until: float | None = None,
+                    actor: str | None = None) -> int:
+        return self._audit.count(kind, kind_prefix=kind_prefix, since=since,
+                                 until=until, actor=actor)
 
     def audit_get(self, seq: int) -> dict | None:
         return self._audit.get(seq)
 
     def audit_entries(self, limit: int = 50, offset: int = 0,
-                      kind: str | None = None) -> list[dict]:
-        return self._audit.entries(limit=limit, offset=offset, kind=kind)
+                      kind: str | None = None, *,
+                      kind_prefix: str | None = None,
+                      since: float | None = None,
+                      until: float | None = None,
+                      actor: str | None = None) -> list[dict]:
+        return self._audit.entries(limit=limit, offset=offset, kind=kind,
+                                   kind_prefix=kind_prefix, since=since,
+                                   until=until, actor=actor)
 
     def audit_range(self, start: int, end: int) -> list[dict]:
         return self._audit.range(start, end)
@@ -379,6 +569,7 @@ class Store:
 
     def write_stats(self) -> dict:
         """Batching/commit telemetry (throughput + debugging aid)."""
+        latency = self._db.write_latency.summary()
         return {
             "commits": self._db.commit_count,
             "flushes": self._buffer.flush_count,
@@ -387,7 +578,17 @@ class Store:
             "flow_rows": self._flows.rows,
             "event_rows": self._events_repo.rows,
             "schema_version": self.schema_version,
+            # health-layer write telemetry (recent ring + lifetime errors)
+            "write_p50_ms": latency["p50_ms"],
+            "write_p95_ms": latency["p95_ms"],
+            "write_samples": latency["samples"],
+            "write_total": latency["total_samples"],
+            "errors": self._db.error_count,
         }
+
+    def incident_count(self) -> int:
+        """Total incidents on disk (health/rate telemetry)."""
+        return self._incidents.count()
 
     def close(self) -> None:
         with self._db.lock:

@@ -30,6 +30,25 @@ def row_to_flow(row: dict) -> dict:
     return out
 
 
+def _like(value: str) -> str:
+    """Escape LIKE wildcards in user input (pair with ``ESCAPE '\\'``)."""
+    return (str(value).replace("\\", "\\\\")
+            .replace("%", "\\%").replace("_", "\\_"))
+
+
+def _endpoint_where(column: str, value: str) -> tuple[str, list]:
+    """``col = value OR col LIKE 'value:%'`` - exact endpoint or host:port.
+
+    ``src``/``dst`` (and the alert endpoint columns) store ``ip:port``; an
+    analyst filtering by ``10.0.0.1`` means that host on *any* port, while
+    ``10.0.0.1:443`` means that exact endpoint.  The prefix cannot leak to a
+    neighbouring address (``10.0.0.1`` never matches ``10.0.0.10:80``)
+    because it is anchored by the literal ``:``.
+    """
+    return (f"({column} = ? OR {column} LIKE ? ESCAPE '\\')",
+            [value, f"{_like(value)}:%"])
+
+
 class FlowRepository:
     """Scored flow rows (detections are flagged rows), bounded by a row cap."""
 
@@ -114,7 +133,10 @@ class FlowRepository:
 
     def query(self, limit: int = 100, offset: int = 0, anomaly_only: bool = False,
               since: float | None = None, until: float | None = None,
-              sni: str | None = None) -> dict:
+              sni: str | None = None, proto: str | None = None,
+              src: str | None = None, dst: str | None = None,
+              min_score: float | None = None, max_score: float | None = None,
+              capture_id: int | None = None) -> dict:
         self._buffer.flush_if_pending()   # read-your-writes
         where, params = [], []
         if anomaly_only:
@@ -126,8 +148,28 @@ class FlowRepository:
             where.append("ts <= ?")
             params.append(until)
         if sni:
-            where.append("sni LIKE ?")
-            params.append(f"%{sni}%")
+            where.append("sni LIKE ? ESCAPE '\\'")
+            params.append(f"%{_like(sni)}%")
+        if proto:
+            where.append("proto = ?")
+            params.append(proto)
+        if src:
+            clause, values = _endpoint_where("src", src)
+            where.append(clause)
+            params.extend(values)
+        if dst:
+            clause, values = _endpoint_where("dst", dst)
+            where.append(clause)
+            params.extend(values)
+        if min_score is not None:
+            where.append("score >= ?")
+            params.append(min_score)
+        if max_score is not None:
+            where.append("score <= ?")
+            params.append(max_score)
+        if capture_id is not None:
+            where.append("capture_id = ?")
+            params.append(capture_id)
         clause = f"WHERE {' AND '.join(where)}" if where else ""
         limit = min(max(1, limit), 1000)
         offset = max(0, offset)
@@ -139,6 +181,108 @@ class FlowRepository:
             f"SELECT COUNT(*) AS n FROM flows {clause}", params)[0]["n"])
         return {"count": total, "offset": offset,
                 "items": [row_to_flow(r) for r in rows]}
+
+    def related(self, *, flow_ids=(), alert_ids=(), hosts=(), snis=(),
+                since: float | None = None, until: float | None = None,
+                limit: int = 100, offset: int = 0) -> dict:
+        """Flows an incident points at: direct links, or endpoints/SNI in window.
+
+        Three bounded branches OR'd together - ``id IN (...)`` (the
+        incident's detection flow), the rows that produced the member
+        alerts (``alert_id`` rides in the record JSON, not a column - the
+        exact ``json.dumps`` serialization is matched, see migration v7),
+        and ``ts BETWEEN ... AND (host match OR SNI match)`` (the activity
+        around them).  Callers cap the input collections so the parameter
+        count stays bounded; with no anchors at all the page is empty
+        instead of scanning the table.
+        """
+        self._buffer.flush_if_pending()
+        branches: list[str] = []
+        params: list = []
+        if flow_ids:
+            ids = [int(f) for f in flow_ids]
+            branches.append(f"id IN ({','.join('?' * len(ids))})")
+            params.extend(ids)
+        if alert_ids:
+            # One LIKE per member against the record JSON: a flow row stores
+            # exactly one alert id, so the separator-exact pattern cannot
+            # collide with another field's value.
+            clauses = []
+            for member in alert_ids:
+                clauses.append("record LIKE ? ESCAPE '\\'")
+                params.append(f'%"alert_id": "{_like(str(member))}"%')
+            branches.append(f"({' OR '.join(clauses)})")
+        # Anchor group (hosts + SNI) keeps its params separate: in the SQL
+        # the window bounds precede the anchors, so they must too.
+        anchor_clauses: list[str] = []
+        anchor_params: list = []
+        for host in hosts:
+            for column in ("src", "dst"):
+                clause, values = _endpoint_where(column, str(host))
+                anchor_clauses.append(clause)
+                anchor_params.extend(values)
+        for sni in snis:
+            anchor_clauses.append("sni = ?")
+            anchor_params.append(str(sni))
+        if anchor_clauses:
+            window: list[str] = []
+            window_params: list = []
+            if since is not None:
+                window.append("ts >= ?")
+                window_params.append(since)
+            if until is not None:
+                window.append("ts <= ?")
+                window_params.append(until)
+            window.append(f"({' OR '.join(anchor_clauses)})")
+            branches.append(f"({' AND '.join(window)})")
+            params.extend(window_params)
+            params.extend(anchor_params)
+        if not branches:
+            return {"count": 0, "offset": max(0, offset), "items": []}
+        clause = f"WHERE ({' OR '.join(branches)})"
+        limit = min(max(1, limit), 1000)
+        offset = max(0, offset)
+        rows = self._db.query(
+            f"SELECT * FROM flows {clause} ORDER BY id DESC LIMIT ? OFFSET ?",
+            (*params, limit, offset),
+        )
+        total = int(self._db.query(
+            f"SELECT COUNT(*) AS n FROM flows {clause}", params)[0]["n"])
+        return {"count": total, "offset": offset,
+                "items": [row_to_flow(r) for r in rows]}
+
+    def search(self, q: str, limit: int = 10, *, endpoint: bool = False,
+               sni: bool = False, fingerprint: bool = False) -> dict:
+        """Global-search hits over one row: OR of the requested matchers.
+
+        Flags come from the query classifier (spectra.entity_search) so the
+        repository never interprets input itself; with no flag the answer is
+        an empty page, never a full scan.  Bound: ``limit`` <= 100 rows.
+        """
+        clauses, params = [], []
+        if endpoint:
+            for column in ("src", "dst"):
+                clause, values = _endpoint_where(column, q)
+                clauses.append(clause)
+                params.extend(values)
+        if sni:
+            clauses.append("sni LIKE ? ESCAPE '\\'")
+            params.append(f"%{_like(q)}%")
+        if fingerprint:
+            for column in ("ja3", "ja4"):
+                clauses.append(f"{column} LIKE ? ESCAPE '\\'")
+                params.append(f"{_like(q)}%")
+        if not clauses:
+            return {"count": 0, "items": []}
+        where = f"WHERE {' OR '.join(clauses)}"
+        limit = min(max(1, limit), 100)
+        rows = self._db.query(
+            f"SELECT * FROM flows {where} ORDER BY id DESC LIMIT ?",
+            (*params, limit),
+        )
+        total = int(self._db.query(
+            f"SELECT COUNT(*) AS n FROM flows {where}", params)[0]["n"])
+        return {"count": total, "items": [row_to_flow(r) for r in rows]}
 
     def stats(self) -> dict:
         self._buffer.flush_if_pending()
@@ -330,10 +474,13 @@ class ModelRunRepository:
             self._db.commit()
             return int(cur.lastrowid)
 
-    def recent(self, limit: int = 20) -> list[dict]:
+    def count(self) -> int:
+        return int(self._db.query("SELECT COUNT(*) AS n FROM model_runs")[0]["n"])
+
+    def recent(self, limit: int = 20, offset: int = 0) -> list[dict]:
         return self._db.query(
-            "SELECT * FROM model_runs ORDER BY id DESC LIMIT ?",
-            (min(limit, 200),),
+            "SELECT * FROM model_runs ORDER BY id DESC LIMIT ? OFFSET ?",
+            (min(max(1, limit), 200), max(0, offset)),
         )
 
 
@@ -367,20 +514,47 @@ class AuditRepository:
             "ORDER BY seq DESC LIMIT 1")
         return rows[0] if rows else None
 
-    def count(self) -> int:
-        return int(self._db.query("SELECT COUNT(*) AS n FROM audit_log")[0]["n"])
-
     def get(self, seq: int) -> dict | None:
         rows = self._db.query("SELECT * FROM audit_log WHERE seq = ?", (seq,))
         return rows[0] if rows else None
 
-    def entries(self, limit: int = 50, offset: int = 0,
-                kind: str | None = None) -> list[dict]:
+    def _where(self, kind: str | None = None, *,
+               kind_prefix: str | None = None, since: float | None = None,
+               until: float | None = None,
+               actor: str | None = None) -> tuple[str, list]:
+        """Shared WHERE builder for count + entries (same filters both)."""
         where, params = [], []
         if kind:
             where.append("kind = ?")
             params.append(kind)
-        clause = f"WHERE {' AND '.join(where)}" if where else ""
+        if kind_prefix:
+            where.append("kind LIKE ? ESCAPE '\\'")
+            params.append(f"{_like(kind_prefix)}%")
+        if since is not None:
+            where.append("ts >= ?")
+            params.append(since)
+        if until is not None:
+            where.append("ts <= ?")
+            params.append(until)
+        if actor:
+            where.append("actor = ?")
+            params.append(actor)
+        return (f"WHERE {' AND '.join(where)}" if where else "", params)
+
+    def count(self, kind: str | None = None, *, kind_prefix: str | None = None,
+              since: float | None = None, until: float | None = None,
+              actor: str | None = None) -> int:
+        clause, params = self._where(kind, kind_prefix=kind_prefix,
+                                     since=since, until=until, actor=actor)
+        return int(self._db.query(
+            f"SELECT COUNT(*) AS n FROM audit_log {clause}", params)[0]["n"])
+
+    def entries(self, limit: int = 50, offset: int = 0,
+                kind: str | None = None, *, kind_prefix: str | None = None,
+                since: float | None = None, until: float | None = None,
+                actor: str | None = None) -> list[dict]:
+        clause, params = self._where(kind, kind_prefix=kind_prefix,
+                                     since=since, until=until, actor=actor)
         return self._db.query(
             f"SELECT * FROM audit_log {clause} ORDER BY seq DESC LIMIT ? OFFSET ?",
             (*params, min(max(1, limit), 1000), max(0, offset)),
@@ -455,12 +629,19 @@ class EventRepository:
         return 0
 
     def query(self, limit: int = 100, offset: int = 0,
-              type: str | None = None) -> dict:
+              type: str | None = None, since: float | None = None,
+              until: float | None = None) -> dict:
         self._buffer.flush_if_pending()
         where, params = [], []
         if type:
             where.append("type = ?")
             params.append(type)
+        if since is not None:
+            where.append("ts >= ?")
+            params.append(since)
+        if until is not None:
+            where.append("ts <= ?")
+            params.append(until)
         clause = f"WHERE {' AND '.join(where)}" if where else ""
         limit = min(max(1, limit), 1000)
         offset = max(0, offset)
@@ -619,7 +800,27 @@ class SessionRepository:
 
 
 class IncidentRepository:
-    """Incident triage rows + their analyst notes (see services.incidents)."""
+    """Incident triage rows + their analyst notes (see services.incidents).
+
+    The incident layer above alerts keeps two extra relations:
+    ``incident_alerts`` (membership with attribution + correlation reason,
+    one incident per alert) and ``incident_events`` (ordered timeline).
+    Column names of the rollup fields match
+    :func:`spectra.incident_correlation.rollup` one-to-one.
+    """
+
+    #: Incident columns whose values are JSON documents (rows -> objects).
+    JSON_FIELDS = ("affected_entities", "related_graph_nodes",
+                   "model_versions")
+    #: Rollup columns ``set_aggregates`` may write (never status/title).
+    AGGREGATE_COLUMNS = (
+        "summary", "severity", "confidence", "first_seen", "last_seen",
+        "affected_entities", "alert_count", "primary_threat_class",
+        "related_graph_nodes", "model_versions", "evidence_summary",
+    )
+    #: Extra columns a transition may set, per action (never user input).
+    TRANSITION_EXTRA = ("acknowledged_by", "acknowledged_at",
+                        "resolved_by", "resolved_at")
 
     def __init__(self, db: Database):
         self._db = db
@@ -636,17 +837,48 @@ class IncidentRepository:
             self._db.commit()
             return int(cur.lastrowid)
 
+    @staticmethod
+    def hydrate(row: dict) -> dict:
+        """One ``incidents`` row: JSON columns back to objects."""
+        out = dict(row)
+        for field in IncidentRepository.JSON_FIELDS:
+            raw = out.get(field)
+            try:
+                out[field] = json.loads(raw) if raw else []
+            except (TypeError, json.JSONDecodeError):  # pragma: no cover
+                out[field] = []
+        out["alert_count"] = int(out.get("alert_count") or 0)
+        return out
+
     def get(self, incident_id: int) -> dict | None:
         rows = self._db.query("SELECT * FROM incidents WHERE id = ?",
                               (incident_id,))
-        return rows[0] if rows else None
+        return self.hydrate(rows[0]) if rows else None
+
+    def count(self) -> int:
+        """Total incidents (health telemetry: incidents/min rate)."""
+        return int(self._db.query("SELECT COUNT(*) AS n FROM incidents")[0]["n"])
 
     def list(self, limit: int = 50, offset: int = 0,
-             status: str | None = None) -> dict:
+             status: str | None = None, severity: str | None = None,
+             threat_type: str | None = None,
+             since: float | None = None, until: float | None = None) -> dict:
         where, params = [], []
         if status:
             where.append("status = ?")
             params.append(status)
+        if severity:
+            where.append("severity = ?")
+            params.append(severity)
+        if threat_type:
+            where.append("primary_threat_class = ?")
+            params.append(threat_type)
+        if since is not None:
+            where.append("COALESCE(last_seen, created_at) >= ?")
+            params.append(since)
+        if until is not None:
+            where.append("COALESCE(first_seen, created_at) <= ?")
+            params.append(until)
         clause = f"WHERE {' AND '.join(where)}" if where else ""
         limit = min(max(1, limit), 500)
         offset = max(0, offset)
@@ -657,29 +889,98 @@ class IncidentRepository:
         )
         total = int(self._db.query(
             f"SELECT COUNT(*) AS n FROM incidents {clause}", params)[0]["n"])
-        return {"count": total, "offset": offset, "items": rows}
+        return {"count": total, "offset": offset,
+                "items": [self.hydrate(r) for r in rows]}
 
-    def acknowledge(self, incident_id: int, by: str, now: float) -> bool:
-        """OPEN -> ACKNOWLEDGED (guarded: a resolved incident is terminal)."""
+    def search(self, q: str, limit: int = 10, *, exact_id: int | None = None,
+               entity: bool = True, title: bool = True) -> dict:
+        """Global-search hits: exact id, quoted entity element, or text.
+
+        ``affected_entities`` holds bare hosts and domains as JSON strings,
+        so the element match is quote-anchored (``%"10.0.0.1"%``) - a
+        substring match would drag ``10.0.0.10`` in on a search for
+        ``10.0.0.1``.  Bound: ``limit`` <= 100 rows.
+        """
+        clauses, params = [], []
+        if exact_id is not None:
+            clauses.append("id = ?")
+            params.append(exact_id)
+        if entity:
+            clauses.append("affected_entities LIKE ? ESCAPE '\\'")
+            params.append(f'%"{_like(q)}"%')
+        if title:
+            clauses.append("(title LIKE ? ESCAPE '\\' "
+                           "OR primary_threat_class LIKE ? ESCAPE '\\')")
+            params.extend([f"%{_like(q)}%", f"%{_like(q)}%"])
+        if not clauses:
+            return {"count": 0, "items": []}
+        where = f"WHERE {' OR '.join(clauses)}"
+        limit = min(max(1, limit), 100)
+        rows = self._db.query(
+            f"SELECT * FROM incidents {where} ORDER BY id DESC LIMIT ?",
+            (*params, limit),
+        )
+        total = int(self._db.query(
+            f"SELECT COUNT(*) AS n FROM incidents {where}", params)[0]["n"])
+        return {"count": total, "items": [self.hydrate(r) for r in rows]}
+
+    def transition(self, incident_id: int, from_statuses: tuple[str, ...],
+                   *, status: str, actor: str, now: float,
+                   extra: dict | None = None) -> bool:
+        """Compare-and-swap status transition (``WHERE status IN (...)``).
+
+        Returns False when the incident is gone or no longer in
+        ``from_statuses`` - the caller turns that into a 409.  ``extra`` sets
+        the per-action attribution columns and is validated against a
+        whitelist (it is built from literals, never user input).
+        """
+        sets = ["status = ?", "updated_by = ?", "updated_at = ?"]
+        params: list = [status, actor, now]
+        for key, value in (extra or {}).items():
+            if key not in IncidentRepository.TRANSITION_EXTRA:
+                raise StoreError(f"unknown transition column: {key}")
+            sets.append(f"{key} = ?")
+            params.append(value)
+        marks = ",".join("?" * len(from_statuses))
         with self._db.lock:
             cur = self._db.execute(
-                """UPDATE incidents
-                   SET status = 'ACKNOWLEDGED', acknowledged_by = ?,
-                       acknowledged_at = ?
-                   WHERE id = ? AND status = 'OPEN'""",
-                (by, now, incident_id),
+                f"UPDATE incidents SET {', '.join(sets)} "
+                f"WHERE id = ? AND status IN ({marks})",
+                (*params, incident_id, *from_statuses),
             )
             self._db.commit()
             return cur.rowcount > 0
 
+    def acknowledge(self, incident_id: int, by: str, now: float) -> bool:
+        """OPEN -> ACKNOWLEDGED (guarded: a resolved incident is terminal)."""
+        return self.transition(
+            incident_id, ("OPEN",), status="ACKNOWLEDGED", actor=by, now=now,
+            extra={"acknowledged_by": by, "acknowledged_at": now})
+
     def resolve(self, incident_id: int, by: str, now: float) -> bool:
-        """OPEN/ACKNOWLEDGED -> RESOLVED (idempotent guard: stays terminal)."""
+        """Active -> RESOLVED (idempotent guard: terminal states stay put)."""
+        return self.transition(
+            incident_id, ("OPEN", "INVESTIGATING", "ACKNOWLEDGED"),
+            status="RESOLVED", actor=by, now=now,
+            extra={"resolved_by": by, "resolved_at": now})
+
+    def set_aggregates(self, incident_id: int, fields: dict) -> bool:
+        """Write the correlation rollup columns of one incident."""
+        unknown = set(fields) - set(IncidentRepository.AGGREGATE_COLUMNS)
+        if unknown:
+            raise StoreError(f"unknown incident aggregate: {sorted(unknown)}")
+        if not fields:
+            return False
+        encoded = dict(fields)
+        for key in ("affected_entities", "related_graph_nodes",
+                    "model_versions"):
+            if key in encoded:
+                encoded[key] = json.dumps(encoded[key] or [])
+        sets = ", ".join(f"{key} = ?" for key in encoded)
         with self._db.lock:
             cur = self._db.execute(
-                """UPDATE incidents
-                   SET status = 'RESOLVED', resolved_by = ?, resolved_at = ?
-                   WHERE id = ? AND status <> 'RESOLVED'""",
-                (by, now, incident_id),
+                f"UPDATE incidents SET {sets} WHERE id = ?",
+                (*encoded.values(), incident_id),
             )
             self._db.commit()
             return cur.rowcount > 0
@@ -707,3 +1008,526 @@ class IncidentRepository:
             "SELECT COUNT(*) AS n FROM incident_notes WHERE incident_id = ?",
             (incident_id,),
         )[0]["n"])
+
+    # -- the incident layer above alerts (membership + rollups + timeline) -----
+
+    def link_alert(self, incident_id: int, alert_id: str, *,
+                   added_at: float, added_by: str, source: str,
+                   reason: str = "", score: float | None = None) -> str:
+        """Attach an alert; returns ``linked``, ``exists`` or ``claimed``.
+
+        ``exists`` = the alert is already in this incident (idempotent no-op);
+        ``claimed`` = the alert belongs to a *different* incident (single
+        ownership - the caller surfaces that as a conflict).
+        """
+        with self._db.lock:
+            rows = self._db.query(
+                "SELECT incident_id FROM incident_alerts WHERE alert_id = ?",
+                (alert_id,))
+            if rows:
+                owner = int(rows[0]["incident_id"])
+                return "exists" if owner == incident_id else "claimed"
+            self._db.execute(
+                """INSERT INTO incident_alerts
+                   (incident_id, alert_id, added_at, added_by, source,
+                    reason, score)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (incident_id, alert_id, added_at, added_by, source, reason,
+                 score),
+            )
+            self._db.commit()
+            return "linked"
+
+    def incident_for_alert(self, alert_id: str) -> int | None:
+        rows = self._db.query(
+            "SELECT incident_id FROM incident_alerts WHERE alert_id = ?",
+            (alert_id,))
+        return int(rows[0]["incident_id"]) if rows else None
+
+    def incident_alert_ids(self, incident_id: int) -> list[str]:
+        """Member alert ids, oldest link first (stable for sampling)."""
+        return [str(r["alert_id"]) for r in self._db.query(
+            "SELECT alert_id FROM incident_alerts "
+            "WHERE incident_id = ? ORDER BY added_at ASC, alert_id ASC",
+            (incident_id,),
+        )]
+
+    def incident_alerts(self, incident_id: int) -> list[dict]:
+        """Full member alerts (hydrated), newest activity first."""
+        rows = self._db.query(
+            "SELECT a.* FROM alerts a "
+            "JOIN incident_alerts l ON l.alert_id = a.alert_id "
+            "WHERE l.incident_id = ? "
+            "ORDER BY a.last_seen DESC, a.alert_id ASC",
+            (incident_id,),
+        )
+        return [AlertRepository.hydrate(r) for r in rows]
+
+    def unassigned_alerts(self, limit: int = 500) -> list[dict]:
+        """Alerts not yet claimed by any incident (resolved ones excluded)."""
+        rows = self._db.query(
+            "SELECT a.* FROM alerts a "
+            "WHERE a.status <> 'RESOLVED' "
+            "AND NOT EXISTS (SELECT 1 FROM incident_alerts l "
+            "                WHERE l.alert_id = a.alert_id) "
+            "ORDER BY a.last_seen DESC, a.alert_id DESC LIMIT ?",
+            (min(max(1, limit), 500),),
+        )
+        return [AlertRepository.hydrate(r) for r in rows]
+
+    def active_incidents(self, start: float, end: float,
+                         limit: int = 50) -> list[dict]:
+        """Open incidents whose sighting window overlaps ``[start, end]``.
+
+        Detection-only incidents (no member alerts, NULL window) are skipped:
+        there is nothing to correlate an alert against.
+        """
+        rows = self._db.query(
+            "SELECT * FROM incidents "
+            "WHERE status IN ('OPEN','INVESTIGATING','ACKNOWLEDGED') "
+            "AND alert_count > 0 "
+            "AND first_seen <= ? AND last_seen >= ? "
+            "ORDER BY last_seen DESC, id DESC LIMIT ?",
+            (end, start, min(max(1, limit), 200)),
+        )
+        return [self.hydrate(r) for r in rows]
+
+    def add_event(self, incident_id: int, ts: float, kind: str,
+                  actor: str, data: dict | None = None) -> int:
+        with self._db.lock:
+            cur = self._db.execute(
+                "INSERT INTO incident_events "
+                "(incident_id, ts, kind, actor, data) VALUES (?, ?, ?, ?, ?)",
+                (incident_id, ts, kind, actor,
+                 json.dumps(data or {})),
+            )
+            self._db.commit()
+            return int(cur.lastrowid)
+
+    def events(self, incident_id: int) -> list[dict]:
+        rows = self._db.query(
+            "SELECT * FROM incident_events WHERE incident_id = ? "
+            "ORDER BY id ASC",
+            (incident_id,),
+        )
+        out = []
+        for row in rows:
+            event = dict(row)
+            try:
+                event["data"] = json.loads(event.get("data") or "{}")
+            except (TypeError, json.JSONDecodeError):  # pragma: no cover
+                event["data"] = {}
+            out.append(event)
+        return out
+
+
+#: Alert columns whose values are JSON documents (rows -> objects on read).
+ALERT_JSON_FIELDS = ("evidence", "severity_factors", "metadata",
+                     "module_annotations")
+
+
+class AlertRepository:
+    """Analyst alert rows (see services.threat_alerts).
+
+    Column names match :class:`spectra.domain.ThreatAlert` one-to-one, so a
+    hydrated row *is* the alert dict; only the JSON documents are parsed.
+    Writes are immediate single commits — alerts are rare next to flows.
+
+    Growth is bounded by a newest-kept row cap rather than an age policy:
+    grouped alerts dedupe repeats, but the distinct group keys (endpoint
+    pair x threat type) are attacker-influenced, so the table must stay
+    bounded even when every ``SPECTRA_*_RETENTION_DAYS`` policy is off.
+    """
+
+    def __init__(self, db: Database, max_rows: int = 50_000):
+        self._db = db
+        self.max_rows = max(1, int(max_rows))
+        self._rows = self.count()
+
+    _COLUMNS = ("alert_id, flow_id, capture_id, timestamp, first_seen, "
+                "last_seen, updated_at, source, destination, protocol, "
+                "threat_type, anomaly_score, confidence, severity, model_id, "
+                "model_version, evidence, severity_factors, metadata, "
+                "module_annotations, status, occurrences")
+
+    def count(self) -> int:
+        return int(self._db.query("SELECT COUNT(*) AS n FROM alerts")[0]["n"])
+
+    @property
+    def rows(self) -> int:
+        """Locally tracked row count (refreshed by :meth:`resync`)."""
+        return self._rows
+
+    def resync(self) -> None:
+        """Recount after retention or another process changed the table."""
+        self._rows = self.count()
+
+    def _prune(self) -> None:
+        """Row cap: drop the least recently seen rows beyond ``max_rows``."""
+        overflow = self._rows - self.max_rows
+        if overflow <= 0:
+            return
+        with self._db.transaction():
+            self._db.conn.execute(
+                """DELETE FROM alerts WHERE alert_id IN (
+                       SELECT alert_id FROM alerts
+                       ORDER BY last_seen ASC, alert_id ASC LIMIT ?)""",
+                (overflow,),
+            )
+        self._rows = self.count()
+
+    @staticmethod
+    def hydrate(row: dict) -> dict:
+        """One ``alerts`` row: JSON columns back to objects."""
+        out = dict(row)
+        for field in ALERT_JSON_FIELDS:
+            raw = out.get(field)
+            try:
+                out[field] = json.loads(raw) if raw else None
+            except (TypeError, json.JSONDecodeError):  # pragma: no cover
+                out[field] = None
+        out["occurrences"] = int(out.get("occurrences") or 1)
+        return out
+
+    def insert(self, alert: dict) -> None:
+        with self._db.lock:
+            self._db.execute(
+                f"INSERT INTO alerts ({self._COLUMNS}) "
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                (
+                    alert["alert_id"],
+                    alert.get("flow_id"),
+                    alert.get("capture_id"),
+                    float(alert["timestamp"]),
+                    float(alert["first_seen"]),
+                    float(alert["last_seen"]),
+                    float(alert.get("updated_at") or alert["timestamp"]),
+                    alert.get("source") or "",
+                    alert.get("destination") or "",
+                    alert.get("protocol") or "",
+                    alert["threat_type"],
+                    alert.get("anomaly_score"),
+                    float(alert.get("confidence") or 0.0),
+                    alert["severity"],
+                    alert.get("model_id"),
+                    alert.get("model_version"),
+                    json.dumps(alert.get("evidence") or {}),
+                    json.dumps(alert.get("severity_factors") or []),
+                    json.dumps(alert.get("metadata") or {}),
+                    json.dumps(alert.get("module_annotations") or {}),
+                    alert.get("status") or "OPEN",
+                    int(alert.get("occurrences") or 1),
+                ),
+            )
+            self._db.commit()
+            self._rows += 1
+            self._prune()
+
+    def get(self, alert_id: str) -> dict | None:
+        rows = self._db.query("SELECT * FROM alerts WHERE alert_id = ?",
+                              (alert_id,))
+        return self.hydrate(rows[0]) if rows else None
+
+    def list(self, limit: int = 50, offset: int = 0,
+             status: str | None = None,
+             threat_type: str | None = None,
+             severity: str | None = None, protocol: str | None = None,
+             source: str | None = None, destination: str | None = None,
+             since: float | None = None, until: float | None = None,
+             min_score: float | None = None,
+             max_score: float | None = None) -> dict:
+        where, params = [], []
+        if status:
+            where.append("status = ?")
+            params.append(status)
+        if threat_type:
+            where.append("threat_type = ?")
+            params.append(threat_type)
+        if severity:
+            where.append("severity = ?")
+            params.append(severity)
+        if protocol:
+            where.append("protocol = ?")
+            params.append(protocol)
+        if source:
+            clause, values = _endpoint_where("source", source)
+            where.append(clause)
+            params.extend(values)
+        if destination:
+            clause, values = _endpoint_where("destination", destination)
+            where.append(clause)
+            params.extend(values)
+        # Overlap semantics: an alert whose sighting interval intersects
+        # [since, until] belongs to that range (spanning alerts never vanish).
+        if since is not None:
+            where.append("last_seen >= ?")
+            params.append(since)
+        if until is not None:
+            where.append("first_seen <= ?")
+            params.append(until)
+        if min_score is not None:
+            where.append("anomaly_score >= ?")
+            params.append(min_score)
+        if max_score is not None:
+            where.append("anomaly_score <= ?")
+            params.append(max_score)
+        clause = f"WHERE {' AND '.join(where)}" if where else ""
+        limit = min(max(1, limit), 500)
+        offset = max(0, offset)
+        rows = self._db.query(
+            f"SELECT * FROM alerts {clause} "
+            f"ORDER BY last_seen DESC, alert_id DESC LIMIT ? OFFSET ?",
+            (*params, limit, offset),
+        )
+        total = int(self._db.query(
+            f"SELECT COUNT(*) AS n FROM alerts {clause}", params)[0]["n"])
+        return {"count": total, "offset": offset,
+                "items": [self.hydrate(r) for r in rows]}
+
+    def search(self, q: str, limit: int = 10, *, alert_id: bool = False,
+               endpoint: bool = False, text: bool = False,
+               model: bool = False) -> dict:
+        """Global-search hits over one alert: OR of the requested matchers.
+
+        ``text`` covers metadata JSON (SNI/JA3/JA4 live there) and the
+        threat class, so domain and fingerprint queries resolve through it.
+        Bound: ``limit`` <= 100 rows.
+        """
+        clauses, params = [], []
+        if alert_id:
+            clauses.append("(alert_id = ? OR alert_id LIKE ? ESCAPE '\\')")
+            params.extend([q, f"{_like(q)}%"])
+        if endpoint:
+            for column in ("source", "destination"):
+                clause, values = _endpoint_where(column, q)
+                clauses.append(clause)
+                params.extend(values)
+        if text:
+            clauses.append("(metadata LIKE ? ESCAPE '\\' "
+                           "OR threat_type LIKE ? ESCAPE '\\')")
+            params.extend([f"%{_like(q)}%", f"%{_like(q)}%"])
+        if model:
+            clauses.append("model_id LIKE ? ESCAPE '\\'")
+            params.append(f"%{_like(q)}%")
+        if not clauses:
+            return {"count": 0, "items": []}
+        where = f"WHERE {' OR '.join(clauses)}"
+        limit = min(max(1, limit), 100)
+        rows = self._db.query(
+            f"SELECT * FROM alerts {where} "
+            f"ORDER BY last_seen DESC, alert_id DESC LIMIT ?",
+            (*params, limit),
+        )
+        total = int(self._db.query(
+            f"SELECT COUNT(*) AS n FROM alerts {where}", params)[0]["n"])
+        return {"count": total, "items": [self.hydrate(r) for r in rows]}
+
+    def models(self, q: str, limit: int = 20) -> list[dict]:
+        """Distinct ``id@version`` scoring identities matching ``q``."""
+        rows = self._db.query(
+            "SELECT model_id, model_version, COUNT(*) AS alerts "
+            "FROM alerts "
+            "WHERE (model_id LIKE ? ESCAPE '\\' "
+            "       OR model_version LIKE ? ESCAPE '\\') "
+            "AND model_id IS NOT NULL "
+            "GROUP BY model_id, model_version "
+            "ORDER BY alerts DESC LIMIT ?",
+            (f"%{_like(q)}%", f"%{_like(q)}%", min(max(1, limit), 100)),
+        )
+        return [{"id": r["model_id"], "version": r["model_version"],
+                 "alerts": int(r["alerts"])} for r in rows]
+
+    def update_group(self, alert_id: str, *, last_seen: float,
+                     updated_at: float, occurrences: int,
+                     anomaly_score: float | None, severity: str,
+                     severity_factors: list) -> bool:
+        """Persist a grouped re-sighting (newest sighting + re-scored severity)."""
+        with self._db.lock:
+            cur = self._db.execute(
+                """UPDATE alerts
+                   SET last_seen = ?, updated_at = ?, occurrences = ?,
+                       anomaly_score = ?, severity = ?, severity_factors = ?
+                   WHERE alert_id = ?""",
+                (last_seen, updated_at, occurrences, anomaly_score, severity,
+                 json.dumps(severity_factors), alert_id),
+            )
+            self._db.commit()
+            return cur.rowcount > 0
+
+    def acknowledge(self, alert_id: str, now: float) -> bool:
+        """OPEN -> ACKNOWLEDGED (guarded: resolved stays terminal)."""
+        with self._db.lock:
+            cur = self._db.execute(
+                "UPDATE alerts SET status = 'ACKNOWLEDGED', updated_at = ? "
+                "WHERE alert_id = ? AND status = 'OPEN'",
+                (now, alert_id),
+            )
+            self._db.commit()
+            return cur.rowcount > 0
+
+    def resolve(self, alert_id: str, now: float) -> bool:
+        """OPEN/ACKNOWLEDGED -> RESOLVED (terminal)."""
+        with self._db.lock:
+            cur = self._db.execute(
+                "UPDATE alerts SET status = 'RESOLVED', updated_at = ? "
+                "WHERE alert_id = ? AND status <> 'RESOLVED'",
+                (now, alert_id),
+            )
+            self._db.commit()
+            return cur.rowcount > 0
+
+
+class ModelRegistryRepository:
+    """Model registry rows (Prompt 14): artifact lineage + status machine.
+
+    The lifecycle is CANDIDATE -> VALIDATED -> ACTIVE -> RETIRED with FAILED
+    reachable from the validation gate; transitions are validated in the
+    registry service, the invariants here are:
+
+    * **one ACTIVE** - the partial unique index ``idx_models_single_active``
+      rejects a second one, and :meth:`activate` retires the current holder
+      and promotes the target inside one ``BEGIN IMMEDIATE`` transaction so
+      no reader ever sees zero or two active models;
+    * **rollback cursor** - ``last_activated_at`` is written on every
+      promotion; the previous model is the RETIRED row with the greatest
+      value below the current one's.
+    """
+
+    #: Columns whose values are JSON documents (rows -> objects).
+    JSON_FIELDS = ("metrics",)
+
+    def __init__(self, db: Database):
+        self._db = db
+
+    def hydrate(self, row: dict) -> dict:
+        out = dict(row)
+        for key in self.JSON_FIELDS:
+            value = out.get(key)
+            if isinstance(value, str):
+                try:
+                    out[key] = json.loads(value)
+                except (TypeError, ValueError):
+                    out[key] = {}
+        return out
+
+    def add(self, fields: dict) -> dict:
+        columns = (
+            "model_id", "created_at", "source", "artifact",
+            "artifact_sha256", "status", "trained_at", "n_train",
+            "contamination", "n_features", "feature_schema",
+            "model_version", "threshold", "metrics",
+        )
+        unknown = set(fields) - set(columns)
+        if unknown:
+            raise StoreError(f"unknown registry fields: {sorted(unknown)}")
+        values = dict(fields)
+        if isinstance(values.get("metrics"), (dict, list)):
+            values["metrics"] = json.dumps(values["metrics"])
+        with self._db.lock:
+            placeholders = ", ".join("?" * len(columns))
+            cur = self._db.execute(
+                f"INSERT INTO model_registry ({', '.join(columns)}) "
+                f"VALUES ({placeholders})",
+                tuple(values.get(c) for c in columns),
+            )
+            self._db.commit()
+            model_id = str(values["model_id"])
+        row = self.get(model_id)
+        assert row is not None  # just inserted under the same lock
+        _ = cur
+        return row
+
+    def get(self, model_id: str) -> dict | None:
+        rows = self._db.query(
+            "SELECT * FROM model_registry WHERE model_id = ?", (model_id,))
+        return self.hydrate(rows[0]) if rows else None
+
+    def count(self) -> int:
+        return int(self._db.query(
+            "SELECT COUNT(*) AS n FROM model_registry")[0]["n"])
+
+    def list(self, limit: int = 100, offset: int = 0) -> dict:
+        limit = min(max(1, limit), 500)
+        offset = max(0, offset)
+        rows = self._db.query(
+            "SELECT * FROM model_registry "
+            "ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?",
+            (limit, offset),
+        )
+        total = self.count()
+        return {"count": total, "offset": offset,
+                "items": [self.hydrate(r) for r in rows]}
+
+    def active(self) -> dict | None:
+        rows = self._db.query(
+            "SELECT * FROM model_registry WHERE status = 'ACTIVE'")
+        return self.hydrate(rows[0]) if rows else None
+
+    def previous_active(self, before_ts: float) -> dict | None:
+        """The rollback target: RETIRED model activated closest before."""
+        rows = self._db.query(
+            "SELECT * FROM model_registry "
+            "WHERE status = 'RETIRED' AND last_activated_at IS NOT NULL "
+            "AND last_activated_at < ? "
+            "ORDER BY last_activated_at DESC LIMIT 1",
+            (before_ts,),
+        )
+        return self.hydrate(rows[0]) if rows else None
+
+    def set_status(self, model_id: str, status: str, *,
+                   metrics: dict | None = None, error: str | None = None,
+                   clear_error: bool = False,
+                   retired_at: float | None = None) -> dict | None:
+        """Write a non-active status transition (validate / retire)."""
+        sets = ["status = ?"]
+        params: list = [status]
+        if metrics is not None:
+            sets.append("metrics = ?")
+            params.append(json.dumps(metrics))
+        if clear_error:
+            sets.append("error = NULL")
+        if error is not None:
+            sets.append("error = ?")
+            params.append(error)
+        if retired_at is not None:
+            sets.append("retired_at = ?")
+            params.append(retired_at)
+        params.append(model_id)
+        with self._db.lock:
+            cur = self._db.execute(
+                f"UPDATE model_registry SET {', '.join(sets)} "
+                "WHERE model_id = ?",
+                tuple(params),
+            )
+            self._db.commit()
+            if cur.rowcount == 0:
+                return None
+        return self.get(model_id)
+
+    def activate(self, model_id: str, now: float) -> dict:
+        """Retire the current ACTIVE and promote ``model_id`` atomically.
+
+        Both statements run in one ``BEGIN IMMEDIATE`` transaction: concurrent
+        activations serialise on the write lock, and the partial unique index
+        backstops the invariant if the promote's status guard ever misfires
+        (the transaction rolls back and the caller sees a StoreError).
+        """
+        with self._db.transaction():
+            self._db.execute(
+                "UPDATE model_registry SET status = 'RETIRED', retired_at = ? "
+                "WHERE status = 'ACTIVE'",
+                (now,),
+            )
+            cur = self._db.execute(
+                "UPDATE model_registry SET status = 'ACTIVE', "
+                "last_activated_at = ?, retired_at = NULL, "
+                "activated_count = activated_count + 1 "
+                "WHERE model_id = ? AND status IN ('VALIDATED', 'RETIRED')",
+                (now, model_id),
+            )
+            if cur.rowcount != 1:
+                raise StoreError(
+                    f"cannot activate {model_id}: not VALIDATED/RETIRED")
+        row = self.get(model_id)
+        assert row is not None  # updated in the transaction above
+        return row

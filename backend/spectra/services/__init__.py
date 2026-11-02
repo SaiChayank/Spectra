@@ -19,9 +19,12 @@ from .correlation import CorrelationService
 from .detection import DetectionService
 from .events import EventBus, Listener
 from .incidents import IncidentService
+from .investigation import InvestigationService
 from .model import ModelService
+from .model_registry import ModelRegistryService
 from .resilience import FailureTracker
 from .system import SystemService
+from .threat_alerts import ThreatAlertService
 from .training import TrainingService
 
 __all__ = [
@@ -35,8 +38,11 @@ __all__ = [
     "EventBus",
     "FailureTracker",
     "IncidentService",
+    "InvestigationService",
     "Listener",
+    "ModelRegistryService",
     "ModelService",
     "SystemService",
+    "ThreatAlertService",
     "TrainingService",
 ]

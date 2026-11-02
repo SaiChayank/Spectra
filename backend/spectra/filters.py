@@ -27,6 +27,15 @@ class FilterError(ValueError):
     """Raised for an invalid filter expression."""
 
 
+#: Hard bounds for filter compilation.  Expressions arrive over HTTP
+#: (``CaptureRequest.bpf_filter``), so an unbounded string would reach the
+#: tokenizer, and a deeply nested ``not not ...`` chain would recurse the
+#: parser until Python's recursion limit turned a client error into a 500.
+#: Both bounds are far above anything a real capture filter needs.
+MAX_FILTER_LENGTH = 1024
+MAX_FILTER_DEPTH = 32
+
+
 Predicate = Callable[[Packet], bool]
 
 _COMBINATORS = {"and", "or"}
@@ -110,6 +119,7 @@ class _Parser:
     def __init__(self, tokens: list[_Token]):
         self.tokens = tokens
         self.pos = 0
+        self.depth = 0
 
     def peek(self) -> _Token | None:
         return self.tokens[self.pos] if self.pos < len(self.tokens) else None
@@ -155,8 +165,15 @@ class _Parser:
 
     def parse_not(self) -> Predicate:
         if self.peek() and self.peek().kind == "not":
+            if self.depth >= MAX_FILTER_DEPTH:
+                raise FilterError(
+                    f"filter nested deeper than {MAX_FILTER_DEPTH} negations")
             self.next()
-            return _not(self.parse_not())
+            self.depth += 1
+            try:
+                return _not(self.parse_not())
+            finally:
+                self.depth -= 1
         return self.parse_atom()
 
     def parse_atom(self) -> Predicate:
@@ -324,10 +341,20 @@ def _port_pred(lo: int, hi: int, direction: str | None) -> Predicate:
 
 
 def compile_filter(expr: str) -> Predicate:
-    """Compile a filter expression into a packet predicate."""
+    """Compile a filter expression into a packet predicate.
+
+    Raises :class:`FilterError` (a ``ValueError``) for anything invalid,
+    including expressions past :data:`MAX_FILTER_LENGTH` or nested past
+    :data:`MAX_FILTER_DEPTH`; callers already translate ``ValueError`` into
+    their domain error (``CaptureError`` -> HTTP 400).
+    """
     expr = (expr or "").strip()
     if not expr:
         return lambda pkt: True
+    if len(expr) > MAX_FILTER_LENGTH:
+        raise FilterError(
+            f"filter expression too long "
+            f"({len(expr)} > {MAX_FILTER_LENGTH} characters)")
     tokens = _tokenize(expr)
     if not tokens:
         return lambda pkt: True

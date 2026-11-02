@@ -1,4 +1,5 @@
-"""Model routes: info, training, drift/evasion/robustness analysis.
+"""Model routes: info, training, drift/evasion/robustness analysis + the
+model registry (Prompt 14: candidates, validation gate, activate/rollback).
 
 PCAP-consuming routes reference managed captures (``capture_id``), never a
 server filesystem path - see :func:`spectra.api.routers.capture_pcap_path`.
@@ -6,23 +7,36 @@ server filesystem path - see :func:`spectra.api.routers.capture_pcap_path`.
 
 from __future__ import annotations
 
+import logging
+import os
+from contextlib import contextmanager
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 
 from ...capture import CaptureError
+from ...services.model import AnalysisBusy
+from ...services.model_registry import RegistryError
+from ...tools import FlowBudgetError
 from ..runtime import engine
 from ..security import require
 from . import capture_pcap_path
 
-#: Info is any signed-in role; drift/evasion/robustness are investigation
-#: probes (ANALYST+); training is ADMIN (``model:manage`` - activate/rollback
-#: will ride the same permission when a model registry lands).
+log = logging.getLogger("spectra.api")
+
+#: Info + registry reads are any signed-in role; drift/evasion/robustness are
+#: investigation probes (ANALYST+); training and every registry transition
+#: (validate/activate/retire/rollback) are ADMIN (``model:manage``).
 router = APIRouter(dependencies=[Depends(require("read"))])
 
 
 class TrainRequest(BaseModel):
     capture_id: int = Field(ge=1)
     contamination: float = Field(default=0.02, gt=0.0, lt=1.0)
+    #: Register+validate+activate (default: training's product contract is
+    #: an immediately usable model).  ``false`` registers a CANDIDATE only -
+    #: the session detector stays untouched until an explicit activation.
+    activate: bool = True
 
 
 class RobustnessRequest(BaseModel):
@@ -36,18 +50,68 @@ def model_info() -> dict:
     return engine.model.info()
 
 
+@router.get("/api/model/intel")
+def model_intel_status() -> dict:
+    """Local threat-intel status: list counts, provenance, load failures.
+
+    Read-only by design: list files are maintained on disk by the
+    operator (spectra intel load / drop files in data/intel/); the API
+    never accepts an upload or a path.
+    """
+    intel = getattr(engine.detection, "intel", None)
+    if intel is None:
+        return {"available": False, "directory": None, "counts": {},
+                "sources": [], "loaded_at": None,
+                "error": "intel service unavailable", "failures": -1}
+    return intel.status()
+
+
+@router.get("/api/model/eval")
+def model_eval_list() -> dict:
+    """Stored evaluation reports (newest first), summary rows only.
+
+    Read-only: reports are produced offline by ``spectra eval run`` and
+    live on disk (<data_dir>/eval/); this route lists, it never evaluates.
+    """
+    from ...eval.store import list_reports
+    return list_reports()
+
+
+@router.get("/api/model/eval/{name}")
+def model_eval_get(name: str) -> dict:
+    """One full evaluation report (metrics + caveats) by stored name."""
+    from ...eval.store import ReportStoreError, load
+    try:
+        return load(name)
+    except ReportStoreError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from None
+
+
 @router.post("/api/model/train",
              dependencies=[Depends(require("model:manage"))])
-def model_train(req: TrainRequest) -> dict:
-    """Train the detector on a stored capture's benign baseline."""
+def model_train(req: TrainRequest,
+                principal: dict = Depends(require("model:manage"))) -> dict:
+    """Train the detector on a stored capture's benign baseline.
+
+    Registers a registry CANDIDATE; with ``activate`` (default true) the
+    audited validate -> activate chain follows.  Response carries
+    ``registry: {model_id, status, activated}`` when persistence is on.
+    """
     path = capture_pcap_path(req.capture_id)
     try:
-        return engine.training.train_from_pcap(path,
-                                               contamination=req.contamination)
+        return engine.training.train_from_pcap(
+            path, contamination=req.contamination, activate=req.activate,
+            actor=principal["username"])
+    except AnalysisBusy as exc:
+        # the single-flight slot is held by another fit/analysis run
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
     except CaptureError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
-    except FileNotFoundError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except FileNotFoundError:
+        # str(exc) would quote the server-side storage path.
+        log.exception("training capture file missing")
+        raise HTTPException(status_code=404,
+                            detail="capture file not found") from None
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -77,9 +141,117 @@ def model_robustness(req: RobustnessRequest) -> dict:
     path = (capture_pcap_path(req.capture_id)
             if req.capture_id is not None else None)
     try:
-        return engine.model.robustness(pcap=path,
-                                       max_features=req.max_features,
-                                       max_rounds=req.max_rounds)
-    except Exception as exc:  # noqa: BLE001 - surface attack failures
+        result = engine.model.robustness(pcap=path,
+                                         max_features=req.max_features,
+                                         max_rounds=req.max_rounds)
+    except AnalysisBusy as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except FlowBudgetError as exc:
+        # a client-chosen capture exceeded the offline flow budget: 400, not
+        # an internal failure (this branch would otherwise be a generic 500).
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception:  # noqa: BLE001 - surface attack failures
+        log.exception("robustness evaluation failed")
         raise HTTPException(status_code=500,
-                            detail=f"robustness evaluation failed: {exc}") from exc
+                            detail="robustness evaluation failed") from None
+    if path is not None and result.get("source") == path:
+        # the service echoes its input source: basename only, never a
+        # server-side storage path in an API response.
+        result["source"] = os.path.basename(path)
+    return result
+
+
+# -- model registry (Prompt 14) -------------------------------------------------
+# Reads ride the router's ``read``; every transition is ``model:manage``.
+# ``/compare`` and ``/rollback`` are declared before ``/{model_id}`` so
+# FastAPI never parses them as ids.
+
+
+def _registry_error(exc: RegistryError) -> HTTPException:
+    return HTTPException(status_code=exc.status_code, detail=str(exc))
+
+
+@contextmanager
+def _registry_call():
+    """Map every registry failure onto a JSON HTTP error.
+
+    ``RegistryError`` carries its own status (404/409/503).  An internal
+    ``ValueError`` (metric parsing, artifact metadata) becomes a generic
+    400, and anything else is logged then answered with a generic 500 so no
+    exception text - which may quote a storage path - reaches the body.
+    """
+    try:
+        yield
+    except RegistryError as exc:
+        raise _registry_error(exc) from exc
+    except ValueError:
+        log.exception("registry request rejected")
+        raise HTTPException(status_code=400,
+                            detail="invalid registry request") from None
+    except Exception:
+        log.exception("registry operation failed")
+        raise HTTPException(status_code=500,
+                            detail="registry operation failed") from None
+
+
+@router.get("/api/model/registry")
+def model_registry_list() -> dict:
+    """Registry rows (newest first) + the ACTIVE model.
+
+    ``enabled: false`` with no items means persistence is off - the
+    lifecycle is a persistence feature, not an error.
+    """
+    return engine.registry.list()
+
+
+@router.get("/api/model/registry/compare")
+def model_registry_compare(a: str, b: str) -> dict:
+    """Field-by-field diff of two registry models (lineage evidence)."""
+    with _registry_call():
+        return engine.registry.compare(a, b)
+
+
+@router.get("/api/model/registry/{model_id}")
+def model_registry_get(model_id: str) -> dict:
+    with _registry_call():
+        return engine.registry.get(model_id)
+
+
+@router.post("/api/model/registry/{model_id}/validate",
+             dependencies=[Depends(require("model:manage"))])
+def model_registry_validate(model_id: str,
+                            principal: dict = Depends(
+                                require("model:manage"))) -> dict:
+    """CANDIDATE -> VALIDATED (or FAILED with the failing checks recorded)."""
+    with _registry_call():
+        return engine.registry.validate(model_id,
+                                        actor=principal["username"])
+
+
+@router.post("/api/model/registry/{model_id}/activate",
+             dependencies=[Depends(require("model:manage"))])
+def model_registry_activate(model_id: str,
+                            principal: dict = Depends(
+                                require("model:manage"))) -> dict:
+    """VALIDATED/RETIRED -> ACTIVE: swaps the session model (audited)."""
+    with _registry_call():
+        return engine.registry.activate(model_id, actor=principal["username"])
+
+
+@router.post("/api/model/registry/{model_id}/retire",
+             dependencies=[Depends(require("model:manage"))])
+def model_registry_retire(model_id: str,
+                          principal: dict = Depends(
+                              require("model:manage"))) -> dict:
+    """CANDIDATE/VALIDATED -> RETIRED (the ACTIVE model cannot retire)."""
+    with _registry_call():
+        return engine.registry.retire(model_id, actor=principal["username"])
+
+
+@router.post("/api/model/registry/rollback",
+             dependencies=[Depends(require("model:manage"))])
+def model_registry_rollback(
+        principal: dict = Depends(require("model:manage"))) -> dict:
+    """Re-activate the most recently superseded model (audited rollback)."""
+    with _registry_call():
+        return engine.registry.rollback(actor=principal["username"])

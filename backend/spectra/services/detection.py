@@ -21,6 +21,7 @@ import numpy as np
 from ..config import Config
 from ..domain import CaptureSession, FlowRecord  # noqa: F401  (FlowRecord documents output)
 from ..features.extractor import extract_features
+from ..intel import IntelService
 from ..modules.audit.log import MAX_LEAVES as AUDIT_MAX_LEAVES
 from ..modules.bio import RESPONSES, BioSystem
 from ..modules.edge import SLICES, EdgeSystem, apply_slice_policy, classify_slice
@@ -28,11 +29,13 @@ from ..modules.pqc import PQCInventory, assess_handshake, screen_flows
 from ..modules.pqc.roadmap import generate_roadmap
 from ..parse.flow import Flow
 from ..store import Store
+from ..threats import THREAT_WINDOW, classify_threat, unknown_threat
 from .alerts import AlertService
 from .correlation import CorrelationService
 from .events import EventBus
 from .model import ModelService
 from .resilience import FailureTracker
+from .threat_alerts import ThreatAlertService
 
 log = logging.getLogger("spectra.engine")
 
@@ -41,8 +44,8 @@ class DetectionService:
     def __init__(self, status: dict, config: Config, store: Store | None,
                  model: ModelService, events: EventBus,
                  correlation: CorrelationService, alerts: AlertService,
-                 session: CaptureSession, failures: FailureTracker,
-                 recent_feats: deque) -> None:
+                 threat_alerts: ThreatAlertService, session: CaptureSession,
+                 failures: FailureTracker, recent_feats: deque) -> None:
         self.status = status
         self.config = config
         self.store = store
@@ -50,12 +53,18 @@ class DetectionService:
         self._events = events
         self._correlation = correlation
         self._alerts = alerts
+        self.threat_alerts = threat_alerts
         self.session = session
         self.failures = failures
         self.recent_feats = recent_feats
 
         # Module 1: quantum posture inventory
         self.pqc = PQCInventory()
+
+        # Local threat intel (spectra.intel): operator-maintained JA3/JA4/SNI
+        # lists; hits ride on the record as evidence for the classifier.
+        self.intel = self.failures.guard(
+            "intel", lambda: IntelService(config.intel_dir), default=None)
 
         # Module 6: bio-inspired layer (immune + SNN + swarm)
         self.bio = BioSystem(contamination=model.contamination)
@@ -85,6 +94,7 @@ class DetectionService:
         return {
             "protocols": Counter(),
             "tls_versions": Counter(),
+            "quic_versions": Counter(),
             "scores": [],
             "slices": Counter(),
         }
@@ -126,6 +136,15 @@ class DetectionService:
         anomaly = False
         reasons: list[dict] = []
 
+        # Local threat intel: a JA3/JA4/SNI hit is attached to the record
+        # *before* classification so the rules can consume it as an
+        # independent signal (guarded: intel failure never blocks scoring).
+        if self.intel is not None:
+            intel_hits = self.failures.guard(
+                "intel", lambda: self.intel.match(record), default=None)
+            if intel_hits:
+                record["intel"] = intel_hits
+
         # Module 1: quantum-risk verdict on this conversation's handshake.
         pqc_assessment = self.failures.guard(
             "pqc",
@@ -140,8 +159,10 @@ class DetectionService:
 
         detector = self._model.detector
         if detector.is_trained:
-            score = float(detector.score(feats)[0])
-            anomaly = bool(detector.predict(feats)[0])
+            # one inference pass for score + verdict (see score_and_predict)
+            scores, flags = detector.score_and_predict(feats)
+            score = float(scores[0])
+            anomaly = bool(flags[0])
             if anomaly:
                 reasons = detector.explain(feats)
 
@@ -149,6 +170,8 @@ class DetectionService:
         self.counters["protocols"][record["proto"]] += 1
         if record["tls_version"]:
             self.counters["tls_versions"][record["tls_version"]] += 1
+        if record.get("quic_version"):
+            self.counters["quic_versions"][record["quic_version"]] += 1
         if score is not None:
             self.counters["scores"].append(score)
             if len(self.counters["scores"]) > 5000:
@@ -212,8 +235,10 @@ class DetectionService:
 
         record["score"] = score
         record["anomaly"] = anomaly
+        # ``feats`` rides along so the publication stage can classify the
+        # threat (see spectra.threats) without re-extracting the flow.
         return {"record": record, "score": score, "anomaly": anomaly,
-                "reasons": reasons}
+                "reasons": reasons, "feats": feats}
 
     def publish_flow(self, scored: dict) -> None:
         """Publication stage: record, publish and persist one scored flow."""
@@ -222,9 +247,43 @@ class DetectionService:
         anomaly = scored["anomaly"]
         reasons = scored["reasons"]
 
+        # Threat classification (spectra.threats): anomalies only, with the
+        # context window of *prior* flows — captured before this record joins
+        # the buffer — and the verdict lands on the record before it is
+        # observed, emitted and persisted.  A classifier failure degrades to
+        # an explicit UNKNOWN_ANOMALY instead of stopping publication.
+        window = list(self.flows)[-THREAT_WINDOW:] if anomaly else None
+
         # Module 5: this flow becomes a Merkle leaf of the session's evidence
         self.session.add_leaf(record, AUDIT_MAX_LEAVES)
         self.flows.append(record)
+
+        if anomaly:
+            threat = self.failures.guard(
+                "threats",
+                lambda: classify_threat(record, scored.get("feats"), window),
+                default=None,
+            )
+            record["threat"] = threat if threat is not None else unknown_threat()
+
+            # Analyst alert (spectra.services.threat_alerts): the
+            # classification may raise a grouped, persisted, streamed alert —
+            # strictly on top of the raw detection, never instead of it.  The
+            # alert id is stamped onto the record *before* persistence, so the
+            # stored flow row names the alert it produced.  A failure here
+            # degrades to "no alert" instead of stopping publication.
+            alert = None
+            if self.threat_alerts is not None:
+                alert = self.failures.guard(
+                    "threat_alerts",
+                    lambda: self.threat_alerts.observe(
+                        record, record["threat"], score=score,
+                        capture_id=self.session.capture_id),
+                    default=None,
+                )
+            if alert is not None:
+                record["alert_id"] = alert["alert_id"]
+
         self._correlation.observe(record)
         self._events.emit(
             {"type": "flow", "data": {**record, "score": score,

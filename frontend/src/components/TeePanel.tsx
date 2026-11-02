@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import CapabilityStrip from "./CapabilityStrip";
 import { api, type FederateResult, type TeeQuote, type TeeVerifyResult } from "../lib/api";
 
 const shortId = () =>
@@ -61,12 +62,16 @@ export default function TeePanel({ canRun, onError, onNotice }: {
 
   return (
     <div className="grid two-col">
-      <p className="note" style={{ gridColumn: "1 / -1" }}>
-        Capability: SIMULATED — local prototype enclave (no SGX/SEV hardware).
-        Attestation, sealed inference and federated rounds run in-process and are
-        never hardware-backed; per-party secret shares never leave the backend.
-        {!canRun && " Running them requires the investigate permission."}
-      </p>
+      <div style={{ gridColumn: "1 / -1" }}>
+        {/* data-driven maturity badges (GET /api/capabilities): SIMULATED
+            is labelled by the contract, not by a hardcoded sentence */}
+        <CapabilityStrip keys={["tee", "federated"]} />
+        <p className="note">
+          Attestation, sealed inference and federated rounds run in-process; per-party secret
+          shares never leave the backend.
+          {!canRun && " Running them requires the investigate permission."}
+        </p>
+      </div>
       <section className="panel">
         <h2>Attestation quote</h2>
         <div className="controls" style={{ marginBottom: 12 }}>
@@ -130,7 +135,7 @@ export default function TeePanel({ canRun, onError, onNotice }: {
       <section className="panel">
         <h2>Verification</h2>
         {!verify ? (
-          <div className="empty">Verify a quote to see its seven checks.</div>
+          <div className="empty">Verify a quote to see its verification checks.</div>
         ) : (
           <>
             <div className={`kv verdict ${verify.ok ? "ok" : "bad"}`}>

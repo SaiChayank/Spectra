@@ -15,6 +15,7 @@ import joblib
 import numpy as np
 
 from ...features.extractor import N_FEATURES
+from ...ml.integrity import digest_ok, write_digest
 from ..adv.watch import score_boundary
 from .danger import MemoryCells, RESPONSES, SelfModel, assess_immunity
 from .snn import TimingSNN
@@ -162,9 +163,12 @@ class BioSystem:
             "weights": dict(self.swarm.weights),
             "memory": [c for c in self.memory.cells],
         }, path)
+        write_digest(path)
 
     def load(self, path: str) -> bool:
         if not os.path.isfile(path):
+            return False
+        if not digest_ok(path):
             return False
         blob = joblib.load(path)
         if blob.get("version") != BIO_VERSION:

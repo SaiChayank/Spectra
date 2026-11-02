@@ -40,6 +40,10 @@ class Config:
     capture_store_dir: str = ""    # resolved in __post_init__ (data/captures)
     capture_max_bytes: int = 256 * 1024 * 1024  # per-import size cap
 
+    # local threat intel (spectra/intel.py): operator-maintained JA3/JA4/SNI
+    # list files; a hit is evidence on the alert, never an auto-verdict.
+    intel_dir: str = ""            # resolved in __post_init__ (data/intel)
+
     # streaming runtime: bounded in-process stages.  Overload never blocks
     # packet acquisition - a full queue sheds internal work under an explicit
     # policy and the loss is counted (status["pipeline"] + /api/metrics).
@@ -71,6 +75,27 @@ class Config:
     # detection model
     contamination: float = 0.02    # expected anomaly fraction when training
 
+    # analyst alerts (spectra.services.threat_alerts): sightings of the same
+    # behaviour (threat type + endpoint pair) within this flow-time window
+    # group into one alert (occurrences++); a longer gap starts a new one.
+    alert_group_seconds: float = 600.0
+
+    # incident correlation (spectra.incident_correlation): alerts whose
+    # sighting intervals are at most this many seconds apart may share an
+    # incident; together with shared anchors this is what keeps grouping
+    # conservative instead of time-wide.
+    incident_window_seconds: float = 1800.0
+
+    # investigation reads (spectra.services.investigation): bounds that keep
+    # every bundle/search response finite no matter how large the tables
+    # grow - a bundle pages ``investigation_flow_limit`` related flows and
+    # aggregates over the newest ``investigation_evidence_rows`` of them,
+    # while /api/search returns at most ``search_section_limit`` rows per
+    # entity section.
+    investigation_flow_limit: int = 100
+    investigation_evidence_rows: int = 500
+    search_section_limit: int = 10
+
     # authentication (spectra.services.auth): local accounts only - one admin
     # is bootstrapped when the users table is empty (env password or a
     # mode-restricted file), sessions are absolute-TTL rows keyed by token
@@ -100,10 +125,20 @@ class Config:
         if not self.capture_store_dir:
             self.capture_store_dir = _env(
                 "CAPTURE_STORE_DIR", os.path.join(self.data_dir, "captures"))
+        if not self.intel_dir:
+            self.intel_dir = _env(
+                "INTEL_DIR", os.path.join(self.data_dir, "intel"))
 
     @classmethod
     def from_env(cls) -> "Config":
-        """Build a config, coercing numeric env overrides."""
+        """Build a config, coercing numeric/boolean/list env overrides.
+
+        Annotations are strings (PEP 563), so the type checks compare
+        against both the string and the type object; list-valued fields
+        (``cors_origins``) are comma-split so ``SPECTRA_CORS_ORIGINS`` can
+        never hand CORSMiddleware a bare string (which would make origin
+        matching iterate characters instead of origins).
+        """
         cfg = cls()
         for f in fields(cls):
             raw = os.environ.get(f"SPECTRA_{f.name.upper()}")
@@ -115,6 +150,9 @@ class Config:
                 setattr(cfg, f.name, int(raw))
             elif f.type in ("bool", bool):
                 setattr(cfg, f.name, raw.lower() in ("1", "true", "yes", "on"))
+            elif f.type in ("list[str]", list[str]):
+                setattr(cfg, f.name,
+                        [v.strip() for v in raw.split(",") if v.strip()])
             else:
                 setattr(cfg, f.name, raw)
         return cfg
@@ -126,12 +164,16 @@ class Config:
 
 
 def setup_logging(level: str | None = None) -> None:
-    """Configure process-wide logging once."""
+    """Configure process-wide logging once.
+
+    Structured JSON lines with the request id and credential redaction -
+    see :mod:`spectra.observability`. Idempotent (formatters are swapped,
+    handlers never stacked).
+    """
     resolved = (level or Config().log_level).upper()
-    logging.basicConfig(
-        level=getattr(logging, resolved, logging.INFO),
-        format="%(asctime)s %(levelname)-7s %(name)s: %(message)s",
-    )
+    from .observability import configure_logging
+
+    configure_logging(getattr(logging, resolved, logging.INFO))
 
 
 _config: Config | None = None

@@ -6,11 +6,15 @@ supplied by the client - see :func:`spectra.api.routers.capture_pcap_path`.
 
 from __future__ import annotations
 
+import logging
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from ..runtime import engine
 from ..security import require
 from . import capture_pcap_path
+
+log = logging.getLogger("spectra.api")
 
 router = APIRouter(dependencies=[Depends(require("read"))])
 
@@ -29,13 +33,20 @@ def pqc_inventory(sector: str | None = None,
             "endpoints": snap["endpoints"][:limit]}
 
 
-@router.get("/api/pqc/scan")
+@router.get("/api/pqc/scan",
+            dependencies=[Depends(require("investigate"))])
 def pqc_scan(capture_id: int = Query(ge=1), sector: str | None = None) -> dict:
-    """Run an offline PQC readiness scan over a managed capture."""
+    """Run an offline PQC readiness scan over a managed capture.
+
+    Reads a capture file and reports findings, so it is an investigation
+    probe (ANALYST+) rather than a read; failures answer a generic 500 -
+    the underlying exception (which may carry server paths) is logged.
+    """
     from ...modules.pqc.scan import scan_pcap
 
     path = capture_pcap_path(capture_id)
     try:
         return scan_pcap(path, sector=sector)
     except Exception as exc:  # noqa: BLE001 - surface scan failures to the client
-        raise HTTPException(status_code=500, detail=f"scan failed: {exc}") from exc
+        log.exception("pqc scan failed for capture %s", capture_id)
+        raise HTTPException(status_code=500, detail="scan failed") from exc

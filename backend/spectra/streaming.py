@@ -41,6 +41,7 @@ from typing import Any, Callable
 
 from .capture.base import CaptureError, CaptureSource
 from .config import Config
+from .health import LatencyReservoir
 from .parse.flow import FlowTracker
 
 log = logging.getLogger("spectra.engine")
@@ -198,6 +199,9 @@ class StreamStats:
         self._lag_max_ms = 0.0
         self._infer_ms = 0.0
         self._infer_max_ms = 0.0
+        # Recent-scoring ring behind the p50/p95 latency percentiles
+        # (bounded, so long captures cannot grow memory without limit).
+        self._infer_reservoir = LatencyReservoir()
         self.inference_ops = 0
         self.active_flows_max = 0
         self._packet_rate = RateMeter()
@@ -222,6 +226,7 @@ class StreamStats:
         self._infer_ms += self.EMA_ALPHA * (ms - self._infer_ms)
         if ms > self._infer_max_ms:
             self._infer_max_ms = ms
+        self._infer_reservoir.observe(ms)
         self.inference_ops += 1
 
     def limits(self) -> dict:
@@ -244,6 +249,7 @@ class StreamStats:
         pq, fq, pub = (self.packet_queue.stats(), self.flow_queue.stats(),
                        self.publish_queue.stats())
         dropped_flows = fq["dropped"] + pub["dropped"]
+        infer = self._infer_reservoir.summary()
         return {
             "packet_queue": pq,
             "flow_queue": fq,
@@ -258,6 +264,8 @@ class StreamStats:
             "processing_lag_max_ms": round(self._lag_max_ms, 3),
             "inference_latency_ms": round(self._infer_ms, 3),
             "inference_latency_max_ms": round(self._infer_max_ms, 3),
+            "inference_latency_p50_ms": infer["p50_ms"],
+            "inference_latency_p95_ms": infer["p95_ms"],
             "inference_ops": self.inference_ops,
             "active_flows": len(self.tracker),
             "active_flows_max": self.active_flows_max,
@@ -286,6 +294,8 @@ def initial_stream_status(config: Config, idle_timeout: float) -> dict:
         "processing_lag_max_ms": 0.0,
         "inference_latency_ms": 0.0,
         "inference_latency_max_ms": 0.0,
+        "inference_latency_p50_ms": 0.0,
+        "inference_latency_p95_ms": 0.0,
         "inference_ops": 0,
         "active_flows": 0,
         "active_flows_max": 0,

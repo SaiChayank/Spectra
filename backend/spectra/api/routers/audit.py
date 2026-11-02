@@ -27,9 +27,13 @@ class CertificateVerifyRequest(BaseModel):
 @router.get("/api/audit/entries")
 def audit_entries(limit: int = Query(50, ge=1, le=500),
                   offset: int = Query(0, ge=0),
-                  kind: str | None = None) -> dict:
-    """Hash-chained audit entries (newest first)."""
-    return engine.audit_service.entries(limit=limit, offset=offset, kind=kind)
+                  kind: str | None = None,
+                  since: float | None = None,
+                  until: float | None = None,
+                  actor: str | None = None) -> dict:
+    """Hash-chained audit entries (newest first), time/actor/kind filtered."""
+    return engine.audit_service.entries(limit=limit, offset=offset, kind=kind,
+                                        since=since, until=until, actor=actor)
 
 
 @router.get("/api/audit/head")

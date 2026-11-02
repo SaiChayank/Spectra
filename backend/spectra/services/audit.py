@@ -48,11 +48,17 @@ class AuditService:
     # -- queries -------------------------------------------------------------
 
     def entries(self, limit: int = 50, offset: int = 0,
-                kind: str | None = None) -> dict:
+                kind: str | None = None, *, kind_prefix: str | None = None,
+                since: float | None = None, until: float | None = None,
+                actor: str | None = None) -> dict:
+        """Filtered page of entries; ``count`` reflects the same filters."""
         return {
-            "count": self.log.count(),
+            "count": self.log.count(kind, kind_prefix=kind_prefix,
+                                    since=since, until=until, actor=actor),
             "signing_key": self.log.pubkey,
-            "items": self.log.entries(limit=limit, offset=offset, kind=kind),
+            "items": self.log.entries(limit=limit, offset=offset, kind=kind,
+                                      kind_prefix=kind_prefix, since=since,
+                                      until=until, actor=actor),
         }
 
     def head(self) -> dict:

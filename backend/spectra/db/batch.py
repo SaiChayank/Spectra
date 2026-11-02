@@ -93,11 +93,16 @@ class WriteBuffer:
                 with self._db.transaction():
                     for table, rows in staged.items():
                         self._db.conn.executemany(INSERTS[table], rows)
-            except sqlite3.Error as exc:
+            except (sqlite3.Error, StoreError) as exc:
                 # Drop the batch: a poison row would block every future flush
                 # (and the retry would fail identically). The caller already
-                # treats persistence errors as non-fatal.
+                # treats persistence errors as non-fatal.  StoreError is in
+                # the tuple because a failed *commit* surfaces as one - those
+                # rows must be discarded too, or they would stay staged and
+                # wedge every later flush while the batch kept re-raising.
                 self._discard()
+                if isinstance(exc, StoreError):
+                    raise
                 raise StoreError(str(exc)) from exc
             counts = {t: len(rows) for t, rows in staged.items()}
             self._discard()
