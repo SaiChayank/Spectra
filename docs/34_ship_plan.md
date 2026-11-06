@@ -374,6 +374,14 @@ where users put it, so the defaults must be safe:
 
 ### 13.4 Legal and acceptable use
 
+- **JA4+ (JA4S, JA4L, JA4LS, JA4H, JA4X, JA4T ...) is not Apache-2.0-compatible.**
+  FoxIO publishes it under FoxIO License 1.1: patent-pending, copyright
+  license for non-commercial use only (support/maintenance services and hosted
+  use count as commercial), no sublicensing. Only base JA4 (client) is BSD-3.
+  Spectra's release therefore ships **no JA4+ implementation** unless the
+  owner decides otherwise (see HANDOFF_FINDINGS.md 9H): options are skip it
+  (default), ship it as a separate optional plugin under FoxIO's terms, or
+  obtain an OEM licence **[DECISION]**.
 - A LICENSE file (S0), plus a `THIRD_PARTY_NOTICES` file generated from the
   SBOM (Python + npm dependency licenses). CI runs a license-allowlist
   check, so a GPL dependency can't slip into an Apache-2.0 project

@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import bisect
 import statistics
+import time
 from collections import OrderedDict, defaultdict, deque
 
 from ...sectors import SectorClassifier, get_classifier
@@ -67,6 +68,10 @@ class CorrelationGraph:
                  pair_window: int = 32):
         self.classifier = classifier or get_classifier()
         self.pair_window = max(MIN_PAIR_FLOWS, int(pair_window))
+        # 9H freshness: when the graph was last rebuilt from storage, and the
+        # newest flow time it has seen (hydrated or live)
+        self.hydrated_at: float | None = None
+        self.cursor_ts: float | None = None
         # (host, ip, sni-or-"") -> sorted flow start times, newest ``pair_window``
         self.pair_times: OrderedDict[tuple[str, str, str], list[float]] = OrderedDict()
         self.nodes: dict[str, dict] = {}
@@ -129,6 +134,8 @@ class CorrelationGraph:
 
         if not host or not ip:
             return
+        if ts is not None and (self.cursor_ts is None or ts > self.cursor_ts):
+            self.cursor_ts = ts
         sector = self.classifier.classify(sni or ip)
 
         h = self._node(f"host:{host}", NODE_HOST, host,
@@ -226,6 +233,7 @@ class CorrelationGraph:
             offset += len(page["items"])
         for rec in items:
             self.observe(rec)
+        self.hydrated_at = time.time()
         return len(items)
 
     # -- queries -------------------------------------------------------------
@@ -398,3 +406,5 @@ class CorrelationGraph:
         self.edges.clear()
         self.edge_meta.clear()
         self.pair_times.clear()
+        self.hydrated_at = None
+        self.cursor_ts = None

@@ -825,10 +825,20 @@ export interface GraphSummary {
   shared_ip_nodes: string[];
 }
 
+/** How current the graph (and the twin built from it) is — Phase 9H. */
+export interface GraphFreshness {
+  /** epoch seconds of the last rebuild from stored history; null = never */
+  hydrated_at: number | null;
+  /** newest stored flow time minus newest flow time the graph has seen; null = unknown */
+  flow_lag: number | null;
+  stale: boolean;
+}
+
 export interface GraphSnapshot {
   summary: GraphSummary;
   nodes: GraphNode[];
   edges: GraphEdge[];
+  freshness: GraphFreshness;
 }
 
 /* ---------- persisted history ---------- */

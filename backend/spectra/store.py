@@ -231,6 +231,9 @@ class Store:
     def stats(self) -> dict:
         return self._flows.stats()
 
+    def newest_flow_ts(self) -> float | None:
+        return self._flows.newest_ts()
+
     # -- local authentication: users + sessions --------------------------------
     #
     # API-facing reads go through _public_user so ``password_hash`` can never

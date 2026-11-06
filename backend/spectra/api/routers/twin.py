@@ -55,7 +55,10 @@ def _sim_kwargs(req: SimulateRequest) -> dict:
 @router.get("/api/twin/topology")
 def twin_topology(min_flows: int = Query(1, ge=0, le=10_000)) -> dict:
     """Twin replica: assets, zones, propagation edges, criticality."""
-    return engine.twin_topology(min_flows=min_flows)
+    # freshness is merged here, not into build_topology, which stays a pure
+    # deterministic function of the graph (simulation reproducibility)
+    return {**engine.twin_topology(min_flows=min_flows),
+            **engine.correlation.freshness()}
 
 
 @router.get("/api/twin/playbooks")

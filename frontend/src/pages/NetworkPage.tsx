@@ -7,6 +7,7 @@ import {
   Loading,
   PageHeader,
 } from "../components/states";
+import FreshnessBadge from "../components/FreshnessBadge";
 import { api, type GraphCascade, type GraphNode, type GraphSnapshot } from "../lib/api";
 import { formatBytes, formatNum } from "../lib/format";
 import { useFetch } from "../lib/useFetch";
@@ -100,6 +101,11 @@ export default function NetworkPage({ can }: Props) {
 
       <section className="panel" style={{ marginBottom: 16 }}>
         <h2>Graph summary</h2>
+        {graph.data?.freshness && (
+          <div style={{ marginBottom: 10 }}>
+            <FreshnessBadge freshness={graph.data.freshness} />
+          </div>
+        )}
         {graph.loading && !graph.data && <Loading label="Loading graph…" />}
         {graph.error && <ErrorBox message={graph.error} onRetry={graph.reload} />}
         {summary && (

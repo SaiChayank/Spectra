@@ -64,6 +64,12 @@ class FlowRepository:
     def count(self) -> int:
         return int(self._db.query("SELECT COUNT(*) AS n FROM flows")[0]["n"])
 
+    def newest_ts(self) -> float | None:
+        """Newest persisted flow time (staged rows are flushed first)."""
+        self._buffer.flush_if_pending()
+        row = self._db.query("SELECT MAX(ts) AS t FROM flows")[0]
+        return None if row["t"] is None else float(row["t"])
+
     def get(self, flow_id: int) -> dict | None:
         """One row by id (incident triage checks the flagged detection)."""
         rows = self._db.query("SELECT * FROM flows WHERE id = ?", (flow_id,))

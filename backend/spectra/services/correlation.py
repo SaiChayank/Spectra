@@ -11,6 +11,11 @@ from .resilience import FailureTracker
 
 log = logging.getLogger("spectra.engine")
 
+#: flow-time seconds the graph may trail the persisted flows before the twin
+#: and the dashboard call it stale (the graph only re-reads storage when it
+#: is hydrated, so flows persisted behind its back are invisible to it)
+STALE_FLOW_LAG_S = 300.0
+
 
 class CorrelationService:
     """Owns the correlation graph: hydration, guarded observation, queries.
@@ -68,11 +73,32 @@ class CorrelationService:
             "summary": self.graph.summary(),
             "nodes": self.graph.nodes_list(ntype=ntype, sector=sector, limit=limit),
             "edges": self.graph.edges_list(limit=min(limit * 4, 5000)),
+            "freshness": self.freshness(),
         }
 
     def cascade(self, node_id: str, max_depth: int = 4,
                 window_s: float | None = None) -> dict:
         return cascade(self.graph, node_id, max_depth=max_depth, window_s=window_s)
+
+    def freshness(self) -> dict:
+        """How current the graph (and the twin built from it) is.
+
+        ``flow_lag`` = newest persisted flow time minus the newest flow time
+        the graph has seen, in flow-time seconds (>= 0); ``None`` when there
+        is no store or no flows to compare.  Never raises.
+        """
+        hydrated_at = self.graph.hydrated_at
+        lag = None
+        if self.store is not None:
+            try:
+                newest = self.store.newest_flow_ts()
+                cursor = self.graph.cursor_ts
+                if newest is not None:
+                    lag = max(0.0, newest - cursor) if cursor is not None else None
+            except Exception as exc:  # noqa: BLE001 - a status read must not raise
+                log.warning("graph freshness lookup failed: %s", exc)
+        return {"hydrated_at": hydrated_at, "flow_lag": lag,
+                "stale": lag is not None and lag > STALE_FLOW_LAG_S}
 
     def summary(self) -> dict:
         return self.graph.summary()
