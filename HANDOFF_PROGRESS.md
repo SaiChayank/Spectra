@@ -284,3 +284,6 @@ Recommended human action: review `git log --oneline main..haiku/spectra-p85`, th
 Command: `uvx pip-audit -r backend/requirements.lock --disable-pip --no-deps` (pip-audit 2.10.1, run from a throwaway uvx environment, queried PyPI advisory data on 2026-11-06).
 Output (verbatim, warnings trimmed to the result): `No known vulnerabilities found`.
 Scope: Python lockfile only. `npm audit`, gitleaks and the GitHub Actions run are still NOT RUN.
+
+## REVIEW GATE-8.5: APPROVED (human: Saikrishna0817, 2026-11-06)
+Approval given by the human in chat this session; recorded by the agent at their instruction. Phase 9 may start.
