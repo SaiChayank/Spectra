@@ -1,0 +1,21 @@
+date: 2026-11-06T17:12:18Z  commit: 4709570  branch: phase10/security-evidence
+semgrep: 1.184.0
+
+$ semgrep --metrics=off --test security/semgrep
+│ Scan Status │
+└─────────────┘
+  Scanning 1 file with 1 Code rule:
+  Scanning 1 file.
+1/1: ✓ All tests passed
+No tests for fixes found.
+
+$ semgrep --metrics=off --config security/semgrep/spectra-payload.yml --error --exclude backend/spectra/parse --exclude backend/spectra/demo.py backend/spectra
+ • Parsed lines: ~100.0%
+ • Scan skipped: 
+   ◦ Matching --exclude patterns: 5
+ • Scan was limited to files tracked by git
+ • For a detailed list of skipped files and lines, run semgrep with the --verbose flag
+Ran 1 rule on 124 files: 0 findings.
+If Semgrep missed a finding, please send us feedback to let us know!
+See https://semgrep.dev/docs/reporting-false-negatives/
+exit: 0

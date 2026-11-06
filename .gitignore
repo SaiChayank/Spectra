@@ -35,3 +35,4 @@ frontend/.vite/
 .DS_Store
 Thumbs.db
 Desktop.ini
+backend/.schemathesis/
