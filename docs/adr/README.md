@@ -4,8 +4,8 @@ ADR-001..004 lived in the planning documents removed in commit `09638ce` (ADR-00
 
 | ADR | Decision |
 |---|---|
-| 005 | Audit signing keys have epochs bound to chain positions |
-| 006 | Shamir t-of-n federation is opt-in; hash commitments, not VSS |
-| 007 | JA4+ is not implemented; base JA4 follows the spec |
-| 008 | Drift alerts fire on the worse of the training and recent PSI |
-| 009 | Payload-access rule in CI and a runtime metadata-only probe |
+| [005](./005-audit-key-epochs.md) | Audit signing keys have epochs bound to chain positions |
+| [006](./006-shamir-opt-in-hash-commitments.md) | Shamir t-of-n federation is opt-in; hash commitments, not VSS |
+| [007](./007-ja4-plus-not-implemented.md) | JA4+ is not implemented; base JA4 follows the spec |
+| [008](./008-drift-alert-on-worse-of-train-and-recent.md) | Drift alerts fire on the worse of the training and recent PSI |
+| [009](./009-payload-rule-and-runtime-probe.md) | Payload-access rule in CI and a runtime metadata-only probe |
