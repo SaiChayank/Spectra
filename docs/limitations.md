@@ -15,6 +15,11 @@ bytes are consumed solely to advance framing, then discarded; QUIC 0-RTT and
 Handshake packets are counted, never opened; no application key material is
 ever derived.
 
+*Scope of "never persisted":* it holds for everything Spectra itself derives
+and stores. An uploaded capture file is stored as the operator supplied it, so
+payload bytes present in that file remain on disk until the capture is deleted
+(`docs/security.md` §4 item 9).
+
 *Consequence:* content-level threats (malware signatures, DNS names inside a
 tunnel, file contents, body keywords) are **architecturally invisible**.
 Detection rests on *how* traffic behaves, not *what* it says. Capture is also

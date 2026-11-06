@@ -119,6 +119,16 @@ upload through (`capture/storage.py`):
    `DELETE` removes row + file and is refused while the capture is running.
 8. **Read path** — every scapy read is clamped to the file's own size, so a
    crafted record length cannot trigger a multi-gigabyte allocation.
+9. **At rest, uploads are verbatim.** The managed store keeps the uploaded
+   file byte-for-byte, so if the capture contains payload (ciphertext, or
+   plaintext for unencrypted protocols) those bytes sit in
+   `captures/cap_<uuid>.pcap`. No route returns them and Spectra's own derived
+   data (database, audit log, API responses, logs) carries none -
+   `tests/test_metadata_only_probe.py` checks exactly that and pins this single
+   exception. Protect `SPECTRA_DATA_DIR` like the evidence it is (directory
+   permissions, disk encryption, retention via `SPECTRA_CAPTURE_RETENTION_DAYS`);
+   deleting a capture removes the file. Stripping payload on ingest is an open
+   design option (HANDOFF_FINDINGS.md, Phase 10).
 
 ## 5. Model & sidecar artifact integrity
 
