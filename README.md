@@ -33,6 +33,7 @@ Three target verticals: **Fintech · Healthcare · Smart City Infrastructure**.
 | [`docs/testing.md`](./docs/testing.md) | 726 tests · 156 acceptance checks · performance · live-capture validation |
 | [`docs/limitations.md`](./docs/limitations.md) | detection, classification, TEE/twin/edge, metadata-only analysis, operational caveats |
 | [`docs/readiness-report.md`](./docs/readiness-report.md) | final readiness report (completed / partial / future / known limitations) |
+| [`docs/sast-report.md`](./docs/sast-report.md) · [`docs/sca-report.md`](./docs/sca-report.md) · [`docs/dast-report.md`](./docs/dast-report.md) · [`docs/threat-model.md`](./docs/threat-model.md) · [`docs/adr/`](./docs/adr/README.md) | Phase 10 security evidence (2026-11-06, raw output in `docs/evidence/`), refreshed threat model, proposed ADRs 005–009 |
 | [`docs/hardening-report.md`](./docs/hardening-report.md) · [`docs/acceptance-report.md`](./docs/acceptance-report.md) · [`docs/acceptance-report-2026-11-06.md`](./docs/acceptance-report-2026-11-06.md) | engineering evidence: fixes, performance baselines, live capture; Phase 9 live-server run (Exit Gate 9) |
 
 ---
