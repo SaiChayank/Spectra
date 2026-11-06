@@ -10,25 +10,26 @@ a sign-off, a review, an account or a payment.
 
 ## 0. What "ship to the internet" means here
 
-Spectra is a passive sensor: it has to sit on the network it watches. So
-"shipping" means two separate deliverables.
+Spectra ships as **self-hosted software**. It is a passive sensor and has to
+sit on the network it watches, so users install and run it themselves. We
+host nothing that processes anyone's traffic.
 
-1. **The software, distributed.** People install it on their own networks.
-   It ships as a Docker image on GHCR, a wheel on PyPI, GitHub Releases, and
-   a docs site.
-2. **A public demo, read-only.** One hosted instance holds pre-analysed
-   *public-dataset* captures, so anyone can explore the dashboard. It has no
-   live capture, no uploads for guests, a guest VIEWER account and a nightly
-   reset.
+Release channels:
+- a container image on GHCR (multi-arch), plus a compose file,
+- a wheel on PyPI (`pip install` → `spectra serve`),
+- GitHub Releases (signed artifacts, SBOM, release notes),
+- a docs site on GitHub Pages.
 
-A multi-tenant SaaS (strangers upload their traffic to us) is **out of
-scope**. HANDOFF's definition of "industry grade" excludes it, and it would
-reopen the DPIA (12C). If you want it, that is a **[DECISION]** and a new
-plan.
+**Out of scope:**
+- **A hosted demo or SaaS.** HANDOFF's definition of "industry grade"
+  excludes internet-facing multi-tenant SaaS, and it would reopen the DPIA
+  (12C). The "try it" path is local instead: `spectra demo` and the synthetic
+  demo captures run on the user's machine.
+- **Telemetry or phone-home.** Spectra makes no outbound connections. That
+  fits the metadata-only promise and is a selling point.
 
-**Cost target: $0.** Every tool and dataset below is free. The only optional
-spend is a custom domain (about $10 a year). A free subdomain also works
-(§7.2).
+**Cost target: $0.** Every tool and dataset below is free. GitHub Pages,
+GHCR, PyPI and Actions are free for a public repo.
 
 ---
 
@@ -54,9 +55,9 @@ features. Every claim on the docs site must come from §3's benchmark runs.
 ## 2. Phase order and gates
 
 ```
-S0 housekeeping ─► 9D..9H ─► B (benchmarks) ─► 10 (security) ─► 11 (ops) ─► 13 (launch)
-                                  ▲                                            │
-                                  └────── nightly bench in CI feeds ───────────┘
+S0 housekeeping ─► 9D..9H ─► B (benchmarks) ─► 10 (security) ─► 11 (packaging/ops) ─► 13 (release)
+                                  ▲                                                     │
+                                  └────────── nightly bench in CI feeds ────────────────┘
 ```
 
 | Phase | Size | Gate (evidence required) |
@@ -65,8 +66,8 @@ S0 housekeeping ─► 9D..9H ─► B (benchmarks) ─► 10 (security) ─► 
 | 9D–9H | L | As in docs/33; Exit Gate 9 acceptance run saved |
 | **B Benchmarks** (new; it delivers 10.4) | L | `docs/evaluation-report.md` built from recorded runs on ≥ 3 public datasets, each with hashes and confidence intervals |
 | 10 Security | L | Raw scan outputs in `docs/evidence/<date>/`; zero open Critical/High; TOTP and lockout tests green; **[HUMAN] security review** |
-| 11 Ops | M | Clean install works; Docker image built and scanned; restore drill logged |
-| **13 Launch** (new) | M | Docs site live; demo instance live behind TLS; v1.0.0 release signed |
+| 11 Packaging / ops | M | Clean install works on every supported platform; image built and scanned; upgrade from the previous release tested; restore drill logged |
+| **13 Release** (new) | M | Docs site live; v1.0.0 artifacts signed; a fresh machine installs Spectra from the docs alone |
 | 12 Scale-out | — | Only on a per-item instruction (unchanged) |
 
 ---
@@ -176,8 +177,10 @@ to test the "baseline matching" limitation honestly.
      50k pps) onto a veth pair. Record flows/s, packets/s, p50/p99
      flow-to-alert latency, CPU, RSS, and the drop counters from
      `/api/metrics`.
-   - Run it on two named machines: your laptop, and the free-tier ARM VM
-     (§7.2). Publish the hardware specs with the numbers.
+   - Run it on named machines: your laptop, plus an ARM box if one is
+     available (e.g. a Raspberry Pi 5-class sensor). Publish the hardware
+     specs with the numbers. The results become the "sizing guide" in the
+     docs (§13.2): how much traffic a given box can handle.
 7. **Adversarial:** run the 9B harness on each real dataset and report the
    evasion rate at the default budget. This is the FR-4.1 evidence, whatever
    the result.
@@ -229,27 +232,39 @@ name the version and command for each (R-rules).
 | Supply chain | OpenSSF Scorecard action; cosign keyless signing of images (GitHub OIDC) | CI |
 | DAST | Schemathesis against `/openapi.json`; OWASP ZAP baseline + API scan | **own loopback instance only** (R22–R24) |
 
-**Additions needed because the demo faces the internet:**
+**Additions for software that strangers will install.** We can't control
+where users put it, so the defaults must be safe:
 
-1. TLS termination with **Caddy** (automatic Let's Encrypt, free) in front of
-   uvicorn. Set `SPECTRA_SESSION_COOKIE_SECURE=true`, HSTS, and security
-   headers (CSP, frame-ancestors, referrer policy) at the proxy.
-2. **Rate limiting** on login and every write route (Caddy rate-limit module
-   or a small FastAPI middleware). Lockout with backoff (HANDOFF 10.6) must
-   not enable username enumeration.
-3. **TOTP for ADMIN** (HANDOFF 10.6).
-4. **Demo profile** (`SPECTRA_PROFILE=demo`): capture disabled, uploads off
-   for non-admins, the guest account fixed to VIEWER, admin bound to
-   loopback or SSH-tunnel only, and a nightly reset from a snapshot.
-5. Bootstrap admin: the password goes to a mode-0600 file only, never to logs.
-   This needs re-checking for container logs.
-6. Threat-model refresh: a new trust boundary for "public internet → demo".
-   Add ADRs for the demo profile and for TLS termination.
-7. Run **gitleaks on the full history before the repo goes public.** The
+1. **Secure defaults.** It binds to `127.0.0.1` (already the default) and
+   refuses to bind a non-loopback address over plain HTTP unless the user
+   sets an explicit flag. The startup log warns when the UI is reachable
+   without TLS.
+2. **TLS path documented and tested.** Option (a) is a Caddy reverse-proxy
+   example in `deploy/` with automatic certificates, HSTS and security
+   headers (CSP, frame-ancestors). Option (b) is built-in
+   `--tls-cert/--tls-key` for a single-box install. With TLS on,
+   `SPECTRA_SESSION_COOKIE_SECURE=true`.
+3. **Rate limiting** on login and write routes (small FastAPI middleware, no
+   new dependency). Lockout with backoff (HANDOFF 10.6) must not enable
+   username enumeration or lock out the only admin for good.
+4. **TOTP for ADMIN** (HANDOFF 10.6).
+5. **First-run safety.** The bootstrap admin password goes to a mode-0600
+   file only, never to stdout or container logs (re-check under Docker), and
+   the user must change it at first login.
+6. **Capture privilege minimised.** Only the capture worker gets `NET_RAW`;
+   the API/UI process runs unprivileged (§11.2). On bare-metal Linux, use
+   `setcap cap_net_raw` instead of running as root.
+7. **Threat-model refresh** for the "installed by a third party" boundary
+   (unknown network, unknown exposure). Add ADRs for secure defaults and TLS.
+8. **Vulnerability handling.** A `SECURITY.md` with a response-time target
+   and supported-versions table; GitHub Security Advisories and CVE
+   requests for real issues.
+9. Run **gitleaks on the full history before the repo goes public.** The
    tree holds a git-ignored `backend/tee_attestation.key`; confirm no key
-   material was ever committed.
-8. **[HUMAN]** security review and sign-off. This is the gate for launch;
-   I cannot self-approve it.
+   material was ever committed. Release artifacts must never contain a
+   generated key (add a test on the built wheel and image).
+10. **[HUMAN]** security review and sign-off. This is the release gate; I
+    cannot self-approve it.
 
 ---
 
@@ -263,43 +278,77 @@ name the version and command for each (R-rules).
 2. **Docker:** multi-stage, non-root, read-only rootfs + tmpfs, pinned base
    digest, healthcheck. Use two compose profiles: `api` (no capabilities) and
    `capture` (`NET_RAW` + `NET_ADMIN`, host network). Build multi-arch
-   (amd64 + arm64, since the demo VM is ARM) and push to **GHCR** (free for
-   public images).
-3. **Prometheus** text exposition on `/api/metrics?format=prom` + a
-   provisioned **Grafana** dashboard JSON in `deploy/grafana/`. Both are OSS.
-4. **Backup/restore:** `sqlite3 .backup` + model artifacts + the audit-key
-   escrow procedure. Run the restore drill in CI on a fixture DB and log the
-   measured RTO/RPO.
-5. **Runbook:** each step executed once on the demo VM, with output recorded.
+   (amd64 + arm64, for ARM servers and small sensors) and push to **GHCR**
+   (free for public images).
+3. **Platform support matrix** **[DECISION]**. The recommendation, tested in
+   CI on every release:
+
+   | Platform | Live capture | Offline PCAP analysis | CI |
+   |---|---|---|---|
+   | Linux x86_64 / arm64 (Docker or pip) | ✅ libpcap | ✅ | ubuntu runners (arm64 runners are free for public repos) |
+   | macOS (pip) | ✅ BPF (needs sudo or ChmodBPF) | ✅ | macos runner, smoke test |
+   | Windows (pip) | ⚠️ needs Npcap, installed by the user under its own license | ✅ | windows runner, smoke test |
+
+   `start.ps1` shows Windows is used today. Npcap's license forbids
+   redistribution, so Windows docs point users to its installer and we never
+   bundle it.
+4. **Upgrades.** Spectra already has numbered DB migrations. Add a CI job
+   that installs the *previous* release, creates data, upgrades to the
+   candidate, and runs the suite against the migrated DB. `spectra backup`
+   runs automatically before migrating. Model artifacts carry a
+   feature-schema version; an incompatible model is refused with a "retrain"
+   message, not loaded silently.
+5. **Offline / air-gapped install.** Many monitored networks have no
+   internet. Ship a `docker save` tarball and a wheelhouse (`pip download`
+   with hashes from `requirements.lock`) as release assets, with a docs page.
+6. **Prometheus** text exposition on `/api/metrics?format=prom` + a
+   **Grafana** dashboard JSON in `deploy/grafana/`. Both are OSS and
+   optional for users.
+7. **Backup/restore:** a `spectra backup` / `spectra restore` CLI
+   (`sqlite3 .backup` + model artifacts + the audit-key escrow procedure).
+   Run the restore drill in CI on a fixture DB and log the measured RTO/RPO.
+8. **Operator runbook:** each step executed once on a local install, with
+   output recorded. It ships in the docs as "Troubleshooting".
 
 ---
 
-## 13. Launch (new phase)
+## 13. Release (new phase)
 
 ### 13.1 Docs site
 
-- **MkDocs Material** on **GitHub Pages** (both free). Sources are the
-  existing `docs/*.md` files; the nav covers Quickstart, Install (Docker,
-  pip), Architecture, Benchmarks (generated), Limitations (prominent, not
-  buried), Security, Datasets & attributions, API (rendered from OpenAPI
-  with Redoc).
+- **MkDocs Material** on **GitHub Pages** (both free), versioned per release
+  with `mike` so v1.0 docs stay readable after v1.1. Sources are the
+  existing `docs/*.md` files. The nav covers:
+  - Quickstart,
+  - Install (Docker, pip, offline),
+  - Sensor placement,
+  - Sizing guide,
+  - First baseline,
+  - Architecture,
+  - Benchmarks (generated),
+  - Limitations (prominent, not buried),
+  - Security hardening,
+  - Upgrading,
+  - Troubleshooting,
+  - Datasets & attributions,
+  - API (rendered from OpenAPI with Redoc).
 - A dataset **attributions page** with every dataset's required citation.
   Most academic datasets ask for one.
 
-### 13.2 Public demo host (free options; **[DECISION]** pick one)
+### 13.2 User-facing guides the software needs (new docs)
 
-| Option | Cost | Notes |
-|---|---|---|
-| **Oracle Cloud Always Free** (Ampere ARM, up to 4 OCPU / 24 GB) | $0 | Best fit; needs a card for identity verification **[HUMAN]**; idle reclaim policy: keep a cron heartbeat |
-| Own machine + **Cloudflare Tunnel** | $0 | No open ports; uptime depends on your machine |
-| Google Cloud e2-micro free tier | $0 | 1 GB RAM: too small for the model + UI under load |
-
-- **Domain:** a free `*.duckdns.org` subdomain or the GitHub Pages domain for
-  docs. A custom domain costs about $10 a year (optional, **[HUMAN]**).
-- **Demo data:** pre-analysed CTU-13 + a CIC-2018 slice. Only Spectra's
-  *metadata* is stored (no pcaps on the server). Check each dataset's terms
-  allow showing derived metadata and credit them on the page.
-- **Uptime:** a free UptimeRobot or Better Stack monitor on `/api/health`.
+1. **Sensor placement:** SPAN/mirror port vs network TAP vs host capture, and
+   what each one sees. Covers asymmetric routing and VLAN tags.
+2. **First baseline:** how long to record benign traffic before training,
+   how to check that the baseline is clean, and when to retrain (drift
+   alerts from 9E). The detector is unsupervised and trained per network,
+   so this guide decides whether users get value or noise.
+3. **Sizing guide:** packets/s and flows/s per CPU core, plus RAM and disk
+   per day of retention. Generated from the §B.2 performance runs.
+4. **Hardening checklist:** TLS, non-loopback binding, TOTP, retention
+   settings, backups. Mirrors §10.
+5. **Integrations:** reading alerts out through the API. A SIEM webhook is
+   12A; it ships only if the owner authorises it.
 
 ### 13.3 Release process
 
@@ -311,18 +360,39 @@ name the version and command for each (R-rules).
   owner's word** (CLAUDE.md).
 - Release checklist in `docs/release-checklist.md`, ticked with command
   output for each release.
+- **Pre-releases first:** `v1.0.0-rc.N` go to TestPyPI and a `:rc` image
+  tag. Invite a few outside testers to install from the docs alone and file
+  issues **[HUMAN]**. Promote to v1.0.0 only once the rc has had no
+  release-blocking issue for one to two weeks.
+- **Support policy** (in `SECURITY.md` and the docs): the latest minor
+  release gets security fixes; the previous minor gets them for about 3
+  months. No SemVer-breaking API or DB change without a major bump and a
+  migration.
+- **Verification for users:** document `cosign verify` for images and
+  checksum or attestation checks for wheels (PyPI Trusted Publishing gives
+  provenance attestations).
 
 ### 13.4 Legal and acceptable use
 
+- A LICENSE file (S0), plus a `THIRD_PARTY_NOTICES` file generated from the
+  SBOM (Python + npm dependency licenses). CI runs a license-allowlist
+  check, so a GPL dependency can't slip into an Apache-2.0 project
+  unnoticed.
 - README + docs: "Deploy only on networks you own or are authorised to
-  monitor." Note that passive capture laws vary by jurisdiction.
-- A demo privacy notice: what the demo stores (session cookie, audit of
-  guest actions) and that no visitor traffic is captured.
-- Dataset licenses honoured (§B.1); no dataset bytes redistributed.
+  monitor." Note that passive capture laws and works-council rules vary by
+  jurisdiction.
+- A privacy statement for the software: no telemetry, no outbound calls,
+  everything stays on the user's disk, metadata-only by design.
+- Dataset licenses honoured (§B.1). No dataset bytes are redistributed in
+  releases; the fetch scripts download from the original sources.
+- Trademark check on the name "Spectra" before publishing packages
+  **[DECISION]**. It is a common name; a distinct package or image name may
+  be needed anyway (§11.1).
 
-**Gate 13:** docs site live; demo reachable over HTTPS with ZAP baseline
-clean against it (our own host, with permission); v1.0.0 artifacts signed and
-installable on a fresh machine following only the docs.
+**Gate 13:** docs site live; v1.0.0 artifacts (wheel, multi-arch image,
+offline bundle, SBOM) signed and published; installed on a fresh Linux,
+macOS and Windows machine by following only the docs; upgrade from the last
+rc passes; at least one outside tester's install reported.
 
 ---
 
@@ -338,10 +408,11 @@ installable on a fresh machine following only the docs.
 | 6 | Run the tcpreplay rig (needs sudo) | [HUMAN] |
 | 7 | 9F crypto review; Phase 10 security sign-off | [HUMAN] |
 | 8 | Retention defaults for the shipping profile | [DECISION] |
-| 9 | PyPI package name + project creation | [DECISION]/[HUMAN] |
-| 10 | Demo host choice + account creation | [DECISION]/[HUMAN] |
-| 11 | Custom domain (optional, ~$10/yr) | [DECISION] |
+| 9 | PyPI/image name (trademark check) + PyPI project creation | [DECISION]/[HUMAN] |
+| 10 | Supported platforms (recommended: Linux full; macOS/Windows best-effort) | [DECISION] |
+| 11 | Recruit 3–5 outside rc testers | [HUMAN] |
 | 12 | Make the GitHub repo public (after the gitleaks history scan) | [HUMAN] |
+| 13 | Custom domain for docs (optional, ~$10/yr) | [DECISION] |
 
 ## 15. Risks
 
@@ -349,7 +420,9 @@ installable on a fresh machine following only the docs.
 |---|---|
 | Benchmarks show weak accuracy on real data | Publish anyway with baselines and limitations. Fix what the ablations point at. Never tune on the test split |
 | Dataset label errors (CIC family) | Use the corrected labels where they exist; report both |
-| Public demo gets attacked | Demo profile: read-only, no capture, rate limits, nightly reset, nothing sensitive stored |
-| Free-tier host reclaimed or changed | Infrastructure kept as compose + a script; redeploy anywhere in under 30 min (measured in the runbook) |
+| Users expose the UI to the internet without TLS | Loopback default; a refusal or loud warning on plain-HTTP non-loopback; hardening checklist; TOTP + lockout |
+| An upgrade breaks a user's DB or model | Previous-release → candidate upgrade job in CI; automatic backup before migrating; model schema versioning |
+| Users get noise because their baseline is poor | "First baseline" guide; drift alerts (9E); honest limitations page |
+| Capture doesn't work on a user's platform | Support matrix tested in CI; offline PCAP analysis works everywhere as a fallback |
 | Disk or bandwidth for datasets | Subset fetches with `--only`; hash-verified resume already exists |
 | Scope creep into SaaS | Out of scope unless the owner makes a new [DECISION] |
