@@ -195,3 +195,37 @@ def test_scheduler_survives_a_failing_run():
     sched.start()
     assert ran.wait(2.0)                                         # second run happened
     sched.stop()
+
+
+def test_enabled_scheduler_runs_the_real_harden_on_the_live_window(tmp_path):
+    """Config interval -> start_scheduler -> HardenService.harden -> audit chain."""
+    cfg = Config(persist=True)
+    cfg.data_dir = str(tmp_path / "iso")
+    cfg.db_path = str(tmp_path / "iso" / "spectra.db")   # own DB: other tests also write model.harden
+    cfg.capture_store_dir = str(tmp_path / "iso" / "captures")
+    cfg.model_path = str(tmp_path / "iso" / "m.joblib")
+    cfg.ensure_dirs()
+    engine = SpectraEngine(config=cfg)
+    engine.train_from_pcap(make_baseline_pcap(str(tmp_path / "b.pcap"), n_flows=120),
+                           contamination=0.05)
+    engine.config.harden_interval_h = 0.00003            # ~0.1 s, test only
+    rng = np.random.default_rng(0)
+    for row in np.abs(rng.normal(5, 1, (12, N_FEATURES))):   # a live window to attack
+        engine.alerts.on_scored(row, 1.0)
+
+    sched = engine.harden.start_scheduler()
+    assert sched is not None
+    try:
+        deadline = time.time() + 10
+        while time.time() < deadline:
+            kinds = [e["kind"] for e in engine.audit_service.entries(limit=50)["items"]]
+            if "model.harden" in kinds:
+                break
+            time.sleep(0.05)
+    finally:
+        sched.stop()
+    entry = next(e for e in engine.audit_service.entries(limit=50)["items"]
+                 if e["kind"] == "model.harden")
+    assert entry["actor"] == "spectra-scheduler"          # the scheduled path, not a person
+    assert entry["payload"]["promote"] is False
+    assert engine.audit_service.verify()["ok"] is True

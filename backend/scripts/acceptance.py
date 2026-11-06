@@ -639,6 +639,137 @@ def run_graph() -> None:
         add(g, "GET /api/graph/path", "warn", "no edges")
 
 
+def run_phase9() -> None:
+    """Phase 9 gap-closure features, exercised through the live API."""
+    g = "phase9"
+    # -- 9A windowed correlation -------------------------------------------------
+    st, snap = req("GET", "/api/graph")
+    nodes = snap.get("nodes") or [] if isinstance(snap, dict) else []
+    hosts = [n["id"] for n in nodes if isinstance(n, dict) and n.get("type") == "host"]
+    if hosts:
+        hid = urllib.parse.quote(hosts[0])
+        st, full = req("GET", f"/api/graph/cascade?id={hid}")
+        st_w, win = req("GET", f"/api/graph/cascade?id={hid}&window_s=3600")
+        check(g, "9A cascade accepts window_s and echoes it",
+              st_w == 200 and win.get("window_s") == 3600 and full.get("window_s") is None,
+              f"HTTP {st_w} window_s={win.get('window_s') if isinstance(win, dict) else win}")
+        check(g, "9A a window never widens the reachable sectors",
+              st == 200 and st_w == 200
+              and set(win.get("sectors", [])) <= set(full.get("sectors", [])),
+              f"windowed={win.get('sectors')} all={full.get('sectors')}")
+        check(g, "9A window_s=0 is rejected (400)",
+              req("GET", f"/api/graph/cascade?id={hid}&window_s=0")[0] == 400)
+    else:
+        add(g, "9A cascade window", "warn", "no host node in the graph")
+    edges = snap.get("edges") or [] if isinstance(snap, dict) else []
+    check(g, "9A edges carry first_ts/last_ts/flow_ids and 9D regularity",
+          bool(edges) and all(k in edges[0] for k in
+                              ("first_ts", "last_ts", "flow_ids", "regularity")),
+          f"keys={sorted(edges[0]) if edges else 'no edges'}")
+
+    # -- 9B adversarial retraining harness (report only) -------------------------------
+    active_before = req("GET", "/api/model/registry")[1].get("active", {})
+    st, hd = req("POST", "/api/model/harden", {"capture_id": susp_capture_id()}, timeout=180)
+    check(g, "9B POST /api/model/harden reports, never promotes",
+          st == 200 and hd.get("promoted") is False and isinstance(hd.get("promote"), bool)
+          and bool(hd.get("reason")),
+          f"HTTP {st} promote={hd.get('promote')} reason={str(hd.get('reason'))[:90]}")
+    active_after = req("GET", "/api/model/registry")[1].get("active", {})
+    check(g, "9B the active model is unchanged by a harden run",
+          (active_before or {}).get("model_id") == (active_after or {}).get("model_id"))
+    kinds = {e.get("kind") for e in req("GET", "/api/audit/entries?limit=200")[1].get("items", [])}
+    check(g, "9B harden runs are audit-chained", "model.harden" in kinds, f"kinds={sorted(kinds)[:8]}")
+
+    # -- 9C synthetic augmentation (opt-in, labelled) ------------------------------------
+    st, tr = req("POST", "/api/model/train",
+                 {"capture_id": base_capture_id(), "contamination": 0.05, "augment": 30})
+    check(g, "9C train --augment is labelled synthetic",
+          st == 200 and tr.get("augmented") == 30 and tr.get("augmentation") == "synthetic",
+          f"HTTP {st} augmented={tr.get('augmented')} augmentation={tr.get('augmentation')}")
+    st, tr0 = req("POST", "/api/model/train",       # restore the plain model for later groups
+                  {"capture_id": base_capture_id(), "contamination": 0.05})
+    check(g, "9C default training is not augmented",
+          st == 200 and tr0.get("augmented") == 0 and "augmentation" not in tr0)
+
+    # -- 9E rolling PSI --------------------------------------------------------------------
+    # score a capture with the (plain) model so the live window has flows to compare
+    sid = susp_capture_id()
+    if sid is not None:
+        req("POST", f"/api/captures/{sid}/process")
+        wait_capture_terminal(sid)
+    st, dr = req("GET", "/api/model/drift")
+    if st == 200 and dr.get("available"):
+        recent = dr.get("psi_vs_recent") or {}
+        # the demo captures hold only a few dozen flows, far fewer than the
+        # reference needs (hundreds of older sampled flows), so "warming up"
+        # is the correct answer here, not a failure
+        check(g, "9E drift reports psi_vs_train, psi_vs_recent and alert_level",
+              {"psi_vs_train", "psi_vs_recent", "alert_level"} <= set(dr)
+              and dr["psi_vs_train"]["level"] in ("stable", "moderate", "significant")
+              and (recent.get("available") is True or "warming" in str(recent.get("reason"))),
+              f"window={dr.get('window')} train={dr.get('psi_vs_train')} recent={recent}")
+    else:
+        add(g, "9E drift", "warn", f"HTTP {st} available={dr.get('available') if isinstance(dr, dict) else dr}")
+
+    # -- 9F audit signing-key epochs ----------------------------------------------------------
+    before = req("GET", "/api/audit/verify")[1]
+    ck = req("POST", "/api/audit/checkpoint")[1]
+    st, rot = req("POST", "/api/audit/rotate-key")
+    check(g, "9F POST /api/audit/rotate-key (public material only)",
+          st == 200 and set(rot) == {"epoch", "pubkey", "start_seq", "entry_seq", "previous_pubkey"}
+          and rot.get("epoch") == (before.get("epoch") or 1) + 1,
+          f"HTTP {st} keys={sorted(rot) if isinstance(rot, dict) else rot}")
+    after = req("GET", "/api/audit/verify")[1]
+    check(g, "9F chain verifies across the rotation",
+          after.get("ok") is True and len(after.get("epochs", [])) >= 2
+          and after.get("signing_key") == rot.get("pubkey"),
+          f"ok={after.get('ok')} epochs={len(after.get('epochs', []))}")
+    if ck.get("seq"):
+        vck = req("GET", f"/api/audit/checkpoint/verify?seq={ck['seq']}")[1]
+        check(g, "9F a pre-rotation checkpoint still verifies", vck.get("ok") is True,
+              f"ok={vck.get('ok')}")
+    req("POST", "/api/audit/checkpoint")
+    check(g, "9F a post-rotation checkpoint verifies",
+          req("GET", "/api/audit/checkpoint/verify")[1].get("ok") is True)
+
+    # -- 9G Shamir t-of-n with dropout ---------------------------------------------------------
+    deltas = [[0.5, -1.25, 3.0], [1.5, 0.75, -2.0], [-0.25, 0.1, 0.4]]
+    st, fed = req("POST", "/api/tee/federate",
+                  {"deltas": deltas, "shareholders": 5, "threshold": 3,
+                   "dropped_shareholders": [0], "dropped_parties": [2]})
+    want_sum = [2.0, -0.5, 1.0]
+    check(g, "9G Shamir round survives a dropped shareholder and a dropped party",
+          st == 200 and fed.get("scheme") == "shamir" and fed.get("exact") is True
+          and fed.get("responded") == 4 and fed.get("parties") == 2
+          and all(abs(a - b) < 1e-5 for a, b in zip(fed.get("aggregate", []), want_sum, strict=False)),
+          f"HTTP {st} aggregate={fed.get('aggregate')} responded={fed.get('responded')}")
+    check(g, "9G federate response leaks no shares, nonces or seed",
+          isinstance(fed, dict) and not any(k in fed for k in (
+              "party_shares", "aggregate_shares", "aggregate_submissions", "party_nonces", "seed")))
+    check(g, "9G too many dropped shareholders is a 400",
+          req("POST", "/api/tee/federate",
+              {"deltas": deltas, "shareholders": 5, "threshold": 3,
+               "dropped_shareholders": [0, 1, 2]})[0] == 400)
+
+    # -- 9H twin / graph freshness --------------------------------------------------------------
+    st, topo = req("GET", "/api/twin/topology")
+    check(g, "9H twin topology reports hydrated_at / flow_lag / stale",
+          st == 200 and {"hydrated_at", "flow_lag", "stale"} <= set(topo),
+          f"HTTP {st} hydrated_at={topo.get('hydrated_at')} flow_lag={topo.get('flow_lag')} "
+          f"stale={topo.get('stale')}")
+    check(g, "9H graph snapshot carries freshness", "freshness" in snap if isinstance(snap, dict) else False)
+
+    # -- JA4 follows the published spec (checked on real parsed traffic) --------------------------
+    import re
+    st, fl = req("GET", "/api/history/flows?limit=200")
+    ja4s = [f.get("ja4") for f in (fl.get("items", []) if isinstance(fl, dict) else []) if f.get("ja4")]
+    shape = re.compile(r"^[tq](?:\d\d|s\d)[di]\d\d\d\d[0-9a-z]{2}_[0-9a-f]{12}_[0-9a-f]{12}$")
+    bad = [j for j in ja4s if not shape.match(j)]
+    check(g, "JA4 strings on stored flows match the FoxIO format",
+          bool(ja4s) and not bad,
+          f"{len(ja4s)} fingerprints, {len(bad)} malformed {bad[:2]}")
+
+
 def run_pqc() -> None:
     g = "pqc"
     want(g, "GET /api/pqc", req("GET", "/api/pqc")[0])
@@ -1020,6 +1151,8 @@ def main() -> int:
     print("== edge (Module 8) ==")
     run_edge()
     print("== adversarial (Module 3, via robustness probe above) ==")
+    print("== phase 9 (gap closure) ==")
+    run_phase9()
     print("== negative paths ==")
     run_negative()
     if not args.skip_cli:
