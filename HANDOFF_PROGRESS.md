@@ -287,3 +287,7 @@ Scope: Python lockfile only. `npm audit`, gitleaks and the GitHub Actions run ar
 
 ## REVIEW GATE-8.5: APPROVED (human: Saikrishna0817, 2026-11-06)
 Approval given by the human in chat this session; recorded by the agent at their instruction. Phase 9 may start.
+
+## RUFF-FIX (post-merge) · tier H · RESULT: PASS (2026-11-06) — branch haiku/spectra-p85
+13 ruff findings (ruff 0.17.4 via uvx, not pinned) in code merged from main's Phase 7; none in Phase 8.5 files. No behaviour change: B023 bound the per-iteration row as a default argument in two `cell()` helpers (eval/adapters.py); unused `os` import removed (services/model.py); F541/F401 auto-fixed; `l`→`lab`, lambda→def, unused assignments dropped but their calls kept (incidents.create, _seed_api); unused `detector = SpectraDetector()` removed from test_eval.py (constructor was not relied on).
+VERIFY: `uvx ruff check .` → All checks passed!; pytest 599 passed; README counts OK.

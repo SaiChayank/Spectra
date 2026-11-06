@@ -9,7 +9,6 @@ comparison and the Module 2 confidential-computing facade.
 from __future__ import annotations
 
 import logging
-import os
 import threading
 from collections import deque
 from contextlib import contextmanager

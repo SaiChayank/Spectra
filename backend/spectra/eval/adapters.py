@@ -535,8 +535,8 @@ def _ctu13_comma(src: str, out_path: str, pcap_path: str | None,
                         f"{lineno}: expected {len(header)} columns, "
                         f"got {len(cells)}")
 
-                def cell(col: str) -> str:
-                    return cells[idx[col]].strip()
+                def cell(col: str, row: list[str] = cells) -> str:
+                    return row[idx[col]].strip()
 
                 raw = cell("Label")
                 raw_labels[raw] += 1
@@ -758,8 +758,8 @@ def cicids2017_to_labels(labels_path: str, out_path: str, *,
                         f"{lineno}: expected {width} columns, "
                         f"got {len(cells)}")
 
-                def cell(col: str) -> str:
-                    return cells[idx[col]].strip()
+                def cell(col: str, row: list[str] = cells) -> str:
+                    return row[idx[col]].strip()
 
                 raw = cell("Label")
                 raw_labels[raw] += 1
