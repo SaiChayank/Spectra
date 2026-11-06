@@ -37,6 +37,10 @@ class TrainRequest(BaseModel):
     #: an immediately usable model).  ``false`` registers a CANDIDATE only -
     #: the session detector stays untouched until an explicit activation.
     activate: bool = True
+    #: Mix this many SYNTHETIC benign flows (demo profile library) into the
+    #: baseline before fitting; 0 = off.  Labelled ``augmented`` /
+    #: ``augmentation: "synthetic"`` in the response, run metrics and audit.
+    augment: int = Field(default=0, ge=0, le=5000)
 
 
 class RobustnessRequest(BaseModel):
@@ -110,7 +114,7 @@ def model_train(req: TrainRequest,
     try:
         return engine.training.train_from_pcap(
             path, contamination=req.contamination, activate=req.activate,
-            actor=principal["username"])
+            actor=principal["username"], augment=req.augment)
     except AnalysisBusy as exc:
         # the single-flight slot is held by another fit/analysis run
         raise HTTPException(status_code=409, detail=str(exc)) from exc

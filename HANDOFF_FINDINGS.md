@@ -25,3 +25,10 @@ Recorded run (scratch scripts, not committed): demo baseline pcap (make_baseline
 - benign + jittered benign copies x2: 25.0% -> 0.0%.
 - contamination 0.05: 91.2% -> 2.5% (FP 5.3%).
 Conclusion: none of the tested augmentations lowers the evasion success rate; evasion.attack defeats every variant (~97-100% of flagged rows). An unsupervised Isolation Forest cannot take negative labels, so adding evaded points only teaches it that they are normal. docs/33 §9B step 1 Done-when ("retrained model's evasion success rate drops") is therefore NOT met by this construction. Reproduction: sizes/seeds above; one-off script was in the session scratchpad.
+
+## 9C experiment (2026-11-06) — synthetic benign augmentation, held-out SYNTHETIC comparison only
+Setup (scratch script, not committed): baseline = make_baseline_pcap(n_flows=120, seed=7); held-out benign = 30 flows per profile from the 7-profile library (spectra.demo.BENIGN_PROFILES) with seed 1000, plus a same-distribution baseline (seed 99); IsolationForest random_state=42, contamination 0.02. "Seen" = the 5 profiles the augmenter drew from; "unseen" = keepalive_slow and quic_stream, left out of augmentation. All data synthetic. NO real capture was available (the real baseline from the acceptance report is gitignored on another machine): the real-traffic false-flag comparison HANDOFF requires is NOT RUN.
+- baseline only: same-dist FP 3.3%, seen-profile FP 41.3%, unseen-profile FP 100%.
+- +30 synthetic: 1.6% / 2.7% / 50%. +100: 1.6% / 2.0% / 78%. +300: 1.6% / 1.3% / 100%.
+- +100 drawn from all 7 profiles: 0.8% / 0.0% / 8.3%.
+Reading: augmentation removes false flags on profile families the library covers and does not hurt the baseline's own distribution, but it does not generalise to benign behaviour the library lacks (unseen-profile FP is erratic: 50% -> 78% -> 100% as N grows). The held-out set shares the library's families, so this shows the mechanism, not a real-world gain. Therefore augmentation ships OPT-IN (default 0) and nothing in docs/UI may claim fewer real-world false flags until a real held-out capture is compared.

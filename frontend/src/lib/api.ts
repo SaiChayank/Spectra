@@ -1032,6 +1032,9 @@ export interface TrainResult {
   pcap?: string;
   contamination?: number;
   n_features?: number;
+  /** SYNTHETIC benign flows mixed into this fit (0 = none). */
+  augmented?: number;
+  augmentation?: "synthetic";
   registry?: {
     model_id: string;
     status: RegistryStatus;
@@ -1153,10 +1156,10 @@ export const api = {
    * `activate: false` registers a registry CANDIDATE only — the running
    * session model stays untouched until an explicit activation.
    */
-  train: (captureId: number, contamination: number, activate = true) =>
+  train: (captureId: number, contamination: number, activate = true, augment = 0) =>
     request<TrainResult>("/api/model/train", {
       method: "POST",
-      body: JSON.stringify({ capture_id: captureId, contamination, activate }),
+      body: JSON.stringify({ capture_id: captureId, contamination, activate, augment }),
     }),
 
   // Managed capture resources: file bytes go up once via multipart import;

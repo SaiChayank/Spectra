@@ -154,8 +154,12 @@ def tls_flow_packets(
     start: float = BASE,
     jitter: random.Random | None = None,
     profile: str = "classic",
+    gap_scale: float = 1.0,
 ) -> list:
     """A complete benign-looking TLS session: handshake, data exchange, FINs.
+
+    ``gap_scale`` stretches the data-exchange gaps (1.0 = the original
+    cadence, byte-identical output; the random draws are unchanged).
 
     Profiles control the negotiated cryptography (used by the PQC tests):
         classic  TLS 1.3 + X25519 (classical, harvestable)
@@ -204,12 +208,12 @@ def tls_flow_packets(
     sseq += len(sh)
 
     for _ in range(n_data):
-        t += 0.05 + rng.uniform(0, 0.05)
+        t += (0.05 + rng.uniform(0, 0.05)) * gap_scale
         size = max(1, int(data_size * rng.uniform(0.7, 1.3)))
         pkts.append(_pkt(src, dst, sport, dport, "PA", cseq + 1, sseq + 1,
                          b"C" * size, t=t))
         cseq += size
-        t += 0.03 + rng.uniform(0, 0.04)
+        t += (0.03 + rng.uniform(0, 0.04)) * gap_scale
         size = max(1, int(data_size * rng.uniform(0.7, 1.3)))
         pkts.append(_pkt(dst, src, dport, sport, "PA", sseq + 1, cseq + 1,
                          b"S" * size, t=t))
@@ -380,6 +384,56 @@ def make_baseline_pcap(path: str, n_flows: int = 40, seed: int = 7) -> str:
         src="10.0.0.8", sport=41501, sni="static.assets.io", profile="hybrid",
         start=BASE + 9.0, jitter=rng,
     )
+    pkts.sort(key=lambda p: float(p.time))
+    return write_pcap(path, pkts)
+
+
+# -- 9C: parameterized benign-diversity library --------------------------------
+# SYNTHETIC by construction: every profile is generated here, never captured.
+# Profiles vary protocol, cadence and burst shape so training can see benign
+# behaviour beyond the single demo baseline (docs/33 Phase 9C, research 10.1).
+
+#: name -> (transport, tls profile, n_data range, data_size range, gap_scale)
+BENIGN_PROFILES: dict[str, tuple] = {
+    "web_browse":     ("tls",  "classic", (3, 8),   (300, 1200), 1.0),
+    "api_chatty":     ("tls",  "classic", (12, 30), (80, 250),   0.4),
+    "bulk_download":  ("tls",  "classic", (4, 8),   (1200, 1400), 0.2),
+    "legacy_tls12":   ("tls",  "rsa12",   (3, 6),   (300, 700),  1.0),
+    "pqc_hybrid":     ("tls",  "hybrid",  (4, 10),  (400, 900),  1.0),
+    "keepalive_slow": ("tls",  "classic", (2, 4),   (60, 120),   12.0),
+    "quic_stream":    ("quic", "classic", (6, 14),  (500, 1100), 1.0),
+}
+
+_PROFILE_SNIS = ["example.com", "api.bank.test", "portal.health.test",
+                 "cdn.city.test", "mail.example.org", "static.assets.io"]
+
+
+def benign_profile_packets(profile: str, index: int = 0, seed: int = 0,
+                           start: float = BASE) -> list:
+    """One synthetic benign flow of the named profile (individually parseable)."""
+    transport, tls_profile, n_range, size_range, gap = BENIGN_PROFILES[profile]
+    rng = random.Random(f"{profile}:{seed}:{index}")
+    kwargs = dict(
+        src=f"10.1.{(index // 200) % 250}.{index % 200 + 10}",
+        sport=30000 + index % 20000,
+        sni=_PROFILE_SNIS[index % len(_PROFILE_SNIS)],
+        n_data=rng.randint(*n_range),
+        data_size=rng.randint(*size_range),
+        start=start, jitter=rng,
+    )
+    if transport == "quic":
+        return quic_flow_packets(profile=tls_profile, **kwargs)
+    return tls_flow_packets(profile=tls_profile, gap_scale=gap, **kwargs)
+
+
+def make_benign_diversity_pcap(path: str, n_flows: int = 40, seed: int = 0,
+                               profiles: list[str] | None = None) -> str:
+    """Synthetic benign PCAP cycling through ``profiles`` (default: all)."""
+    names = list(profiles or BENIGN_PROFILES)
+    pkts: list = []
+    for i in range(n_flows):
+        pkts += benign_profile_packets(names[i % len(names)], index=i, seed=seed,
+                                       start=BASE + i * 20.0)
     pkts.sort(key=lambda p: float(p.time))
     return write_pcap(path, pkts)
 

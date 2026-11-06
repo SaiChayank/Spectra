@@ -538,9 +538,10 @@ class SpectraEngine:
 
     def train_from_pcap(self, path: str, contamination: float | None = None,
                         *, activate: bool = True,
-                        actor: str | None = None) -> dict:
+                        actor: str | None = None, augment: int = 0) -> dict:
         """Train the detector on the benign baseline contained in a PCAP.
 
+        ``augment`` > 0 mixes that many SYNTHETIC benign flows into the fit.
         With persistence the fit registers a registry CANDIDATE; the audited
         register -> validate -> activate chain runs when ``activate`` is set
         (the default), so training keeps its contract of an immediately
@@ -548,7 +549,7 @@ class SpectraEngine:
         """
         return self.training.train_from_pcap(
             path, contamination=contamination, activate=activate,
-            actor=actor)
+            actor=actor, augment=augment)
 
     # -- model registry (Prompt 14) -------------------------------------------------
 

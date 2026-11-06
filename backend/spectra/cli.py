@@ -18,7 +18,8 @@ def cmd_train(args: argparse.Namespace) -> int:
     from .pipeline import SpectraEngine
 
     engine = SpectraEngine(model_path=args.out)
-    info = engine.train_from_pcap(args.pcap, contamination=args.contamination)
+    info = engine.train_from_pcap(args.pcap, contamination=args.contamination,
+                                  augment=args.augment)
     print("model trained:")
     print(json.dumps(info, indent=2))
     return 0
@@ -977,6 +978,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("pcap", help="path to baseline (benign) PCAP")
     p.add_argument("--contamination", type=float, default=0.02,
                    help="expected anomaly fraction of the baseline (default 0.02)")
+    p.add_argument("--augment", type=int, default=0, metavar="N",
+                   help="mix N SYNTHETIC benign flows (demo profile library) "
+                        "into the baseline before fitting (default 0 = off)")
     p.add_argument("--out", default=None, help="output model path")
     p.set_defaults(func=cmd_train)
 

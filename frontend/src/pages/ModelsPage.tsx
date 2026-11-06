@@ -94,6 +94,7 @@ export default function ModelsPage({ can, onError, onNotice }: Props) {
   // Training form.
   const [captureId, setCaptureId] = useState("");
   const [contamination, setContamination] = useState("0.02");
+  const [augment, setAugment] = useState("0");
   const [activate, setActivate] = useState(true);
   const [trainResult, setTrainResult] = useState<string | null>(null);
 
@@ -183,13 +184,20 @@ export default function ModelsPage({ can, onError, onNotice }: Props) {
       onError("Contamination must be between 0 and 0.5 (fraction of training rows assumed anomalous).");
       return;
     }
+    const augmentValue = Number(augment);
+    if (!Number.isInteger(augmentValue) || augmentValue < 0 || augmentValue > 5000) {
+      onError("Synthetic flows must be a whole number from 0 to 5000.");
+      return;
+    }
     setBusyKey("train");
     setTrainResult(null);
     try {
-      const result = await api.train(Number(captureId), contaminationValue, activate);
+      const result = await api.train(Number(captureId), contaminationValue, activate, augmentValue);
       const reg = result.registry;
       setTrainResult(
-        `Trained on ${formatNum(result.n_train)} row(s) → ${result.model_path}` +
+        `Trained on ${formatNum(result.n_train)} row(s)` +
+          (result.augmented ? ` (incl. ${formatNum(result.augmented)} SYNTHETIC benign)` : "") +
+          ` → ${result.model_path}` +
           (reg
             ? `. Registry: ${reg.model_id} is ${reg.status}` +
               (reg.activated ? " and ACTIVE" : " (candidate — activate when ready)") +
@@ -485,6 +493,17 @@ export default function ModelsPage({ can, onError, onNotice }: Props) {
                   onChange={(e) => setContamination(e.target.value)}
                 />
               </label>
+              <label title="Adds generated (not captured) benign flows to the baseline. Opt-in; recorded as synthetic in the run history and audit log.">
+                Synthetic benign flows (0 = off)
+                <input
+                  type="number"
+                  step="1"
+                  min={0}
+                  max={5000}
+                  value={augment}
+                  onChange={(e) => setAugment(e.target.value)}
+                />
+              </label>
               <label className="checkbox">
                 <input
                   type="checkbox"
@@ -617,7 +636,12 @@ export default function ModelsPage({ can, onError, onNotice }: Props) {
                           {relTime(run.trained_at)}
                         </td>
                         <td className="mono">{run.pcap ?? "—"}</td>
-                        <td>{formatNum(run.n_train)}</td>
+                        <td>
+                          {formatNum(run.n_train)}
+                          {Number(metrics.augmented) > 0 && (
+                            <span className="dim"> (incl. {String(metrics.augmented)} synthetic)</span>
+                          )}
+                        </td>
                         <td>{run.contamination ?? "—"}</td>
                         <td className="dim mono">{metricText || "—"}</td>
                       </tr>
