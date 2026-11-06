@@ -81,8 +81,20 @@ class CaptureResourceService:
         self.storage = CaptureStorage(
             config.capture_store_dir, max_bytes=config.capture_max_bytes)
         self.sweep_orphans()
+        if store is not None:
+            store.retention_listeners.append(self._after_retention)
 
     # -- housekeeping ---------------------------------------------------------
+
+    def _after_retention(self, counts: dict) -> None:
+        """Retention removed capture rows: delete their stored files now.
+
+        Uploads are stored verbatim, so the file - not the row - is what holds
+        any payload bytes; leaving it until the next restart would make
+        ``capture_retention_days`` a promise about rows only.
+        """
+        if counts.get("captures"):
+            self.sweep_orphans()
 
     def sweep_orphans(self, older_than: float = 3600.0) -> int:
         """Delete store files no capture row references (best effort).

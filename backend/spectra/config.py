@@ -20,8 +20,30 @@ def _env(name: str, default: str) -> str:
     return os.environ.get(f"SPECTRA_{name}", default)
 
 
+#: Deployment profiles.  ``local`` (default) is today's behaviour: nothing is
+#: deleted by age.  ``hardened`` is the shipping posture: age-based retention
+#: on, and anything the operator did not set explicitly takes the value below.
+PROFILES: tuple[str, ...] = ("local", "hardened")
+
+#: PROPOSED hardened retention (days) - NOT yet approved by the data owner
+#: (docs/project-rules.md section 3: any retention change needs their approval).
+#: Flagged rows are investigation evidence so they outlive ordinary flows;
+#: uploaded captures are kept shortest because they are stored verbatim and may
+#: hold payload bytes.  ``audit_log`` is never pruned by any profile.
+HARDENED_RETENTION_DAYS: dict[str, float] = {
+    "flow_retention_days": 30.0,
+    "detection_retention_days": 90.0,
+    "capture_retention_days": 14.0,
+    "event_retention_days": 30.0,
+}
+
+
 @dataclass
 class Config:
+    # deployment profile: "local" (default, retention off) or "hardened"
+    # (proposed retention defaults above); an explicit SPECTRA_*_RETENTION_DAYS wins
+    profile: str = field(default_factory=lambda: _env("PROFILE", "local"))
+
     # paths
     data_dir: str = field(default_factory=lambda: _env("DATA_DIR", str(DEFAULT_DATA_DIR)))
     db_path: str = ""              # resolved in __post_init__
@@ -128,6 +150,16 @@ class Config:
     log_level: str = field(default_factory=lambda: _env("LOG_LEVEL", "INFO"))
 
     def __post_init__(self) -> None:
+        if self.profile not in PROFILES:
+            raise ValueError(
+                f"unknown SPECTRA_PROFILE {self.profile!r}; choose one of {', '.join(PROFILES)}")
+        if self.profile == "hardened":
+            # 0 means "not set" here: only a still-default field takes the profile
+            # value (an operator disabling one on purpose sets it via the environment,
+            # which Config.from_env applies afterwards and so wins)
+            for name, days in HARDENED_RETENTION_DAYS.items():
+                if getattr(self, name) == 0.0:
+                    setattr(self, name, days)
         if not self.db_path:
             self.db_path = _env("DB_PATH", os.path.join(self.data_dir, "spectra.db"))
         if not self.model_path:

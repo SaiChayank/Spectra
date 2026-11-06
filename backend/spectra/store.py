@@ -102,6 +102,10 @@ class Store:
         self._incidents = IncidentRepository(self._db)
         self._alerts = AlertRepository(self._db)
         self.retention = retention if retention is not None else RetentionPolicy()
+        #: called with the per-policy counts after every retention run (outside
+        #: the database lock) - the capture service uses it to delete the stored
+        #: upload files of the capture rows retention just removed
+        self.retention_listeners: list = []
         self._lock = self._db.lock           # compat: historical attribute
         # Startup sweep: close sessions a crashed process left open and apply
         # configured age policies before this process writes anything. A sweep
@@ -601,7 +605,12 @@ class Store:
             counts = apply_retention(self._db, self.retention)
             self._flows.resync()
             self._events_repo.resync()
-            return counts
+        for listener in list(self.retention_listeners):
+            try:
+                listener(counts)
+            except Exception as exc:  # noqa: BLE001 - housekeeping must not fail a capture
+                log.warning("retention listener failed: %s", exc)
+        return counts
 
     def write_stats(self) -> dict:
         """Batching/commit telemetry (throughput + debugging aid)."""

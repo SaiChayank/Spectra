@@ -178,7 +178,9 @@ upload through (`capture/storage.py`):
    data (database, audit log, API responses, logs) carries none -
    `tests/test_metadata_only_probe.py` checks exactly that and pins this single
    exception. Protect `SPECTRA_DATA_DIR` like the evidence it is (directory
-   permissions, disk encryption, retention via `SPECTRA_CAPTURE_RETENTION_DAYS`);
+   permissions, disk encryption, retention via `SPECTRA_CAPTURE_RETENTION_DAYS`
+   - which now removes the stored file together with a finished capture's row;
+   an upload that is never processed is exempt, see `docs/retention.md`);
    deleting a capture removes the file. Stripping payload on ingest is an open
    design option (HANDOFF_FINDINGS.md, Phase 10).
 
@@ -268,6 +270,7 @@ Booleans accept `1/true/yes/on`. Defaults are the safe local values.
 | `SPECTRA_ADMIN_PASSWORD` | *(unset)* | unset ⇒ random, written to `data/admin_bootstrap.txt` (600) |
 | `SPECTRA_SESSION_TTL_MINUTES` | `720` | absolute session lifetime |
 | `SPECTRA_SESSION_COOKIE_SECURE` | `false` | set `true` behind TLS |
+| `SPECTRA_PROFILE` | `local` | `hardened` turns retention on with the proposed defaults ([retention.md](./retention.md)) |
 | `SPECTRA_TOTP_KEY_PATH` | `<data dir>/totp.key` | key file that encrypts enrolled TOTP secrets (back it up with the database) |
 | `SPECTRA_TOTP_ISSUER` | `Spectra` | label shown in authenticator apps |
 | `SPECTRA_CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | comma-separated; also gates WS Origin |

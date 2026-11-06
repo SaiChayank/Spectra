@@ -26,6 +26,8 @@ All notable changes to Spectra are documented here. The format follows
 - Phase 10 security evidence: custom Semgrep payload-access rule + CI `sast` job, licence policy check, npm-audit gates, metadata-only runtime probe, SAST/SCA/DAST reports with raw evidence, refreshed threat model, ADRs 005-009 (proposed). Found: uploaded captures are stored verbatim (documented).
 - Login throttle now escalates: repeated failure episodes double the block (60 s up to 900 s), strikes decay, a success clears them; per-source, non-enumerating, bounded (Phase 10 §6, `test_login_backoff.py`). TOTP is not built - see `HANDOFF_FINDINGS.md`.
 - Model evaluation report and model card (`docs/evaluation-report.md`, `docs/model-card.md`) from a reproducible synthetic evaluation (`scripts/eval_synthetic.py`, bootstrap intervals, 2 baselines, evasion rates, cross-sector table). Synthetic only; real-data runs not done.
+- Optional TOTP second factor (`/api/auth/totp/{setup,enable,disable}`, `totp_code` on login, admin/CLI reset, secrets AES-GCM-encrypted under `totp.key`), awaiting security review (Phase 10, ADR-010).
+- Deployment profiles: `SPECTRA_PROFILE=hardened` turns on proposed retention defaults (flows 30 d, detections 90 d, captures 14 d, events 30 d; default `local` unchanged); numbers need data-owner approval (`docs/retention.md`).
 - Ship plan for the public software release (`docs/34_ship_plan.md`).
 - `LICENSE` (Apache-2.0), `SECURITY.md`, `CONTRIBUTING.md`, issue/PR
   templates and Dependabot configuration.
@@ -37,6 +39,7 @@ All notable changes to Spectra are documented here. The format follows
   referenced as binding.
 
 ### Fixed
+- Capture retention now deletes the stored upload file together with the row; previously the verbatim PCAP stayed on disk until the next restart.
 - Ruff findings in merged Phase 7 code; react-hooks lint errors in the
   frontend.
 
