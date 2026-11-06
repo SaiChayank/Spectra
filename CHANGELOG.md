@@ -27,6 +27,7 @@ All notable changes to Spectra are documented here. The format follows
   templates and Dependabot configuration.
 
 ### Changed
+- **JA4 now follows the published FoxIO spec** (`t13d1516h2_8daaf6152771_e5627efa2ab1` for the spec's worked example). Previously the value was JA4-style but not interoperable: decimal unsorted values, wrong extension count and ALPN characters, one merged hash. QUIC hellos now start with `q`; server hellos get no JA4; a GREASE-first `supported_versions` no longer yields a bogus negotiated version. Flows stored before this change keep their old JA4 value and will not match JA4 reference lists.
 - Project rules and guardrails restored as `docs/project-rules.md`. The
   former `docs/16`/`docs/17` were removed in an earlier cleanup while still
   referenced as binding.

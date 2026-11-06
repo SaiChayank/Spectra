@@ -164,7 +164,7 @@ def test_rfc9001_client_initial_metadata():
     assert meta.sni == "example.com"
     assert meta.alpn == ["alpn"]                     # quirk of the RFC sample
     assert 0x001D in meta.key_share_groups
-    assert meta.ja4.startswith("t13d")
+    assert meta.ja4.startswith("q13d")        # JA4 marks QUIC with 'q' (was 't' before the spec fix)
 
 
 def test_rfc9001_server_initial_decrypt_and_metadata():

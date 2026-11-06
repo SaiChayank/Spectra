@@ -105,7 +105,7 @@ stored, or logged.
 * **TLS (TCP):** a streaming reassembler feeds ClientHello/ServerHello parsing
   → `TlsMetadata`: legacy/negotiated version, cipher suites, extensions,
   supported groups, signature algorithms, **SNI** (IDNA-decoded), **ALPN**,
-  key-share group, JA3 (MD5, GREASE stripped) and **JA4** (SHA-256).
+  key-share group, JA3 (MD5, GREASE stripped) and **JA4** (FoxIO spec, client hellos; sorted hex, SHA-256 truncated).
 * **QUIC:** the *Initial* packet is opened with HKDF-derived secrets (RFC 9001 —
   this is standard Initial-header handling, not a privacy boundary crossing),
   the CRYPTO frames are reassembled, and the same `TlsMetadata` is produced.

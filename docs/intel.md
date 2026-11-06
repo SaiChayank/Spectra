@@ -33,6 +33,14 @@ Drop files into `backend/data/intel/` (git-ignored):
 | `ja4.txt` | full JA4 values or prefixes (`t13d`, `t13d1516h2`) | one per line |
 | `sni.txt` | exact domains (`evil.example.com`) or wildcards (`*.bad.net` matches any subdomain, not the apex) | one per line |
 
+**JA4 format.** Spectra computes the published FoxIO JA4 (client) fingerprint
+- the same strings as ja4db.com and FoxIO's examples, e.g.
+`t13d1516h2_8daaf6152771_e5627efa2ab1` (QUIC hellos start with `q`). Server
+hellos get no JA4 (the server-side JA4S belongs to JA4+, licensed
+non-commercially by FoxIO, and is not implemented). Flows stored **before
+2026-11-06** carry the earlier, non-spec JA4-style value and will not match
+reference lists; re-process their captures to regenerate them.
+
 `#` starts a comment; blank lines are skipped. Malformed entries are
 **rejected and counted** in the status output (never silently dropped).
 

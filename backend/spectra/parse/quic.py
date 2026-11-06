@@ -393,7 +393,7 @@ def handshake_metadata(crypto: bytes) -> TlsMetadata | None:
     """Parse reassembled CRYPTO bytes as TLS handshake messages."""
     if not crypto:
         return None
-    meta = TlsMetadata()
+    meta = TlsMetadata(proto="q")          # JA4's first character: QUIC
     records = [TlsRecord(CONTENT_TYPE_HANDSHAKE, 0x0303, crypto)]
     if parse_handshake(records, meta):
         return meta

@@ -65,6 +65,9 @@ class TlsMetadata:
     signature_algorithms: list[int] = field(default_factory=list)
     sni: str = ""
     alpn: list[str] = field(default_factory=list)
+    supported_versions: list[int] = field(default_factory=list)  # client supported_versions, wire order
+    alpn_raw: list[bytes] = field(default_factory=list)          # ALPN values as sent (JA4 needs the bytes)
+    proto: str = "t"                    # "t" TLS over TCP | "q" QUIC (JA4 first character)
     key_share_groups: list[int] = field(default_factory=list)  # groups client offers shares for
     selected_group: int = 0                                     # group chosen by server
     ja3: str = ""
@@ -172,6 +175,7 @@ def _parse_client_hello(body: bytes, meta: TlsMetadata) -> None:
             n = edata[0] if edata else 0
             meta.point_formats = list(edata[1:1 + n])
         elif etype == EXT_ALPN:
+            meta.alpn_raw = _parse_alpn_raw(edata)
             meta.alpn = _parse_alpn(edata)
         elif etype == EXT_SIGNATURE_ALGORITHMS:
             meta.signature_algorithms = _u16_list(edata[2:])
@@ -180,7 +184,14 @@ def _parse_client_hello(body: bytes, meta: TlsMetadata) -> None:
         elif etype == EXT_SUPPORTED_VERSIONS and len(edata) >= 3:
             # client form: 1-byte list length then versions
             if len(edata) == edata[0] + 1:
-                meta.negotiated_version = int.from_bytes(edata[1:3], "big")
+                meta.supported_versions = [
+                    int.from_bytes(edata[i:i + 2], "big")
+                    for i in range(1, len(edata) - 1, 2)]
+                # highest real version: a GREASE value (Chrome puts one first)
+                # is not a version, and wire order is not rank order
+                real = [v for v in meta.supported_versions if not _grease(v)]
+                if real:
+                    meta.negotiated_version = max(real)
             else:  # server form: single selected version
                 meta.negotiated_version = int.from_bytes(edata[:2], "big")
 
@@ -251,12 +262,12 @@ def _is_ascii(b: bytes) -> bool:
     return all(32 <= c < 127 for c in b)
 
 
-def _parse_alpn(data: bytes) -> list[str]:
+def _parse_alpn_raw(data: bytes) -> list[bytes]:
     buf = _Buf(data)
     total = buf.u16()
     if total is None:
         return []
-    out: list[str] = []
+    out: list[bytes] = []
     while buf.remaining() >= 1:
         n = buf.u8()
         if n is None:
@@ -264,8 +275,12 @@ def _parse_alpn(data: bytes) -> list[str]:
         raw = buf.take(n)
         if raw is None:
             break
-        out.append(raw.decode("ascii", errors="replace"))
+        out.append(raw)
     return out
+
+
+def _parse_alpn(data: bytes) -> list[str]:
+    return [raw.decode("ascii", errors="replace") for raw in _parse_alpn_raw(data)]
 
 
 def _u16_list(data: bytes) -> list[int]:
@@ -313,34 +328,69 @@ def ja3(meta: TlsMetadata) -> str:
     return hashlib.md5(raw.encode()).hexdigest()
 
 
+def _alnum(b: int) -> bool:
+    return 0x30 <= b <= 0x39 or 0x41 <= b <= 0x5A or 0x61 <= b <= 0x7A
+
+
+def _alpn_chars(first: bytes) -> str:
+    """JA4 ALPN field: first and last character of the first ALPN value.
+
+    No ALPN or an empty first value -> ``00``; a single character counts as
+    both; if the first or last byte is not ASCII alphanumeric the first and
+    last character of the value's hex representation are used instead.
+    """
+    if not first:
+        return "00"
+    if _alnum(first[0]) and _alnum(first[-1]):
+        return chr(first[0]) + chr(first[-1])
+    hexed = first.hex()
+    return hexed[0] + hexed[-1]
+
+
+def _ja4_version(meta: TlsMetadata) -> str:
+    """supported_versions' highest non-GREASE value if present, else the hello version."""
+    real = [v for v in meta.supported_versions if not _grease(v)]
+    version = max(real) if real else meta.legacy_version
+    return {0x0304: "13", 0x0303: "12", 0x0302: "11", 0x0301: "10",
+            0x0300: "s3", 0x0002: "s2"}.get(version, "00")
+
+
+def _hash12(text: str) -> str:
+    return hashlib.sha256(text.encode()).hexdigest()[:12]
+
+
 def ja4(meta: TlsMetadata) -> str:
-    """JA4 fingerprint: {type}{version}{sni}{ciphers:02d}{exts:02d}{alpn}_{hash}_{sig}."""
-    proto = "t"  # TCP
+    """JA4 client fingerprint (FoxIO JA4, BSD-3-Clause), e.g. ``t13d1516h2_8daaf6152771_e5627efa2ab1``.
+
+    ``{t|q}{version}{d|i}{cipher count}{extension count}{alpn}_{ciphers}_{extensions+sigalgs}``:
+    GREASE ignored everywhere; ciphers and extensions are hashed as sorted
+    4-digit lowercase hex, SNI (0000) and ALPN (0010) excluded from the
+    extension hash but counted; signature algorithms follow in wire order.
+
+    Only ClientHellos get a JA4.  The server-side companion (JA4S) is part of
+    JA4+, which FoxIO licenses non-commercially, so it is not implemented.
+    """
     if meta.role == "server":
-        proto = "T"
-    version = (meta.negotiated_version or meta.legacy_version) or 0
-    ver_str = {0x0301: "10", 0x0302: "11", 0x0303: "12", 0x0304: "13"}.get(
-        version, "00"
-    )
-    sni = "d" if meta.sni else "i"
+        return ""
     ciphers = [c for c in meta.cipher_suites if not _grease(c)]
     exts = [e for e in meta.extensions if not _grease(e)]
-    # SNI(0) and ALPN(16) are excluded from the count per the JA4 spec.
-    ext_count = sum(1 for e in exts if e not in (EXT_SERVER_NAME, EXT_ALPN))
-    alpn = (meta.alpn[0][:2] if meta.alpn else "00")
-    alpn = alpn if len(alpn) == 2 else alpn.ljust(2, "0")
+    sni = "d" if EXT_SERVER_NAME in exts else "i"
+    alpn = _alpn_chars(meta.alpn_raw[0]) if meta.alpn_raw else "00"
+    part_a = (f"{meta.proto}{_ja4_version(meta)}{sni}"
+              f"{min(len(ciphers), 99):02d}{min(len(exts), 99):02d}{alpn}")
 
-    if meta.role == "server":
-        hash_input = ",".join(str(c) for c in ciphers)
+    part_b = (_hash12(",".join(f"{c:04x}" for c in sorted(ciphers)))
+              if ciphers else "000000000000")
+    hashed_exts = sorted(e for e in exts if e not in (EXT_SERVER_NAME, EXT_ALPN))
+    if hashed_exts:
+        text = ",".join(f"{e:04x}" for e in hashed_exts)
+        sigs = [s for s in meta.signature_algorithms if not _grease(s)]
+        if sigs:
+            text += "_" + ",".join(f"{s:04x}" for s in sigs)
+        part_c = _hash12(text)
     else:
-        hash_input = ",".join(
-            ["-".join(str(c) for c in ciphers), "-".join(str(e) for e in exts)]
-        )
-    h1 = hashlib.sha256(hash_input.encode()).hexdigest()[:12]
-    sig = ",".join(str(s) for s in meta.signature_algorithms if not _grease(s))
-    h2 = hashlib.sha256(sig.encode()).hexdigest()[:12] if sig else "000000000000"
-
-    return f"{proto}{ver_str}{sni}{len(ciphers):02d}{ext_count:02d}{alpn}_{h1}_{h2}"
+        part_c = "000000000000"
+    return f"{part_a}_{part_b}_{part_c}"
 
 
 # --- streaming record parser ------------------------------------------------

@@ -106,7 +106,7 @@ class Flow:
             "sni": tls.sni if tls else None,
             "alpn": tls.alpn if tls else None,
             "ja3": tls.ja3 if tls else None,
-            "ja4": tls.ja4 if tls else None,
+            "ja4": (tls.ja4 or None) if tls else None,   # server hellos get none
             "cipher_count": tls.cipher_count if tls else 0,
             "extension_count": tls.extension_count if tls else 0,
             "quic_version": self.quic.get("version_name") if self.quic else None,
