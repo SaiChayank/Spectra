@@ -7,6 +7,7 @@ name = "spectra"
 version = "1.0.0"
 description = "Spectra - encrypted traffic threat detection (metadata-only, privacy-preserving)"
 requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
 dependencies = [
     "scapy>=2.5.0",
     "numpy>=1.26.0",

@@ -1,0 +1,49 @@
+name: Bug report
+description: Something in Spectra does not work as documented
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Security problems go through SECURITY.md, not public issues.
+        **Never attach packet captures or payload data.** Spectra is
+        metadata-only and so is this tracker.
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      placeholder: "1.0.0, or the git commit hash"
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: How is it installed?
+      options: [pip, Docker, from source]
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: OS and Python/Node version
+      placeholder: "Ubuntu 24.04, Python 3.12"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs actual behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Relevant log lines. Remove IP addresses and hostnames you do not want public.
+      render: text

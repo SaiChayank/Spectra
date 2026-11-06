@@ -17,8 +17,8 @@ step has a **Done-when** — a concrete check, usually a test or CLI command. A
 phase is complete when all its steps' Done-when checks pass and its exit gate
 is met. Estimate brackets (S/M/L) are relative effort, not durations.
 
-**Ground rules that apply to every phase** (from `16_project_rules_file.md`,
-`17_guardrails_context.md`):
+**Ground rules that apply to every phase** (from `project-rules.md`, Parts 1-2,
+formerly `16_project_rules_file.md` / `17_guardrails_context.md`):
 - Metadata-only: no code path may decrypt, log, or persist payload. Any step
   touching capture/parse/features must preserve this and add a test for it.
 - No fabricated evidence: security/validation docs are populated only with

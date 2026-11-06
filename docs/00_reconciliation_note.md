@@ -86,4 +86,4 @@ schedule (currently opt-in via `SPECTRA_*_RETENTION_DAYS`).
 When the implementation diverges from a planning document, either update that
 document or add a row here — do not let a planning doc silently become a false
 description of current state. Evidence documents (VAPT, SAST, sign-offs) may only
-be populated with real, dated, attributable events per `16_project_rules_file.md` §4.
+be populated with real, dated, attributable events per `project-rules.md` §4.

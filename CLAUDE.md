@@ -1,6 +1,6 @@
 # Spectra
 
-**Before doing anything, read `HANDOFF.md` in this directory in full** (Part A audit, Part B work order, Part C rules R1–R41), then `docs/16_project_rules_file.md` and `docs/17_guardrails_context.md`. The functional roadmap is `docs/33_implementation_plan.md` Part II; `HANDOFF.md` adds the mandatory Phase 8.5 that must land first.
+**Before doing anything, read `HANDOFF.md` in this directory in full** (Part A audit, Part B work order, Part C rules R1–R41), then `docs/project-rules.md` (the project rules and guardrails, formerly `docs/16` and `docs/17`). The functional roadmap is `docs/33_implementation_plan.md` Part II; `HANDOFF.md` adds the mandatory Phase 8.5 that must land first.
 
 Non-negotiables:
 - Metadata-only, always: no code path may decrypt, log or persist payload bytes. Add a test for it whenever you touch capture/parse/features/API responses.

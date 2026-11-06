@@ -2,7 +2,7 @@
 
 Audit date: 2026-10-26 · Repo: `Spectra` (git, `main`, clean, 211 tracked files, last commit `264fc9d`) · Author of audit: Claude (Sonnet 5.5)
 
-> **How to use this file.** Part A is the verified state, Part B the work order, Part C (appended) binding rules. Spectra already has a detailed forward plan, `docs/33_implementation_plan.md` (Phases 9–12). **That document is the functional roadmap; this file adds a verified audit, a mandatory Phase 8.5 (release-engineering fixes that must land first), and strict execution rules.** Project rules in `docs/16_project_rules_file.md` and `docs/17_guardrails_context.md` also bind you; where they are stricter than Part C, follow them (notably: *metadata-only, no payload, ever*; *no fabricated security evidence*).
+> **How to use this file.** Part A is the verified state, Part B the work order, Part C (appended) binding rules. Spectra already has a detailed forward plan, `docs/33_implementation_plan.md` (Phases 9–12). **That document is the functional roadmap; this file adds a verified audit, a mandatory Phase 8.5 (release-engineering fixes that must land first), and strict execution rules.** Project rules and guardrails in `docs/project-rules.md` (formerly `docs/16_project_rules_file.md` and `docs/17_guardrails_context.md`) also bind you; where they are stricter than Part C, follow them (notably: *metadata-only, no payload, ever*; *no fabricated security evidence*).
 
 ---
 
@@ -95,7 +95,7 @@ Functional roadmap = `docs/33_implementation_plan.md` PART II (Phases 9–12). P
 ## Phase 9 — Gap closure (per `docs/33_implementation_plan.md` §9A–9H)
 
 Execute 9A–9H in the document's order, **one sub-phase at a time**, each as its own branch/PR-sized change. Additional conditions:
-1. **Metadata-only invariant (rule 1 of `16_project_rules_file.md`):** every sub-phase touching `capture/`, `parse/`, `features/` or API responses adds a test asserting no payload bytes reach persistence, logs, features or responses (structural, not by example).
+1. **Metadata-only invariant (rule 2.1 of `docs/project-rules.md`):** every sub-phase touching `capture/`, `parse/`, `features/` or API responses adds a test asserting no payload bytes reach persistence, logs, features or responses (structural, not by example).
 2. **Every new API route** must (a) appear in OpenAPI, (b) be covered by the non-vacuous sweep, (c) carry an explicit permission (`model:manage` etc.) with allow/deny tests per role (ADMIN/ANALYST/VIEWER).
 3. **Every schema change** is a numbered migration in `spectra/db/migrations.py` (v7 audit key epochs, v8 JA4S/JA4L columns) with an in-place upgrade test from a v6 database holding data, and a rollback-by-restore note. Nothing else may CREATE/ALTER (project rule).
 4. **9B adversarial retraining:** the harden endpoint only *reports*; promotion remains a separate explicit, audit-chained step. Evasion-rate numbers in docs come from recorded runs (seed, data hash, model hash), never from memory.
