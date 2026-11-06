@@ -50,10 +50,29 @@ on. Code: `backend/spectra/auth/`, `authz.py`, `api/security.py`,
   effect on the next request (role is re-read, not cached in the token).
 * `/api/auth/*` responses carry `Cache-Control: no-store`.
 
-**Login throttling** (`LoginThrottle`, checked *before* any scrypt work):
-10 failures / 60 s per *(ip, username)*, 40 / 60 s per ip → `429` +
-`Retry-After`. In-process and memory-only (resets on restart) — see
-[limitations.md §7](./limitations.md).
+**Login throttling with escalating backoff** (`LoginThrottle`, checked
+*before* any scrypt work): 10 failures / 60 s per *(ip, username)* or 40 / 60 s
+per ip start a block of 60 s answered `429` + `Retry-After`; every repeat
+episode **doubles** the block (60, 120, 240, ... capped at 900 s). Properties,
+each covered by `test_login_backoff.py`:
+
+* **No permanent lockout.** Blocks expire; strikes are forgotten after 1 h of
+  quiet or a successful login; the state is memory-only, so a restart clears
+  it. That restart is the recovery path for a locked-out single-host admin.
+* **No lockout of the real admin from elsewhere.** Keys are *(ip, username)*
+  and *ip*, never the username alone, so an attacker guessing `admin` from one
+  address cannot block `admin` logging in from another.
+* **No account enumeration.** The decision depends on the source and the
+  *attempted* name only; real and non-existent usernames get identical
+  statuses, bodies and `Retry-After` values. Blocked attempts are not counted
+  again (a block cannot be extended by hammering it).
+* **Bounded memory** under key spraying (10 000 keys per table).
+* **Known limit - reverse proxies:** the key is the TCP peer address. Behind a
+  proxy every client shares the proxy's address, so one guesser can block them
+  all for up to the cap. Trusting `X-Forwarded-For` is a separate setting that
+  is deliberately not enabled; configure the proxy's own rate limiting too.
+
+See [limitations.md §7](./limitations.md).
 
 **WebSocket:** handshake authenticated (cookie or `?token=`) before accept —
 failure closes `4401`; Origin must be allowlisted else `4403`; the session is

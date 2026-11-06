@@ -24,6 +24,7 @@ All notable changes to Spectra are documented here. The format follows
 - Twin/graph staleness: `GET /api/twin/topology` and `GET /api/graph` report `hydrated_at`, `flow_lag` and `stale`; the Network page shows a freshness badge (Phase 9H). JA4S/JA4L were not built - JA4+ is not Apache-2.0-compatible (see `HANDOFF_FINDINGS.md`).
 - Exit Gate 9: traceability matrix re-run (FR-2.2 closed, FR-4.1 scheduled mode with qualifiers); acceptance runner gained a `phase9` group and was run against a live server (`docs/acceptance-report-2026-11-06.md`).
 - Phase 10 security evidence: custom Semgrep payload-access rule + CI `sast` job, licence policy check, npm-audit gates, metadata-only runtime probe, SAST/SCA/DAST reports with raw evidence, refreshed threat model, ADRs 005-009 (proposed). Found: uploaded captures are stored verbatim (documented).
+- Login throttle now escalates: repeated failure episodes double the block (60 s up to 900 s), strikes decay, a success clears them; per-source, non-enumerating, bounded (Phase 10 §6, `test_login_backoff.py`). TOTP is not built - see `HANDOFF_FINDINGS.md`.
 - Ship plan for the public software release (`docs/34_ship_plan.md`).
 - `LICENSE` (Apache-2.0), `SECURITY.md`, `CONTRIBUTING.md`, issue/PR
   templates and Dependabot configuration.

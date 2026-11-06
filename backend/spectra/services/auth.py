@@ -124,93 +124,131 @@ def hash_token(token: str) -> str:
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
+class _Meter:
+    """Failures per key -> escalating, self-expiring blocks.
+
+    ``limit`` failures inside ``window`` start a block of ``window`` seconds;
+    each further episode doubles it, up to ``max_block``.  Strikes persist
+    after a block ends and are forgotten once the key has been quiet for
+    ``strike_ttl`` seconds (or on a success), so no key stays blocked longer
+    than ``max_block`` and nothing is permanent.  Tables are bounded.
+    """
+
+    MAX_KEYS = 10_000
+
+    def __init__(self, limit: int, window: float, max_block: float,
+                 strike_ttl: float, clock) -> None:
+        self.limit, self.window = limit, window
+        self.max_block, self.strike_ttl = max_block, strike_ttl
+        self.clock = clock
+        self.events: dict = {}      # key -> failure times inside the window
+        self.blocks: dict = {}      # key -> {"until": t, "strikes": n}
+
+    def wait(self, key, now: float) -> float | None:
+        block = self.blocks.get(key)
+        if block is not None and block["until"] > now:
+            return block["until"] - now
+        return None
+
+    def fail(self, key, now: float) -> None:
+        block = self.blocks.get(key)
+        if block is not None and block["until"] > now:
+            return                      # already blocked: attempts do not extend it
+        if block is not None and now - block["until"] > self.strike_ttl:
+            del self.blocks[key]        # quiet long enough: forgiven
+            block = None
+        times = [t for t in self.events.get(key, ()) if t > now - self.window]
+        times.append(now)
+        if len(times) >= self.limit:
+            strikes = (block["strikes"] if block else 0) + 1
+            length = min(self.window * 2 ** (strikes - 1), self.max_block)
+            self.blocks.pop(key, None)  # re-insert last: dict order = recency
+            self.blocks[key] = {"until": now + length, "strikes": strikes}
+            self.events.pop(key, None)
+        else:
+            self.events[key] = times
+        if len(self.events) > self.MAX_KEYS or len(self.blocks) > self.MAX_KEYS:
+            self._shrink(now)
+
+    def success(self, key) -> None:
+        self.events.pop(key, None)
+        self.blocks.pop(key, None)
+
+    def clear(self) -> None:
+        self.events.clear()
+        self.blocks.clear()
+
+    def _shrink(self, now: float) -> None:
+        for key in [k for k, v in self.events.items()
+                    if not v or v[-1] <= now - self.window]:
+            del self.events[key]
+        for key in [k for k, v in self.blocks.items()
+                    if now - v["until"] > self.strike_ttl]:
+            del self.blocks[key]
+        # ponytail: if >MAX_KEYS keys are still live (a hostile spray) the oldest
+        # are dropped, which can forget a block; the per-ip meter bounds how fast
+        # one source can create keys.  Upgrade: a sketch / LRU with a real budget.
+        for table in (self.events, self.blocks):
+            while len(table) > self.MAX_KEYS:
+                del table[next(iter(table))]
+
+
 class LoginThrottle:
-    """Sliding-window failed-login meter (per client ip + username).
+    """Escalating failed-login throttle (per client ip + username, and per ip).
 
     Online password guessing is the one attack the local account store
     cannot answer with key material, so repeated failures from one source
-    are shed with 429 + ``Retry-After`` before any scrypt work runs.
-    Keys are the *(ip, username)* pair - a spray across many usernames from
-    one ip is capped by the per-ip bucket, while distinct sources each get
-    their own budget (no shared-lockout amplification against a victim).
-    Counts only :class:`CredentialsError`: policy/unavailability failures
-    never lock anyone out, and a successful login clears its key.  Memory
-    is bounded: buckets expire with the window and the table is pruned on
-    every check.
+    are shed with 429 + ``Retry-After`` before any scrypt work runs.  The
+    first episode blocks for ``window`` seconds; each repeat doubles the
+    block up to ``max_block`` (see :class:`_Meter`).
+
+    Properties (tested in ``test_login_backoff.py``):
+
+    * keys are *(ip, username)* and *ip*, never the username alone, so an
+      attacker cannot lock the real admin out of other networks (no
+      shared-lockout amplification) - **but** behind a reverse proxy every
+      client shares the proxy's address, so one guesser can block them all
+      until the block expires (at most ``max_block``); trusting
+      ``X-Forwarded-For`` is a separate, deliberate setting and is not done;
+    * the decision depends only on the source and the *attempted* name, never
+      on whether the account exists, and blocked attempts are not counted
+      again (no extension attacks);
+    * no block is permanent: it expires, strikes decay after ``strike_ttl``,
+      a success clears them, and a restart clears everything - that is the
+      recovery path for a locked-out only admin on a single host;
+    * counts only :class:`CredentialsError`: policy/unavailability failures
+      never lock anyone out.
     """
 
     def __init__(self, limit: int = 10, ip_limit: int = 40,
-                 window: float = 60.0):
+                 window: float = 60.0, max_block: float = 900.0,
+                 strike_ttl: float = 3600.0, clock=time.monotonic):
         self.limit = limit
         self.ip_limit = ip_limit
         self.window = window
-        self._failures: dict[tuple[str, str], list[float]] = {}
-        self._ip_failures: dict[str, list[float]] = {}
-
-    @staticmethod
-    def _prune(bucket: list[float], now: float, window: float) -> list[float]:
-        cutoff = now - window
-        kept = [t for t in bucket if t > cutoff]
-        return kept
+        self.clock = clock
+        self._pair = _Meter(limit, window, max_block, strike_ttl, clock)
+        self._ip = _Meter(ip_limit, window, max_block, strike_ttl, clock)
 
     def retry_after(self, ip: str, username: str) -> float | None:
         """Seconds to wait when blocked, else ``None`` (allowed to try)."""
-        now = time.monotonic()
-        key = (ip, username.casefold())
-        self._failures[key] = self._prune(
-            self._failures.get(key, []), now, self.window)
-        self._ip_failures[ip] = self._prune(
-            self._ip_failures.get(ip, []), now, self.window)
-        waits = [self._unblock_time(self._failures[key], self.limit, now),
-                 self._unblock_time(self._ip_failures[ip], self.ip_limit, now)]
-        blocked = [w for w in waits if w is not None]
-        if not blocked:
-            return None
-        # Both buckets must fall under their limits; wait for the slower one.
-        return max(1.0, max(blocked))
-
-    def _unblock_time(self, bucket: list[float], limit: int,
-                      now: float) -> float | None:
-        """When ``bucket`` drops below ``limit`` entries, or ``None``."""
-        if len(bucket) < limit:
-            return None
-        # Ascending timestamps: dropping len-limit+1 oldest entries frees the
-        # bucket, i.e. when the entry at index len-limit slides out of window.
-        return max(1.0, bucket[len(bucket) - limit] + self.window - now)
+        now = self.clock()
+        waits = [w for w in (self._pair.wait((ip, username.casefold()), now),
+                             self._ip.wait(ip, now)) if w is not None]
+        return max(1.0, max(waits)) if waits else None
 
     def record_failure(self, ip: str, username: str) -> None:
-        now = time.monotonic()
-        key = (ip, username.casefold())
-        self._failures.setdefault(key, []).append(now)
-        self._ip_failures.setdefault(ip, []).append(now)
-        if len(self._failures) > 4096:  # table bound (hostile key spraying)
-            self._prune_table(now)
+        now = self.clock()
+        self._pair.fail((ip, username.casefold()), now)
+        self._ip.fail(ip, now)
 
     def record_success(self, ip: str, username: str) -> None:
-        self._failures.pop((ip, username.casefold()), None)
+        self._pair.success((ip, username.casefold()))
 
     def reset(self) -> None:
-        """Drop all state (test/fixture hygiene)."""
-        self._failures.clear()
-        self._ip_failures.clear()
-
-    def _prune_table(self, now: float) -> None:
-        expired = []
-        for key, value in self._failures.items():
-            self._failures[key] = pruned = self._prune(
-                value, now, self.window)
-            if not pruned:
-                expired.append(key)
-        for key in expired:
-            del self._failures[key]
-        expired_ips = []
-        for ip, value in self._ip_failures.items():
-            self._ip_failures[ip] = pruned = self._prune(
-                value, now, self.window)
-            if not pruned:
-                expired_ips.append(ip)
-        for ip in expired_ips:
-            del self._ip_failures[ip]
+        """Drop all state (test/fixture hygiene; what a restart does)."""
+        self._pair.clear()
+        self._ip.clear()
 
 
 class AuthService:
