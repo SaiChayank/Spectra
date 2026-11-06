@@ -16,3 +16,12 @@ Also for the reviewer (not an error, a choice made in S-08):
 ## Added after REVIEW S-08b/S-08c/S-09
 - backend/spectra/modules/twin/simulate.py (crit removal, commit 04fcc52): before, the dict comprehension read `criticality` for EVERY node, so a topology node without it raised KeyError. After, only nodes that reach the other accessors still raise. Those are `resolve_initial` (line ~61, asset nodes only) and `_resolved_controls` (line ~87, asset nodes only) and `simulate` (line ~186, asset nodes only). So a non-asset node missing `criticality` no longer raises. No validation of the topology exists in simulate.py (grep finds none). Reviewer: decide whether to add validation, which is outside this card.
 - Frontend polling wording: the frontend has no WebSocket-to-polling fallback. App.tsx polls every 3 s unconditionally while signed in (setInterval refresh, 3000); BioPanel and EdgePanel poll every 5 s. The planning doc docs/33_implementation_plan.md line 272 says "3 s polling fallback", which is loose. README.md contains no such sentence (checked), so README was not changed. docs/33 is outside this card's files; left untouched.
+
+## 9B experiment (2026-11-06) — augmentation does not harden the Isolation Forest against evasion.attack
+Recorded run (scratch scripts, not committed): demo baseline pcap (make_baseline_pcap n_flows=300 -> 302 benign flows x 39 features), seed 1; attack set = 80 benign rows with 10 features pushed 8-20 sigma out of range; every model fit with random_state=42, contamination 0.02 unless stated. Metric = fraction of the attack set still flagged after `evasion.attack` on every flagged row (comparable across models, unlike `evasion_rate`, whose denominator is the model's own flagged set).
+- base model: flags 66.2% of the attack set; 2.5% still flagged after attack (benign false-flag rate 2.3%).
+- benign + evaded perturbed vectors: 58.8% -> 0.0% after attack (FP 0.7%).
+- benign + shrunk attack points (0.35 toward the mean): 75.0% -> 0.0% (FP 0.7%).
+- benign + jittered benign copies x2: 25.0% -> 0.0%.
+- contamination 0.05: 91.2% -> 2.5% (FP 5.3%).
+Conclusion: none of the tested augmentations lowers the evasion success rate; evasion.attack defeats every variant (~97-100% of flagged rows). An unsupervised Isolation Forest cannot take negative labels, so adding evaded points only teaches it that they are normal. docs/33 §9B step 1 Done-when ("retrained model's evasion success rate drops") is therefore NOT met by this construction. Reproduction: sizes/seeds above; one-off script was in the session scratchpad.
