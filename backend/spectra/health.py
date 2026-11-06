@@ -400,7 +400,7 @@ def check_model(*, trained: bool, model_id: str, version: str | int,
                      evidence)
     if drift_level in DRIFT_LEVELS:
         return entry("model", DEGRADED,
-                     f"input drift '{drift_level}' vs the training baseline "
+                     f"input drift '{drift_level}' vs the training or recent baseline "
                      f"(PSI) - scores may be less reliable",
                      evidence)
     return entry("model", HEALTHY,

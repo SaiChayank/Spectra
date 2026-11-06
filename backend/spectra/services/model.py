@@ -113,14 +113,35 @@ class ModelService:
 
     # -- Module 3: adversarial resilience ------------------------------------
 
+    def _drift(self) -> dict:
+        """PSI of the recent window against the training snapshot (``psi_vs_train``)
+        and against older sampled traffic (``psi_vs_recent``); the top-level
+        ``psi``/``level``/``features`` stay the training comparison, and
+        ``alert_level`` is the worse of the two - recent only ever adds alerts."""
+        X = np.vstack([np.asarray(f, dtype=np.float64) for f in self.recent_feats])
+        report = self.detector.psi(X)
+        if not report.get("available"):
+            return report
+        report["psi_vs_train"] = {"psi": report["psi"], "level": report["level"]}
+        ref = self._alerts.reference_matrix()
+        if ref is None:
+            recent = {"available": False,
+                      "reason": "warming up - not enough older traffic yet"}
+        else:
+            recent = self.detector.psi_vs(ref, X)
+            recent.pop("features", None)
+        report["psi_vs_recent"] = recent
+        levels = [report["level"], recent.get("level") or "stable"]
+        report["alert_level"] = max(levels, key=("stable", "moderate", "significant").index)
+        return report
+
     def drift_report(self) -> dict:
-        """PSI of recent scored flows against the training baseline."""
+        """Drift of recent scored flows: vs the training baseline and vs recent history."""
         if not self.detector.is_trained:
             return {"available": False, "reason": "model not trained"}
         if not self.recent_feats:
             return {"available": False, "reason": "no scored flows yet"}
-        X = np.vstack([np.asarray(f, dtype=np.float64) for f in self.recent_feats])
-        report = self.detector.psi(X)
+        report = self._drift()
         report["window"] = len(self.recent_feats)
         self._alerts.note_drift(report)
         return report
@@ -128,11 +149,9 @@ class ModelService:
     def refresh_drift_level(self) -> None:
         """Recompute the cached drift level feeding the immune danger axis."""
         try:
-            X = np.vstack([np.asarray(f, dtype=np.float64)
-                           for f in self.recent_feats])
-            report = self.detector.psi(X)
+            report = self._drift()
             if report.get("available"):
-                self._alerts.set_drift_level(report.get("level"))
+                self._alerts.set_drift_level(report.get("alert_level"))
         except Exception:  # noqa: BLE001 - drift cache is best effort
             pass
 

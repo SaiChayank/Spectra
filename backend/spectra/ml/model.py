@@ -241,7 +241,43 @@ class SpectraDetector:
                 continue
             val = float(np.sum((q - p) * np.log(q / p)))
             rows.append({"feature": name, "psi": round(val, 4)})
+        return self._summarize_psi(rows, len(X))
 
+    def psi_vs(self, ref: np.ndarray, X: np.ndarray, group: int = 4) -> dict:
+        """PSI of X against a *reference sample* instead of the training snapshot.
+
+        Same per-feature bins as :meth:`psi`, merged ``group`` at a time: a
+        few hundred reference rows over 40 bins would put the sampling-noise
+        floor of PSI above the 0.10 "moderate" line, so the comparison is made
+        on 40 / ``group`` bins (noise ~ bins / n).  Out-of-range values are
+        dropped, exactly as in :meth:`psi`.
+        """
+        if not self.has_baseline:
+            return {"available": False, "reason": "model predates drift support - retrain"}
+        ref, X = self._check(ref), self._check(X)
+        if len(ref) == 0 or len(X) == 0:
+            return {"available": True, "n": int(len(X)), "n_ref": int(len(ref)),
+                    "psi": 0.0, "level": "stable", "features": []}
+        eps = 1e-6
+        rows = []
+        for i, name in enumerate(self.feature_names):
+            if np.allclose(self._baseline_props[i], self._baseline_props[i][0]):
+                rows.append({"feature": name, "psi": 0.0, "constant": True})
+                continue
+            e = self._baseline_edges[i]
+            edges = np.append(e[:-1:group], e[-1])
+            p = np.histogram(ref[:, i], bins=edges)[0].astype(np.float64) + eps
+            q = np.histogram(X[:, i], bins=edges)[0].astype(np.float64) + eps
+            p /= p.sum()
+            q /= q.sum()
+            rows.append({"feature": name,
+                         "psi": round(float(np.sum((q - p) * np.log(q / p))), 4)})
+        out = self._summarize_psi(rows, len(X))
+        out["n_ref"] = int(len(ref))
+        return out
+
+    @staticmethod
+    def _summarize_psi(rows: list[dict], n: int) -> dict:
         values = [r["psi"] for r in rows]
         overall = float(np.mean(values)) if values else 0.0
         level = ("significant" if overall > 0.25
@@ -249,7 +285,7 @@ class SpectraDetector:
         rows.sort(key=lambda r: -r["psi"])
         return {
             "available": True,
-            "n": int(len(X)),
+            "n": int(n),
             "psi": round(overall, 4),
             "level": level,
             "features": rows[:10],
