@@ -56,7 +56,7 @@ function EvidenceRow({ item, kind }: { item: EvidenceItem; kind: "ok" | "bad" })
 }
 
 function TimelineEntry({ entry }: { entry: IncidentEvent }) {
-  let detail = "";
+  let detail: string;
   try {
     detail = Object.entries(entry.data ?? {})
       .map(([key, value]) => `${key}: ${typeof value === "object" ? JSON.stringify(value) : String(value)}`)

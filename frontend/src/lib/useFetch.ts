@@ -29,15 +29,15 @@ export function useFetch<T>(
   const [loading, setLoading] = useState(enabled);
   const [nonce, setNonce] = useState(0);
   const fetcherRef = useRef(fetcher);
-  fetcherRef.current = fetcher;
+  useEffect(() => {
+    fetcherRef.current = fetcher; // declared before the fetch effect, so it runs first
+  });
 
   useEffect(() => {
-    if (!enabled) {
-      setLoading(false);
-      return;
-    }
+    if (!enabled) return;
     let cancelled = false;
-    setLoading(true);
+    // `loading` starts true and only flags the first load; refetches keep the
+    // previous data on screen instead of flipping back to a spinner.
 
     const run = () =>
       fetcherRef
@@ -68,5 +68,5 @@ export function useFetch<T>(
   }, [...deps, nonce, enabled, intervalMs]);
 
   const reload = useCallback(() => setNonce((n) => n + 1), []);
-  return { data, error, loading, reload };
+  return { data, error, loading: enabled && loading, reload };
 }
