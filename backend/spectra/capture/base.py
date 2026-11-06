@@ -35,7 +35,7 @@ class CaptureSource(ABC):
             "max_queue_depth": 0,
         }
 
-    def close(self) -> None:  # pragma: no cover - default no-op
+    def close(self) -> None:  # noqa: B027  # optional hook, default is a no-op  # pragma: no cover - default no-op
         """Release any resources held by the source."""
 
 

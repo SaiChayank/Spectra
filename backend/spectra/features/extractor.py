@@ -127,7 +127,7 @@ def extract_features(flow: Flow) -> np.ndarray:
     tls = flow.tls
     sni = tls.sni if tls else ""
     fwd_times = [p.ts for p in pkts if p.direction == 0]
-    fwd_iats = [b - a for a, b in zip(fwd_times, fwd_times[1:]) if b >= a]
+    fwd_iats = [b - a for a, b in zip(fwd_times, fwd_times[1:], strict=False) if b >= a]
     version = 0.0
     if tls:
         effective = tls.negotiated_version or tls.legacy_version or 0

@@ -95,7 +95,7 @@ def test_slice_policy_differentiates_response():
 
 def test_slice_registry_is_complete():
     assert set(SLICES) == {"urllc", "embb", "mmtc", "default"}
-    for sid, pol in SLICES.items():
+    for _sid, pol in SLICES.items():
         assert pol["label"] and pol["policy"]
         assert pol["sensitivity"] in (-1, 0, 1)
         assert pol["max_rtt_ms"] > 0

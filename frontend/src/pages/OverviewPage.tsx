@@ -56,8 +56,12 @@ function hostTally(alerts: ThreatAlert[]): { host: string; count: number }[] {
  * top affected hosts, detection trend, drift and capability health.
  */
 export default function OverviewPage({ snapshot, alerts, can }: Props) {
-  const health = useFetch<SystemHealth>(
-    () => api.systemHealth(),
+  const health = useFetch<SystemHealth & { started_at: number }>(
+    // Date.now() is read in the fetch callback, not during render.
+    () =>
+      api
+        .systemHealth()
+        .then((h) => ({ ...h, started_at: Date.now() / 1000 - h.uptime_s })),
     [],
     { intervalMs: 10000 },
   );
@@ -410,7 +414,7 @@ export default function OverviewPage({ snapshot, alerts, can }: Props) {
           </KV>
           <KV k="session start">
             {health.data
-              ? `session started ${formatTs((Date.now() / 1000) - health.data.uptime_s)}`
+              ? `session started ${formatTs(health.data.started_at)}`
               : "—"}
           </KV>
         </section>

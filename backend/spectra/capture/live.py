@@ -63,7 +63,7 @@ class LiveSource(CaptureSource):
                     stop_filter=lambda _: self._stop.is_set(),
                     count=self.max_packets or 0,
                 )
-            except PermissionError as exc:
+            except PermissionError:
                 self._error = CaptureError(
                     "permission denied opening the capture interface - "
                     "run with elevated privileges (Administrator on Windows)."

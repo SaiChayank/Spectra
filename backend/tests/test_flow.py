@@ -42,7 +42,7 @@ def test_feature_vector_shape_and_finiteness():
     feats = extract_features(flows[0])
     assert feats.shape == (len(FEATURE_NAMES),)
     assert np.isfinite(feats).all()
-    names = dict(zip(FEATURE_NAMES, feats.tolist()))
+    names = dict(zip(FEATURE_NAMES, feats.tolist(), strict=False))
     assert names["tls_present"] == 1.0
     assert names["sni_present"] == 1.0
     assert names["sni_length"] == len("example.com")

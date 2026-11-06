@@ -109,27 +109,49 @@ def test_login_without_persistence_is_503(raw_client):
 
 # -- default-deny: every route needs a session --------------------------------
 
+_HTTP_METHODS = ("GET", "POST", "PUT", "PATCH", "DELETE")
+
+
+def _api_operations(application):
+    """(METHOD, concrete_path) for every /api/ operation, from OpenAPI.
+
+    OpenAPI is independent of how routers are nested, unlike app.routes."""
+    ops = []
+    for path, item in application.openapi()["paths"].items():
+        if not path.startswith("/api/"):
+            continue
+        concrete = re.sub(r"\{[^}]+\}", "1", path)
+        ops.extend((m.upper(), concrete) for m in item if m.upper() in _HTTP_METHODS)
+    return ops
+
+
 def test_every_api_route_requires_a_session(raw_client):
     """Sweep: no /api/ route answers an anonymous caller (except the two
     public ones) - a newly added route is protected by construction."""
     checked = 0
-    for route in app.routes:
-        methods = getattr(route, "methods", None)
-        if not methods:
-            continue  # websocket / mounts
-        path = re.sub(r"\{[^}]+\}", "1", route.path)
-        if not path.startswith("/api/"):
+    for method, path in _api_operations(app):
+        if (method, path) in PUBLIC_ROUTES:
             continue
-        for method in sorted(m for m in methods if m not in ("HEAD", "OPTIONS")):
-            if (method, path) in PUBLIC_ROUTES:
-                continue
-            res = raw_client.request(method, path)
-            assert res.status_code == 401, (
-                f"{method} {route.path} answered {res.status_code} "
-                f"without a session ({res.text[:120]})")
-            assert res.headers.get("www-authenticate") == "Bearer"
-            checked += 1
+        res = raw_client.request(method, path)
+        assert res.status_code == 401, (
+            f"{method} {path} answered {res.status_code} "
+            f"without a session ({res.text[:120]})")
+        assert res.headers.get("www-authenticate") == "Bearer"
+        checked += 1
     assert checked >= 70  # the sweep actually walked the API surface
+
+
+def test_route_sweep_sees_an_unprotected_route():
+    from fastapi import FastAPI
+    demo = FastAPI()
+
+    @demo.get("/api/open")
+    def open_route():
+        return {"ok": True}
+
+    ops = _api_operations(demo)
+    assert ops == [("GET", "/api/open")]
+    assert TestClient(demo).get("/api/open").status_code != 401  # the real sweep would flag this
 
 
 def test_public_routes_stay_public(raw_client):

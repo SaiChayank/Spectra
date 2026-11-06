@@ -565,7 +565,7 @@ def test_attach_validations_and_manual_relation(tmp_path):
     c = raise_alert(env, src="10.80.0.3:3", dst="own-two.example.net:8443",
                     ts=BASE_TS + 120)
     inc1 = env.incidents.create("one", None, "ana", alert_ids=[a["alert_id"]])
-    inc2 = env.incidents.create("two", None, "ana", alert_ids=[b["alert_id"]])
+    env.incidents.create("two", None, "ana", alert_ids=[b["alert_id"]])
 
     with pytest.raises(IncidentNotFound):
         env.incidents.attach(999999, [c["alert_id"]], "ana")
@@ -667,7 +667,7 @@ def test_api_incident_alert_layer_workflow(analyst_client):
         "created", "alert_added", "alert_added", "alert_added"]
 
     # 2. a related alert streams in and auto-joins over the bus
-    joined = _seed_api("10.101.0.4:40004", "api-incident.example.net:8443",
+    _seed_api("10.101.0.4:40004", "api-incident.example.net:8443",
                        BASE_TS + 300)
     detail = analyst_client.get(f"/api/incidents/{inc['id']}").json()
     assert detail["alert_count"] == 4

@@ -619,7 +619,7 @@ def test_api_alerts_read_acknowledge_resolve_and_audit(analyst_client):
     alert_id = alert["alert_id"]
 
     # reads: page filter + detail carry the full analyst contract
-    page = client.get(f"/api/alerts?threat_type=C2_BEACONING&limit=500").json()
+    page = client.get("/api/alerts?threat_type=C2_BEACONING&limit=500").json()
     assert any(i["alert_id"] == alert_id for i in page["items"])
     detail = client.get(f"/api/alerts/{alert_id}")
     assert detail.status_code == 200

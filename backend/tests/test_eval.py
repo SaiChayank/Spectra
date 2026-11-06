@@ -16,7 +16,6 @@ import pytest
 
 from spectra.eval import (
     METADATA_INVISIBLE,
-    EvalParams,
     LabelError,
     LabelRow,
     ScoredFlow,
@@ -237,7 +236,7 @@ def test_join_matches_naive_reference_on_random_inputs():
         got_pairs = [(idmap[id(j.label)] if j.label is not None else None,
                       j.time_distance) for j in got.joins]
         assert got_pairs == exp_pairs, f"trial {trial}: join mismatch"
-        assert [idmap[id(l)] for l in got.missed_labels] == exp_missed, \
+        assert [idmap[id(lab)] for lab in got.missed_labels] == exp_missed, \
             f"trial {trial}: missed-label mismatch"
         invisible_expected = sum(
             1 for idx, (li, _) in enumerate(exp_pairs)
@@ -462,12 +461,10 @@ def test_score_flows_and_run_eval_shape(tmp_path, monkeypatch):
     """run_eval end-to-end on a stub detector + tiny generated PCAP."""
     from spectra.demo import make_baseline_pcap
     from spectra.eval.runner import run_eval
-    from spectra.ml.model import SpectraDetector
 
     pcap = str(tmp_path / "baseline.pcap")
     make_baseline_pcap(pcap, n_flows=6)
 
-    detector = SpectraDetector()
     # a detector that flags everything - exercises the join + metrics path
     class _FlagAll:
         is_trained = True
@@ -512,8 +509,10 @@ def test_stream_flows_matches_collect_and_flags_truncation(tmp_path):
     ref = collect_flows(pcap)
     assert len(ref) >= 2
 
-    key = lambda f: (f.src_ip, f.dst_ip, f.src_port, f.dst_port,
-                     f.proto, float(f.start_ts))
+    def key(f):
+        return (f.src_ip, f.dst_ip, f.src_port, f.dst_port,
+                f.proto, float(f.start_ts))
+
     seen = []
     info = stream_flows(pcap, on_flow=seen.append)
     assert info == {"flows": len(ref), "truncated": False}

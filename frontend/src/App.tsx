@@ -59,26 +59,24 @@ export default function App() {
     return () => window.removeEventListener("spectra:unauthorized", onUnauthorized);
   }, []);
 
-  const refresh = useCallback(async () => {
-    try {
-      const [stats, flowList, detList, alertList] = await Promise.all([
-        api.stats(),
-        api.flows(60),
-        api.detections(40),
-        api.alerts(40),
-      ]);
-      setSnapshot(stats);
-      setFlows(flowList.items);
-      setDetections(detList.items);
-      setAlerts(alertList.items);
-      setError(null);
-    } catch (err) {
-      setError(
-        `Backend unreachable (http://localhost:8787) — ${
-          err instanceof Error ? err.message : String(err)
-        }`,
-      );
-    }
+  // Promise chain (not async/await) so state is set in callbacks, not
+  // synchronously in the polling effect.
+  const refresh = useCallback(() => {
+    Promise.all([api.stats(), api.flows(60), api.detections(40), api.alerts(40)])
+      .then(([stats, flowList, detList, alertList]) => {
+        setSnapshot(stats);
+        setFlows(flowList.items);
+        setDetections(detList.items);
+        setAlerts(alertList.items);
+        setError(null);
+      })
+      .catch((err: unknown) => {
+        setError(
+          `Backend unreachable (http://localhost:8787) — ${
+            err instanceof Error ? err.message : String(err)
+          }`,
+        );
+      });
   }, []);
 
   useEffect(() => {

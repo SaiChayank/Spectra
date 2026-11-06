@@ -11,7 +11,6 @@ import time
 
 import numpy as np
 import pytest
-from scapy.utils import PcapWriter
 
 from spectra.demo import make_baseline_pcap, quic_flow_packets, write_pcap
 from spectra.features.extractor import N_FEATURES, extract_features

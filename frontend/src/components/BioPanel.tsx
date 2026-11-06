@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { api, type BioStatus } from "../lib/api";
 
 /** Weight bars scale to the swarm's W_MAX (3.0) pheromone ceiling. */
@@ -16,19 +16,15 @@ function Row({ k, v, title }: { k: string; v: ReactNode; title?: string }) {
 export default function BioPanel({ onError }: { onError: (msg: string) => void }) {
   const [s, setS] = useState<BioStatus | null>(null);
 
-  const load = useCallback(async () => {
-    try {
-      setS(await api.bioStatus());
-    } catch (err) {
-      onError(err instanceof Error ? err.message : String(err));
-    }
-  }, [onError]);
-
   useEffect(() => {
+    const load = () =>
+      api.bioStatus().then(setS, (err: unknown) =>
+        onError(err instanceof Error ? err.message : String(err)),
+      );
     load();
     const id = setInterval(load, 5000);
     return () => clearInterval(id);
-  }, [load]);
+  }, [onError]);
 
   if (!s) return <div className="empty">Loading immune layer…</div>;
   if (!s.available)

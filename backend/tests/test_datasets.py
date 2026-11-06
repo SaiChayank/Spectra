@@ -7,7 +7,6 @@ manifest round-trip is asserted.  No network, no external datasets.
 
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 
@@ -17,7 +16,6 @@ from spectra.config import Config
 from spectra.datasets import (
     CATALOG_BY_NAME,
     DATASET_CATALOG,
-    MANIFEST_NAME,
     DatasetError,
     artifact_path,
     catalog,
