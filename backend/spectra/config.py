@@ -75,6 +75,10 @@ class Config:
     # detection model
     contamination: float = 0.02    # expected anomaly fraction when training
 
+    # 9B adversarial-retraining harness: hours between report-only runs on the
+    # live window; 0 (default) = off, manual POST /api/model/harden only.
+    harden_interval_h: float = 0.0
+
     # analyst alerts (spectra.services.threat_alerts): sightings of the same
     # behaviour (threat type + endpoint pair) within this flow-time window
     # group into one alert (occurrences++); a longer gap starts a new one.

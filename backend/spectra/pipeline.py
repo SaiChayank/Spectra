@@ -58,6 +58,7 @@ from .services import (
     DetectionService,
     EventBus,
     FailureTracker,
+    HardenService,
     IncidentService,
     InvestigationService,
     ModelRegistryService,
@@ -244,6 +245,9 @@ class SpectraEngine:
             self.config, self.idle_timeout, self._store, self.model,
             self.detection, self.capture, self.audit_service, self.events,
             self.status, registry=self.registry,
+        )
+        self.harden = HardenService(
+            self.config, self.model, self.training, self.audit_service,
         )
         self.system = SystemService(
             self.status, self.config, self._store, self.model,

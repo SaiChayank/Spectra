@@ -30,7 +30,7 @@ Three target verticals: **Fintech · Healthcare · Smart City Infrastructure**.
 | [`docs/datasets.md`](./docs/datasets.md) | evaluation datasets: catalog, operator fetch, label generation, manifest integrity |
 | [`docs/intel.md`](./docs/intel.md) | local threat intel: file-based JA3/JA4/SNI lists, evidence-signal semantics, FP caution |
 | [`docs/security.md`](./docs/security.md) | auth, RBAC, managed captures, artifact integrity, audit chain, local-only assumptions |
-| [`docs/testing.md`](./docs/testing.md) | 604 tests · 156 acceptance checks · performance · live-capture validation |
+| [`docs/testing.md`](./docs/testing.md) | 614 tests · 156 acceptance checks · performance · live-capture validation |
 | [`docs/limitations.md`](./docs/limitations.md) | detection, classification, TEE/twin/edge, metadata-only analysis, operational caveats |
 | [`docs/readiness-report.md`](./docs/readiness-report.md) | final readiness report (completed / partial / future / known limitations) |
 | [`docs/hardening-report.md`](./docs/hardening-report.md) · [`docs/acceptance-report.md`](./docs/acceptance-report.md) | engineering evidence: fixes, performance baselines, live capture |
@@ -51,12 +51,12 @@ with the passing pytest suite below. Local authentication
 | Feature extraction (39-feature vector per flow) | ✅ |
 | ML anomaly detector (IsolationForest + scaler, 0–100 scoring, σ-explanations) | ✅ trained from a benign baseline |
 | 8 strategic modules (see matrix below) | ✅ |
-| API (95 HTTP routes + WebSocket, default-deny auth) + CLI (15 commands) | ✅ |
+| API (96 HTTP routes + WebSocket, default-deny auth) + CLI (15 commands) | ✅ |
 | Persistence (SQLite: migration-driven schema, batched writes, bounded retention) | ✅ |
 | React dashboard | ✅ live (local login, role-aware UI) |
 | Local threat intel (JA3/JA4/SNI lists, `spectra intel`) | ✅ file-based, evidence signal only |
 | Labeled offline evaluation (`spectra eval run/train/compare`) | ✅ honesty-gated metrics, versioned reports |
-| Automated tests (pytest) | ✅ 604 passing tests |
+| Automated tests (pytest) | ✅ 614 passing tests |
 | Authentication & RBAC (ADMIN / ANALYST / VIEWER) | ✅ scrypt + sessions |
 | Live capture on Windows | ✅ validated with [Npcap](https://nmap.org/npcap/) (driver required) |
 
@@ -169,7 +169,7 @@ out-of-distribution (validated in
 
 ## API
 
-95 HTTP routes + 1 WebSocket, grouped by module:
+96 HTTP routes + 1 WebSocket, grouped by module:
 
 | Group | Routes |
 |---|---|
@@ -250,7 +250,7 @@ route checks a permission from `spectra/authz.py`.
 
 ```bash
 cd backend
-python -m pytest tests -q      # 604 tests
+python -m pytest tests -q      # 614 tests
 ```
 
 Full verification workflow (pytest + acceptance runner + performance + build):
@@ -284,14 +284,14 @@ backend/
     modules/        # eight strategic modules (pqc, tee, adv, twin, audit, bio, corr, edge)
     auth/           # password policy + scrypt hashing
     authz.py        # RBAC matrix (ADMIN / ANALYST / VIEWER → permissions)
-    api/            # FastAPI: 95 HTTP routes + WebSocket event stream (auth gate)
+    api/            # FastAPI: 96 HTTP routes + WebSocket event stream (auth gate)
     db/             # SQLite layer: 11 migrations, repositories, batched writes, retention
     filters.py      # pure-Python BPF-style filters (no libpcap needed)
     streaming.py    # bounded staged capture runtime (queues, overload policy, telemetry)
     pipeline.py     # engine wiring capture → detection → annotation → events
     cli.py          # 15 CLI commands
     demo.py         # synthetic PCAP generators (tests + demos)
-  tests/            # 604 unit/integration tests
+  tests/            # 614 unit/integration tests
   demo_pcaps/       # committed fixture captures
 frontend/           # React + TypeScript dashboard (Vite)
 docs/               # as-built documentation + evidence reports
@@ -309,7 +309,7 @@ start.ps1           # optional convenience launcher (backend + frontend)
 
 `1.0.0` — PCAP + **live NIC capture** (Npcap 1.88, validated 2026-09-29),
 92-route API + WebSocket, CLI, React console, model registry with integrity
-checks: **604 tests**, **156/156 acceptance checks**, performance at or better
+checks: **614 tests**, **156/156 acceptance checks**, performance at or better
 than the recorded baseline. Evidence:
 [`docs/acceptance-report.md`](./docs/acceptance-report.md),
 [`docs/hardening-report.md`](./docs/hardening-report.md),

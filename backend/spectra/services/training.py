@@ -6,6 +6,8 @@ import hashlib
 import logging
 import os
 
+import numpy as np
+
 from ..capture import CaptureError
 from ..config import Config
 from ..features.extractor import flows_to_matrix
@@ -64,6 +66,30 @@ class TrainingService:
         with self._model.analysis_slot():
             return self._train_locked(path, contamination,
                                       activate=activate, actor=actor)
+
+    def augmented_fit(self, X: np.ndarray, attacked: np.ndarray | None = None,
+                      contamination: float | None = None) -> SpectraDetector:
+        """Fit a *scratch* detector on baseline ``X`` plus attacked vectors.
+
+        Used by the 9B harden harness.  Touches neither the session detector
+        nor the registry, so it needs no slot of its own (the caller holds
+        ``analysis_slot``) and nothing it returns is live until someone
+        registers and activates it.  ``attacked`` rows must have the same
+        feature width as ``X``.
+        """
+        X = np.asarray(X, dtype=np.float64)
+        if attacked is not None and len(attacked):
+            attacked = np.atleast_2d(np.asarray(attacked, dtype=np.float64))
+            if attacked.shape[1] != X.shape[1]:
+                raise ValueError(
+                    f"attacked vectors have {attacked.shape[1]} features, "
+                    f"baseline has {X.shape[1]}")
+            X = np.vstack([X, attacked])
+        scratch = SpectraDetector()
+        scratch.contamination = (self.config.contamination
+                                 if contamination is None else contamination)
+        scratch.fit(X)
+        return scratch
 
     def _train_locked(self, path: str, contamination: float | None,
                       *, activate: bool, actor: str | None) -> dict:

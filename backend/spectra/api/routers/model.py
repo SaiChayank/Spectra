@@ -45,6 +45,15 @@ class RobustnessRequest(BaseModel):
     max_rounds: int = Field(6, ge=1, le=20)
 
 
+class HardenRequest(BaseModel):
+    #: baseline capture; omitted = the recent scored window
+    capture_id: int | None = Field(None, ge=1)
+    contamination: float | None = Field(None, gt=0.0, lt=1.0)
+    max_features: int = Field(12, ge=1, le=64)
+    max_rounds: int = Field(6, ge=1, le=20)
+    max_attack_rows: int = Field(50, ge=1, le=200)
+
+
 @router.get("/api/model")
 def model_info() -> dict:
     return engine.model.info()
@@ -159,6 +168,35 @@ def model_robustness(req: RobustnessRequest) -> dict:
         # server-side storage path in an API response.
         result["source"] = os.path.basename(path)
     return result
+
+
+@router.post("/api/model/harden",
+             dependencies=[Depends(require("model:manage"))])
+def model_harden(req: HardenRequest,
+                 principal: dict = Depends(require("model:manage"))) -> dict:
+    """Adversarial-retraining dry run (Phase 9B): REPORT ONLY.
+
+    Attacks the incumbent, fits a scratch candidate on the baseline plus the
+    attacked vectors, compares both under attack and shadow-compares them.
+    ``promote`` is a recommendation (false unless the candidate is measurably
+    more robust at no false-flag cost); nothing is registered or activated -
+    that stays the explicit registry path.  Audit-chained as ``model.harden``
+    and ``model.shadow``.
+    """
+    path = (capture_pcap_path(req.capture_id)
+            if req.capture_id is not None else None)
+    try:
+        return engine.harden.harden(
+            pcap=path, contamination=req.contamination,
+            max_features=req.max_features, max_rounds=req.max_rounds,
+            max_attack_rows=req.max_attack_rows, actor=principal["username"])
+    except AnalysisBusy as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    except FlowBudgetError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception:  # noqa: BLE001 - never echo internals (may quote paths)
+        log.exception("harden run failed")
+        raise HTTPException(status_code=500, detail="harden run failed") from None
 
 
 # -- model registry (Prompt 14) -------------------------------------------------

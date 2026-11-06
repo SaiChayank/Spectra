@@ -18,6 +18,7 @@ from .captures import CaptureResourceService
 from .correlation import CorrelationService
 from .detection import DetectionService
 from .events import EventBus, Listener
+from .harden import HardenService
 from .incidents import IncidentService
 from .investigation import InvestigationService
 from .model import ModelService
@@ -37,6 +38,7 @@ __all__ = [
     "DetectionService",
     "EventBus",
     "FailureTracker",
+    "HardenService",
     "IncidentService",
     "InvestigationService",
     "Listener",

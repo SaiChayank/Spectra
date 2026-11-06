@@ -65,14 +65,18 @@ log = logging.getLogger("spectra.api")
 async def lifespan(_app: FastAPI):
     """Graceful shutdown: end the capture session, then make the store durable.
 
-    Startup deliberately does nothing - the engine is built at import time
-    (see ``spectra.api.runtime``), and running work during lifespan startup
-    would make importing the app have side effects.  The shutdown half is
-    what was missing: without it, stopping the server left the capture
-    supervisor thread draining on its own and the batch writer's staged rows
-    uncommitted until process death.
+    Startup does no work except the opt-in harden scheduler
+    (``SPECTRA_HARDEN_INTERVAL_H`` > 0; off by default) - the engine is built
+    at import time (see ``spectra.api.runtime``), and running work during
+    lifespan startup would make importing the app have side effects.  The
+    shutdown half is what was missing: without it, stopping the server left
+    the capture supervisor thread draining on its own and the batch writer's
+    staged rows uncommitted until process death.
     """
+    scheduler = engine.harden.start_scheduler()
     yield
+    if scheduler is not None:
+        scheduler.stop()
     try:
         if engine.capture.running:
             engine.capture.stop()
