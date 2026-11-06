@@ -52,6 +52,14 @@ class CorrelationService:
         except Exception as exc:  # noqa: BLE001 - correlation must never kill capture
             self.failures.record("correlation", exc)
 
+    def pair_cadence(self, record: FlowRecord) -> dict | None:
+        """Cadence of the record's host pair (None if unknown); never raises."""
+        try:
+            return self.graph.pair_cadence(record)
+        except Exception as exc:  # noqa: BLE001 - a bad lookup must not drop the flow
+            self.failures.record("correlation", exc)
+            return None
+
     # -- queries -------------------------------------------------------------
 
     def snapshot(self, ntype: str | None = None, sector: str | None = None,

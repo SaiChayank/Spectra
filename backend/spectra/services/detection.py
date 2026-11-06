@@ -196,6 +196,7 @@ class DetectionService:
                     self._model.refresh_drift_level()
                 out = self.bio.assess(
                     feats, score=score, anomaly=anomaly,
+                    pair_cadence=self._correlation.pair_cadence(record),
                     drift_level=self._alerts.drift_level,
                     evasion=self._alerts.evasion_active,
                     timing_scale=self.edge.timing_scale(),

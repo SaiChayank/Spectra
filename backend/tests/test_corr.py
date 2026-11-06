@@ -7,7 +7,7 @@ from scapy.utils import PcapWriter
 
 from spectra.demo import tls_flow_packets
 from spectra.modules.corr import NODE_DOMAIN, NODE_HOST, NODE_IP, NODE_SECTOR, cascade
-from spectra.modules.corr.graph import CorrelationGraph
+from spectra.modules.corr.graph import CorrelationGraph, cadence_stats
 from spectra.pipeline import SpectraEngine
 
 
@@ -291,3 +291,111 @@ def test_api_window_param(tmp_path):
                           f"&window_s={bad}").status_code == 400
     assert client.get("/api/graph/path?src=host:10.0.0.5&dst=sector:fintech"
                       "&window_s=3600").status_code == 404
+
+
+# -- 9D: per-host-pair cadence ------------------------------------------------
+
+def _beacons(g, gaps, sni="c2.example", src="10.0.0.5:40000", dst="203.0.113.9:443"):
+    t = 1_700_000_000.0
+    for gap in gaps:
+        t += gap
+        g.observe(rec(src=src, dst=dst, sni=sni, ts=t))
+    return t
+
+
+def _talks(g):
+    return next(e for e in g.edges_list() if e["type"] == "talks_to")
+
+
+def test_pair_cadence_regular_vs_irregular_edge_weight():
+    reg, irr = CorrelationGraph(), CorrelationGraph()
+    _beacons(reg, [0, 10.2, 9.7, 10.1, 9.9])            # jittered 10 s beacon
+    _beacons(irr, [0, 1.0, 30.0, 4.0, 90.0])            # organic
+    assert _talks(reg)["regularity"] > 0.9
+    assert _talks(irr)["regularity"] < 0.3
+    assert _talks(reg)["regularity"] > _talks(irr)["regularity"]
+    assert _talks(reg)["weight"] == _talks(irr)["weight"]   # byte weight unchanged
+
+    stats = cadence_stats(next(iter(reg.pair_times.values())))
+    assert stats["n"] == 5 and 9.5 < stats["mean_s"] < 10.5 and stats["cv"] < 0.05
+
+
+def test_pair_cadence_needs_four_flows_and_includes_the_current_one():
+    g = CorrelationGraph()
+    last = _beacons(g, [0, 10, 10])                       # 3 observed starts
+    assert cadence_stats(next(iter(g.pair_times.values()))) is None
+    assert _talks(g)["regularity"] is None
+    # peek: the 4th (current) flow counts although it is not observed yet
+    now = rec(sni="c2.example", dst="203.0.113.9:443", ts=last + 10)
+    assert g.pair_cadence(now)["n"] == 4
+    assert _talks(g)["regularity"] is None                # peeking changed nothing
+
+
+def test_pair_window_is_configurable_and_bounded():
+    gaps = [0, 1, 50, 2, 70, 10, 10, 10, 10, 10]        # irregular, then regular tail
+    wide, narrow = CorrelationGraph(pair_window=32), CorrelationGraph(pair_window=5)
+    _beacons(wide, gaps)
+    _beacons(narrow, gaps)
+    assert _talks(narrow)["regularity"] > 0.95            # last 5 starts only
+    assert _talks(wide)["regularity"] < 0.5
+    (times,) = narrow.pair_times.values()
+    assert len(times) == 5                                # bounded history
+
+    from spectra.config import Config
+    assert Config().pair_window_flows == 32
+    cfg = Config(pair_window_flows=7)
+    assert SpectraEngine(config=cfg, persist=False).correlation.graph.pair_window == 7
+
+
+def test_pair_window_env_override(monkeypatch):
+    from spectra.config import Config
+    monkeypatch.setenv("SPECTRA_PAIR_WINDOW_FLOWS", "9")
+    assert Config.from_env().pair_window_flows == 9
+
+
+def test_tracked_pairs_are_capped(monkeypatch):
+    import spectra.modules.corr.graph as graph_mod
+    monkeypatch.setattr(graph_mod, "PAIR_CAP", 3)
+    g = CorrelationGraph()
+    for i in range(10):
+        g.observe(rec(dst=f"203.0.113.{i}:443", sni=f"h{i}.example"))
+    assert len(g.pair_times) == 3
+
+
+def test_pair_cadence_keeps_only_timestamps_and_endpoints():
+    """Metadata-only: pair state holds start times, never anything payload-like."""
+    import json
+    g = CorrelationGraph()
+    secret = "TOP-SECRET-PAYLOAD"
+    t = 1_700_000_000.0
+    for i in range(5):
+        r = rec(sni="c2.example", dst="203.0.113.9:443", ts=t + 10 * i)
+        r.update(payload=secret.encode(), client_hello=secret, raw=secret)
+        g.observe(r)
+    stats = g.pair_cadence(rec(sni="c2.example", dst="203.0.113.9:443", ts=t + 60))
+    assert set(stats) == {"n", "mean_s", "cv", "regularity"}
+    blob = json.dumps(stats) + repr(g.pair_times) + json.dumps(g.edges_list())
+    assert secret not in blob
+    for times in g.pair_times.values():
+        assert all(isinstance(v, float) for v in times)
+
+
+def test_detection_passes_pair_cadence_to_bio(tmp_path):
+    from spectra.demo import make_baseline_pcap, make_suspicious_pcap
+    import time as _t
+    engine = SpectraEngine(model_path=str(tmp_path / "m.joblib"), persist=False)
+    engine.train_from_pcap(make_baseline_pcap(str(tmp_path / "b.pcap"), n_flows=30),
+                           contamination=0.05)
+    seen = []
+    real = engine.bio.assess
+
+    def spy(x, **kw):
+        seen.append(kw)
+        return real(x, **kw)
+
+    engine.bio.assess = spy
+    engine.start("pcap", path=make_suspicious_pcap(str(tmp_path / "s.pcap")))
+    deadline = _t.time() + 30
+    while engine.running and _t.time() < deadline:
+        _t.sleep(0.05)
+    assert seen and all("pair_cadence" in kw for kw in seen)

@@ -492,3 +492,45 @@ def test_bio_api(tmp_path, upload_capture):
     assert payload["available"] is True
     assert payload["response"] in RESPONSES
     json.dumps(payload)
+
+
+# -- 9D: per-host-pair cadence ------------------------------------------------
+
+
+def test_pair_cadence_upgrades_the_beacon_signal():
+    """A jittered 4-flow beacon pair scores higher than the per-flow view."""
+    x = np.zeros(N_FEATURES)
+    x[IDX_IAT_MEAN] = 1.0
+    x[IDX_IAT_STD] = 0.6                 # organic inside the flow: per-flow view quiet
+    pair = {"n": 4, "mean_s": 10.0, "cv": 0.03}   # flow starts every ~10 s
+
+    per_flow = danger_signals(x)
+    per_pair = danger_signals(x, pair_cadence=pair)
+    fired = {s["name"]: s["fired"] for s in per_flow}
+    assert fired["beacon_cadence"] is False
+    sig = next(s for s in per_pair if s["name"] == "beacon_cadence")
+    assert sig["fired"] is True and "pair" in sig["detail"]
+    assert danger_total(per_pair) > danger_total(per_flow)
+
+    # irregular pair, too little history, or a too-fast mean do not fire
+    for weak in ({"n": 4, "mean_s": 10.0, "cv": 0.5},
+                 {"n": 3, "mean_s": 10.0, "cv": 0.01},
+                 {"n": 4, "mean_s": 0.01, "cv": 0.01}):
+        s = next(s for s in danger_signals(x, pair_cadence=weak)
+                 if s["name"] == "beacon_cadence")
+        assert s["fired"] is False
+
+    # a metronomic flow still fires on its own when the pair is irregular
+    x[IDX_IAT_STD] = 0.01
+    s = next(s for s in danger_signals(x, pair_cadence={"n": 9, "mean_s": 5.0, "cv": 0.9})
+             if s["name"] == "beacon_cadence")
+    assert s["fired"] is True
+
+
+def test_assess_threads_pair_cadence_through(bio):
+    x = benign_matrix(1)[0].copy()
+    x[IDX_IAT_MEAN], x[IDX_IAT_STD] = 1.0, 0.6
+    pair = {"n": 6, "mean_s": 30.0, "cv": 0.02}
+    quiet = bio.assess(x, reinforce=False)
+    loud = bio.assess(x, pair_cadence=pair, reinforce=False)
+    assert loud["immune"]["danger_total"] > quiet["immune"]["danger_total"]

@@ -75,6 +75,11 @@ class Config:
     # detection model
     contamination: float = 0.02    # expected anomaly fraction when training
 
+    # 9D per-host-pair beaconing: flow start times kept per (source, SNI-or-IP)
+    # pair; the inter-flow gap regularity of that window feeds the bio cadence
+    # signal and the graph edge's ``regularity``.
+    pair_window_flows: int = 32
+
     # 9B adversarial-retraining harness: hours between report-only runs on the
     # live window; 0 (default) = off, manual POST /api/model/harden only.
     harden_interval_h: float = 0.0

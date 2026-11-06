@@ -67,7 +67,8 @@ class BioSystem:
     def assess(self, x, *, score: float | None = None,
                anomaly: bool = False, drift_level: str | None = None,
                evasion: bool = False, timing_scale: float = 1.0,
-               reinforce: bool = True) -> dict:
+               reinforce: bool = True,
+               pair_cadence: dict | None = None) -> dict:
         """Immune + SNN + swarm assessment of one flow."""
         if not self.available:
             return {"available": False,
@@ -79,7 +80,8 @@ class BioSystem:
 
         immune = assess_immunity(x, self.self_model, self.memory,
                                  score=score, anomaly=anomaly,
-                                 drift_level=drift_level, evasion=evasion)
+                                 drift_level=drift_level, evasion=evasion,
+                                 pair_cadence=pair_cadence)
         snn_score: float | None = None
         if self.snn.trained:
             snn_score = float(self.snn.score(x, timing_scale=timing_scale)[0])

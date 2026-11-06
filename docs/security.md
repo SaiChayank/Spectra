@@ -180,6 +180,7 @@ Booleans accept `1/true/yes/on`. Defaults are the safe local values.
 | `SPECTRA_DB_BATCH_SIZE` / `DB_FLUSH_INTERVAL` | `256` / `1.0` | batched writes |
 | `SPECTRA_MAX_HISTORY_ROWS` / `EVENT_MAX_ROWS` | `200000` / `50000` | row caps |
 | `SPECTRA_FLOW_RETENTION_DAYS` / `DETECTION_RETENTION_DAYS` / `CAPTURE_RETENTION_DAYS` / `EVENT_RETENTION_DAYS` | `0` (off) | age policies |
+| `SPECTRA_PAIR_WINDOW_FLOWS` | `32` | flow starts kept per (source, SNI-or-IP) pair for beacon-cadence scoring (9D) |
 | `SPECTRA_STALE_SESSION_HOURS` | `24` | crashed-session sweep |
 | `SPECTRA_CONTAMINATION` | `0.02` | training threshold |
 | `SPECTRA_ALERT_GROUP_SECONDS` / `INCIDENT_WINDOW_SECONDS` | `600` / `1800` | alert grouping / incident window |

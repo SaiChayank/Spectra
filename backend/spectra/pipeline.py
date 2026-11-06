@@ -217,8 +217,9 @@ class SpectraEngine:
         # watch, event) - injected as a hook so the registry never imports
         # another service.
         self.registry.on_activate = self._apply_activation
-        self.correlation = CorrelationService(CorrelationGraph(), self._store,
-                                              self.failures)
+        self.correlation = CorrelationService(
+            CorrelationGraph(pair_window=self.config.pair_window_flows),
+            self._store, self.failures)
         # Analyst alerts (spectra.services.threat_alerts): correlated verdicts
         # over flagged flows, carrying the scoring model's identity.
         self.threat_alerts = ThreatAlertService(

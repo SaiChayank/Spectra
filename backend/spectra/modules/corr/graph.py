@@ -16,7 +16,9 @@ the cascade engine uses that to score how far a compromise could spread
 
 from __future__ import annotations
 
-from collections import defaultdict, deque
+import bisect
+import statistics
+from collections import OrderedDict, defaultdict, deque
 
 from ...sectors import SectorClassifier, get_classifier
 
@@ -31,6 +33,28 @@ EDGE_IN_SECTOR = "in_sector"
 
 FLOW_IDS_CAP = 20
 
+#: 9D: pairs tracked at once (least recently seen are dropped) and the fewest
+#: flow starts that make a cadence (4 starts = 3 gaps).
+PAIR_CAP = 10_000
+MIN_PAIR_FLOWS = 4
+
+
+def cadence_stats(times: list[float]) -> dict | None:
+    """Gap regularity of sorted flow start times, or None with too little history.
+
+    ``cv`` is std/mean of the gaps between consecutive starts (0 = metronome);
+    ``regularity`` is ``1 - cv`` floored at 0, so higher means more beacon-like.
+    """
+    if len(times) < MIN_PAIR_FLOWS:
+        return None
+    gaps = [b - a for a, b in zip(times, times[1:], strict=False)]  # n-1 pairs by design
+    mean = statistics.fmean(gaps)
+    if mean <= 0:
+        return None
+    cv = statistics.pstdev(gaps) / mean
+    return {"n": len(times), "mean_s": round(mean, 4), "cv": round(cv, 4),
+            "regularity": round(max(0.0, 1.0 - cv), 4)}
+
 
 def _strip_port(addr: str | None) -> str:
     if not addr:
@@ -39,8 +63,12 @@ def _strip_port(addr: str | None) -> str:
 
 
 class CorrelationGraph:
-    def __init__(self, classifier: SectorClassifier | None = None):
+    def __init__(self, classifier: SectorClassifier | None = None,
+                 pair_window: int = 32):
         self.classifier = classifier or get_classifier()
+        self.pair_window = max(MIN_PAIR_FLOWS, int(pair_window))
+        # (host, ip, sni-or-"") -> sorted flow start times, newest ``pair_window``
+        self.pair_times: OrderedDict[tuple[str, str, str], list[float]] = OrderedDict()
         self.nodes: dict[str, dict] = {}
         # adjacency: src_id -> {dst_id -> {edge_type -> weight}}
         self.edges: dict[str, dict[str, dict[str, float]]] = defaultdict(
@@ -118,6 +146,8 @@ class CorrelationGraph:
 
         self._edge(h["id"], d["id"], EDGE_TALKS_TO, weight=size or 1,
                    first_ts=first, last_ts=ts, flow_id=fid)
+        if first is not None:
+            self._pair_add((host, ip, sni or ""), float(first))
 
         if sni:
             dom_id = f"domain:{sni}"
@@ -144,6 +174,39 @@ class CorrelationGraph:
                 sec["last_ts"] = ts if sec["last_ts"] is None else max(sec["last_ts"], ts)
             self._edge(dom_id, sec_id, EDGE_IN_SECTOR, weight=1,
                        first_ts=first, last_ts=ts, flow_id=fid)
+
+    def _pair_add(self, key: tuple[str, str, str], t: float) -> None:
+        times = self.pair_times.pop(key, [])
+        bisect.insort(times, t)             # hydrate replays out of order
+        del times[:-self.pair_window]       # keep the newest window
+        self.pair_times[key] = times        # re-insert = most recently seen
+        while len(self.pair_times) > PAIR_CAP:
+            self.pair_times.popitem(last=False)
+
+    def pair_cadence(self, record: dict) -> dict | None:
+        """Cadence of this record's (source, SNI-or-IP) pair *including* it.
+
+        Read-only: the record is counted as the newest start but not stored,
+        so the hot path can ask before ``observe`` runs.
+        """
+        host, ip = _strip_port(record.get("src")), _strip_port(record.get("dst"))
+        t = record.get("start_ts") or record.get("last_ts")
+        if not host or not ip or t is None:
+            return None
+        times = list(self.pair_times.get((host, ip, record.get("sni") or ""), ()))
+        bisect.insort(times, float(t))
+        return cadence_stats(times[-self.pair_window:])
+
+    def _edge_regularity(self, src: str, dst: str) -> float | None:
+        """Best pair regularity among the pairs behind a host->ip talks_to edge."""
+        host, ip = src.partition(":")[2], dst.partition(":")[2]
+        best = None
+        for (h, i, _sni), times in self.pair_times.items():
+            if h == host and i == ip:
+                stats = cadence_stats(times)
+                if stats and (best is None or stats["regularity"] > best):
+                    best = stats["regularity"]
+        return best
 
     def observe_many(self, records) -> None:
         for rec in records:
@@ -226,6 +289,8 @@ class CorrelationGraph:
                     meta = self.edge_meta.get((src, dst, etype), {})
                     out.append({"source": src, "target": dst,
                                 "type": etype, "weight": round(weight, 2),
+                                "regularity": (self._edge_regularity(src, dst)
+                                               if etype == EDGE_TALKS_TO else None),
                                 "first_ts": meta.get("first_ts"),
                                 "last_ts": meta.get("last_ts"),
                                 "flow_ids": list(meta.get("flow_ids", []))})
@@ -332,3 +397,4 @@ class CorrelationGraph:
         self.nodes.clear()
         self.edges.clear()
         self.edge_meta.clear()
+        self.pair_times.clear()

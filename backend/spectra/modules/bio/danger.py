@@ -33,6 +33,7 @@ DANGER_LEVELS = (0.20, 0.50, 0.95)
 # cadence (beacon) rule: metronomic inter-arrival times are a danger signal
 BEACON_MIN_MEAN_S = 0.05      # slower than this is not a C2-style cadence
 BEACON_REGULARITY = 0.15      # std/mean below this = metronomic
+PAIR_MIN_FLOWS = 4            # flow starts a host pair needs before its cadence counts
 RATE_SPIKE_Z = 3.0            # robust z of packets_per_s that reads as a burst
 
 IDX_RATE = FEATURE_NAMES.index("packets_per_s")
@@ -97,7 +98,8 @@ class SelfModel:
 
 def danger_signals(x, *, score=None, anomaly: bool = False,
                    drift_level: str | None = None, evasion: bool = False,
-                   self_model: SelfModel | None = None) -> list[dict]:
+                   self_model: SelfModel | None = None,
+                   pair_cadence: dict | None = None) -> list[dict]:
     """Contextual danger signals for one flow (Module 6 input #2).
 
     Each signal is independent of the raw affinity: they describe what is
@@ -138,11 +140,23 @@ def danger_signals(x, *, score=None, anomaly: bool = False,
     # metronomic cadence: constant inter-arrival times (beaconing C2)
     mean_iat = float(x[IDX_IAT_MEAN])
     std_iat = float(x[IDX_IAT_STD])
-    regular = (mean_iat >= BEACON_MIN_MEAN_S
-               and mean_iat > 0
-               and (std_iat / mean_iat) < BEACON_REGULARITY)
-    add("beacon_cadence", regular, 0.30,
-        "inter-arrival times are metronomic" if regular else "cadence varies")
+    flow_regular = (mean_iat >= BEACON_MIN_MEAN_S
+                    and mean_iat > 0
+                    and (std_iat / mean_iat) < BEACON_REGULARITY)
+    # 9D: once the host pair has history, its flow-start cadence counts too -
+    # a jittered beacon looks organic inside each flow but not across flows.
+    pair_regular = (pair_cadence is not None
+                    and pair_cadence.get("n", 0) >= PAIR_MIN_FLOWS
+                    and pair_cadence.get("mean_s", 0.0) >= BEACON_MIN_MEAN_S
+                    and pair_cadence.get("cv", 1.0) < BEACON_REGULARITY)
+    regular = flow_regular or pair_regular
+    if pair_regular:
+        detail = (f"host pair starts a flow every ~{pair_cadence['mean_s']:.1f}s "
+                  f"(cv {pair_cadence['cv']:.2f}, {pair_cadence['n']} flows)")
+    else:
+        detail = ("inter-arrival times are metronomic" if flow_regular
+                  else "cadence varies")
+    add("beacon_cadence", regular, 0.30, detail)
     return signals
 
 
@@ -185,7 +199,8 @@ class MemoryCells:
 def assess_immunity(x, model: SelfModel, memory: MemoryCells, *,
                     score=None, anomaly: bool = False,
                     drift_level: str | None = None,
-                    evasion: bool = False) -> dict:
+                    evasion: bool = False,
+                    pair_cadence: dict | None = None) -> dict:
     """Combine affinity + danger into one escalating response level."""
     if not model.trained:
         return {"available": False, "reason": "self model not trained"}
@@ -193,7 +208,7 @@ def assess_immunity(x, model: SelfModel, memory: MemoryCells, *,
     affinity = model.affinity(x)
     signals = danger_signals(x, score=score, anomaly=anomaly,
                              drift_level=drift_level, evasion=evasion,
-                             self_model=model)
+                             self_model=model, pair_cadence=pair_cadence)
     total = danger_total(signals)
     memory_hit = memory.hit(x, model)
     level = max(band_level(affinity, AFFINITY_LEVELS),

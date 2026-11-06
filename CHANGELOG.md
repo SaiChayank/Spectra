@@ -17,6 +17,7 @@ All notable changes to Spectra are documented here. The format follows
   --augment N` and `augment` on `POST /api/model/train`, labelled synthetic
   everywhere. It has been validated on synthetic held-out traffic only
   (Phase 9C).
+- Per-host-pair beaconing: flow-start cadence per (source, SNI-or-IP) pair feeds the bio `beacon_cadence` danger signal and a `regularity` field on graph edges; `SPECTRA_PAIR_WINDOW_FLOWS` (default 32). Not yet measured on real traffic (Phase 9D).
 - Ship plan for the public software release (`docs/34_ship_plan.md`).
 - `LICENSE` (Apache-2.0), `SECURITY.md`, `CONTRIBUTING.md`, issue/PR
   templates and Dependabot configuration.
