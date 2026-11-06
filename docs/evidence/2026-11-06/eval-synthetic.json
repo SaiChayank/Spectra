@@ -1,0 +1,624 @@
+{
+  "kind": "SYNTHETIC evaluation - generated traffic only; see caveats",
+  "environment": {
+    "commit": "a0ef02a",
+    "branch": "phase10/gate-10",
+    "python": "3.14.8",
+    "platform": "Linux-7.2.15-1-omarchy-x86_64-with-glibc2.44",
+    "seed": 20261106,
+    "bootstrap_resamples": 1000
+  },
+  "artifacts": {
+    "train_A_demo": {
+      "sha256": "e15d44edb691f64a03e45cae5f98b7c81612a2b64f05fc744bdeba73d4a821b9",
+      "bytes": 2600657,
+      "flows": 302
+    },
+    "train_B_diverse": {
+      "sha256": "46027f1aea1a2f3dad415a064c02c6f4571131c36eaa71c265f428f4bf4e0183",
+      "bytes": 4749513,
+      "flows": 420
+    },
+    "val_benign": {
+      "sha256": "a14ec83c4e052ed7a512fdc0d8662065c2a699bdd75d58a8cfb1b1f70cd98912",
+      "bytes": 4384580,
+      "flows": 400
+    },
+    "test_benign_diverse": {
+      "sha256": "f52cb4bc9034154707151467c099966effbdc971524bbf6fb4d47ebff9fcb229",
+      "bytes": 4487189,
+      "flows": 400
+    },
+    "test_benign_demo": {
+      "sha256": "b10232277bebdad34ed904a5ab704e20b5a313f65c6a709ed933374ee6851543",
+      "bytes": 3487188,
+      "flows": 402
+    },
+    "attack_beacon_plain": {
+      "sha256": "0dc1ad5f58ec1306c2da5064713ad8b169821ae3ed531212f4b38fb225d04e26",
+      "bytes": 263282,
+      "flows": 123
+    },
+    "attack_beacon_tls": {
+      "sha256": "75e9547e8db5adfa4a4f59575d73856ba410d1a93f04473e007c67ae2a63e86c",
+      "bytes": 565432,
+      "flows": 120
+    },
+    "attack_exfil_bulk": {
+      "sha256": "d93181aaf715ac0b66a6dadb60b0017028448f6dd7d5f2e4faf8b192de2c92a7",
+      "bytes": 32827568,
+      "flows": 120
+    },
+    "attack_scan": {
+      "sha256": "0c59c15a85f83206406aad6712d5ed493bf6677b3e14690d6cffd6957ba1520e",
+      "bytes": 16824,
+      "flows": 120
+    }
+  },
+  "baselines": {
+    "A_demo_baseline": {
+      "trained_on": "train_A_demo",
+      "n_train": 302,
+      "contamination": 0.02,
+      "score_used_for_ranking": "raw isolation-forest score (not the clipped 0-100 percentile)",
+      "model_info": {
+        "n_train": 302,
+        "threshold": 0.049464
+      },
+      "benign": {
+        "test_benign_diverse": {
+          "false_flag_rate": {
+            "n": 400,
+            "rate": 0.5825,
+            "ci95": [
+              0.535,
+              0.63
+            ]
+          }
+        },
+        "test_benign_demo": {
+          "false_flag_rate": {
+            "n": 402,
+            "rate": 0.0149,
+            "ci95": [
+              0.005,
+              0.0274
+            ]
+          }
+        }
+      },
+      "attacks": {
+        "beacon_plain": {
+          "recall_at_default_threshold": {
+            "n": 123,
+            "rate": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ]
+          },
+          "roc_auc_vs_diverse_benign": {
+            "auc": 0.8575,
+            "ci95": [
+              0.8225,
+              0.8899
+            ],
+            "resamples": 300
+          },
+          "recall_at_val_fpr_1pct": {
+            "n": 123,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "recall_at_val_fpr_0.1pct": {
+            "n": 123,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          }
+        },
+        "beacon_tls": {
+          "recall_at_default_threshold": {
+            "n": 120,
+            "rate": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ]
+          },
+          "roc_auc_vs_diverse_benign": {
+            "auc": 0.6717,
+            "ci95": [
+              0.6303,
+              0.7095
+            ],
+            "resamples": 300
+          },
+          "recall_at_val_fpr_1pct": {
+            "n": 120,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "recall_at_val_fpr_0.1pct": {
+            "n": 120,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          }
+        },
+        "exfil_bulk": {
+          "recall_at_default_threshold": {
+            "n": 120,
+            "rate": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ]
+          },
+          "roc_auc_vs_diverse_benign": {
+            "auc": 0.8568,
+            "ci95": [
+              0.8271,
+              0.8883
+            ],
+            "resamples": 300
+          },
+          "recall_at_val_fpr_1pct": {
+            "n": 120,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "recall_at_val_fpr_0.1pct": {
+            "n": 120,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          }
+        },
+        "scan": {
+          "recall_at_default_threshold": {
+            "n": 120,
+            "rate": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ]
+          },
+          "roc_auc_vs_diverse_benign": {
+            "auc": 0.9575,
+            "ci95": [
+              0.9362,
+              0.9775
+            ],
+            "resamples": 300
+          },
+          "recall_at_val_fpr_1pct": {
+            "n": 120,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          },
+          "recall_at_val_fpr_0.1pct": {
+            "n": 120,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          }
+        }
+      },
+      "operating_points": {
+        "val_fpr_1pct_threshold": 0.244,
+        "val_fpr_0.1pct_threshold": 0.248
+      },
+      "precision_at_prevalence": {
+        "1%": 0.017,
+        "5%": 0.0829,
+        "10%": 0.1602,
+        "50%": 0.6319,
+        "inputs": {
+          "pooled_attack_tpr": 1.0,
+          "diverse_benign_fpr": 0.5825
+        }
+      },
+      "evasion_attack_default_budget": {
+        "beacon_plain": {
+          "flagged_sampled": 60,
+          "evaded": {
+            "n": 60,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          }
+        },
+        "beacon_tls": {
+          "flagged_sampled": 60,
+          "evaded": {
+            "n": 60,
+            "rate": 0.0333,
+            "ci95": [
+              0.0,
+              0.0833
+            ]
+          }
+        },
+        "exfil_bulk": {
+          "flagged_sampled": 60,
+          "evaded": {
+            "n": 60,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          }
+        },
+        "scan": {
+          "flagged_sampled": 60,
+          "evaded": {
+            "n": 60,
+            "rate": 0.0,
+            "ci95": [
+              0.0,
+              0.0
+            ]
+          }
+        }
+      },
+      "cross_sector_false_flags": {
+        "sectors": {
+          "fintech": {
+            "sni": "pay.bank.test",
+            "false_flag_rate": {
+              "n": 400,
+              "rate": 0.015,
+              "ci95": [
+                0.005,
+                0.0275
+              ]
+            }
+          },
+          "healthcare": {
+            "sni": "portal.health.test",
+            "false_flag_rate": {
+              "n": 400,
+              "rate": 0.025,
+              "ci95": [
+                0.01,
+                0.0425
+              ]
+            }
+          },
+          "smart_city": {
+            "sni": "cdn.city.test",
+            "false_flag_rate": {
+              "n": 400,
+              "rate": 0.0175,
+              "ci95": [
+                0.005,
+                0.03
+              ]
+            }
+          },
+          "general": {
+            "sni": "static.assets.io",
+            "false_flag_rate": {
+              "n": 400,
+              "rate": 0.015,
+              "ci95": [
+                0.005,
+                0.0275
+              ]
+            }
+          }
+        },
+        "max_minus_min": 0.01
+      }
+    },
+    "B_benign_diversity": {
+      "trained_on": "train_B_diverse",
+      "n_train": 420,
+      "contamination": 0.02,
+      "score_used_for_ranking": "raw isolation-forest score (not the clipped 0-100 percentile)",
+      "model_info": {
+        "n_train": 420,
+        "threshold": 0.064773
+      },
+      "benign": {
+        "test_benign_diverse": {
+          "false_flag_rate": {
+            "n": 400,
+            "rate": 0.0225,
+            "ci95": [
+              0.01,
+              0.0375
+            ]
+          }
+        },
+        "test_benign_demo": {
+          "false_flag_rate": {
+            "n": 402,
+            "rate": 0.0025,
+            "ci95": [
+              0.0,
+              0.0075
+            ]
+          }
+        }
+      },
+      "attacks": {
+        "beacon_plain": {
+          "recall_at_default_threshold": {
+            "n": 123,
+            "rate": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ]
+          },
+          "roc_auc_vs_diverse_benign": {
+            "auc": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "resamples": 300
+          },
+          "recall_at_val_fpr_1pct": {
+            "n": 123,
+            "rate": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ]
+          },
+          "recall_at_val_fpr_0.1pct": {
+            "n": 123,
+            "rate": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "beacon_tls": {
+          "recall_at_default_threshold": {
+            "n": 120,
+            "rate": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ]
+          },
+          "roc_auc_vs_diverse_benign": {
+            "auc": 0.9972,
+            "ci95": [
+              0.9928,
+              0.9998
+            ],
+            "resamples": 300
+          },
+          "recall_at_val_fpr_1pct": {
+            "n": 120,
+            "rate": 0.9667,
+            "ci95": [
+              0.9333,
+              0.9917
+            ]
+          },
+          "recall_at_val_fpr_0.1pct": {
+            "n": 120,
+            "rate": 0.9417,
+            "ci95": [
+              0.8917,
+              0.975
+            ]
+          }
+        },
+        "exfil_bulk": {
+          "recall_at_default_threshold": {
+            "n": 120,
+            "rate": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ]
+          },
+          "roc_auc_vs_diverse_benign": {
+            "auc": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "resamples": 300
+          },
+          "recall_at_val_fpr_1pct": {
+            "n": 120,
+            "rate": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ]
+          },
+          "recall_at_val_fpr_0.1pct": {
+            "n": 120,
+            "rate": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "scan": {
+          "recall_at_default_threshold": {
+            "n": 120,
+            "rate": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ]
+          },
+          "roc_auc_vs_diverse_benign": {
+            "auc": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "resamples": 300
+          },
+          "recall_at_val_fpr_1pct": {
+            "n": 120,
+            "rate": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ]
+          },
+          "recall_at_val_fpr_0.1pct": {
+            "n": 120,
+            "rate": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "operating_points": {
+        "val_fpr_1pct_threshold": 0.075,
+        "val_fpr_0.1pct_threshold": 0.078
+      },
+      "precision_at_prevalence": {
+        "1%": 0.3098,
+        "5%": 0.7005,
+        "10%": 0.8316,
+        "50%": 0.978,
+        "inputs": {
+          "pooled_attack_tpr": 1.0,
+          "diverse_benign_fpr": 0.0225
+        }
+      },
+      "evasion_attack_default_budget": {
+        "beacon_plain": {
+          "flagged_sampled": 60,
+          "evaded": {
+            "n": 60,
+            "rate": 0.0167,
+            "ci95": [
+              0.0,
+              0.05
+            ]
+          }
+        },
+        "beacon_tls": {
+          "flagged_sampled": 60,
+          "evaded": {
+            "n": 60,
+            "rate": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "exfil_bulk": {
+          "flagged_sampled": 60,
+          "evaded": {
+            "n": 60,
+            "rate": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ]
+          }
+        },
+        "scan": {
+          "flagged_sampled": 60,
+          "evaded": {
+            "n": 60,
+            "rate": 1.0,
+            "ci95": [
+              1.0,
+              1.0
+            ]
+          }
+        }
+      },
+      "cross_sector_false_flags": {
+        "sectors": {
+          "fintech": {
+            "sni": "pay.bank.test",
+            "false_flag_rate": {
+              "n": 400,
+              "rate": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ]
+            }
+          },
+          "healthcare": {
+            "sni": "portal.health.test",
+            "false_flag_rate": {
+              "n": 400,
+              "rate": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ]
+            }
+          },
+          "smart_city": {
+            "sni": "cdn.city.test",
+            "false_flag_rate": {
+              "n": 400,
+              "rate": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ]
+            }
+          },
+          "general": {
+            "sni": "static.assets.io",
+            "false_flag_rate": {
+              "n": 400,
+              "rate": 0.0,
+              "ci95": [
+                0.0,
+                0.0
+              ]
+            }
+          }
+        },
+        "max_minus_min": 0.0
+      }
+    }
+  },
+  "caveats": [
+    "All traffic is synthetic. The attack families were written by the detector's authors; recall on them is weak evidence of real-world detection.",
+    "The real-capture baseline from the acceptance report is not on this machine: the 'two-baseline evaluation on a real capture' is NOT RUN.",
+    "Precision depends on attack prevalence; it is reported at stated prevalences, not measured.",
+    "Intervals are percentile bootstraps over flows; flows from one generator seed are not independent samples of a real population, so the intervals are optimistic."
+  ]
+}
