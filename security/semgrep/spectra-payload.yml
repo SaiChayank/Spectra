@@ -1,0 +1,32 @@
+rules:
+  - id: spectra-payload-access-outside-parser
+    languages: [python]
+    severity: ERROR
+    message: >-
+      Packet payload access outside backend/spectra/parse/. Spectra is
+      metadata-only (docs/project-rules.md section 2, rule 1): only the
+      handshake parser may read bytes above the transport header, and it must
+      keep nothing but structural metadata. Take lengths/timings from the flow
+      record instead, or move the parsing into parse/.
+    metadata:
+      category: security
+      rule: docs/project-rules.md#2
+    pattern-either:
+      # scapy layer payloads: pkt[TCP].payload, pkt["UDP"].payload, ...
+      - pattern: $PKT[TCP].payload
+      - pattern: $PKT[UDP].payload
+      - pattern: $PKT[IP].payload
+      - pattern: $PKT[IPv6].payload
+      - pattern: $PKT["TCP"].payload
+      - pattern: $PKT["UDP"].payload
+      - pattern: $PKT["IP"].payload
+      # the Raw layer carries application bytes
+      - pattern: $PKT[Raw]
+      - pattern: $PKT["Raw"]
+      - pattern: $PKT.getlayer(Raw)
+      - pattern: $PKT.haslayer(Raw)
+      - pattern: raw($PKT)
+      - patterns:
+          - pattern: $PKT.load
+          # same $PKT: skip only the callee of a method call such as joblib.load(...)
+          - pattern-not-inside: $PKT.load(...)

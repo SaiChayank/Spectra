@@ -325,7 +325,8 @@ def ja3(meta: TlsMetadata) -> str:
             seg(meta.curves),
             "-".join(str(v) for v in meta.point_formats),
         ])
-    return hashlib.md5(raw.encode()).hexdigest()
+    # JA3 is defined as MD5 over the fingerprint string: a fingerprint, not a security hash
+    return hashlib.md5(raw.encode(), usedforsecurity=False).hexdigest()
 
 
 def _alnum(b: int) -> bool:

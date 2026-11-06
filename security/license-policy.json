@@ -1,0 +1,17 @@
+{
+  "_comment": "Licence allowlist for shipped dependencies. Spectra itself is Apache-2.0. Copyleft is not allowed without an exception; an exception is only 'approved' by the owner, never by tooling.",
+  "allowed": [
+    "MIT", "MIT-0", "0BSD", "BSD", "BSD-2-Clause", "BSD-3-Clause", "Apache-2.0",
+    "PSF-2.0", "ISC", "Zlib", "CC0-1.0", "Unlicense", "MPL-2.0", "Python-2.0", "BlueOak-1.0.0"
+  ],
+  "exceptions": [
+    {
+      "package": "scapy",
+      "license": "GPL-2.0-only",
+      "status": "pending",
+      "reason": "Hard runtime dependency (6 modules import it) under GPL-2.0-only, while Spectra's LICENSE is Apache-2.0. Options: relicense GPL-compatibly, replace scapy with a permissive pcap reader/parser, or get legal advice. See HANDOFF_FINDINGS.md 'S0 licence note'.",
+      "owner": "",
+      "expires": ""
+    }
+  ]
+}

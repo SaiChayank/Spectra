@@ -28,9 +28,36 @@ jobs:
       - uses: astral-sh/setup-uv@v5
       - run: uv venv .venv && uv pip install --require-hashes -r backend/requirements.lock
       - run: .venv/bin/pip-audit -r backend/requirements.lock --disable-pip --no-deps
+      # licence allowlist (security/license-policy.json): fails on an unknown or
+      # copyleft licence with no exception; a *pending* exception is printed
+      - run: .venv/bin/python backend/scripts/check_licenses.py --frontend --json license-report.json
       - uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  sast:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      # custom rule: no packet-payload access outside backend/spectra/parse/
+      # (the rule is tested against annotated fixtures, then run as a gate)
+      - run: uvx semgrep@1.184.0 --metrics=off --test security/semgrep
+      - run: >-
+          uvx semgrep@1.184.0 --metrics=off --config security/semgrep/spectra-payload.yml
+          --error --exclude backend/spectra/parse --exclude backend/spectra/demo.py backend/spectra
+      # general rule packs: reported, not gating (see docs/sast-report.md for the triage)
+      - run: >-
+          uvx semgrep@1.184.0 --metrics=off --config p/python --config p/owasp-top-ten
+          --json -o semgrep-registry.json backend/spectra backend/scripts
+      # Bandit: HIGH severity gates; the triaged Medium/Low report is kept as an artifact
+      - run: uvx bandit@1.9.4 -r backend/spectra backend/scripts -lll
+      - run: uvx bandit@1.9.4 -r backend/spectra backend/scripts -f json -o bandit.json || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sast-reports
+          path: |
+            semgrep-registry.json
+            bandit.json
   frontend:
     runs-on: ubuntu-latest
     defaults:
@@ -47,3 +74,6 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+      # production dependencies must be clean; no high/critical anywhere
+      - run: npm audit --omit=dev
+      - run: npm audit --audit-level=high

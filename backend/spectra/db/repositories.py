@@ -1452,7 +1452,8 @@ class ModelRegistryRepository:
             self._db.commit()
             model_id = str(values["model_id"])
         row = self.get(model_id)
-        assert row is not None  # just inserted under the same lock
+        if row is None:  # just inserted under the same lock - cannot happen
+            raise StoreError(f"registry row {model_id} vanished after insert")
         _ = cur
         return row
 
@@ -1548,5 +1549,6 @@ class ModelRegistryRepository:
                 raise StoreError(
                     f"cannot activate {model_id}: not VALIDATED/RETIRED")
         row = self.get(model_id)
-        assert row is not None  # updated in the transaction above
+        if row is None:  # updated in the transaction above - cannot happen
+            raise StoreError(f"registry row {model_id} vanished after activation")
         return row
