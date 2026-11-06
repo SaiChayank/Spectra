@@ -7,7 +7,7 @@ import {
   Loading,
   PageHeader,
 } from "../components/states";
-import { api, type GraphNode, type GraphSnapshot } from "../lib/api";
+import { api, type GraphCascade, type GraphNode, type GraphSnapshot } from "../lib/api";
 import { formatBytes, formatNum } from "../lib/format";
 import { useFetch } from "../lib/useFetch";
 
@@ -33,6 +33,8 @@ export default function NetworkPage({ can }: Props) {
   const [lookup, setLookup] = useState<NeighborResult | null>(null);
   const [lookupError, setLookupError] = useState<string | null>(null);
   const [looking, setLooking] = useState(false);
+  const [windowS, setWindowS] = useState(0); // 0 = all history
+  const [cascade, setCascade] = useState<GraphCascade | null>(null);
 
   const allowed = can("investigate");
 
@@ -53,8 +55,14 @@ export default function NetworkPage({ can }: Props) {
     setLooking(true);
     setLookupError(null);
     setLookup(null);
+    setCascade(null);
     try {
-      setLookup(await api.graphNode(id));
+      const [node, blast] = await Promise.all([
+        api.graphNode(id),
+        api.graphCascade(id, windowS || undefined),
+      ]);
+      setLookup(node);
+      setCascade(blast);
     } catch (err) {
       setLookupError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -155,6 +163,15 @@ export default function NetworkPage({ can }: Props) {
               ))}
             </select>
           </label>
+          <label>
+            Contact window
+            <select value={windowS} onChange={(e) => setWindowS(Number(e.target.value))}>
+              <option value={0}>all history</option>
+              <option value={3600}>last 1 h</option>
+              <option value={86400}>last 24 h</option>
+              <option value={604800}>last 7 d</option>
+            </select>
+          </label>
           <button
             className="ghost"
             onClick={() => {
@@ -190,6 +207,12 @@ export default function NetworkPage({ can }: Props) {
               {formatNum(lookup.node.flows ?? 0)} / {formatBytes(lookup.node.bytes ?? 0)} /{" "}
               {formatNum(lookup.node.detections ?? 0)}
             </KV>
+            {cascade && (
+              <KV k={`blast radius (${cascade.window_s ? `last ${cascade.window_s / 3600} h` : "all history"})`}>
+                {cascade.level ?? "—"} · score {cascade.score} · sectors{" "}
+                {cascade.sectors?.join(", ") || "none"}
+              </KV>
+            )}
             <KV k="in-edges">
               {lookup.in.length === 0
                 ? "—"

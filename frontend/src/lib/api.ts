@@ -798,6 +798,22 @@ export interface GraphEdge {
   target: string;
   type: string;
   weight: number;
+  /** Contact window: first/last flow time on this edge, and a sample of flow ids. */
+  first_ts?: number | null;
+  last_ts?: number | null;
+  flow_ids?: number[];
+}
+
+export interface GraphCascade {
+  start: string;
+  found: boolean;
+  /** Edge window applied, in seconds; null = all history. */
+  window_s: number | null;
+  score: number;
+  level?: "low" | "medium" | "high";
+  sectors?: string[];
+  detections?: number;
+  reasons: string[];
 }
 
 export interface GraphSummary {
@@ -1293,6 +1309,9 @@ export const api = {
   graphSnapshot: (params: { ntype?: string; sector?: string; limit?: number } = {}) =>
     request<GraphSnapshot>(`/api/graph${qs(params)}`),
   graphSummary: () => request<GraphSummary>("/api/graph/summary"),
+  /** Blast radius from a node; `windowS` limits it to recent contact (omit = all history). */
+  graphCascade: (id: string, windowS?: number) =>
+    request<GraphCascade>(`/api/graph/cascade${qs({ id, window_s: windowS })}`),
   /** One node plus its in/out edges (404 when the id is unknown). */
   graphNode: (id: string) =>
     request<{

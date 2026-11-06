@@ -29,6 +29,8 @@ EDGE_TALKS_TO = "talks_to"
 EDGE_SERVED_BY = "served_by"
 EDGE_IN_SECTOR = "in_sector"
 
+FLOW_IDS_CAP = 20
+
 
 def _strip_port(addr: str | None) -> str:
     if not addr:
@@ -44,6 +46,8 @@ class CorrelationGraph:
         self.edges: dict[str, dict[str, dict[str, float]]] = defaultdict(
             lambda: defaultdict(lambda: defaultdict(float))
         )
+        # contact window per edge: (src, dst, edge_type) -> first_ts/last_ts/flow_ids
+        self.edge_meta: dict[tuple[str, str, str], dict] = {}
 
     # -- construction --------------------------------------------------------
 
@@ -68,8 +72,21 @@ class CorrelationGraph:
             node["sector"] = sector
         return node
 
-    def _edge(self, src: str, dst: str, etype: str, weight: float = 1.0) -> None:
+    def _edge(self, src: str, dst: str, etype: str, weight: float = 1.0,
+              first_ts: float | None = None, last_ts: float | None = None,
+              flow_id: int | None = None) -> None:
         self.edges[src][dst][etype] += weight
+        meta = self.edge_meta.setdefault(
+            (src, dst, etype), {"first_ts": None, "last_ts": None, "flow_ids": []})
+        if first_ts is not None:
+            meta["first_ts"] = (first_ts if meta["first_ts"] is None
+                                else min(meta["first_ts"], first_ts))
+        if last_ts is not None:
+            meta["last_ts"] = (last_ts if meta["last_ts"] is None
+                               else max(meta["last_ts"], last_ts))
+        # ponytail: first FLOW_IDS_CAP ids only; the window is exact, ids are a sample.
+        if flow_id is not None and len(meta["flow_ids"]) < FLOW_IDS_CAP:
+            meta["flow_ids"].append(flow_id)
 
     def observe(self, record: dict) -> None:
         """Add one completed flow to the graph."""
@@ -77,6 +94,8 @@ class CorrelationGraph:
         ip = _strip_port(record.get("dst"))
         sni = record.get("sni")
         ts = record.get("last_ts")
+        first = record.get("start_ts") or ts
+        fid = record.get("id")
         size = int(record.get("bytes") or 0)
         anomaly = bool(record.get("anomaly"))
 
@@ -97,7 +116,8 @@ class CorrelationGraph:
                 n["first_ts"] = ts if n["first_ts"] is None else min(n["first_ts"], ts)
                 n["last_ts"] = ts if n["last_ts"] is None else max(n["last_ts"], ts)
 
-        self._edge(h["id"], d["id"], EDGE_TALKS_TO, weight=size or 1)
+        self._edge(h["id"], d["id"], EDGE_TALKS_TO, weight=size or 1,
+                   first_ts=first, last_ts=ts, flow_id=fid)
 
         if sni:
             dom_id = f"domain:{sni}"
@@ -111,7 +131,8 @@ class CorrelationGraph:
                 dom["last_ts"] = ts if dom["last_ts"] is None else max(dom["last_ts"], ts)
             h["domains"].add(dom_id)
             d["domains"].add(dom_id)
-            self._edge(dom_id, d["id"], EDGE_SERVED_BY, weight=1)
+            self._edge(dom_id, d["id"], EDGE_SERVED_BY, weight=1,
+                       first_ts=first, last_ts=ts, flow_id=fid)
             sec_id = f"sector:{sector}"
             sec = self._node(sec_id, NODE_SECTOR, sector, sector)
             sec["flows"] += 1
@@ -121,7 +142,8 @@ class CorrelationGraph:
             if ts:
                 sec["first_ts"] = ts if sec["first_ts"] is None else min(sec["first_ts"], ts)
                 sec["last_ts"] = ts if sec["last_ts"] is None else max(sec["last_ts"], ts)
-            self._edge(dom_id, sec_id, EDGE_IN_SECTOR, weight=1)
+            self._edge(dom_id, sec_id, EDGE_IN_SECTOR, weight=1,
+                       first_ts=first, last_ts=ts, flow_id=fid)
 
     def observe_many(self, records) -> None:
         for rec in records:
@@ -201,8 +223,12 @@ class CorrelationGraph:
         for src, nbrs in self.edges.items():
             for dst, weights in nbrs.items():
                 for etype, weight in weights.items():
+                    meta = self.edge_meta.get((src, dst, etype), {})
                     out.append({"source": src, "target": dst,
-                                "type": etype, "weight": round(weight, 2)})
+                                "type": etype, "weight": round(weight, 2),
+                                "first_ts": meta.get("first_ts"),
+                                "last_ts": meta.get("last_ts"),
+                                "flow_ids": list(meta.get("flow_ids", []))})
                     if len(out) >= limit:
                         return out
         return out
@@ -224,8 +250,47 @@ class CorrelationGraph:
                                      "weight": round(w, 2)})
         return {"node": self._public(node), "in": incoming, "out": out}
 
-    def shortest_path(self, src: str, dst: str, max_depth: int = 6) -> list[str] | None:
-        """Undirected shortest path (kill-chain hops may traverse edges either way)."""
+    # -- time windows --------------------------------------------------------
+
+    def cutoff(self, window_s: float | None) -> float | None:
+        """Oldest ``last_ts`` an edge may have to count, or None (no window).
+
+        Anchored to the newest contact in the graph, not the wall clock, so
+        replayed or historical captures window the same way live ones do.
+        ``inf`` when nothing carries a timestamp (nothing can be in window).
+        """
+        if window_s is None:
+            return None
+        # ponytail: O(edges) per query; cache the max if queries get hot.
+        newest = max((m["last_ts"] for m in self.edge_meta.values()
+                      if m["last_ts"] is not None), default=None)
+        return float("inf") if newest is None else newest - window_s
+
+    def edge_active(self, a: str, b: str, cutoff: float | None) -> bool:
+        """True if any edge a->b was last seen at or after ``cutoff``."""
+        if cutoff is None:
+            return True
+        return any((self.edge_meta.get((a, b, etype)) or {}).get("last_ts") is not None
+                   and self.edge_meta[(a, b, etype)]["last_ts"] >= cutoff
+                   for etype in self.edges.get(a, {}).get(b, ()))
+
+    def _adjacent(self, current: str, cutoff: float | None) -> set[str]:
+        """Undirected neighbours of ``current`` over in-window edges."""
+        nxts = {n for n in self.edges.get(current, {})
+                if self.edge_active(current, n, cutoff)}
+        for pred, nbrs in self.edges.items():
+            if current in nbrs and self.edge_active(pred, current, cutoff):
+                nxts.add(pred)
+        return nxts
+
+    def shortest_path(self, src: str, dst: str, max_depth: int = 6,
+                      window_s: float | None = None) -> list[str] | None:
+        """Undirected shortest path (kill-chain hops may traverse edges either way).
+
+        ``window_s`` keeps only edges last seen within that many seconds of the
+        newest contact in the graph (None = every edge, the original behaviour).
+        """
+        cutoff = self.cutoff(window_s)
         if src not in self.nodes or dst not in self.nodes:
             return None
         if src == dst:
@@ -236,11 +301,7 @@ class CorrelationGraph:
             current, path = queue.popleft()
             if len(path) > max_depth:
                 continue
-            nxts = set(self.edges.get(current, {}))
-            for pred, nbrs in self.edges.items():
-                if current in nbrs:
-                    nxts.add(pred)
-            for nxt in nxts:
+            for nxt in self._adjacent(current, cutoff):
                 if nxt in seen:
                     continue
                 if nxt == dst:
@@ -249,21 +310,19 @@ class CorrelationGraph:
                 queue.append((nxt, path + [nxt]))
         return None
 
-    def reachable(self, nid: str, max_depth: int = 4) -> dict[str, int]:
+    def reachable(self, nid: str, max_depth: int = 4,
+                  window_s: float | None = None) -> dict[str, int]:
         """BFS distances from nid (undirected for blast-radius purposes)."""
         if nid not in self.nodes:
             return {}
+        cutoff = self.cutoff(window_s)
         seen = {nid: 0}
         queue: deque[str] = deque([nid])
         while queue:
             current = queue.popleft()
             if seen[current] >= max_depth:
                 continue
-            nxts = set(self.edges.get(current, {}))
-            for src, nbrs in self.edges.items():  # reverse direction
-                if current in nbrs:
-                    nxts.add(src)
-            for nxt in nxts:
+            for nxt in self._adjacent(current, cutoff):
                 if nxt not in seen:
                     seen[nxt] = seen[current] + 1
                     queue.append(nxt)
@@ -272,3 +331,4 @@ class CorrelationGraph:
     def reset(self) -> None:
         self.nodes.clear()
         self.edges.clear()
+        self.edge_meta.clear()
