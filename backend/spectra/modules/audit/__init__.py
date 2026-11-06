@@ -26,6 +26,7 @@ from .curve import (
     schnorr_sign,
     schnorr_verify,
 )
+from .keys import AuditKeyProvider, FileKeyProvider
 from .log import AuditError, AuditLog
 from .merkle import (
     canonical_json,
@@ -46,6 +47,8 @@ from .zkp import (
 
 __all__ = [
     "AuditError",
+    "AuditKeyProvider",
+    "FileKeyProvider",
     "AuditLog",
     "CertificateError",
     "DISCLOSABLE_KEYS",

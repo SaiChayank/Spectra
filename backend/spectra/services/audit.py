@@ -70,6 +70,10 @@ class AuditService:
     def checkpoint(self) -> dict:
         return self.log.checkpoint()
 
+    def rotate_key(self, actor: str) -> dict:
+        """Rotate the audit signing key (public material only in the result)."""
+        return self.log.rotate_key(actor=actor)
+
     def verify_checkpoint(self, seq: int | None = None) -> dict:
         return self.log.verify_checkpoint(seq=seq)
 

@@ -58,6 +58,15 @@ def audit_checkpoint() -> dict:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
+@router.post("/api/audit/rotate-key",
+             dependencies=[Depends(require("config:manage"))])
+def audit_rotate_key(principal: dict = Depends(require("config:manage"))) -> dict:
+    """Rotate the audit signing key (ADMIN). Chain-recorded as ``audit.key_rotated``;
+    earlier checkpoints keep verifying against their own epoch. Returns public
+    material only."""
+    return engine.audit_service.rotate_key(actor=principal["username"])
+
+
 @router.get("/api/audit/checkpoint/verify")
 def audit_checkpoint_verify(seq: int | None = Query(None, ge=1)) -> dict:
     from ...modules.audit import AuditError

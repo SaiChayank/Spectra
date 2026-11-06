@@ -585,6 +585,27 @@ def _lookup_indexes(db: Database) -> None:
         db.execute(stmt)
 
 
+def _audit_key_epochs(db: Database) -> None:
+    """v12: audit signing-key history (Phase 9F).
+
+    One row per key epoch.  ``start_seq`` is the chain sequence number at
+    which the epoch began (the ``audit.key_rotated`` entry's seq; 0 for the
+    first epoch): a checkpoint signed in epoch ``e`` is only valid when its
+    covered range ends inside ``[start_seq(e), start_seq(e+1))``.  Public keys
+    only - never a secret.  Like ``audit_log`` this table is exempt from
+    retention.  Rollback is by restoring the pre-upgrade database backup; the
+    table is additive and older code ignores it.
+    """
+    db.execute(
+        """CREATE TABLE IF NOT EXISTS audit_key_epochs (
+            epoch      INTEGER PRIMARY KEY,
+            pubkey     TEXT NOT NULL,
+            start_seq  INTEGER NOT NULL,
+            created_at REAL NOT NULL
+        )"""
+    )
+
+
 MIGRATIONS: tuple[Migration, ...] = (
     Migration(1, "baseline_schema", _baseline),
     Migration(2, "flows_capture_foreign_key", _flows_capture_foreign_key),
@@ -597,6 +618,7 @@ MIGRATIONS: tuple[Migration, ...] = (
     Migration(9, "investigation_indexes", _investigation_indexes),
     Migration(10, "model_registry", _model_registry),
     Migration(11, "lookup_indexes", _lookup_indexes),
+    Migration(12, "audit_key_epochs", _audit_key_epochs),
 )
 
 

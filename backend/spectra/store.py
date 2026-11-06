@@ -522,6 +522,14 @@ class Store:
     def audit_head(self) -> dict | None:
         return self._audit.head()
 
+    def audit_epochs(self) -> list[dict]:
+        """Signing-key history (public keys only), oldest first."""
+        return self._audit.epochs()
+
+    def audit_epoch_add(self, epoch: int, pubkey: str, start_seq: int,
+                        created_at: float) -> None:
+        self._audit.add_epoch(epoch, pubkey, start_seq, created_at)
+
     def audit_count(self, kind: str | None = None, *,
                     kind_prefix: str | None = None,
                     since: float | None = None,

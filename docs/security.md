@@ -154,6 +154,44 @@ failed digest skips that subsystem rather than loading it.
 * **Guarded appends:** an audit failure is counted and logged; capture and
   detection continue.
 
+### 6.1 Signing-key epochs and the provider seam (Phase 9F)
+
+The hash chain itself is unkeyed (sha256); the signing key signs
+**checkpoints** and **compliance certificates**. Keys now have epochs:
+
+* **Rotation:** `POST /api/audit/rotate-key` (ADMIN, `config:manage`) swaps the
+  key, records the new *public* key in `audit_key_epochs` (migration v12) and
+  appends an `audit.key_rotated` entry whose `seq` is the new epoch's
+  `start_seq`. The old secret is overwritten (the file provider keeps no key
+  history), so a rotated-out key can no longer sign.
+* **Validity window:** a checkpoint names its epoch inside the signed message
+  and is valid only if (1) that epoch's key signed it and (2) its covered
+  range ends in `[start_seq(e), start_seq(e+1))`. Therefore a stolen *current*
+  key cannot forge checkpoints over entries that predate it, and a stolen
+  *old* key cannot sign anything after the rotation. `verify()` also checks
+  every epoch after the first is backed by a matching `audit.key_rotated`
+  entry. Checkpoints written before 9F carry no epoch and verify as epoch 1.
+* **What rotation does NOT give you:** a key stolen *before* it was rotated can
+  still forge checkpoints for its own epoch's range, and the chain is unkeyed,
+  so anyone who can rewrite the database and recompute every hash can rewrite
+  history; only checkpoints exported/anchored outside the host close that
+  gap. Certificates are checked against the epoch window at their signed
+  `chain_head.seq`.
+* **Key replaced outside `rotate_key`** (lost key file, crash between the
+  swap and the registration): the next start registers the new key as an epoch
+  and chains an `audit.key_rotated` entry saying so - it is never silent.
+* **KMS/HSM contract:** implement `spectra.modules.audit.keys.AuditKeyProvider`
+  - `public_key()` (compressed secp256k1 point, hex), `sign(msg)`
+  (`schnorr_sign`-format signature by the current key; the secret never leaves
+  the provider) and `rotate()` (switch to a new key, return its public key) -
+  and pass it as `AuditLog(store, provider=...)`. No cloud dependency ships
+  in v1; `FileKeyProvider` (mode-0600 file, atomic replace) is the only
+  provider. The Schnorr/secp256k1 code is Spectra's own implementation
+  (`modules/audit/curve.py`) and has not had an independent cryptographic
+  review.
+* **Upgrade / rollback:** v12 only adds a table. Roll back by restoring the
+  pre-upgrade database backup; older code ignores the table.
+
 ## 7. Environment variable reference
 
 Booleans accept `1/true/yes/on`. Defaults are the safe local values.

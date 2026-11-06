@@ -508,6 +508,19 @@ class AuditRepository:
             )
             self._db.commit()
 
+    def epochs(self) -> list[dict]:
+        return self._db.query(
+            "SELECT epoch, pubkey, start_seq, created_at FROM audit_key_epochs "
+            "ORDER BY epoch ASC")
+
+    def add_epoch(self, epoch: int, pubkey: str, start_seq: int,
+                  created_at: float) -> None:
+        with self._db.lock:
+            self._db.execute(
+                "INSERT INTO audit_key_epochs (epoch, pubkey, start_seq, created_at) "
+                "VALUES (?,?,?,?)", (epoch, pubkey, start_seq, created_at))
+            self._db.commit()
+
     def head(self) -> dict | None:
         rows = self._db.query(
             "SELECT seq, ts, kind, entry_hash FROM audit_log "

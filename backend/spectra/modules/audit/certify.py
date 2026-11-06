@@ -328,7 +328,13 @@ def verify_certificate(bundle: dict, log: AuditLog | None = None,
     sig_ok = sig_ok and pub == str(
         (bundle.get("issuer") or {}).get("pubkey", ""))
     if log is not None:
-        sig_ok = sig_ok and pub == log.pubkey
+        # any key this log ever signed with, valid at the chain position the
+        # (signed) certificate says it was issued at
+        try:
+            head_seq = int((bundle.get("chain_head") or {}).get("seq"))
+        except (TypeError, ValueError):
+            head_seq = None
+        sig_ok = sig_ok and log.key_valid_at(pub, head_seq)
     check("signature", sig_ok, "issuer Schnorr signature over the whole bundle")
 
     profile = bundle.get("profile")

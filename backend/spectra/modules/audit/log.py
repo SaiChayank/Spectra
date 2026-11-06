@@ -18,12 +18,11 @@ import os
 import threading
 import time
 
-from .curve import G, N as N_ORDER, compress, pt_mul
+from .keys import KEY_FILE, AuditKeyProvider, FileKeyProvider
 from .merkle import canonical_json, leaf_hash, merkle_proof, merkle_root, verify_merkle_proof
-from .zkp import schnorr_keypair, schnorr_sign, schnorr_verify
+from .zkp import schnorr_verify
 
 GENESIS = "0" * 64
-KEY_FILE = "audit_signing.key"
 MAX_LEAVES = 5000  # per-entry cap: keeps rows bounded on long captures
 
 
@@ -48,11 +47,17 @@ class AuditLog:
     """Append-only log; persists through :class:`~spectra.store.Store` when
     available, otherwise keeps entries in memory (persistence-disabled mode)."""
 
-    def __init__(self, store=None, key_path: str | None = None):
+    def __init__(self, store=None, key_path: str | None = None,
+                 provider: AuditKeyProvider | None = None):
         self.store = store
         self._lock = threading.RLock()
         self._mem: list[dict] = []
-        self.secret, self.pubkey = self._load_key(key_path)
+        self._mem_epochs: list[dict] = []
+        if provider is None:
+            path = key_path if key_path is not None else self._default_key_path()
+            provider = FileKeyProvider(path)
+        self.provider = provider
+        self._sync_epochs()
 
     # -- signing key ---------------------------------------------------------
 
@@ -64,43 +69,96 @@ class AuditLog:
             return None
         return os.path.join(os.path.dirname(os.path.abspath(path)), KEY_FILE)
 
-    def _load_key(self, key_path: str | None) -> tuple[str, str]:
-        path = key_path if key_path is not None else self._default_key_path()
-        if path and os.path.isfile(path):
-            try:
-                with open(path, "r", encoding="utf-8") as fh:
-                    secret = fh.read().strip()
-                if secret:
-                    pub = self._pub_from_secret(secret)
-                    return secret, pub
-            except (OSError, ValueError):
-                pass  # fall through to a fresh key
-        secret, pub = schnorr_keypair()
-        if path:
-            try:
-                os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
-                with open(path, "w", encoding="utf-8") as fh:
-                    fh.write(secret + "\n")
-                try:
-                    os.chmod(path, 0o600)
-                except OSError:  # pragma: no cover - platform dependent
-                    pass
-            except OSError:  # pragma: no cover - read-only dirs: ephemeral key
-                pass
-        return secret, pub
-
-    @staticmethod
-    def _pub_from_secret(secret_hex: str) -> str:
-        x = int(secret_hex, 16)
-        if not (0 < x < N_ORDER):
-            raise AuditError("stored signing key is out of range")
-        return compress(pt_mul(x, G))
+    @property
+    def pubkey(self) -> str:
+        return self.provider.public_key()
 
     def sign(self, msg: bytes) -> str:
-        return schnorr_sign(self.secret, msg)
+        return self.provider.sign(msg)
 
     def verify_signature(self, msg: bytes, sig: str) -> bool:
+        """Verify against the *current* key only; epoch history is in verify_checkpoint."""
         return schnorr_verify(self.pubkey, msg, sig)
+
+    # -- key epochs (9F) ---------------------------------------------------------
+
+    def epochs(self) -> list[dict]:
+        """Signing-key history, oldest first (public keys only)."""
+        with self._lock:
+            rows = (self._mem_epochs if self.store is None
+                    else self.store.audit_epochs())
+            return [{"epoch": int(r["epoch"]), "pubkey": r["pubkey"],
+                     "start_seq": int(r["start_seq"]),
+                     "created_at": r["created_at"]} for r in rows]
+
+    def current_epoch(self) -> int:
+        return self.epochs()[-1]["epoch"]
+
+    def _add_epoch(self, pubkey: str, start_seq: int) -> int:
+        eps = self.epochs()
+        epoch = (eps[-1]["epoch"] if eps else 0) + 1
+        now = time.time()
+        if self.store is None:
+            self._mem_epochs.append({"epoch": epoch, "pubkey": pubkey,
+                                     "start_seq": start_seq, "created_at": now})
+        else:
+            self.store.audit_epoch_add(epoch, pubkey, start_seq, now)
+        return epoch
+
+    def _sync_epochs(self) -> None:
+        """Make the epoch table agree with the provider's current key.
+
+        First start: epoch 1 (valid from the beginning of the chain, so
+        pre-9F checkpoints verify).  A key that differs from the newest epoch
+        was changed without ``rotate_key`` (lost key file, crash between the
+        provider swap and the registration): register it as a new epoch with
+        a chain entry saying so - never silently.
+        """
+        with self._lock:
+            eps = self.epochs()
+            pub = self.provider.public_key()
+            if not eps:
+                self._add_epoch(pub, 0)
+            elif eps[-1]["pubkey"] != pub:
+                self._register_rotation(
+                    pub, eps[-1], "signing key changed outside rotate_key()",
+                    "spectra")
+
+    def _register_rotation(self, pub: str, previous: dict, reason: str,
+                           actor: str) -> tuple[int, dict]:
+        # entry first: its seq *is* the new epoch's start_seq
+        epoch = previous["epoch"] + 1
+        entry = self.append("audit.key_rotated", {
+            "epoch": epoch, "pubkey": pub,
+            "previous_epoch": previous["epoch"],
+            "previous_pubkey": previous["pubkey"], "reason": reason,
+        }, actor=actor)
+        self._add_epoch(pub, entry["seq"])
+        return epoch, entry
+
+    def rotate_key(self, actor: str = "spectra") -> dict:
+        """Swap the signing key; old checkpoints keep verifying against their epoch."""
+        with self._lock:
+            previous = self.epochs()[-1]
+            new_pub = self.provider.rotate()
+            epoch, entry = self._register_rotation(
+                new_pub, previous, "rotation requested", actor)
+            return {"epoch": epoch, "pubkey": new_pub,
+                    "start_seq": entry["seq"], "entry_seq": entry["seq"],
+                    "previous_pubkey": previous["pubkey"]}
+
+    def key_valid_at(self, pub: str, seq: int | None = None) -> bool:
+        """Was ``pub`` a signing key of this log (at chain position ``seq``)?"""
+        eps = self.epochs()
+        if seq is None:
+            return bool(eps) and eps[-1]["pubkey"] == pub
+        for i, ep in enumerate(eps):
+            if ep["pubkey"] != pub:
+                continue
+            upper = eps[i + 1]["start_seq"] if i + 1 < len(eps) else None
+            if seq >= ep["start_seq"] and (upper is None or seq < upper):
+                return True
+        return False
 
     # -- append --------------------------------------------------------------
 
@@ -295,11 +353,26 @@ class AuditLog:
                 break
             prev_hash = entry["entry_hash"]
             expected_seq += 1
+        # every epoch after the first must be backed by its key_rotated entry
+        by_seq = {e["seq"]: e for e in entries}
+        epochs = self.epochs()
+        for ep in epochs[1:]:
+            e = by_seq.get(ep["start_seq"])
+            p = (e or {}).get("payload") or {}
+            if not (e and e["kind"] == "audit.key_rotated"
+                    and p.get("pubkey") == ep["pubkey"]
+                    and p.get("epoch") == ep["epoch"]):
+                errors.append({
+                    "seq": ep["start_seq"],
+                    "reason": f"epoch {ep['epoch']} is not backed by a matching "
+                              f"audit.key_rotated entry"})
         return {
             "ok": not errors,
             "entries": len(entries),
             "head": self.head(),
             "signing_key": self.pubkey,
+            "epoch": epochs[-1]["epoch"] if epochs else None,
+            "epochs": epochs,
             "errors": errors,
         }
 
@@ -375,9 +448,10 @@ class AuditLog:
                 "covered_to": covered[-1]["seq"],
                 "entries": len(covered),
                 "root": root,
+                "epoch": self.current_epoch(),
             }
             entry = self.append("checkpoint", payload, actor="audit")
-            sig = schnorr_sign(self.secret, canonical_json(payload).encode())
+            sig = self.sign(canonical_json(payload).encode())
             return {
                 "seq": entry["seq"],
                 "entry_hash": entry["entry_hash"],
@@ -442,14 +516,30 @@ class AuditLog:
         integrity_ok = all(_entry_hash(e) == e["entry_hash"] for e in entries)
         check("entry_integrity", integrity_ok,
               "every covered entry still hashes to its stored entry_hash")
+        # key epoch: a checkpoint without one predates 9F and is epoch 1
+        try:
+            epoch_n = int(ckpt["epoch"]) if "epoch" in ckpt else 1
+        except (TypeError, ValueError):
+            epoch_n = -1
+        epochs = {e["epoch"]: e for e in self.epochs()}
+        ep = epochs.get(epoch_n)
+        check("epoch_known", ep is not None, f"signing-key epoch {epoch_n}")
+        if ep is not None:
+            nxt = epochs.get(epoch_n + 1)
+            upper = nxt["start_seq"] if nxt else None
+            check("epoch_window",
+                  end >= ep["start_seq"] and (upper is None or end < upper),
+                  f"covered range ends at {end}; epoch {epoch_n} signs "
+                  f"[{ep['start_seq']}, {upper if upper is not None else 'now'})")
         if "signature" in ckpt:
-            msg = canonical_json({
-                k: ckpt[k] for k in
-                ("covered_from", "covered_to", "entries", "root")
-            }).encode()
-            ok = ckpt.get("pubkey") == self.pubkey and schnorr_verify(
-                str(ckpt.get("pubkey", "")), msg, str(ckpt.get("signature", "")))
-            check("signature", ok, "Schnorr signature over the covered root")
+            fields = ("covered_from", "covered_to", "entries", "root")
+            if "epoch" in ckpt:
+                fields += ("epoch",)
+            msg = canonical_json({k: ckpt[k] for k in fields}).encode()
+            ok = ep is not None and ckpt.get("pubkey") == ep["pubkey"] and \
+                schnorr_verify(str(ckpt.get("pubkey", "")), msg,
+                               str(ckpt.get("signature", "")))
+            check("signature", ok, "Schnorr signature by the epoch's key")
         return {"ok": all(c["ok"] for c in checks), "checks": checks,
                 "seq": ckpt.get("seq"), "root": declared_root}
 
