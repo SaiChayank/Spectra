@@ -62,7 +62,7 @@ context only (`SCORING_POLICY`).
 | 7 | Correlation graph | **REAL** | Attack-graph correlation over observed flow records, hydrated from history at startup |
 | 8a | Edge slicing + MEC micro-detector | **LOCAL IMPLEMENTATION** | Real micro-detector scoring and slice classification, single-process scope |
 | 8b | Edge deployment / NTN registry | **SIMULATED** | In-process registry explicitly marked `capability: SIMULATED` — no MEC or 5G control plane |
-| — | Federated aggregation (TEE sub-feature) | **SIMULATED** | Real additive secret-sharing math over *locally simulated* parties |
+| — | Federated aggregation (TEE sub-feature) | **SIMULATED** | Real secret-sharing math (additive k-of-k, or opt-in Shamir t-of-n with dropout) over *locally simulated* parties |
 
 Per-module integration contract (what it consumes/produces, whether it may touch
 scoring, how it degrades on failure) is machine-readable in

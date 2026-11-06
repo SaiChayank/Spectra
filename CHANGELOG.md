@@ -20,6 +20,7 @@ All notable changes to Spectra are documented here. The format follows
 - Per-host-pair beaconing: flow-start cadence per (source, SNI-or-IP) pair feeds the bio `beacon_cadence` danger signal and a `regularity` field on graph edges; `SPECTRA_PAIR_WINDOW_FLOWS` (default 32). Not yet measured on real traffic (Phase 9D).
 - Rolling PSI reference: `GET /api/model/drift` now also reports `psi_vs_train`, `psi_vs_recent` and `alert_level` (worse of the two); drift alerts fire on either. It re-baselines after legitimate shifts; it does not detect slow drift sooner than the training PSI (Phase 9E, see `HANDOFF_FINDINGS.md`).
 - Audit signing-key epochs: `POST /api/audit/rotate-key` (ADMIN), migration v12 `audit_key_epochs`, a swappable `AuditKeyProvider`, epoch-aware checkpoint/certificate verification (Phase 9F; awaiting human security review).
+- Federated aggregation: opt-in Shamir t-of-n over GF(2^127-1) with share commitments and shareholder/party dropout tolerance (`threshold`, `dropped_parties`, `dropped_shareholders` on `POST /api/tee/federate`; `spectra tee federate --threshold`). Default stays additive k-of-k (Phase 9G).
 - Ship plan for the public software release (`docs/34_ship_plan.md`).
 - `LICENSE` (Apache-2.0), `SECURITY.md`, `CONTRIBUTING.md`, issue/PR
   templates and Dependabot configuration.

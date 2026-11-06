@@ -176,8 +176,8 @@ _MODULE_CAPABILITIES: dict[str, dict] = {
         "title": "Federated aggregation",
         "status": SIMULATED,
         "hardware_backed": False,
-        "note": "Real additive secret-sharing math over locally simulated "
-                "parties.",
+        "note": "Real secret-sharing math (additive k-of-k, or opt-in Shamir "
+                "t-of-n with dropout) over locally simulated parties.",
         "consumes": "Model delta vectors (explicit, or derived from the "
                     "live score window).",
         "produces": "Secret-shared secure aggregation over locally "

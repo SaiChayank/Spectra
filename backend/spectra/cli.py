@@ -753,9 +753,14 @@ def cmd_tee(args: argparse.Namespace) -> int:
             deltas = [np.asarray(g).mean(axis=0).tolist()
                       for g in groups if len(g)]
         try:
-            report = engine.tee_federate(deltas=deltas,
-                                         shareholders=args.shareholders,
-                                         seed=args.seed)
+            def _idx(text: str) -> list[int]:
+                return [int(v) for v in text.split(",") if v.strip()]
+
+            report = engine.tee_federate(
+                deltas=deltas, shareholders=args.shareholders, seed=args.seed,
+                threshold=args.threshold,
+                dropped_parties=_idx(args.drop_parties),
+                dropped_shareholders=_idx(args.drop_shareholders))
         except Exception as exc:  # noqa: BLE001 - report cleanly
             print(f"federated round failed: {exc}", file=sys.stderr)
             return 2
@@ -763,7 +768,9 @@ def cmd_tee(args: argparse.Namespace) -> int:
             print(json.dumps(report, indent=2, default=str))
             return 0
         print(f"federated round: {report['parties']} parties x "
-              f"{report['shareholders']} shareholders, dim {report['dim']}")
+              f"{report['shareholders']} shareholders ({report['scheme']}, "
+              f"threshold {report['threshold']}, {report['responded']} responded), "
+              f"dim {report['dim']}")
         print(f"  exact recombination : {report['exact']}")
         head = [round(v, 6) for v in report["aggregate"][:4]]
         print(f"  aggregate (first 4) : {head}")
@@ -1221,11 +1228,18 @@ def build_parser() -> argparse.ArgumentParser:
     q.add_argument("--json", action="store_true")
     q.set_defaults(func=cmd_tee)
 
-    q = tesub.add_parser("federate", help="additive secret-sharing round")
+    q = tesub.add_parser("federate", help="secret-sharing round (additive, or "
+                         "Shamir t-of-n with --threshold)")
     q.add_argument("--pcap", default=None,
                    help="build the 3 party deltas from this PCAP")
     q.add_argument("--shareholders", type=int, default=3)
     q.add_argument("--seed", type=int, default=7)
+    q.add_argument("--threshold", type=int, default=None,
+                   help="Shamir t-of-n: any t shareholders recombine")
+    q.add_argument("--drop-shareholders", default="",
+                   help="comma-separated shareholder indexes that fail after dealing")
+    q.add_argument("--drop-parties", default="",
+                   help="comma-separated party indexes that fail before dealing")
     q.add_argument("--json", action="store_true")
     q.set_defaults(func=cmd_tee)
 

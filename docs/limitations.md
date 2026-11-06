@@ -77,9 +77,14 @@ verification that *reports* that fact. There is no SGX/SEV/TrustZone hardware,
 no remote attestation service, and no hardware-backed claim anywhere
 (`hardware_backed_count: 0`).
 
-Federated aggregation performs **real** additive secret-sharing math over
-**locally simulated parties** — it demonstrates the protocol, not a
-cross-organisation deployment. Consequence: attestation receipts are useful as
+Federated aggregation performs **real** secret-sharing math — additive k-of-k
+by default, or opt-in Shamir t-of-n over GF(2^127−1) that tolerates shareholder
+and party dropout (Phase 9G) — over **locally simulated parties**; it
+demonstrates the protocol, not a cross-organisation deployment. Shamir shares
+carry hash commitments (tampered shares are rejected) but this is **not**
+verifiable secret sharing: a malicious dealer is only caught by the
+polynomial-consistency check when surplus shares exist, and seeded randomness
+is reproducible rather than a production CSPRNG. Consequence: attestation receipts are useful as
 an integrity *mechanism* demonstration, not as evidence to an auditor that code
 ran inside an enclave.
 

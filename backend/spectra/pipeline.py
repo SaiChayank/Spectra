@@ -753,10 +753,13 @@ class SpectraEngine:
         return self.model.tee_infer(features)
 
     def tee_federate(self, deltas=None, shareholders: int = 3,
-                     seed: int = 7) -> dict:
+                     seed: int = 7, threshold: int | None = None,
+                     dropped_parties=(), dropped_shareholders=()) -> dict:
         """Secure aggregation: explicit deltas or the live window's means."""
-        return self.model.tee_federate(deltas=deltas,
-                                       shareholders=shareholders, seed=seed)
+        return self.model.tee_federate(
+            deltas=deltas, shareholders=shareholders, seed=seed,
+            threshold=threshold, dropped_parties=dropped_parties,
+            dropped_shareholders=dropped_shareholders)
 
     # -- advanced-module capability status -----------------------------------
 

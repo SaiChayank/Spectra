@@ -35,7 +35,7 @@ Status legend: ✅ implemented · 🟡 partial · ⏳ deferred (see `00_reconcil
 |---|---|---|---|---|---|
 | FR-3.1 | Detection inference executes inside a supported TEE (SGX/SEV-SNP/TrustZone) | Software enclave analog: `TeeEnclave` measures model file digest, holds signing keypair, seals inference; **no hardware enclave** (roadmap, ADR-002) | `modules/tee/enclave.py`; `POST /api/tee/infer` | `test_tee.py` | 🟡 analog only |
 | FR-3.2 | Produce an attestation report proving model integrity on request | Nonce-bound Schnorr attestation quotes over (model digest ‖ feature digest ‖ nonce); verify endpoint recomputes and checks freshness | `modules/tee/enclave.py` (`attest`, `verify`); `POST /api/tee/{attest,verify}`; `spectra tee attest/verify` | `test_tee.py` (incl. malformed-input 400s) | ✅ (software attestation) |
-| FR-3.3 | Federated training across ≥2 participants without raw data leaving their enclave | Shimir secret-sharing: model updates split k-of-k, `recombine` reconstructs aggregate only — participants exchange shares, not raw updates | `modules/tee/federated.py`; `POST /api/tee/federate` | `test_tee.py` | ✅ (mechanism) |
+| FR-3.3 | Federated training across ≥2 participants without raw data leaving their enclave | Secret sharing: model updates split additively k-of-k (default) or Shamir t-of-n with dropout (opt-in, Phase 9G); the aggregate is reconstructed, never a party update — participants exchange shares, not raw updates | `modules/tee/federated.py`; `POST /api/tee/federate` | `test_tee.py`, `test_federated_shamir.py` | ✅ (mechanism) |
 
 ## FR-4: Adversarial Resilience — ✅ (on-demand, not continuous)
 

@@ -30,6 +30,11 @@ class TeeFederateRequest(BaseModel):
     deltas: list[list[float]] | None = None
     shareholders: int = Field(3, ge=2, le=16)
     seed: int = 7
+    #: Shamir t-of-n (9G). Omitted = additive k-of-k (every shareholder needed).
+    threshold: int | None = Field(None, ge=2, le=16)
+    #: party indexes that fail before dealing / shareholder indexes that fail after
+    dropped_parties: list[int] = Field(default_factory=list, max_length=64)
+    dropped_shareholders: list[int] = Field(default_factory=list, max_length=16)
 
 
 @router.post("/api/tee/attest")
@@ -73,7 +78,8 @@ def tee_infer(req: TeeInferRequest) -> dict:
 
 @router.post("/api/tee/federate")
 def tee_federate(req: TeeFederateRequest) -> dict:
-    """Additive secret-sharing round; returns a safe summary only.
+    """Secret-sharing round (additive k-of-k, or Shamir t-of-n with dropout).
+    Returns a safe summary only.
 
     Per-party shares, per-shareholder aggregates and the round seed stay
     inside the process - the response carries round identity, threshold,
@@ -84,6 +90,9 @@ def tee_federate(req: TeeFederateRequest) -> dict:
     try:
         return engine.model.tee_federate(deltas=req.deltas,
                                          shareholders=req.shareholders,
-                                         seed=req.seed)
+                                         seed=req.seed,
+                                         threshold=req.threshold,
+                                         dropped_parties=req.dropped_parties,
+                                         dropped_shareholders=req.dropped_shareholders)
     except (FederatedError, TeeError) as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
