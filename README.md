@@ -33,7 +33,7 @@ Three target verticals: **Fintech · Healthcare · Smart City Infrastructure**.
 | [`docs/testing.md`](./docs/testing.md) | 702 tests · 156 acceptance checks · performance · live-capture validation |
 | [`docs/limitations.md`](./docs/limitations.md) | detection, classification, TEE/twin/edge, metadata-only analysis, operational caveats |
 | [`docs/readiness-report.md`](./docs/readiness-report.md) | final readiness report (completed / partial / future / known limitations) |
-| [`docs/hardening-report.md`](./docs/hardening-report.md) · [`docs/acceptance-report.md`](./docs/acceptance-report.md) | engineering evidence: fixes, performance baselines, live capture |
+| [`docs/hardening-report.md`](./docs/hardening-report.md) · [`docs/acceptance-report.md`](./docs/acceptance-report.md) · [`docs/acceptance-report-2026-11-06.md`](./docs/acceptance-report-2026-11-06.md) | engineering evidence: fixes, performance baselines, live capture; Phase 9 live-server run (Exit Gate 9) |
 
 ---
 

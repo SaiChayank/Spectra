@@ -21,12 +21,12 @@ Status legend: ✅ implemented · 🟡 partial · ⏳ deferred (see `00_reconcil
 | FR-1.4 | Flag traffic patterns consistent with Harvest-Now-Decrypt-Later behavior | `assess_hndl` scores bulk transfers (volume/duration asymmetry vs sector sensitivity), `screen_flows` batch screen | `modules/pqc/hndl.py`; surfaced in PQC scan report; `spectra pqc` | `test_pqc.py` | ✅ |
 | FR-1.5 | Generate sector-specific PQC migration roadmap on demand | `generate_roadmap` builds prioritized items (priority × sector sensitivity weight: healthcare 1.0/HIPAA, fintech 0.9/PCI-DSS, smart city 0.7) from inventory findings | `modules/pqc/roadmap.py`, `sectors.py`; PQC scan response | `test_pqc.py` | ✅ |
 
-## FR-2: Cross-Domain Correlation — 🟡 (core ✅, one gap)
+## FR-2: Cross-Domain Correlation — ✅
 
 | Req | Text (abridged) | Implementation | Surface | Tests | Status |
 |---|---|---|---|---|---|
 | FR-2.1 | Maintain a graph model of shared infrastructure across monitored sectors | In-memory `CorrelationGraph`: host/IP/SNI nodes typed with sector (`fintech`/`healthcare`/`smart_city`/`general`), weighted edges; hydrated from persisted flow rows at startup | `modules/corr/graph.py` (`observe`, `hydrate`, `SectorClassifier` from `sectors.py`); `GET /api/graph`, `/api/graph/summary`, `/api/graph/node` | `test_corr.py` | ✅ |
-| FR-2.2 | Detect anomalies correlated across ≥2 sectors within a configurable time window | Cascade/blast-radius analysis reaches cross-sector nodes; **no explicit configurable time-window parameter** on correlation | `modules/corr/cascade.py` (`cascade`, `_kill_chain`); `GET /api/graph/cascade`, `/api/graph/path` | `test_corr.py` | 🟡 window parameter not implemented |
+| FR-2.2 | Detect anomalies correlated across ≥2 sectors within a configurable time window | Graph edges carry first/last contact times and sampled flow ids; `cascade`, `shortest_path` and `reachable` take `window_s` (anchored to the newest contact in the graph, so replays window like live data); `window_s` ≤ 0 or NaN is a 400; kill-chain scoring respects the window (Phase 9A) | `modules/corr/graph.py`, `modules/corr/cascade.py`; `GET /api/graph/cascade?window_s=`, `/api/graph/path?window_s=`; Network page window selector | `test_corr.py` (5 windowed tests), acceptance `phase9` group | ✅ |
 | FR-2.3 | Visualize a cross-sector kill chain when a correlated threat is detected | Cascade result carries kill-chain stage paths; correlation panel consumes `/api/graph*` | `modules/corr/cascade.py`; dashboard correlation views | `test_corr.py` | ✅ |
 
 ## FR-3: Confidential Computing / TEE — 🟡 (analog delivered)
@@ -37,11 +37,11 @@ Status legend: ✅ implemented · 🟡 partial · ⏳ deferred (see `00_reconcil
 | FR-3.2 | Produce an attestation report proving model integrity on request | Nonce-bound Schnorr attestation quotes over (model digest ‖ feature digest ‖ nonce); verify endpoint recomputes and checks freshness | `modules/tee/enclave.py` (`attest`, `verify`); `POST /api/tee/{attest,verify}`; `spectra tee attest/verify` | `test_tee.py` (incl. malformed-input 400s) | ✅ (software attestation) |
 | FR-3.3 | Federated training across ≥2 participants without raw data leaving their enclave | Secret sharing: model updates split additively k-of-k (default) or Shamir t-of-n with dropout (opt-in, Phase 9G); the aggregate is reconstructed, never a party update — participants exchange shares, not raw updates | `modules/tee/federated.py`; `POST /api/tee/federate` | `test_tee.py`, `test_federated_shamir.py` | ✅ (mechanism) |
 
-## FR-4: Adversarial Resilience — ✅ (on-demand, not continuous)
+## FR-4: Adversarial Resilience — ✅ (continuous mode is opt-in, default off)
 
 | Req | Text (abridged) | Implementation | Surface | Tests | Status |
 |---|---|---|---|---|---|
-| FR-4.1 | Continuously generate adversarial traffic samples against own models | Score-boundary attack: feature-perturbation search that pushes benign vectors across the decision boundary; `attack_batch`; **invoked on demand (API/CLI), not continuously scheduled** | `modules/adv/evasion.py`; `POST /api/model/robustness`; `spectra adversarial` | `test_adv.py` | ✅ |
+| FR-4.1 | Continuously generate adversarial traffic samples against own models | Score-boundary attack: feature-perturbation search that pushes benign vectors across the decision boundary; `attack_batch`. **Opt-in scheduled mode (Phase 9B):** with `SPECTRA_HARDEN_INTERVAL_H` > 0 the report-only harness attacks the incumbent's flagged flows on the live window every N hours and audit-chains `model.harden`/`model.shadow`; default 0 = off. Adversarial *feature vectors* are generated, not packets. **Retraining on them does NOT reduce evasion** (HANDOFF_FINDINGS.md 9B), so the harness never promotes a model | `modules/adv/evasion.py`; `services/harden.py`; `POST /api/model/robustness`, `POST /api/model/harden`; `spectra adversarial` | `test_adv.py`, `test_harden.py` (incl. the enabled scheduler running the real harden), acceptance `phase9` group | ✅ (generation; no robustness gain shown) |
 | FR-4.2 | Detect when the system is being actively probed (meta-anomaly) | Evasion watch: `ScoreWindow` near-miss-rate detection + `watch()` meta-anomaly on score distribution shapes; drift events and evasion alerts are audit-chained | `modules/adv/watch.py`; `GET /api/model/evasion`, `/api/model/drift` | `test_adv.py` | ✅ |
 | FR-4.3 | Distinguish natural concept drift from adversarial manipulation | PSI baseline per feature (40 bins) captured at training; drift endpoint reports per-feature PSI so benign drift vs boundary-probing signatures are separable | `ml/model.py` (`_make_baseline`, drift info); `modules/adv/watch.py` | `test_model.py`, `test_adv.py` | ✅ |
 
@@ -96,8 +96,11 @@ The SRS left engineering values as `[X]`. Measured/implemented values:
 
 ## Gaps and known deltas (summary)
 
-1. **FR-2.2** — cross-sector correlation lacks the configurable time window.
+Re-run at Exit Gate 9 (2026-11-06; evidence in `docs/acceptance-report-2026-11-06.md`):
+
+1. ~~**FR-2.2** — no configurable time window.~~ **Closed in Phase 9A** (`window_s`).
 2. **FR-3.1** — hardware TEE replaced by software enclave analog.
-3. **FR-6.1** — audit proofs are hash-chain/Merkle/Schnorr, not zero-knowledge.
-4. **FR-4.1** — adversarial generation is on-demand, not continuous.
+3. **FR-6.1** — audit proofs are hash-chain/Merkle/Schnorr, not zero-knowledge. Signing keys now have epochs and a provider seam (9F, awaiting human security review); the Schnorr/secp256k1 code is Spectra's own and has had no independent review.
+4. ~~**FR-4.1** — adversarial generation is on-demand, not continuous.~~ **Scheduled mode added (9B), opt-in and default off.** Residual: retraining on the generated vectors does not make the detector harder to evade; the harness reports and never promotes.
 5. Multi-tenancy, SIEM delivery, MFA/OIDC: deferred (see `00_reconciliation_note.md` §5).
+6. **New in Phase 9, recorded honestly:** 9C synthetic augmentation is opt-in and only validated on synthetic data (no real-traffic comparison run); 9E's rolling PSI re-baselines after legitimate shifts but does **not** detect slow drift sooner than the training PSI; 9H shipped the twin staleness badge but **not** JA4S/JA4L, because JA4+ is licensed non-commercially (FoxIO License 1.1) and cannot sit in an Apache-2.0 release without an owner decision.

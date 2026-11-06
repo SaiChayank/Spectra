@@ -22,6 +22,7 @@ All notable changes to Spectra are documented here. The format follows
 - Audit signing-key epochs: `POST /api/audit/rotate-key` (ADMIN), migration v12 `audit_key_epochs`, a swappable `AuditKeyProvider`, epoch-aware checkpoint/certificate verification (Phase 9F; awaiting human security review).
 - Federated aggregation: opt-in Shamir t-of-n over GF(2^127-1) with share commitments and shareholder/party dropout tolerance (`threshold`, `dropped_parties`, `dropped_shareholders` on `POST /api/tee/federate`; `spectra tee federate --threshold`). Default stays additive k-of-k (Phase 9G).
 - Twin/graph staleness: `GET /api/twin/topology` and `GET /api/graph` report `hydrated_at`, `flow_lag` and `stale`; the Network page shows a freshness badge (Phase 9H). JA4S/JA4L were not built - JA4+ is not Apache-2.0-compatible (see `HANDOFF_FINDINGS.md`).
+- Exit Gate 9: traceability matrix re-run (FR-2.2 closed, FR-4.1 scheduled mode with qualifiers); acceptance runner gained a `phase9` group and was run against a live server (`docs/acceptance-report-2026-11-06.md`).
 - Ship plan for the public software release (`docs/34_ship_plan.md`).
 - `LICENSE` (Apache-2.0), `SECURITY.md`, `CONTRIBUTING.md`, issue/PR
   templates and Dependabot configuration.
