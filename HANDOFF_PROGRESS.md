@@ -279,3 +279,8 @@ NEXT: none. Phase 9 does not start until REVIEW GATE-8.5: APPROVED is written in
 Whole-branch checks on haiku/spectra-p85 vs main (25 commits, 49 files): no key/db/env/model/data files in the diff; the only new `noqa` is the single approved B027 line; no skip/xfail/type-ignore/eslint-disable added; `./handoff_verify.sh full` = ruff PASS, 341 passed, frontend build PASS (I re-ran it); frontend lint + 8 tests pass per agent. Decisions on its open items: B905 stays `strict=False` (behaviour-preserving; upgrade later only with a test per site); the simulate.py KeyError change is accepted as a dead-code removal; "73 vs 77": README now states the measured, defined number (OpenAPI /api/ operations = 73) and the script enforces it — accepted; docs/33 "polling fallback" wording to be corrected in Phase 9 docs; the "2 warnings" oddity is unexplained and harmless.
 NOT VERIFIED: GitHub Actions run (workflow, security and frontend jobs), gitleaks, pip-audit on the lock (Spectra's lock has not been audited yet — add as card S-13 before Phase 9).
 Recommended human action: review `git log --oneline main..haiku/spectra-p85`, then merge or open a PR when you choose (the agent never pushes). Phase 9 starts only after `REVIEW GATE-8.5: APPROVED` from the human.
+
+## S-13 · tier H · RESULT: PASS (2026-11-06)
+Command: `uvx pip-audit -r backend/requirements.lock --disable-pip --no-deps` (pip-audit 2.10.1, run from a throwaway uvx environment, queried PyPI advisory data on 2026-11-06).
+Output (verbatim, warnings trimmed to the result): `No known vulnerabilities found`.
+Scope: Python lockfile only. `npm audit`, gitleaks and the GitHub Actions run are still NOT RUN.
