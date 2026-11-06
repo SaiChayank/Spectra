@@ -75,6 +75,29 @@ def cmd_demo(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_auth(args: argparse.Namespace) -> int:
+    """Local operator recovery for accounts (needs host access to the data directory)."""
+    from .pipeline import SpectraEngine
+
+    if args.auth_cmd == "totp-reset":
+        engine = SpectraEngine(persist=True)
+        if engine.store is None:
+            print("persistence is disabled: no accounts to reset", file=sys.stderr)
+            return 2
+        creds = engine.store.find_user_credentials(args.username)
+        if creds is None:
+            print(f"no such user: {args.username}", file=sys.stderr)
+            return 2
+        engine.auth.totp_reset(creds["id"])
+        engine.audit_service.append(
+            "auth.totp_reset", {"username": creds["username"], "via": "cli"},
+            actor="cli")
+        print(f"two-factor authentication reset for '{creds['username']}'; "
+              "they can sign in with their password and re-enrol")
+        return 0
+    return 2
+
+
 def cmd_intel(args: argparse.Namespace) -> int:
     from .config import get_config
     from .intel import IntelService
@@ -1079,6 +1102,12 @@ def build_parser() -> argparse.ArgumentParser:
     q.set_defaults(func=cmd_eval)
 
     # -- local threat intel (Phase 7: JA3/JA4/SNI list matching) -------------
+
+    p = sub.add_parser("auth", help="local account recovery (two-factor reset)")
+    authsub = p.add_subparsers(dest="auth_cmd", required=True)
+    q = authsub.add_parser("totp-reset", help="remove a user's two-factor enrolment (lost device / key file)")
+    q.add_argument("username")
+    p.set_defaults(func=cmd_auth)
 
     p = sub.add_parser("intel",
                        help="local threat intel: JA3/JA4/SNI list status + load")

@@ -606,6 +606,40 @@ def _audit_key_epochs(db: Database) -> None:
     )
 
 
+def _user_totp(db: Database) -> None:
+    """v13: optional TOTP second factor (Phase 10).
+
+    ``user_totp`` holds one row per enrolled account: the shared secret
+    *encrypted* (``spectra.auth.totp.TotpVault``, key kept outside the
+    database), ``enabled`` (a row is created pending at setup and enabled only
+    after the first valid code), and ``last_counter`` - the newest accepted
+    time step, so a code cannot be replayed.  ``user_recovery_codes`` keeps
+    single-use recovery codes as SHA-256 hashes only.  Both cascade with the
+    user.  Additive: older code ignores the tables; roll back by restoring the
+    pre-upgrade backup.
+    """
+    db.execute(
+        """CREATE TABLE IF NOT EXISTS user_totp (
+            user_id      INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+            secret_enc   TEXT NOT NULL,
+            enabled      INTEGER NOT NULL DEFAULT 0,
+            last_counter INTEGER NOT NULL DEFAULT -1,
+            created_at   REAL NOT NULL,
+            confirmed_at REAL
+        )"""
+    )
+    db.execute(
+        """CREATE TABLE IF NOT EXISTS user_recovery_codes (
+            id        INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id   INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            code_hash TEXT NOT NULL,
+            used_at   REAL
+        )"""
+    )
+    db.execute("CREATE INDEX IF NOT EXISTS idx_recovery_user "
+               "ON user_recovery_codes(user_id, code_hash)")
+
+
 MIGRATIONS: tuple[Migration, ...] = (
     Migration(1, "baseline_schema", _baseline),
     Migration(2, "flows_capture_foreign_key", _flows_capture_foreign_key),
@@ -619,6 +653,7 @@ MIGRATIONS: tuple[Migration, ...] = (
     Migration(10, "model_registry", _model_registry),
     Migration(11, "lookup_indexes", _lookup_indexes),
     Migration(12, "audit_key_epochs", _audit_key_epochs),
+    Migration(13, "user_totp", _user_totp),
 )
 
 

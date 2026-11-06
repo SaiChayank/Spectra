@@ -35,6 +35,7 @@ import re
 import secrets
 import time
 
+from ..auth import totp
 from ..auth import (
     check_password_policy,
     hash_password,
@@ -67,6 +68,11 @@ _USERNAME_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{2,31}$")
 _TOUCH_INTERVAL = 60.0
 
 
+def _totp_now() -> float:
+    """Clock for second-factor checks (a seam: tests pin it)."""
+    return time.time()
+
+
 class AuthError(Exception):
     """Mapped to an HTTP error by the routers (``status_code``/``detail``)."""
 
@@ -90,6 +96,13 @@ class CredentialsError(AuthError):
 
     status_code = 401
     default_detail = INVALID_CREDENTIALS
+
+
+class TotpStateError(AuthError):
+    """Enrolment is in the wrong state for the request (409)."""
+
+    status_code = 409
+    default_detail = "two-factor state conflict"
 
 
 class SessionExpired(AuthError):
@@ -334,12 +347,17 @@ class AuthService:
 
     # -- login / sessions -----------------------------------------------------
 
-    def login(self, username: str, password: str) -> tuple[dict, str, float]:
+    def login(self, username: str, password: str,
+              totp_code: str | None = None) -> tuple[dict, str, float]:
         """Verify credentials and open a session.
 
         Returns ``(public_user, raw_token, expires_at)``. An unknown username
         performs the same scrypt work as a real one before failing with the
-        same generic 401 (anti-enumeration).
+        same generic 401 (anti-enumeration).  An account with a second factor
+        enabled needs ``totp_code`` (an authenticator code or a recovery code)
+        in the *same* request; a missing or wrong one fails with the same
+        generic 401 and is counted by the throttle, so the response never
+        reveals that the password was right or that the account has a factor.
         """
         if self.store is None:
             raise AuthUnavailable()
@@ -349,6 +367,7 @@ class AuthService:
             raise CredentialsError()
         if not verify_password(password, creds["password_hash"]):
             raise CredentialsError()
+        self._check_second_factor(creds["id"], totp_code)
         if password_needs_rehash(creds["password_hash"]):
             # Store-level write (no session revocation): the row is upgraded
             # in place to the current work factor right after its own proof,
@@ -372,6 +391,99 @@ class AuthService:
         if user is None:  # pragma: no cover - row was read moments ago
             raise CredentialsError()
         return user, token, expires_at
+
+    # -- optional TOTP second factor ---------------------------------------------
+
+    @property
+    def _vault(self) -> totp.TotpVault:
+        vault = getattr(self, "_totp_vault", None)
+        if vault is None or vault._path != self.config.totp_key_path:
+            vault = self._totp_vault = totp.TotpVault(self.config.totp_key_path)
+        return vault
+
+    def totp_enabled(self, user_id: int) -> bool:
+        row = self.store.totp_get(user_id) if self.store is not None else None
+        return bool(row and row["enabled"])
+
+    def _check_second_factor(self, user_id: int, code: str | None) -> None:
+        """No-op for accounts without TOTP; else the code must be valid and fresh."""
+        row = self.store.totp_get(user_id)
+        if not row or not row["enabled"]:
+            return
+        if not code or not self._accept_code(user_id, row, code):
+            raise CredentialsError()
+
+    def _accept_code(self, user_id: int, row: dict, code: str) -> bool:
+        """True and consumed if ``code`` is a valid authenticator or recovery code."""
+        if totp.looks_like_recovery(code):        # 12 hex chars; a TOTP code is exactly 6 digits
+            return self.store.totp_consume_recovery(user_id, totp.hash_recovery(code))
+        try:
+            secret = self._vault.decrypt(row["secret_enc"], user_id)
+        except totp.TotpVaultError:
+            log.error("TOTP secret for user id %s is undecryptable (key file lost or changed); "
+                      "reset with: spectra auth totp-reset <username>", user_id)
+            return False
+        counter = totp.verify(secret, code, _totp_now(), int(row["last_counter"]))
+        return counter is not None and self.store.totp_advance(user_id, counter)
+
+    def _credentials(self, username: str, password: str) -> dict:
+        creds = self.store.find_user_credentials(username)
+        if creds is None:
+            verify_dummy(password)
+            raise CredentialsError()
+        if not verify_password(password, creds["password_hash"]):
+            raise CredentialsError()
+        return creds
+
+    def totp_begin(self, username: str, password: str, issuer: str | None = None) -> dict:
+        """Start enrolment (password re-entry required): returns the secret once."""
+        if self.store is None:
+            raise AuthUnavailable()
+        creds = self._credentials(username, password)
+        if self.totp_enabled(creds["id"]):
+            raise TotpStateError("two-factor authentication is already enabled")
+        secret = totp.new_secret()
+        self.store.totp_put_pending(creds["id"], self._vault.encrypt(secret, creds["id"]))
+        b32 = totp.to_base32(secret)
+        issuer = issuer or self.config.totp_issuer
+        return {"secret": b32, "issuer": issuer,
+                "otpauth_uri": totp.provisioning_uri(b32, creds["username"], issuer)}
+
+    def totp_confirm(self, user_id: int, code: str) -> list[str]:
+        """Enable the pending enrolment with a first valid code; returns recovery codes."""
+        row = self.store.totp_get(user_id)
+        if row is None or row["enabled"]:
+            raise TotpStateError("no pending two-factor enrolment")
+        try:
+            secret = self._vault.decrypt(row["secret_enc"], user_id)
+        except totp.TotpVaultError:
+            raise TotpStateError("the pending enrolment cannot be read; start again") from None
+        counter = totp.verify(secret, code, _totp_now(), int(row["last_counter"]))
+        if counter is None:
+            raise CredentialsError("invalid code")
+        codes = totp.new_recovery_codes()
+        if not self.store.totp_enable(user_id, counter, [totp.hash_recovery(c) for c in codes]):
+            raise TotpStateError("no pending two-factor enrolment")
+        return codes
+
+    def totp_disable(self, username: str, password: str, code: str) -> dict:
+        """Turn the factor off (password + a valid code or recovery code)."""
+        if self.store is None:
+            raise AuthUnavailable()
+        creds = self._credentials(username, password)
+        row = self.store.totp_get(creds["id"])
+        if not row or not row["enabled"]:
+            raise TotpStateError("two-factor authentication is not enabled")
+        if not code or not self._accept_code(creds["id"], row, code):
+            raise CredentialsError("invalid code")
+        self.store.totp_delete(creds["id"])
+        return {"username": creds["username"]}
+
+    def totp_reset(self, user_id: int) -> dict:
+        """Operator/admin reset (no factor needed): removes enrolment and recovery codes."""
+        user = self.get_user(user_id)
+        self.store.totp_delete(user_id)
+        return user
 
     def validate(self, token: str) -> dict | None:
         """Resolve a raw session token to a principal (internal shape).

@@ -12,6 +12,7 @@ interface Props {
 export default function LoginPanel({ onLogin }: Props) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -21,7 +22,7 @@ export default function LoginPanel({ onLogin }: Props) {
     setBusy(true);
     setError(null);
     try {
-      const identity = await api.login(username.trim(), password);
+      const identity = await api.login(username.trim(), password, code.trim() || undefined);
       onLogin(identity);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
@@ -53,6 +54,16 @@ export default function LoginPanel({ onLogin }: Props) {
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
               required
+            />
+          </label>
+          <label>
+            Authenticator or recovery code (only if you enabled two-factor)
+            <input
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              autoComplete="one-time-code"
+              inputMode="text"
+              maxLength={32}
             />
           </label>
           <button type="submit" disabled={busy || !username || !password}>

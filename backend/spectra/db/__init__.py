@@ -39,6 +39,7 @@ from .repositories import (
     ModelRegistryRepository,
     ModelRunRepository,
     SessionRepository,
+    TotpRepository,
     UserRepository,
     row_to_flow,
 )
@@ -60,6 +61,7 @@ __all__ = [
     "RetentionPolicy",
     "SessionRepository",
     "StoreError",
+    "TotpRepository",
     "UserRepository",
     "WriteBuffer",
     "applied_migrations",

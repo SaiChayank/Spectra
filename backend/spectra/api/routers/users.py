@@ -91,3 +91,17 @@ def users_delete(user_id: int,
         "user.delete", {"user_id": user_id},
         actor=principal["username"])
     return {"ok": True, "deleted": user_id}
+
+
+@router.delete("/api/users/{user_id}/totp")
+def users_totp_reset(user_id: int,
+                     principal: dict = Depends(require("users:manage"))) -> dict:
+    """Remove a user's second factor (lost device): the recovery path an admin has."""
+    try:
+        user = engine.auth.totp_reset(user_id)
+    except AuthError as exc:
+        raise auth_error(exc) from exc
+    engine.audit_service.append(
+        "auth.totp_reset", {"username": user["username"], "user_id": user_id},
+        actor=principal["username"])
+    return {"ok": True, "user_id": user_id, "totp_enabled": False}

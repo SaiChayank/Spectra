@@ -682,6 +682,77 @@ class EventRepository:
         return {"count": total, "offset": offset, "items": items}
 
 
+class TotpRepository:
+    """TOTP enrolment rows + recovery-code hashes (see migration v13)."""
+
+    def __init__(self, db: Database):
+        self._db = db
+
+    def get(self, user_id: int) -> dict | None:
+        rows = self._db.query("SELECT * FROM user_totp WHERE user_id = ?", (user_id,))
+        return rows[0] if rows else None
+
+    def put_pending(self, user_id: int, secret_enc: str, now: float) -> None:
+        """Create or replace the pending enrolment (never an enabled one)."""
+        with self._db.lock:
+            self._db.execute(
+                """INSERT INTO user_totp (user_id, secret_enc, enabled, last_counter, created_at)
+                   VALUES (?, ?, 0, -1, ?)
+                   ON CONFLICT(user_id) DO UPDATE SET secret_enc = excluded.secret_enc,
+                       created_at = excluded.created_at, last_counter = -1
+                   WHERE user_totp.enabled = 0""",
+                (user_id, secret_enc, now))
+            self._db.commit()
+
+    def enable(self, user_id: int, counter: int, now: float, code_hashes: list[str]) -> bool:
+        """Atomically enable a pending enrolment and store its recovery codes."""
+        with self._db.lock:
+            cur = self._db.execute(
+                "UPDATE user_totp SET enabled = 1, last_counter = ?, confirmed_at = ? "
+                "WHERE user_id = ? AND enabled = 0", (counter, now, user_id))
+            if cur.rowcount != 1:
+                self._db.commit()
+                return False
+            self._db.execute("DELETE FROM user_recovery_codes WHERE user_id = ?", (user_id,))
+            for h in code_hashes:
+                self._db.execute(
+                    "INSERT INTO user_recovery_codes (user_id, code_hash) VALUES (?, ?)",
+                    (user_id, h))
+            self._db.commit()
+            return True
+
+    def advance(self, user_id: int, counter: int) -> bool:
+        """Record ``counter`` as used; False if it (or a newer one) was already used."""
+        with self._db.lock:
+            cur = self._db.execute(
+                "UPDATE user_totp SET last_counter = ? "
+                "WHERE user_id = ? AND enabled = 1 AND last_counter < ?",
+                (counter, user_id, counter))
+            self._db.commit()
+            return cur.rowcount == 1
+
+    def consume_recovery(self, user_id: int, code_hash: str, now: float) -> bool:
+        with self._db.lock:
+            cur = self._db.execute(
+                "UPDATE user_recovery_codes SET used_at = ? "
+                "WHERE user_id = ? AND code_hash = ? AND used_at IS NULL",
+                (now, user_id, code_hash))
+            self._db.commit()
+            return cur.rowcount == 1
+
+    def unused_recovery(self, user_id: int) -> int:
+        return int(self._db.query(
+            "SELECT COUNT(*) AS n FROM user_recovery_codes WHERE user_id = ? AND used_at IS NULL",
+            (user_id,))[0]["n"])
+
+    def delete(self, user_id: int) -> bool:
+        with self._db.lock:
+            cur = self._db.execute("DELETE FROM user_totp WHERE user_id = ?", (user_id,))
+            self._db.execute("DELETE FROM user_recovery_codes WHERE user_id = ?", (user_id,))
+            self._db.commit()
+            return cur.rowcount > 0
+
+
 class UserRepository:
     """Local accounts: scrypt encodings + one of three RBAC roles.
 

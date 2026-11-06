@@ -279,7 +279,7 @@ def test_upgrade_from_v11_with_audit_data(tmp_path):
     store.close()
 
     reopened = Store(str(tmp_path / "up.db"))
-    assert reopened.schema_version == 12
+    assert reopened.schema_version >= 12          # v12 re-applied (and any later migration)
     upgraded = AuditLog(store=reopened)
     assert [e["entry_hash"] for e in sorted(upgraded.all_entries(), key=lambda e: e["seq"])] == before
     assert upgraded.verify()["ok"] and upgraded.pubkey == pub

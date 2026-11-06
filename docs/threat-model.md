@@ -31,6 +31,7 @@ Replaces the planning-era model that was removed with the old `docs/NN_*` set. S
 | pair-cadence state (9D) | unbounded memory from many host pairs | `PAIR_CAP` 10 000 pairs, newest `pair_window_flows` starts each; timestamps only | `test_corr.py` (cap, metadata-only) |
 | rolling PSI reference (9E) | unbounded memory | sampled deque, `REF_MAX` 4 000 float vectors, cleared per session | `test_drift.py` |
 | `POST /api/audit/rotate-key` (9F) | key theft → forged checkpoints; secret exposure | ADMIN (`config:manage`); secret never in responses/audit; epoch window binds a key to a seq range; old secret overwritten; chain-backed epochs | `test_audit_keys.py` (incl. forgery cases, mutation-checked) |
+| `POST /api/auth/totp/*`, `totp_code` on login (Phase 10) | authenticator brute force; session-theft enrolment; secret theft; replay | password re-entry; throttle on wrong codes; atomic single-use counter; AES-GCM at rest with an off-database key; generic failures | `test_totp.py` (mutation-checked) |
 | Shamir `threshold`/dropout on `POST /api/tee/federate` (9G) | tampered/misattributed shares; leaking shares | per-share SHA-256 commitments with secret nonces, consistency check, explicit errors below threshold/survivors; no shares, nonces or seed in responses | `test_federated_shamir.py` (independent vectors) |
 | graph/twin `freshness` (9H) | stale topology trusted as current | `hydrated_at`/`flow_lag`/`stale` + UI badge | `test_twin_freshness.py` |
 | JA4 parsing (fix) | fingerprint spoofing/evasion | evidence only, never a verdict | `test_ja4_spec.py` |
@@ -44,7 +45,7 @@ Custom Semgrep rule bars packet-payload reads outside `parse/` (gate in CI); a r
 1. **Payload at rest in uploaded captures** (verbatim store). Owner decision: accept/document (done), sanitise on ingest, or make it opt-in.
 2. **The hash chain is unkeyed.** Anyone able to rewrite the database *and* recompute every hash can rewrite history; only checkpoints exported off-host close this. Key epochs limit what a stolen key can forge, they do not prevent rewriting.
 3. **Own-implemented cryptography** (secp256k1 Schnorr, Pedersen/ZK primitives, Shamir field arithmetic) has had no independent review. 9F awaits the owner's security review.
-4. **No login throttling / lockout, no second factor yet** (Phase 10 item 6, not started; TOTP design caveat in `HANDOFF_FINDINGS.md`). Mitigation today: loopback bind, scrypt, absolute session TTL, indistinguishable login failures.
+4. **Login hardening is new and unreviewed:** escalating throttle (per source, non-enumerating, 15-minute cap) and an optional TOTP second factor (`docs/security.md` §2). Residual: behind a reverse proxy all clients share one throttle key; TOTP is opt-in, has no enrolment screen, and its secrets are only as safe as the host protecting `totp.key`; both are awaiting the owner's review.
 5. **GPL-2.0-only scapy** under an Apache-2.0 licence (owner decision pending).
 6. **No in-process TLS**; deploy behind a TLS terminator and set `SPECTRA_SESSION_COOKIE_SECURE=true`.
 7. **Federation randomness is seeded** (reproducible, not a CSPRNG) — acceptable only while the capability is `SIMULATED`.

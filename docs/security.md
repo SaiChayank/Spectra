@@ -72,6 +72,39 @@ each covered by `test_login_backoff.py`:
   all for up to the cap. Trusting `X-Forwarded-For` is a separate setting that
   is deliberately not enabled; configure the proxy's own rate limiting too.
 
+**Optional second factor (TOTP, RFC 6238).** Any signed-in user can enrol an
+authenticator app for their own account; it is off unless they do (Phase 10 §6,
+**awaiting your security review before merge**). Flow, all through the API:
+`POST /api/auth/totp/setup` (password re-entry; returns the secret and an
+`otpauth://` URI once) → `POST /api/auth/totp/enable` (a first valid code;
+returns 8 single-use recovery codes once) → from then on `POST /api/auth/login`
+takes `totp_code` **in the same request**. Properties (`test_totp.py`, 24 tests,
+mutation-checked):
+
+* **No oracle.** An account with a factor answers a missing or wrong code with
+  the same generic `401` as a wrong password, and counts it against the login
+  throttle, so a response never says the password was right or that a factor
+  exists. Brute-forcing a 6-digit code is bounded by the escalating throttle.
+* **Single-use codes.** The newest accepted time step is recorded
+  (`last_counter`) with an atomic compare-and-set, so a code cannot be replayed
+  - including by two simultaneous requests. Clock skew of one step is accepted.
+* **Secrets encrypted at rest.** The shared secret must be recoverable, so it
+  is AES-256-GCM encrypted under a 32-byte key in `totp.key` (mode 0600, next to
+  the database, never inside it), bound to the account id. A stolen database
+  alone reveals no secret; a stolen database **plus** the key file does. The key
+  is created when the first secret is encrypted and is never silently re-created.
+* **Recovery codes** are random, single-use, stored only as SHA-256 hashes.
+* **Setup/disable need the password** (and disable a valid code), so a stolen
+  session cannot enrol its own authenticator or strip the owner's.
+* **Lost device or lost `totp.key`:** an ADMIN can `DELETE /api/users/{id}/totp`;
+  on the host `spectra auth totp-reset USERNAME` does the same without the
+  second factor. Both are audit-chained (`auth.totp_reset`). Without the key
+  file the affected users cannot log in until reset - back it up with the
+  database (`docs/34_ship_plan.md` §11).
+* **Not built:** an enrolment screen (API only today), enforcing the factor for
+  all admins, WebAuthn, and the plan's wording "stored as scrypt'd secret"
+  (impossible for a recoverable secret - see `HANDOFF_FINDINGS.md`).
+
 See [limitations.md §7](./limitations.md).
 
 **WebSocket:** handshake authenticated (cookie or `?token=`) before accept —
@@ -235,6 +268,8 @@ Booleans accept `1/true/yes/on`. Defaults are the safe local values.
 | `SPECTRA_ADMIN_PASSWORD` | *(unset)* | unset ⇒ random, written to `data/admin_bootstrap.txt` (600) |
 | `SPECTRA_SESSION_TTL_MINUTES` | `720` | absolute session lifetime |
 | `SPECTRA_SESSION_COOKIE_SECURE` | `false` | set `true` behind TLS |
+| `SPECTRA_TOTP_KEY_PATH` | `<data dir>/totp.key` | key file that encrypts enrolled TOTP secrets (back it up with the database) |
+| `SPECTRA_TOTP_ISSUER` | `Spectra` | label shown in authenticator apps |
 | `SPECTRA_CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | comma-separated; also gates WS Origin |
 | `SPECTRA_API_HOST` / `SPECTRA_API_PORT` | `127.0.0.1` / `8787` | **not read by `serve`** — use `--host`/`--port` |
 | `SPECTRA_LOG_LEVEL` | `INFO` | structured JSON, redacting formatter |

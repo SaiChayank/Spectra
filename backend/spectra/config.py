@@ -111,6 +111,10 @@ class Config:
     # hash, so both survive restarts and are invalidated by password changes.
     session_ttl_minutes: float = 720.0   # absolute session lifetime (12 h)
     admin_username: str = "admin"        # bootstrap account (first run only)
+    # optional TOTP second factor: the AES key that encrypts enrolled secrets
+    # lives in this file (resolved next to the database), never in the database
+    totp_key_path: str = ""
+    totp_issuer: str = "Spectra"         # label shown in authenticator apps
     session_cookie_secure: bool = False   # set True only behind TLS
 
     # service
@@ -134,6 +138,9 @@ class Config:
         if not self.capture_store_dir:
             self.capture_store_dir = _env(
                 "CAPTURE_STORE_DIR", os.path.join(self.data_dir, "captures"))
+        if not self.totp_key_path:
+            self.totp_key_path = _env(
+                "TOTP_KEY_PATH", os.path.join(self.data_dir, "totp.key"))
         if not self.intel_dir:
             self.intel_dir = _env(
                 "INTEL_DIR", os.path.join(self.data_dir, "intel"))

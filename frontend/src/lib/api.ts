@@ -1071,6 +1071,8 @@ export interface AuthUser {
   username: string;
   role: "ADMIN" | "ANALYST" | "VIEWER";
   permissions: string[];
+  /** true once the user has finished enrolling an authenticator app */
+  totp_enabled?: boolean;
 }
 
 export interface Identity {
@@ -1123,10 +1125,12 @@ function qs(params: Record<string, string | number | boolean | undefined | null>
 export const api = {
   // Local authentication: HttpOnly session cookie, no tokens in JS.
   me: () => request<Identity>("/api/auth/me"),
-  login: (username: string, password: string) =>
+  login: (username: string, password: string, totpCode?: string) =>
     request<Identity>("/api/auth/login", {
       method: "POST",
-      body: JSON.stringify({ username, password }),
+      // the code is sent in the same request and only when typed, so the
+      // server's answer never reveals whether an account has a second factor
+      body: JSON.stringify(totpCode ? { username, password, totp_code: totpCode } : { username, password }),
     }),
   logout: () => request<{ ok: boolean }>("/api/auth/logout", { method: "POST" }),
 

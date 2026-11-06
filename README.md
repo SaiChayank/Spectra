@@ -30,7 +30,7 @@ Three target verticals: **Fintech · Healthcare · Smart City Infrastructure**.
 | [`docs/datasets.md`](./docs/datasets.md) | evaluation datasets: catalog, operator fetch, label generation, manifest integrity |
 | [`docs/intel.md`](./docs/intel.md) | local threat intel: file-based JA3/JA4/SNI lists, evidence-signal semantics, FP caution |
 | [`docs/security.md`](./docs/security.md) | auth, RBAC, managed captures, artifact integrity, audit chain, local-only assumptions |
-| [`docs/testing.md`](./docs/testing.md) | 742 tests · 156 acceptance checks · performance · live-capture validation |
+| [`docs/testing.md`](./docs/testing.md) | 766 tests · 156 acceptance checks · performance · live-capture validation |
 | [`docs/limitations.md`](./docs/limitations.md) | detection, classification, TEE/twin/edge, metadata-only analysis, operational caveats |
 | [`docs/readiness-report.md`](./docs/readiness-report.md) | final readiness report (completed / partial / future / known limitations) |
 | [`docs/evaluation-report.md`](./docs/evaluation-report.md) · [`docs/model-card.md`](./docs/model-card.md) | synthetic-only model evaluation with bootstrap intervals (real-data runs NOT RUN) and the detector model card |
@@ -53,12 +53,12 @@ with the passing pytest suite below. Local authentication
 | Feature extraction (39-feature vector per flow) | ✅ |
 | ML anomaly detector (IsolationForest + scaler, 0–100 scoring, σ-explanations) | ✅ trained from a benign baseline |
 | 8 strategic modules (see matrix below) | ✅ |
-| API (97 HTTP routes + WebSocket, default-deny auth) + CLI (15 commands) | ✅ |
+| API (101 HTTP routes + WebSocket, default-deny auth) + CLI (16 commands) | ✅ |
 | Persistence (SQLite: migration-driven schema, batched writes, bounded retention) | ✅ |
 | React dashboard | ✅ live (local login, role-aware UI) |
 | Local threat intel (JA3/JA4/SNI lists, `spectra intel`) | ✅ file-based, evidence signal only |
 | Labeled offline evaluation (`spectra eval run/train/compare`) | ✅ honesty-gated metrics, versioned reports |
-| Automated tests (pytest) | ✅ 742 passing tests |
+| Automated tests (pytest) | ✅ 766 passing tests |
 | Authentication & RBAC (ADMIN / ANALYST / VIEWER) | ✅ scrypt + sessions |
 | Live capture on Windows | ✅ validated with [Npcap](https://nmap.org/npcap/) (driver required) |
 
@@ -171,13 +171,13 @@ out-of-distribution (validated in
 
 ## API
 
-97 HTTP routes + 1 WebSocket, grouped by module:
+101 HTTP routes + 1 WebSocket, grouped by module:
 
 | Group | Routes |
 |---|---|
 | Core | `GET /api/health`, `/api/status`, `/api/stats`, `/api/flows`, `/api/detections`, `/api/interfaces`, `/api/metrics`, `/api/capabilities` |
-| Auth (local) | `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me` |
-| Users (ADMIN) | `GET/POST /api/users`, `GET/PATCH/DELETE /api/users/{id}` |
+| Auth (local) | `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`, optional second factor: `POST /api/auth/totp/{setup,enable,disable}` |
+| Users (ADMIN) | `GET/POST /api/users`, `GET/PATCH/DELETE /api/users/{id}`, `DELETE /api/users/{id}/totp` (reset a lost second factor) |
 | Incidents | `GET/POST /api/incidents`, `GET /api/incidents/{id}`, `POST /api/incidents/{id}/{acknowledge,resolve,notes}` |
 | Live capture | `POST /api/capture/start` (live mode only), `POST /api/capture/stop` |
 | Captures (managed) | `POST /api/captures` (multipart import), `GET /api/captures`, `GET /api/captures/{id}`, `POST /api/captures/{id}/process`, `DELETE /api/captures/{id}` |
@@ -246,13 +246,14 @@ route checks a permission from `spectra/authz.py`.
 | `spectra twin` | Module 4: topology · playbooks · simulate · playbook · shadow |
 | `spectra bio` | Module 6: status · assess (self model, SNN, swarm, memory) |
 | `spectra tee` | Module 2: attest · verify · infer · federate |
+| `spectra auth` | local account recovery: `totp-reset USERNAME` |
 | `spectra edge` | Module 8: report · link · slice · deploy |
 
 ## Tests
 
 ```bash
 cd backend
-python -m pytest tests -q      # 742 tests
+python -m pytest tests -q      # 766 tests
 ```
 
 Full verification workflow (pytest + acceptance runner + performance + build):
@@ -260,7 +261,7 @@ Full verification workflow (pytest + acceptance runner + performance + build):
 
 The suite covers TLS/QUIC parsing, flow tracking, feature extraction, filters, the
 detector, PQC, correlation, adversarial, twin, audit, bio, TEE, edge, the persistence
-layer (12 migrations, repositories, batched writes, retention), managed capture
+layer (13 migrations, repositories, batched writes, retention), managed capture
 resources (import validation, lifecycle, path-traversal rejection, delete safety),
 local authentication and RBAC (login success/failure, session expiry and revocation,
 role matrices, default-deny route sweep, WebSocket authorization, incidents
@@ -286,14 +287,14 @@ backend/
     modules/        # eight strategic modules (pqc, tee, adv, twin, audit, bio, corr, edge)
     auth/           # password policy + scrypt hashing
     authz.py        # RBAC matrix (ADMIN / ANALYST / VIEWER → permissions)
-    api/            # FastAPI: 97 HTTP routes + WebSocket event stream (auth gate)
-    db/             # SQLite layer: 12 migrations, repositories, batched writes, retention
+    api/            # FastAPI: 101 HTTP routes + WebSocket event stream (auth gate)
+    db/             # SQLite layer: 13 migrations, repositories, batched writes, retention
     filters.py      # pure-Python BPF-style filters (no libpcap needed)
     streaming.py    # bounded staged capture runtime (queues, overload policy, telemetry)
     pipeline.py     # engine wiring capture → detection → annotation → events
-    cli.py          # 15 CLI commands
+    cli.py          # 16 CLI commands
     demo.py         # synthetic PCAP generators (tests + demos)
-  tests/            # 742 unit/integration tests
+  tests/            # 766 unit/integration tests
   demo_pcaps/       # committed fixture captures
 frontend/           # React + TypeScript dashboard (Vite)
 docs/               # as-built documentation + evidence reports
@@ -311,7 +312,7 @@ start.ps1           # optional convenience launcher (backend + frontend)
 
 `1.0.0` — PCAP + **live NIC capture** (Npcap 1.88, validated 2026-09-29),
 92-route API + WebSocket, CLI, React console, model registry with integrity
-checks: **742 tests**, **156/156 acceptance checks**, performance at or better
+checks: **766 tests**, **156/156 acceptance checks**, performance at or better
 than the recorded baseline. Evidence:
 [`docs/acceptance-report.md`](./docs/acceptance-report.md),
 [`docs/hardening-report.md`](./docs/hardening-report.md),

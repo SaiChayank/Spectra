@@ -172,7 +172,7 @@ def _no_store(response, path: str):
 
 # -- response shaping (identity without secrets) -------------------------------
 
-def identity_payload(user: dict, expires_at: float) -> dict:
+def identity_payload(user: dict, expires_at: float, totp_enabled: bool = False) -> dict:
     """Login/``me`` response: identity + permissions, never token material."""
     return {
         "user": {
@@ -180,12 +180,13 @@ def identity_payload(user: dict, expires_at: float) -> dict:
             "username": user["username"],
             "role": user["role"],
             "permissions": permissions_for(user["role"]),
+            "totp_enabled": totp_enabled,
         },
         "expires_at": expires_at,
     }
 
 
-def public_principal(principal: dict) -> dict:
+def public_principal(principal: dict, totp_enabled: bool = False) -> dict:
     """``/me`` response from a principal (no token hash, no internals)."""
     return {
         "user": {
@@ -193,6 +194,7 @@ def public_principal(principal: dict) -> dict:
             "username": principal["username"],
             "role": principal["role"],
             "permissions": list(principal["permissions"]),
+            "totp_enabled": totp_enabled,
         },
         "expires_at": principal["session"]["expires_at"],
     }

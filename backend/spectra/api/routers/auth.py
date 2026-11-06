@@ -28,6 +28,23 @@ router = APIRouter()
 class LoginRequest(BaseModel):
     username: str = Field(min_length=1, max_length=64)
     password: str = Field(min_length=1, max_length=1024)
+    #: authenticator code or recovery code; required only for accounts that
+    #: enabled two-factor - sent in the same request so the response never
+    #: reveals whether a password was right or a factor exists
+    totp_code: str | None = Field(None, max_length=32)
+
+
+class TotpSetupRequest(BaseModel):
+    password: str = Field(min_length=1, max_length=1024)
+
+
+class TotpEnableRequest(BaseModel):
+    code: str = Field(min_length=1, max_length=32)
+
+
+class TotpDisableRequest(BaseModel):
+    password: str = Field(min_length=1, max_length=1024)
+    code: str = Field(min_length=1, max_length=32)
 
 
 def _client_ip(request: Request) -> str:
@@ -56,7 +73,8 @@ def auth_login(req: LoginRequest, response: Response,
             detail="too many failed login attempts",
             headers={"Retry-After": str(int(wait) + 1)})
     try:
-        user, token, expires_at = engine.auth.login(req.username, req.password)
+        user, token, expires_at = engine.auth.login(
+            req.username, req.password, req.totp_code)
     except CredentialsError as exc:
         engine.auth.throttle.record_failure(ip, req.username)
         raise auth_error(exc) from exc
@@ -67,7 +85,7 @@ def auth_login(req: LoginRequest, response: Response,
     engine.audit_service.append(
         "auth.login", {"username": user["username"]},
         actor=user["username"])
-    return identity_payload(user, expires_at)
+    return identity_payload(user, expires_at, engine.auth.totp_enabled(user["id"]))
 
 
 @router.post("/api/auth/logout")
@@ -85,4 +103,56 @@ def auth_logout(response: Response,
 @router.get("/api/auth/me")
 def auth_me(principal: dict = Depends(require("read"))) -> dict:
     """The signed-in identity: username, role, permissions, expiry."""
-    return public_principal(principal)
+    return public_principal(principal, engine.auth.totp_enabled(principal["user_id"]))
+
+
+# -- optional TOTP second factor (self-service) ---------------------------------------
+# Password re-entry guards setup/disable (a stolen session alone cannot enrol its
+# own authenticator or strip the owner's), and wrong passwords/codes feed the same
+# throttle as login, so none of these is a free guessing oracle.
+
+def _throttled(request: Request, username: str, action):
+    ip = _client_ip(request)
+    wait = engine.auth.throttle.retry_after(ip, username)
+    if wait is not None:
+        raise HTTPException(status_code=429, detail="too many failed attempts",
+                            headers={"Retry-After": str(int(wait) + 1)})
+    try:
+        return action()
+    except CredentialsError as exc:
+        engine.auth.throttle.record_failure(ip, username)
+        raise auth_error(exc) from exc
+    except AuthError as exc:
+        raise auth_error(exc) from exc
+
+
+@router.post("/api/auth/totp/setup")
+def totp_setup(req: TotpSetupRequest, request: Request,
+               principal: dict = Depends(require("read"))) -> dict:
+    """Begin enrolling an authenticator app; returns the secret and otpauth URI once."""
+    return _throttled(request, principal["username"], lambda: engine.auth.totp_begin(
+        principal["username"], req.password))
+
+
+@router.post("/api/auth/totp/enable")
+def totp_enable(req: TotpEnableRequest, request: Request,
+                principal: dict = Depends(require("read"))) -> dict:
+    """Confirm with a first valid code; returns the single-use recovery codes once."""
+    codes = _throttled(request, principal["username"], lambda: engine.auth.totp_confirm(
+        principal["user_id"], req.code))
+    engine.audit_service.append(
+        "auth.totp_enabled", {"username": principal["username"]},
+        actor=principal["username"])
+    return {"recovery_codes": codes}
+
+
+@router.post("/api/auth/totp/disable")
+def totp_disable(req: TotpDisableRequest, request: Request,
+                 principal: dict = Depends(require("read"))) -> dict:
+    """Turn the second factor off (password + a valid code or a recovery code)."""
+    out = _throttled(request, principal["username"], lambda: engine.auth.totp_disable(
+        principal["username"], req.password, req.code))
+    engine.audit_service.append(
+        "auth.totp_disabled", {"username": out["username"]},
+        actor=principal["username"])
+    return {"totp_enabled": False}

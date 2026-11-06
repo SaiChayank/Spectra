@@ -45,6 +45,7 @@ from .db import (
     RetentionPolicy,
     SessionRepository,
     StoreError,
+    TotpRepository,
     UserRepository,
     WriteBuffer,
     apply_retention,
@@ -95,6 +96,7 @@ class Store:
         self._runs = ModelRunRepository(self._db)
         self._models = ModelRegistryRepository(self._db)
         self._audit = AuditRepository(self._db)
+        self._totp = TotpRepository(self._db)
         self._users = UserRepository(self._db)
         self._sessions = SessionRepository(self._db)
         self._incidents = IncidentRepository(self._db)
@@ -275,6 +277,29 @@ class Store:
                                   now=time.time()):
             return None
         return _public_user(self._users.get(user_id))
+
+    # -- optional TOTP second factor (v13) ------------------------------------------
+
+    def totp_get(self, user_id: int) -> dict | None:
+        return self._totp.get(user_id)
+
+    def totp_put_pending(self, user_id: int, secret_enc: str) -> None:
+        self._totp.put_pending(user_id, secret_enc, time.time())
+
+    def totp_enable(self, user_id: int, counter: int, code_hashes: list[str]) -> bool:
+        return self._totp.enable(user_id, counter, time.time(), code_hashes)
+
+    def totp_advance(self, user_id: int, counter: int) -> bool:
+        return self._totp.advance(user_id, counter)
+
+    def totp_consume_recovery(self, user_id: int, code_hash: str) -> bool:
+        return self._totp.consume_recovery(user_id, code_hash, time.time())
+
+    def totp_unused_recovery(self, user_id: int) -> int:
+        return self._totp.unused_recovery(user_id)
+
+    def totp_delete(self, user_id: int) -> bool:
+        return self._totp.delete(user_id)
 
     def set_user_login_time(self, user_id: int) -> None:
         self._users.touch_login(user_id, now=time.time())
