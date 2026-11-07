@@ -53,7 +53,7 @@ jobs:
       # Bandit: HIGH severity gates; the triaged Medium/Low report is kept as an artifact
       - run: uvx bandit@1.9.4 -r backend/spectra backend/scripts -lll
       - run: uvx bandit@1.9.4 -r backend/spectra backend/scripts -f json -o bandit.json || true
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: sast-reports
           path: |
@@ -107,7 +107,7 @@ jobs:
       - run: >
           docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.58.1
           image --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 spectra:ci
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: release-wheel-and-sbom
           path: |
