@@ -153,6 +153,13 @@
             0.0015
           ]
         },
+        "fraction_above_benign_p90": 0.9995,
+        "fraction_above_benign_p99": 0.0005,
+        "score_p05_p50_p95": [
+          0.0867,
+          0.0898,
+          0.0936
+        ],
         "scores_vs_all_benign": {
           "n_pos": 2048,
           "n_neg": 75044,
@@ -192,6 +199,13 @@
             0.0014
           ]
         },
+        "fraction_above_benign_p90": 0.9997,
+        "fraction_above_benign_p99": 0.0,
+        "score_p05_p50_p95": [
+          0.0538,
+          0.0983,
+          0.1171
+        ],
         "scores_vs_all_benign": {
           "n_pos": 3641,
           "n_neg": 75044,
@@ -231,6 +245,13 @@
             0.0109
           ]
         },
+        "fraction_above_benign_p90": 0.0404,
+        "fraction_above_benign_p99": 0.0038,
+        "score_p05_p50_p95": [
+          -0.1498,
+          -0.1498,
+          -0.0587
+        ],
         "scores_vs_all_benign": {
           "n_pos": 4975,
           "n_neg": 75044,
@@ -262,6 +283,13 @@
       }
     }
   },
+  "benign_score_percentiles_p50_p90_p99_p999": [
+    -0.1255,
+    -0.0448,
+    0.1792,
+    0.232
+  ],
+  "default_threshold": 0.1401,
   "caveats": [
     "Labels are joined on the 4-tuple only; repeated tuples with conflicting labels are dropped, flows absent from the CSV are excluded.",
     "HIKARI's attacks are synthetic-in-the-lab (brute force, probing, miner) against a few servers; this is not a general encrypted-traffic claim.",

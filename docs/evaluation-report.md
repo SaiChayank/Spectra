@@ -92,3 +92,54 @@ The spread across sectors is 1.0% for A and 0.0% for B, inside the bootstrap int
 | B — benign-diversity | 100.0% [100.0%, 100.0%] | 99.2% [97.6%, 100.0%] | 100.0% [100.0%, 100.0%] | **100.0% [100.0%, 100.0%]** |
 
 **Reading.** Every flow is flagged, **including the benign control**, on every port. A flag rate that is the same for malicious and benign plaintext flows is not detection; it is the baseline-matching limitation in its extreme form: a detector fitted to synthetic TLS/QUIC traffic treats anything else, and even real TLS flows (flagged 99.2% by B), as anomalous. This run therefore shows two things and no more: **(1)** the parser and feature extractor process a real 58 MB, 21,254-flow capture end to end without failure (about 50 s to parse); **(2)** synthetic-trained models do not transfer to real traffic. It does **not** show that Spectra detects botnets. A meaningful test needs a *real benign baseline from the network under test* plus per-flow labels (`docs/evaluation.md` §3–§4), and for modern encrypted C2 a capture with TLS C2 rather than this 2011 plaintext botnet.
+
+## 10. Real captures, benign-trained: CTU-Normal vs CTU botnet (pcap-level labels)
+
+**Run.** `backend/scripts/bench_ctu.py` (raw: `docs/evidence/2026-11-07/bench/ctu-bench.json`; file SHA-256s in `docs/datasets.md` §5c; commit of the run `0342337` plus the then-uncommitted script, now `e06860a`). Model: the shipped isolation-forest detector, contamination 0.02, trained on **63,567 flows of CTU-Normal captures dated 2017-04-18…30** (scripted HTTPS browsing of Alexa top-1000 sites; 12–17% of flows carry a parsed TLS handshake). Test, later in time: benign = CTU-Normal 2017-05-01 and 05-02 (23,378 flows); positives = five botnet captures (101,976 flows: CTU-13 s1 and s2, rbot, fast-flux, botnet2.infected.1). Scores are the raw isolation-forest scores (the 0-100 score saturates). `CTU-Malware-Capture-Botnet-100/…win5.pcap` was **excluded**: Spectra's reader and Zeek both report it ends inside a record. Positives are **pcap-level**: every flow of a botnet capture counts as malicious, so botnet captures that contain benign background understate recall.
+
+| Measure | Value | 95% CI (1000 bootstrap, seed 1337) |
+|---|---|---|
+| Benign flag rate at the default threshold | 4.2% | [3.9%, 4.4%] |
+| Botnet flow flag rate at the default threshold | 2.9% | [2.8%, 3.0%] |
+| ROC-AUC, pooled | 0.746 | [0.742, 0.750] |
+| PR-AUC, pooled (**81% of test flows are positive**, so this is inflated; do not compare across datasets) | 0.897 | n/a |
+| Recall at benign FPR 1% / 0.1% | 0.1% / 0.0% | n/a |
+| Null control: benign vs benign halves, ROC-AUC | 0.494 | [0.487, 0.502] |
+| TLS-handshake flows only (316 botnet vs 5,819 benign flows), ROC-AUC | 0.855 | [0.837, 0.873] |
+
+Per botnet capture ROC-AUC vs the benign test: s1 0.635, s2 0.826, rbot 0.767, fast-flux 0.744, botnet2 0.742. **Reading:** the detector ranks botnet flows above benign ones only modestly, and at any operating point an operator would use (≤1% false flags) it detects essentially none of them. The default threshold flags *fewer* botnet flows (2.9%) than benign ones (4.2%). The botnet captures are 2011/2015 plaintext-heavy host traces (0–12% TLS), while the benign side is lab HTTPS; AUC here partly measures "unlike CTU-Normal HTTPS", so even the modest 0.75 is not evidence of malice detection.
+
+**Baselines on the same pcaps** (`ctu-baselines.json`; Suricata 7.0.8 with ET Open fetched 2026-11-07, 69,342 rules / 53,373 enabled; Zeek 7.0.5 stock scripts, no packages). A flow counts as alerted if its 4-tuple appears in a Suricata alert.
+
+| | Benign test flows alerted | Botnet flows alerted |
+|---|---|---|
+| Suricata + ET Open | 1.3% [1.15%, 1.47%] (263 of 20,204) | 3.3% [3.16%, 3.40%] (2,945 of 89,872) |
+| Stock Zeek notices | 0 | 0 |
+
+Suricata also finds little (3.3%): ET Open fires on a small share of these old botnet flows, and stock Zeek is not an IDS (zero notices is expected, not a tuned-Zeek result). The JA3-list reference ("Zeek + JA3") was **not run**: installing the third-party Zeek JA3 package was blocked, and the abuse.ch SSLBL list fetched (16 entries, frozen since 2021) is tiny.
+
+**Supervised upper bound** (RandomForest on the same 39 features, trained **with** labels on the benign train slice vs the other four botnet captures, tested on the held-out one): ROC-AUC 0.91 (s1), 0.94 (s2), 0.97 (rbot), 0.98 (fast-flux), 0.93 (botnet2); recall at 1% FPR 0.58 / 0.68 / 0.81 / 0.79 / 0.07. Because positives are pcap-level and the environments differ, this number mostly shows how separable the capture environments are; it is an upper bound on the headroom of these features, not a competitor.
+
+**Not done here:** cross-dataset (train CTU-Normal / test HIKARI and the reverse), the 9C/9D/9H ablations, the 9B evasion run on real data, performance replay (`bench_perf`, needs `CAP_NET_RAW`/sudo from the human), and the labelled-real-benign baseline from the owner's own network.
+
+## 11. Real captures with per-flow labels: HIKARI-2021/2022 (attacks inside TLS)
+
+**Run.** `backend/scripts/bench_hikari.py` (raw: `docs/evidence/2026-11-07/bench/hikari-bench.json`). Labels come from the dataset's `ALLFLOWMETER_HIKARI2021.csv` and `ALLFLOWMETER_HIKARI2022.csv` (SHA-256 in the JSON), joined to Spectra's flows **by the 4-tuple only** (the CSVs carry no timestamps); 23,856 tuples with conflicting labels were dropped and unlabelled flows excluded. Detector trained on the **benign + background flows of the 2021-04-11/12 captures only** (32,929 flows) and tested on later captures: 2021-04-17 (benign/background only), 2022-04-10 (HTTPS brute force + XMRig miner) and 2022-04-11 (XML brute force + miner): 75,044 benign/background and 10,664 attack flows (2,048 Bruteforce, 3,641 Bruteforce-XML, 4,975 XMRig crypto-miner).
+
+| Measure (Spectra, unsupervised) | Value |
+|---|---|
+| Benign flag rate at the default threshold (0.140) | 1.9% [1.8%, 2.0%] |
+| Attack flag rate at the default threshold | 0.4% [0.3%, 0.5%] |
+| ROC-AUC, all attacks | 0.617 [0.609, 0.625] |
+| PR-AUC, all attacks (prevalence 12.4%) | 0.334 [0.327, 0.342] |
+| Recall at benign FPR 1% / 0.1% | 0.2% / 0.0% |
+
+Per category (ROC-AUC vs all benign): Bruteforce 0.963, Bruteforce-XML 0.966, **XMRig miner 0.219 (scores *lower* than benign)**. For both brute-force categories ~100% of attack flows score above the benign 90th percentile, but only 0.0–0.05% exceed the 99th percentile or the default threshold. **Reading:** the brute-force flows are a distinct, consistent cluster that the model ranks high, yet well inside the benign tail, so the shipped contamination-based threshold (and a 1% FPR budget) misses them; a 10% false-flag budget would catch them, which is not an acceptable operating point. The miner flows look *more* ordinary than the benign mix and are not detected at all. In this lab the attacks are few, regular and synthetic; this is not a general encrypted-traffic claim.
+
+**Baselines on the same 85,708 labelled test flows.** Suricata + ET Open: **0 of 10,664 attack flows alerted (recall 0%)**, and **19.7% of benign/background flows alerted** (14,758) — HIKARI's benign side contains traffic ET Open rules fire on, and TLS brute-force/miner traffic carries no signature. Supervised RandomForest (trained with labels on only 247 attack flows available in the training captures, all HTTPS brute force): ROC-AUC 0.594, recall at 1% FPR 19.5%, at 0.1% FPR 13.1% — it does not generalise to the other attack types either. If Suricata is judged on this dataset, Spectra's ranking (AUC 0.96 on brute force) beats Suricata's 0 detections, but neither is operationally useful at a low-FPR operating point.
+
+**Caveats specific to this run.** Same lab, same servers for train and test (in-distribution for the network); 4-tuple joining can mislabel reused tuples; the 2021 captures contain almost no attack flows, so most evidence comes from two 2022 captures of about 150 s each; the attacks are lab-generated.
+
+## 12. Summary of what Phase B shows so far
+
+On two real datasets with a benign-only training slice from an earlier time, the unsupervised detector (a) behaves correctly on its null control (AUC 0.49 benign vs benign), (b) ranks some attack types well above benign (HIKARI brute force 0.96) and others at or below benign (miner 0.22), (c) detects almost nothing at the default threshold or at a 1% false-flag budget, and (d) was not better than a labelled RandomForest or competitive with a tuned IDS — but the Suricata/Zeek comparison here is weak (rule/era mismatch, stock Zeek). Not reached: CIC-2018 (skipped on size), cross-dataset generalisation, ablations, real-data adversarial run, performance sizing, the owner's own-network baseline. **No claim of detection performance on real networks follows from these runs.**
