@@ -38,6 +38,8 @@ class EvalParams:
     join_tolerance_s: float = DEFAULT_TOLERANCE_S
     contamination: float | None = None
     max_flows: int = 250_000
+    bootstrap: int = 0          # >0: 95% bootstrap intervals on the score metrics
+    bootstrap_seed: int = 1337
 
 
 def _parseable(flow) -> bool:
@@ -130,7 +132,7 @@ def run_eval(detector, pcap_path: str, labels: list[LabelRow],
     info = stream_flows(pcap_path, _score, idle_timeout=p.idle_timeout,
                         max_flows=p.max_flows)
     result = join_flows(scored, labels, tolerance_s=p.join_tolerance_s)
-    metrics = compute_metrics(result, labels)
+    metrics = compute_metrics(result, labels, bootstrap=p.bootstrap, seed=p.bootstrap_seed)
     coverage = parser_coverage(scored)
 
     n_anom = sum(1 for f in scored if f.anomaly)

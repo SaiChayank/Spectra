@@ -334,6 +334,7 @@ def cmd_eval(args: argparse.Namespace) -> int:
                 idle_timeout=args.idle_timeout,
                 join_tolerance_s=args.tolerance,
                 max_flows=args.max_flows,
+                bootstrap=args.bootstrap,
             ),
         )
         if args.out:
@@ -1135,6 +1136,8 @@ def build_parser() -> argparse.ArgumentParser:
                    help="score at most this many completed flows; the "
                         "report flags flows.truncated + a caveat when the "
                         "capture held more (default 250000)")
+    q.add_argument("--bootstrap", type=int, default=0, metavar="N",
+                   help="add 95%% bootstrap intervals (N resamples, fixed seed) to the score metrics")
     q.add_argument("--out", default=None, help="write the report JSON here")
     q.add_argument("--json", action="store_true", help="print full report JSON")
     q.set_defaults(func=cmd_eval)
