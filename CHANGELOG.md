@@ -7,6 +7,7 @@ All notable changes to Spectra are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- Operations (Phase 11): validated Prometheus exposition with latency histograms and an optional metrics-only token (**breaking:** counters renamed to `*_total`); a wheel that serves the dashboard same-origin and keeps data in a per-user directory; `spectra backup create|verify|restore` with an executed restore drill (demo scale); `docs/runbook.md`; digest-pinned non-root Docker image, `compose.yaml`, trivy in CI.
 - Time-windowed correlation edges: graph edges carry first/last contact
   time, and paths, reachability and cascade accept `window_s` (Phase 9A).
 - Report-only adversarial-retraining harness, `POST /api/model/harden`, with
@@ -46,6 +47,9 @@ All notable changes to Spectra are documented here. The format follows
 - Capture retention now deletes the stored upload file together with the row; previously the verbatim PCAP stayed on disk until the next restart.
 - Ruff findings in merged Phase 7 code; react-hooks lint errors in the
   frontend.
+
+### Fixed (Phase 11)
+- A truncated capture file is now reported as an error instead of being read as a shorter, complete capture.
 
 ## [1.0.0] - 2026-09-29
 
