@@ -113,10 +113,11 @@ Per botnet capture ROC-AUC vs the benign test: s1 0.635, s2 0.826, rbot 0.767, f
 
 | | Benign test flows alerted | Botnet flows alerted |
 |---|---|---|
-| Suricata + ET Open | 1.3% [1.15%, 1.47%] (263 of 20,204) | 3.3% [3.16%, 3.40%] (2,945 of 89,872) |
+| Suricata + ET Open, **all alerts** | 1.3% [1.15%, 1.47%] (263 of 20,204) | 3.3% [3.16%, 3.40%] (2,945 of 89,872) |
+| Suricata + ET Open, **ET rules only** (no `SURICATA …` engine/decoder events, no `ET INFO`) | 0.10% [0.06%, 0.15%] (20) | 0.17% [0.14%, 0.20%] (152) |
 | Stock Zeek notices | 0 | 0 |
 
-Suricata also finds little (3.3%): ET Open fires on a small share of these old botnet flows, and stock Zeek is not an IDS (zero notices is expected, not a tuned-Zeek result). The JA3-list reference ("Zeek + JA3") was **not run**: installing the third-party Zeek JA3 package was blocked, and the abuse.ch SSLBL list fetched (16 entries, frozen since 2021) is tiny.
+The "all alerts" row includes Suricata engine events (for example "invalid checksum", a capture artefact) and informational rules, which say nothing about threats; the "ET rules only" row is the fair signature-IDS reference. **Suricata detects essentially none of these botnet flows** (0.17%), and stock Zeek is not an IDS (zero notices is expected, not a tuned-Zeek result). The JA3-list reference ("Zeek + JA3") was **not run**: installing the third-party Zeek JA3 package was blocked, and the abuse.ch SSLBL list fetched (16 entries, frozen since 2021) is tiny.
 
 **Supervised upper bound** (RandomForest on the same 39 features, trained **with** labels on the benign train slice vs the other four botnet captures, tested on the held-out one): ROC-AUC 0.91 (s1), 0.94 (s2), 0.97 (rbot), 0.98 (fast-flux), 0.93 (botnet2); recall at 1% FPR 0.58 / 0.68 / 0.81 / 0.79 / 0.07. Because positives are pcap-level and the environments differ, this number mostly shows how separable the capture environments are; it is an upper bound on the headroom of these features, not a competitor.
 
@@ -136,10 +137,37 @@ Suricata also finds little (3.3%): ET Open fires on a small share of these old b
 
 Per category (ROC-AUC vs all benign): Bruteforce 0.963, Bruteforce-XML 0.966, **XMRig miner 0.219 (scores *lower* than benign)**. For both brute-force categories ~100% of attack flows score above the benign 90th percentile, but only 0.0–0.05% exceed the 99th percentile or the default threshold. **Reading:** the brute-force flows are a distinct, consistent cluster that the model ranks high, yet well inside the benign tail, so the shipped contamination-based threshold (and a 1% FPR budget) misses them; a 10% false-flag budget would catch them, which is not an acceptable operating point. The miner flows look *more* ordinary than the benign mix and are not detected at all. In this lab the attacks are few, regular and synthetic; this is not a general encrypted-traffic claim.
 
-**Baselines on the same 85,708 labelled test flows.** Suricata + ET Open: **0 of 10,664 attack flows alerted (recall 0%)**, and **19.7% of benign/background flows alerted** (14,758) — HIKARI's benign side contains traffic ET Open rules fire on, and TLS brute-force/miner traffic carries no signature. Supervised RandomForest (trained with labels on only 247 attack flows available in the training captures, all HTTPS brute force): ROC-AUC 0.594, recall at 1% FPR 19.5%, at 0.1% FPR 13.1% — it does not generalise to the other attack types either. If Suricata is judged on this dataset, Spectra's ranking (AUC 0.96 on brute force) beats Suricata's 0 detections, but neither is operationally useful at a low-FPR operating point.
+**Baselines on the same 85,708 labelled test flows.** Suricata + ET Open, **ET rules only** (no engine events, no `ET INFO`): **0 of 10,664 attack flows alerted (recall 0%)** and 6 benign flows alerted (0.01%). Counting *all* alerts, including engine/decoder events and informational rules, 19.7% of benign flows alerted (14,758) and still 0 attack flows; that figure measures capture artefacts, not detection quality. TLS brute-force and miner traffic carries no ET signature. Supervised RandomForest (trained with labels on only 247 attack flows available in the training captures, all HTTPS brute force): ROC-AUC 0.594, recall at 1% FPR 19.5%, at 0.1% FPR 13.1% — it does not generalise to the other attack types. Against Suricata's 0 detections, Spectra's ranking of brute force (AUC 0.96) is better, but neither is operationally useful at a low-FPR operating point.
 
 **Caveats specific to this run.** Same lab, same servers for train and test (in-distribution for the network); 4-tuple joining can mislabel reused tuples; the 2021 captures contain almost no attack flows, so most evidence comes from two 2022 captures of about 150 s each; the attacks are lab-generated.
 
-## 12. Summary of what Phase B shows so far
+## 12. Real captures, Bot day: CSE-CIC-IDS2018 (labels from the published attack schedule)
 
-On two real datasets with a benign-only training slice from an earlier time, the unsupervised detector (a) behaves correctly on its null control (AUC 0.49 benign vs benign), (b) ranks some attack types well above benign (HIKARI brute force 0.96) and others at or below benign (miner 0.22), (c) detects almost nothing at the default threshold or at a 1% false-flag budget, and (d) was not better than a labelled RandomForest or competitive with a tuned IDS — but the Suricata/Zeek comparison here is weak (rule/era mismatch, stock Zeek). Not reached: CIC-2018 (skipped on size), cross-dataset generalisation, ablations, real-data adversarial run, performance sizing, the owner's own-network baseline. **No claim of detection performance on real networks follows from these runs.**
+**Run.** `backend/scripts/bench_cic2018.py` (raw: `docs/evidence/2026-11-07/bench/cic2018-bench.json`; file hashes in `docs/datasets.md` §5c). The per-host captures are cut off mid-record (8 of 24 here), so the script reads the packets before the cut; the product's strict reader would refuse them. Positives: flows of the ten documented Bot-victim hosts (`172.31.69.{6,8,10,12,14,17,23,26,29,30}`) that have the documented C2 address `18.219.211.138` as an endpoint, inside the documented windows (10:11-11:34 and 14:24-15:55 local, ±120 s): **98,700 flows**. Negatives: all flows of the day's non-victim hosts: **30,107 flows**. 57,434 other victim flows and 44,311 C2 flows outside the windows are excluded and not scored. The time-zone offset is not documented, so it was chosen from the data: UTC−4 puts 98,700 of 143,011 C2 flows inside the windows (UTC−5, which I expected, puts 76,030). Training: two benign client hosts of Wednesday 2018-02-14 (an earlier day).
+
+| Measure (Spectra, unsupervised) | Value |
+|---|---|
+| ROC-AUC (Bot vs benign) | **0.190** [0.186, 0.194] (below 0.5: Bot flows score *lower* than benign) |
+| PR-AUC (prevalence 77%, inflated) | 0.653 |
+| Recall at benign FPR 1% / 0.1% | 0% / 0% |
+| Benign flag rate at the default threshold | 1.15% [1.02%, 1.26%] |
+| Bot flag rate at the default threshold | 0.0% (0 of 98,700) |
+| Supervised RandomForest (random 50/50 split of the same flows; optimistic by construction) | ROC-AUC 1.0 |
+| Suricata + ET Open, all alerts | Bot 0.96% (946), benign 49.5% (14,911) |
+| Suricata + ET Open, ET rules only | **Bot 0.0% (0 of 98,700)**, benign 1.56% (471) |
+
+**Reading.** The Ares C2 traffic is invisible to the unsupervised scorer: it scores the Bot flows as *more* ordinary than the benign mix, and flags none. The RandomForest separating them perfectly shows the 39 features do carry the signal; the isolation forest ranks the dense, repetitive beacon flows as typical, because a dense cluster is not isolated. This is the mechanism Spectra's separate beaconing module (9D, flow-start cadence per host pair) is meant to address, and **it has not been measured on this data**. Suricata with ET Open also detects none of it. **Benign half is dominated by capture artefacts for Suricata:** 49.5% of benign flows triggered an alert, almost all "SURICATA … invalid checksum" engine events and `ET INFO RDP` rules (checked in the Suricata output), not threat rules.
+
+**Caveats.** Positives are only the documented C2-address flows; other Bot-related flows are not labelled and not scored. Negatives are all flows of non-victim hosts, assumed benign because the schedule lists no attack on them, which is not an audit of their traffic. Same AWS lab for train and test; one botnet on ten hosts.
+
+## 13. Summary of what Phase B shows so far
+
+Three real public datasets were evaluated with a benign-only training slice from an earlier time and the same signature-IDS baseline (Suricata 7.0.8, ET Open, ET rules only): CTU-Normal vs CTU botnet captures (§10), HIKARI-2021/2022 (§11) and CSE-CIC-IDS2018 Bot day (§12). Across them:
+
+* The unsupervised detector behaves correctly on its null control (benign vs benign AUC 0.49) and keeps benign false flags low (1-4% at the default threshold).
+* **It detects almost none of the attacks at the default threshold or at a 1% false-flag budget** (CTU 2.9% of botnet flows flagged, recall 0.1% at 1% FPR; HIKARI 0.4%; CIC-2018 Bot 0 of 98,700).
+* Ranking differs by attack type: HIKARI brute force ranks well above benign (AUC 0.96), CTU botnets modestly (0.75), the HIKARI miner (0.22) and CIC-2018 Ares C2 beaconing (0.19) rank *below* benign. Dense, regular flows look ordinary to an isolation forest. The beaconing module (9D) that targets exactly this was not measured here.
+* Suricata with ET Open (ET rules only) detects essentially nothing either: 0.17% of CTU botnet flows, 0 of 10,664 HIKARI attack flows, 0 of 98,700 CIC-2018 Bot flows. This comparison is weak (rule/era mismatch, lab-generated attacks, stock Zeek only), so it does not show that Spectra is better than a tuned IDS.
+* A supervised RandomForest on the same features separates the classes well on in-distribution splits (CIC-2018 1.0, CTU 0.91-0.98), so the features hold signal that the unsupervised scoring does not use. On unseen attack types (HIKARI) it did not generalise.
+
+**Gate B status: the dataset count (3 Tier-1 datasets) is met in the narrow sense; the gate as written is not met.** Missing: ablations, the real-data adversarial run, performance sizing, cross-dataset generalisation, Zeek+JA3 reference, the nightly CI job, and an owner's-own-network benign baseline. Labels are weak in all three (pcap-level, 4-tuple join, schedule windows). **No claim of detection performance on real networks follows from these runs, and the numbers argue against shipping the default threshold as a detector for these attack types.**

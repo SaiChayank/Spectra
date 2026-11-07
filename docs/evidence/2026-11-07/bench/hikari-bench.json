@@ -1,7 +1,7 @@
 {
   "kind": "REAL captures; per-flow labels from HIKARI ALLFLOWMETER CSV joined on the 4-tuple (no timestamps)",
   "environment": {
-    "commit": "0342337",
+    "commit": "1fdf40e",
     "python": "3.14.8",
     "numpy": "2.5.4",
     "seed": 1337,
@@ -346,13 +346,24 @@
     }
   },
   "suricata_et_open": {
-    "flows_with_alert_and_attack": 0,
-    "attack_flows_missed": 10664,
-    "benign_flows_alerted": 14758,
-    "benign_flows_quiet": 60286,
-    "recall": 0.0,
-    "benign_flag_rate": 0.1967,
-    "precision": 0.0,
-    "note": "an alert is joined to a flow by its 4-tuple; rules = ET Open as fetched 2026-11-07 (suricata-update), Suricata 7.0.8"
+    "all_alerts": {
+      "flows_with_alert_and_attack": 0,
+      "attack_flows_missed": 10664,
+      "benign_flows_alerted": 14758,
+      "benign_flows_quiet": 60286,
+      "recall": 0.0,
+      "benign_flag_rate": 0.1967,
+      "precision": 0.0
+    },
+    "et_rules_only_excluding_info_and_engine_events": {
+      "flows_with_alert_and_attack": 0,
+      "attack_flows_missed": 10664,
+      "benign_flows_alerted": 6,
+      "benign_flows_quiet": 75038,
+      "recall": 0.0,
+      "benign_flag_rate": 0.0001,
+      "precision": 0.0
+    },
+    "note": "alert joined to a flow by its 4-tuple; Suricata 7.0.8, ET Open fetched 2026-11-07; 'all_alerts' includes engine/decoder events and ET INFO rules"
   }
 }

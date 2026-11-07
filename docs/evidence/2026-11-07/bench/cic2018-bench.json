@@ -1,0 +1,283 @@
+{
+  "kind": "REAL captures; labels from the published attack schedule (C2 address + time windows), NOT per-flow ground truth",
+  "environment": {
+    "commit": "1fdf40e",
+    "python": "3.14.8",
+    "numpy": "2.5.4",
+    "seed": 1337,
+    "bootstrap": 1000,
+    "contamination": 0.02,
+    "model_fit": {
+      "n_train": 31983,
+      "threshold": 0.053785,
+      "train_score_mean": -0.077004,
+      "train_score_p99": 0.081415,
+      "contamination": 0.02
+    }
+  },
+  "labelling": {
+    "c2": "18.219.211.138",
+    "victims": [
+      6,
+      8,
+      10,
+      12,
+      14,
+      17,
+      23,
+      26,
+      29,
+      30
+    ],
+    "windows_local": "10:11-11:34, 14:24-15:55 (+/-120 s)",
+    "utc_offset_chosen_h": -4,
+    "c2_flows_inside_window_by_offset": {
+      "-8": 32214,
+      "-7": 28015,
+      "-6": 23158,
+      "-5": 76030,
+      "-4": 98700,
+      "-3": 32182
+    },
+    "c2_flows_total": 143011
+  },
+  "files": {
+    "Wednesday-14-02-2018__capDESKTOP-AN3U28N-172.31.67.15": {
+      "sha256": "8572308658a2856cd7e59076ca8636a6366dcf3abd35dccedfbc4cd3887bd571",
+      "flows": 3829,
+      "cut_off_mid_record": true
+    },
+    "Wednesday-14-02-2018__capWIN-J6GMIG1DQE5-172.31.67.109": {
+      "sha256": "e3f9071170d31ee3b2275c21f6d649efa0a46b1e18ad9c3f082d7811527cc07c",
+      "flows": 28154,
+      "cut_off_mid_record": false
+    },
+    "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.10": {
+      "sha256": "48265cd901fe91e95b4a6552cfb822daf682b68359494ef153c9ff0278854243",
+      "flows": 22992,
+      "cut_off_mid_record": false
+    },
+    "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.12": {
+      "sha256": "00e2d2d175de6a93821dd19961c2f00b45c39b48bb1fd2f054843b8785af03fd",
+      "flows": 10244,
+      "cut_off_mid_record": false
+    },
+    "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.14": {
+      "sha256": "d701711685967c7564ea4442d272f877f31005ce3803ffcd6e8e7593db0b36a4",
+      "flows": 18888,
+      "cut_off_mid_record": false
+    },
+    "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.17": {
+      "sha256": "560e8e123189a1d63a734757c2de47f2e768b2226c9097e9e54e85046be1bb48",
+      "flows": 19131,
+      "cut_off_mid_record": false
+    },
+    "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.23": {
+      "sha256": "56fc8375d9104615ec08952bf811cc17e0579af5d2fc98e54dea669cc9d5d58e",
+      "flows": 21971,
+      "cut_off_mid_record": false
+    },
+    "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.26": {
+      "sha256": "ed0b57eac080732e41535b0228b114a7c90a9e4da88faa140621ff8117cbeebd",
+      "flows": 17072,
+      "cut_off_mid_record": false
+    },
+    "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.29": {
+      "sha256": "799081247a14ea82ccfda77756bc6212f428e59b474b5b18fe688326a7b4a378",
+      "flows": 23335,
+      "cut_off_mid_record": false
+    },
+    "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.30": {
+      "sha256": "4e129df72cf04e3bc425d649bace9dddf214d25f1461de3b229aa86add0ab01b",
+      "flows": 22583,
+      "cut_off_mid_record": false
+    },
+    "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.6": {
+      "sha256": "4e116afc21ba8b8609127c2ef476987d589851ae7bb7f258a9cec36a67de3bfd",
+      "flows": 24479,
+      "cut_off_mid_record": false
+    },
+    "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.8": {
+      "sha256": "dfdfdf3e850e8910fc3e2cb1cd5ada03bcc68e29db78809b6c62f7fe46a70992",
+      "flows": 19750,
+      "cut_off_mid_record": false
+    },
+    "Friday-02-03-2018__UCAP172.31.69.15": {
+      "sha256": "e08b441c2a4c0cad757b85564f39ed16244c4569458489e60346ef145b9aab84",
+      "flows": 853,
+      "cut_off_mid_record": true
+    },
+    "Friday-02-03-2018__UCAP172.31.69.18": {
+      "sha256": "5eefe0b26d37ab10a7134274bb6eca21754c8f5a428fefb136bf56f447a6a357",
+      "flows": 1176,
+      "cut_off_mid_record": true
+    },
+    "Friday-02-03-2018__UCAP172.31.69.21": {
+      "sha256": "bb9479fb5e88a13000c6893a09d7a664cba396d9db22c2bec53fd306afeca6f1",
+      "flows": 843,
+      "cut_off_mid_record": false
+    },
+    "Friday-02-03-2018__UCAP172.31.69.22": {
+      "sha256": "4de5df26f4e0db20e5216b366983083b1cb1aa47ce435900e36f131992c09e66",
+      "flows": 984,
+      "cut_off_mid_record": true
+    },
+    "Friday-02-03-2018__UCAP172.31.69.25": {
+      "sha256": "16b26ae2036c7183288d71c8660c3c0d68c5c93d2c07c9db854d8e1f74220c83",
+      "flows": 1040,
+      "cut_off_mid_record": true
+    },
+    "Friday-02-03-2018__UCAP172.31.69.27": {
+      "sha256": "2f820aa4b89fe2a4a996b5584711e1ac3fd2c88bc9bba82b7cc0992f5c070aa7",
+      "flows": 846,
+      "cut_off_mid_record": true
+    },
+    "Friday-02-03-2018__UCAP172.31.69.28": {
+      "sha256": "8a09e5d476fa81571e49a632df8b3a78666dcdce19803fa7d714f7167835fe43",
+      "flows": 961,
+      "cut_off_mid_record": true
+    },
+    "Friday-02-03-2018__UCAP172.31.69.7": {
+      "sha256": "83d8d04dea73e3a0c621f32aecc0b651ceab88e7f4ce30cd81b153324fcbc80a",
+      "flows": 1061,
+      "cut_off_mid_record": true
+    },
+    "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.20": {
+      "sha256": "a7d589d0dd86dde58b9fa20e555fb7292ce78cf75531b5073b84380d61e4d287",
+      "flows": 54,
+      "cut_off_mid_record": false
+    },
+    "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69_-_Copy.24": {
+      "sha256": "f8e0382a34d000d16e13c4c14f2e952db7fc1372589b95f5d8c53696c4fb6c05",
+      "flows": 11,
+      "cut_off_mid_record": false
+    },
+    "Friday-02-03-2018__capWIN-J6GMIG1DQE5-172.31.67.62": {
+      "sha256": "d611a5b53d901f6e17728f66a6485a7f97e3a63f32a40102a7e9ccdec04568f5",
+      "flows": 22199,
+      "cut_off_mid_record": false
+    },
+    "Friday-02-03-2018__capWIN-J6GMIG1DQE5-172.31.67.95": {
+      "sha256": "ec78c0adf63abaac2d9f3556583b30975795e1175f8e3bfa62b19e10cc47a197",
+      "flows": 79,
+      "cut_off_mid_record": false
+    }
+  },
+  "counts": {
+    "positive_flows": 98700,
+    "negative_flows": 30107,
+    "excluded_victim_flows_without_c2": 57434,
+    "excluded_c2_flows_outside_windows": 44311,
+    "captures_cut_mid_record": 8,
+    "captures": 24
+  },
+  "spectra_unsupervised": {
+    "scores": {
+      "n_pos": 98700,
+      "n_neg": 30107,
+      "bootstrap": 1000,
+      "seed": 1337,
+      "roc_auc": 0.19013212147191733,
+      "roc_auc_ci95": [
+        0.1855733180497832,
+        0.19439037241336699
+      ],
+      "pr_auc": 0.6528715503212256,
+      "pr_auc_ci95": [
+        0.6517875180670704,
+        0.6539548912703161
+      ],
+      "recall_at_fpr_1pct": 0.0,
+      "recall_at_fpr_1pct_fpr_reached": 0.009997674959311788,
+      "recall_at_fpr_1pct_ci95": [
+        0.0,
+        0.0
+      ],
+      "recall_at_fpr_0_1pct": 0.0,
+      "recall_at_fpr_0_1pct_fpr_reached": 0.0008968014083103597,
+      "recall_at_fpr_0_1pct_ci95": [
+        0.0,
+        0.0
+      ]
+    },
+    "benign_flag_rate_at_default_threshold": {
+      "n": 30107,
+      "rate": 0.0115,
+      "ci95": [
+        0.0102,
+        0.0126
+      ]
+    },
+    "bot_flag_rate_at_default_threshold": {
+      "n": 98700,
+      "rate": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "benign_score_percentiles_p50_p90_p99_p999": [
+    -0.0411,
+    0.0119,
+    0.0637,
+    0.1813
+  ],
+  "default_threshold": 0.0538,
+  "caveats": [
+    "Positives are flows that touch the documented C2 address inside the documented windows; other Bot-related flows are not labelled.",
+    "Negatives are all flows of non-victim hosts from the same day; the schedule lists no attack on them, but that is not an audit of their traffic.",
+    "Local time is UTC + the offset chosen from the data, not documented.",
+    "Per-host captures are cut off mid-record; flows after the cut are missing.",
+    "Same AWS lab for train and test hosts; positives are one botnet (Ares) on ten victim hosts."
+  ],
+  "supervised_random_forest_upper_bound": {
+    "note": "random 50/50 flow split of the SAME labelled flows (same hosts, same day): optimistic by construction",
+    "scores": {
+      "n_pos": 49350,
+      "n_neg": 15054,
+      "bootstrap": 1000,
+      "seed": 1337,
+      "roc_auc": 1.0,
+      "roc_auc_ci95": [
+        1.0,
+        1.0
+      ],
+      "pr_auc": 1.0,
+      "pr_auc_ci95": [
+        1.0,
+        1.0
+      ],
+      "recall_at_fpr_1pct": 1.0,
+      "recall_at_fpr_1pct_fpr_reached": 0.0054470572605287634,
+      "recall_at_fpr_1pct_ci95": [
+        1.0,
+        1.0
+      ],
+      "recall_at_fpr_0_1pct": 1.0,
+      "recall_at_fpr_0_1pct_fpr_reached": 0.0009964129135113591,
+      "recall_at_fpr_0_1pct_ci95": [
+        1.0,
+        1.0
+      ]
+    }
+  },
+  "suricata_et_open": {
+    "all_alerts": {
+      "bot_flows_alerted": 946,
+      "bot_flows": 98700,
+      "recall": 0.0096,
+      "benign_flows_alerted": 14911,
+      "benign_flows": 30107,
+      "benign_flag_rate": 0.4953
+    },
+    "et_rules_only_excluding_info_and_engine_events": {
+      "bot_flows_alerted": 0,
+      "bot_flows": 98700,
+      "recall": 0.0,
+      "benign_flows_alerted": 471,
+      "benign_flows": 30107,
+      "benign_flag_rate": 0.0156
+    }
+  }
+}

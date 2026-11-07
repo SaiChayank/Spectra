@@ -26,7 +26,7 @@ Operator-supplied benign PCAP of their own network. The repository's demo genera
 * Cross-sector false-flag spread: ≤ 1 pp (within noise); no sector-specific behaviour.
 * **Adversarial robustness: poor.** The greedy feature-perturbation attack evaded 100 % of sampled flagged flows on three of four families against the better model. Retraining on evaded vectors did not help (`HANDOFF_FINDINGS.md`, 9B).
 
-* **Real captures, benign-trained, later-in-time test (2026-11-07, `docs/evaluation-report.md` §10-§11):** CTU-Normal vs botnet captures: ROC-AUC 0.75, recall 0.1% at 1% false-flag rate (pcap-level labels, environment-confounded). HIKARI per-flow: ROC-AUC 0.62 overall (brute force 0.96, crypto-miner 0.22); attack flag rate 0.4% at the default threshold; benign flag rate 1.9%. Suricata + ET Open caught 0 of the HIKARI attack flows. No claim of real-network performance.
+* **Real captures, benign-trained, later-in-time test (2026-11-07, `docs/evaluation-report.md` §10-§11):** CTU-Normal vs botnet captures: ROC-AUC 0.75, recall 0.1% at 1% false-flag rate (pcap-level labels, environment-confounded). HIKARI per-flow: ROC-AUC 0.62 overall (brute force 0.96, crypto-miner 0.22); attack flag rate 0.4% at the default threshold; benign flag rate 1.9%. CIC-2018 Bot day: ROC-AUC 0.19 (Ares C2 beaconing scores below benign), 0 of 98,700 flows flagged. Suricata + ET Open (rules only) caught 0 of the HIKARI and 0 of the CIC-2018 attack flows. No claim of real-network performance.
 
 ## Limitations and known failure modes
 * Baseline-matching: behaviour outside the training distribution — including legitimate new applications — is flagged. Drift is reported (PSI vs training and vs recent history); retraining is the operator's decision.

@@ -22,7 +22,16 @@
           "SURICATA Ethernet packet too small",
           1
         ]
-      ]
+      ],
+      "rules_only": {
+        "alert_events": 17,
+        "flows_alerted": 16,
+        "flow_rate": 0.0016,
+        "flow_rate_ci95": [
+          0.001,
+          0.0026
+        ]
+      }
     },
     "ctu_normal--2017-05-02_kali-normal": {
       "group": "benign",
@@ -48,7 +57,16 @@
           "SURICATA HTTP unable to match response to request",
           81
         ]
-      ]
+      ],
+      "rules_only": {
+        "alert_events": 7,
+        "flows_alerted": 4,
+        "flow_rate": 0.0004,
+        "flow_rate_ci95": [
+          0.0002,
+          0.001
+        ]
+      }
     },
     "ctu13--botnet-capture-20110810-neris": {
       "group": "botnet",
@@ -74,7 +92,16 @@
           "SURICATA STREAM 3way handshake SYNACK with wrong ack",
           6
         ]
-      ]
+      ],
+      "rules_only": {
+        "alert_events": 0,
+        "flows_alerted": 0,
+        "flow_rate": 0.0,
+        "flow_rate_ci95": [
+          0.0,
+          0.0003
+        ]
+      }
     },
     "ctu13--botnet-capture-20110811-neris": {
       "group": "botnet",
@@ -100,7 +127,16 @@
           "SURICATA TLS handshake invalid length",
           2
         ]
-      ]
+      ],
+      "rules_only": {
+        "alert_events": 0,
+        "flows_alerted": 0,
+        "flow_rate": 0.0,
+        "flow_rate_ci95": [
+          0.0,
+          0.0002
+        ]
+      }
     },
     "ctu_botnet--botnet-capture-20110812-rbot": {
       "group": "botnet",
@@ -126,7 +162,16 @@
           "SURICATA Applayer Detect protocol only one direction",
           106
         ]
-      ]
+      ],
+      "rules_only": {
+        "alert_events": 3395,
+        "flows_alerted": 3,
+        "flow_rate": 0.0001,
+        "flow_rate_ci95": [
+          0.0,
+          0.0003
+        ]
+      }
     },
     "ctu_botnet--botnet-capture-20110815-fast-flux": {
       "group": "botnet",
@@ -152,7 +197,16 @@
           "SURICATA TLS handshake invalid length",
           6
         ]
-      ]
+      ],
+      "rules_only": {
+        "alert_events": 0,
+        "flows_alerted": 0,
+        "flow_rate": 0.0,
+        "flow_rate_ci95": [
+          0.0,
+          0.0044
+        ]
+      }
     },
     "ctu_botnet--capture.botnet2.infected.1": {
       "group": "botnet",
@@ -178,11 +232,20 @@
           "ET MALWARE DNS Reply Sinkhole - Microsoft - 199.2.137.0/24",
           801
         ]
-      ]
+      ],
+      "rules_only": {
+        "alert_events": 1175,
+        "flows_alerted": 149,
+        "flow_rate": 0.0067,
+        "flow_rate_ci95": [
+          0.0057,
+          0.0079
+        ]
+      }
     }
   },
   "pooled": {
-    "benign": {
+    "all_alerts_benign": {
       "flows": 20204,
       "alerted": 263,
       "rate": 0.013,
@@ -192,13 +255,33 @@
       ],
       "zeek_notices": 0
     },
-    "botnet": {
+    "all_alerts_botnet": {
       "flows": 89872,
       "alerted": 2945,
       "rate": 0.0328,
       "ci95": [
         0.0316,
         0.034
+      ],
+      "zeek_notices": 0
+    },
+    "et_rules_only_benign": {
+      "flows": 20204,
+      "alerted": 20,
+      "rate": 0.001,
+      "ci95": [
+        0.0006,
+        0.0015
+      ],
+      "zeek_notices": 0
+    },
+    "et_rules_only_botnet": {
+      "flows": 89872,
+      "alerted": 152,
+      "rate": 0.0017,
+      "ci95": [
+        0.0014,
+        0.002
       ],
       "zeek_notices": 0
     }

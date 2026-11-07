@@ -41,13 +41,21 @@ def conn_tuples(path: str) -> set:
     return out
 
 
-def alerts(path: str) -> tuple[set, int, dict]:
+def is_rule_alert(e: dict) -> bool:
+    """ET rule that is not informational; excludes Suricata engine/decoder events (capture artefacts) and ET INFO."""
+    sig = e.get("alert", {}).get("signature", "")
+    return sig.startswith("ET ") and not sig.startswith("ET INFO ")
+
+
+def alerts(path: str, rules_only: bool = False) -> tuple[set, int, dict]:
     hits, n, sigs = set(), 0, {}
     if os.path.isfile(path):
         for line in open(path, encoding="utf-8"):
             if '"event_type":"alert"' not in line:
                 continue
             e = json.loads(line)
+            if rules_only and not is_rule_alert(e):
+                continue
             n += 1
             if "src_port" in e:
                 hits.add((e["src_ip"], int(e["src_port"]), e["dest_ip"], int(e["dest_port"])))
@@ -68,18 +76,27 @@ def main() -> int:
             flows = conn_tuples(os.path.join(a.bench_data, "zeek", "out", n, "conn.log"))
             hits, n_alerts, sigs = alerts(os.path.join(a.bench_data, "suricata", "out", n, "eve.json"))
             alerted = sum(1 for t in flows if t in hits)
+            hits_r, n_alerts_r, _ = alerts(os.path.join(a.bench_data, "suricata", "out", n, "eve.json"), rules_only=True)
+            alerted_r = sum(1 for t in flows if t in hits_r)
             notice = os.path.join(a.bench_data, "zeek", "out", n, "notice.log")
             rows[n] = {"group": group, "zeek_flows": len(flows), "suricata_alert_events": n_alerts,
                        "flows_with_suricata_alert": alerted,
                        "suricata_flow_rate": round(alerted / max(len(flows), 1), 4),
                        "suricata_flow_rate_ci95": wilson(alerted, len(flows)),
                        "zeek_notices": sum(1 for line in open(notice) if not line.startswith("#")) if os.path.isfile(notice) else 0,
-                       "top_signatures": sorted(sigs.items(), key=lambda kv: -kv[1])[:3]}
+                       "top_signatures": sorted(sigs.items(), key=lambda kv: -kv[1])[:3],
+                       "rules_only": {"alert_events": n_alerts_r, "flows_alerted": alerted_r,
+                                      "flow_rate": round(alerted_r / max(len(flows), 1), 4),
+                                      "flow_rate_ci95": wilson(alerted_r, len(flows))}}
             tot[group][0] += alerted
             tot[group][1] += len(flows)
             tot[group][2] += rows[n]["zeek_notices"]
+            tot.setdefault(group + "_rules", [0, 0, 0])
+            tot[group + "_rules"][0] += alerted_r
+            tot[group + "_rules"][1] += len(flows)
     pooled = {g: {"flows": v[1], "alerted": v[0], "rate": round(v[0] / max(v[1], 1), 4),
                   "ci95": wilson(v[0], v[1]), "zeek_notices": v[2]} for g, v in tot.items()}
+    pooled = {("all_alerts_" + g if not g.endswith("_rules") else "et_rules_only_" + g[:-6]): v for g, v in pooled.items()}
     rep = {"suricata": "7.0.8, ET Open via suricata-update on 2026-11-07 (69,342 rules, 53,373 enabled), -k none",
            "zeek": "7.0.5 stock scripts, no packages (the JA3 package install was not run)",
            "per_capture": rows, "pooled": pooled,

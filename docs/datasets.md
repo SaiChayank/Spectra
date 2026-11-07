@@ -150,6 +150,43 @@ Sciences 2021) and the Zenodo record.
 | `ALLFLOWMETER_HIKARI2021.csv.zip` (labels) | 65 MB | md5 `d7d9e277fe4a66cb00764d7f91a810dd` (Zenodo-published; verified) | Zenodo 6463389 |
 | `ground-truth.zip` (anonymised full captures; **downloaded but not used** - it holds pcaps, not labels) | 93 MB | `4005ec39ba2d3a26e224312957191fe00f43423c3f0dd41e72ec7f7441aa8e25` | Zenodo 6463389 |
 
+
+**CSE-CIC-IDS2018** (Canadian Institute for Cybersecurity / Communications Security Establishment; AWS Open Data bucket
+`cse-cic-ids2018`). Licence per the dataset page: may be redistributed in any form with a citation of the dataset and a link
+to the page. Cite: Sharafaldin, Lashkari, Ghorbani, *Toward Generating a New Intrusion Detection Dataset and Intrusion Traffic
+Characterization*, ICISSP 2018. Fetched by HTTP range requests from the day archives (`pcap.zip`, 37-42 GB each; only the
+members below were read). The processed label CSV was downloaded (`labels_Friday-02-03-2018.csv`, 352,368,373 bytes, SHA-256
+`d96f38e7496aba83475031e6fb8c6fdf1abf6aa1b71325a917798f3c7de93de1`) but is **not used**: it has no IP columns and ends at 12:59
+local. Labels come from the attack schedule on the dataset page. The first 11 small Friday captures were downloaded by
+mistake (they are not Bot victims) and appear only as negatives.
+
+| Member (from `Friday-02-03-2018/pcap.zip` or `Wednesday-14-02-2018/pcap.zip`) | Size | SHA-256 |
+|---|---|---|
+| `Friday-02-03-2018__UCAP172.31.69.15` | 4.7 MB | `e08b441c2a4c0cad757b85564f39ed16244c4569458489e60346ef145b9aab84` |
+| `Friday-02-03-2018__UCAP172.31.69.18` | 1.1 MB | `5eefe0b26d37ab10a7134274bb6eca21754c8f5a428fefb136bf56f447a6a357` |
+| `Friday-02-03-2018__UCAP172.31.69.21` | 0.7 MB | `bb9479fb5e88a13000c6893a09d7a664cba396d9db22c2bec53fd306afeca6f1` |
+| `Friday-02-03-2018__UCAP172.31.69.22` | 1.0 MB | `4de5df26f4e0db20e5216b366983083b1cb1aa47ce435900e36f131992c09e66` |
+| `Friday-02-03-2018__UCAP172.31.69.25` | 4.9 MB | `16b26ae2036c7183288d71c8660c3c0d68c5c93d2c07c9db854d8e1f74220c83` |
+| `Friday-02-03-2018__UCAP172.31.69.27` | 0.7 MB | `2f820aa4b89fe2a4a996b5584711e1ac3fd2c88bc9bba82b7cc0992f5c070aa7` |
+| `Friday-02-03-2018__UCAP172.31.69.28` | 4.8 MB | `8a09e5d476fa81571e49a632df8b3a78666dcdce19803fa7d714f7167835fe43` |
+| `Friday-02-03-2018__UCAP172.31.69.7` | 4.7 MB | `83d8d04dea73e3a0c621f32aecc0b651ceab88e7f4ce30cd81b153324fcbc80a` |
+| `Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.10` | 89.7 MB | `48265cd901fe91e95b4a6552cfb822daf682b68359494ef153c9ff0278854243` |
+| `Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.12` | 62.9 MB | `00e2d2d175de6a93821dd19961c2f00b45c39b48bb1fd2f054843b8785af03fd` |
+| `Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.14` | 83.1 MB | `d701711685967c7564ea4442d272f877f31005ce3803ffcd6e8e7593db0b36a4` |
+| `Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.17` | 78.2 MB | `560e8e123189a1d63a734757c2de47f2e768b2226c9097e9e54e85046be1bb48` |
+| `Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.20` | 0.4 MB | `a7d589d0dd86dde58b9fa20e555fb7292ce78cf75531b5073b84380d61e4d287` |
+| `Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.23` | 99.4 MB | `56fc8375d9104615ec08952bf811cc17e0579af5d2fc98e54dea669cc9d5d58e` |
+| `Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.26` | 46.1 MB | `ed0b57eac080732e41535b0228b114a7c90a9e4da88faa140621ff8117cbeebd` |
+| `Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.29` | 73.3 MB | `799081247a14ea82ccfda77756bc6212f428e59b474b5b18fe688326a7b4a378` |
+| `Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.30` | 74.7 MB | `4e129df72cf04e3bc425d649bace9dddf214d25f1461de3b229aa86add0ab01b` |
+| `Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.6` | 100.6 MB | `4e116afc21ba8b8609127c2ef476987d589851ae7bb7f258a9cec36a67de3bfd` |
+| `Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.8` | 126.4 MB | `dfdfdf3e850e8910fc3e2cb1cd5ada03bcc68e29db78809b6c62f7fe46a70992` |
+| `Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69_-_Copy.24` | 0.1 MB | `f8e0382a34d000d16e13c4c14f2e952db7fc1372589b95f5d8c53696c4fb6c05` |
+| `Friday-02-03-2018__capWIN-J6GMIG1DQE5-172.31.67.62` | 970.4 MB | `d611a5b53d901f6e17728f66a6485a7f97e3a63f32a40102a7e9ccdec04568f5` |
+| `Friday-02-03-2018__capWIN-J6GMIG1DQE5-172.31.67.95` | 0.5 MB | `ec78c0adf63abaac2d9f3556583b30975795e1175f8e3bfa62b19e10cc47a197` |
+| `Wednesday-14-02-2018__capDESKTOP-AN3U28N-172.31.67.15` | 800.0 MB | `8572308658a2856cd7e59076ca8636a6366dcf3abd35dccedfbc4cd3887bd571` |
+| `Wednesday-14-02-2018__capWIN-J6GMIG1DQE5-172.31.67.109` | 552.7 MB | `e3f9071170d31ee3b2275c21f6d649efa0a46b1e18ad9c3f082d7811527cc07c` |
+
 **Baselines fetched at run time:** Suricata 7.0.8 image (`jasonish/suricata:7.0.8`) with ET Open rules from `suricata-update` on
 2026-11-07 (69,342 rules, 53,373 enabled); Zeek 7.0.5 (`zeek/zeek:7.0.5`); abuse.ch SSLBL JA3 list (CC0, 16 entries, SHA-256
 prefix `37fcee5a0845b1f7`). A third-party Zeek JA3 package was NOT installed (blocked by the safety classifier).

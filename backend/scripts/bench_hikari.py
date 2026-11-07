@@ -87,7 +87,14 @@ def label_of(t: tuple, labels: dict):
     return labels.get(t) or labels.get((t[2], t[3], t[0], t[1]))
 
 
-def suricata_hits(eve_path: str) -> set:
+def is_rule_alert(e: dict) -> bool:
+    """A real signature hit: an ET rule that is not informational. Excludes Suricata engine/decoder events
+    (e.g. 'SURICATA IPv4 invalid checksum', a capture artefact) and 'ET INFO' rules."""
+    sig = e.get("alert", {}).get("signature", "")
+    return sig.startswith("ET ") and not sig.startswith("ET INFO ")
+
+
+def suricata_hits(eve_path: str, rules_only: bool = False) -> set:
     hits = set()
     if not os.path.isfile(eve_path):
         return hits
@@ -96,7 +103,7 @@ def suricata_hits(eve_path: str) -> set:
             if '"event_type":"alert"' not in line:
                 continue
             e = json.loads(line)
-            if "src_ip" in e and "src_port" in e:
+            if "src_ip" in e and "src_port" in e and (not rules_only or is_rule_alert(e)):
                 hits.add((e["src_ip"], int(e["src_port"]), e["dest_ip"], int(e["dest_port"])))
                 hits.add((e["dest_ip"], int(e["dest_port"]), e["src_ip"], int(e["src_port"])))
     return hits
@@ -194,33 +201,34 @@ def main() -> int:
             "benign_flag_rate_at_0.5": rate(rn >= 0.5), "attack_flag_rate_at_0.5": rate(rp >= 0.5)}
     # Suricata + ET Open on the same labelled test flows
     if a.suricata_out:
-        tp = fp = fn = tn = 0
-        alerts_on_test = 0
-        for n in TEST:
-            hits = suricata_hits(os.path.join(a.suricata_out, n[:-5], "eve.json"))
-            for t, x in zip(data[n]["tuples"], data[n]["lab"], strict=True):
-                if x is None:
-                    continue
-                hit = t in hits
-                alerts_on_test += hit
-                if x[0] == 1:
-                    tp += hit
-                    fn += not hit
-                else:
-                    fp += hit
-                    tn += not hit
-        rep["suricata_et_open"] = {
-            "flows_with_alert_and_attack": tp, "attack_flows_missed": fn, "benign_flows_alerted": fp, "benign_flows_quiet": tn,
-            "recall": round(tp / max(tp + fn, 1), 4), "benign_flag_rate": round(fp / max(fp + tn, 1), 4),
-            "precision": round(tp / max(tp + fp, 1), 4),
-            "note": "an alert is joined to a flow by its 4-tuple; rules = ET Open as fetched 2026-11-07 (suricata-update), Suricata 7.0.8"}
+        rep["suricata_et_open"] = {}
+        for label, rules_only in (("all_alerts", False), ("et_rules_only_excluding_info_and_engine_events", True)):
+            tp = fp = fn = tn = 0
+            for n in TEST:
+                hits = suricata_hits(os.path.join(a.suricata_out, n[:-5], "eve.json"), rules_only)
+                for t, x in zip(data[n]["tuples"], data[n]["lab"], strict=True):
+                    if x is None:
+                        continue
+                    hit = t in hits
+                    if x[0] == 1:
+                        tp += hit
+                        fn += not hit
+                    else:
+                        fp += hit
+                        tn += not hit
+            rep["suricata_et_open"][label] = {
+                "flows_with_alert_and_attack": tp, "attack_flows_missed": fn, "benign_flows_alerted": fp,
+                "benign_flows_quiet": tn, "recall": round(tp / max(tp + fn, 1), 4),
+                "benign_flag_rate": round(fp / max(fp + tn, 1), 4), "precision": round(tp / max(tp + fp, 1), 4)}
+        rep["suricata_et_open"]["note"] = ("alert joined to a flow by its 4-tuple; Suricata 7.0.8, ET Open fetched 2026-11-07; "
+                                           "'all_alerts' includes engine/decoder events and ET INFO rules")
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
     json.dump(rep, open(a.out, "w", encoding="utf-8"), indent=2)
     s = rep["spectra_unsupervised"]["scores"]
     print(f"\nSpectra roc_auc {s['roc_auc']:.4f} {s['roc_auc_ci95']} pr_auc {s['pr_auc']:.4f} "
           f"recall@1%FPR {s['recall_at_fpr_1pct']:.4f} recall@0.1%FPR {s['recall_at_fpr_0_1pct']:.4f}")
     if "suricata_et_open" in rep:
-        print("Suricata:", {k: rep['suricata_et_open'][k] for k in ('recall', 'benign_flag_rate', 'precision')})
+        print("Suricata:", {k: v for k, v in rep["suricata_et_open"].items() if k != "note"})
     print("wrote", a.out)
     return 0
 
