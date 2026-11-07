@@ -20,9 +20,14 @@ services:
     <<: *spectra
     profiles: [capture]
     network_mode: host
-    cap_add: [NET_RAW]
-    command: ["serve", "--host", "127.0.0.1", "--port", "8001"]
-    user: "10001"
+    cap_add: [NET_RAW, DAC_OVERRIDE]   # DAC_OVERRIDE: root must write the volume that the image owns as uid 10001
+    command: ["serve", "--host", "127.0.0.1", "--port", "${SPECTRA_CAPTURE_PORT:-8001}"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,os; urllib.request.urlopen('http://127.0.0.1:%s/api/health' % os.environ.get('SPECTRA_CAPTURE_PORT','8001'), timeout=4)"]
+      interval: 30s
+      start_period: 30s
+    environment: {SPECTRA_CAPTURE_PORT: "${SPECTRA_CAPTURE_PORT:-8001}"}
+    user: "0"          # NET_RAW is only effective for root in a container (no ambient caps); everything else is dropped
     volumes: [spectra-capture-data:/data]   # its own instance: never share one SQLite DB between two servers
 
 volumes:

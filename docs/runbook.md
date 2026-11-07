@@ -79,6 +79,9 @@ Image: `python:3.13-slim` pinned by digest, non-root uid 10001, read-only root f
 Observed: container reaches `healthy`, `/api/health` and `/` return 200, writing outside `/data` and `/tmp` fails.
 Trivy 0.58.1 (`--severity HIGH,CRITICAL --ignore-unfixed`): 0 findings -> `docs/evidence/2026-11-07/phase11/trivy-image.txt`
 (the first build had 5 HIGH, all from pip's vendored msgpack/urllib3/setuptools; removing pip fixed them).
-The optional `capture` profile (host networking + `NET_RAW`, its own volume) is **written but not run** - live capture on a NIC
-was not exercised. Not covered: image signing, a Kubernetes manifest, trivy secret/misconfig scanners, scapy's GPL-2.0-only
+The optional `capture` profile (`docker compose --profile capture up -d capture`, own volume, port `SPECTRA_CAPTURE_PORT`) was run:
+it reaches `healthy`, runs read-only, and can open an `AF_PACKET` raw socket. It has to run as root with only `NET_RAW` and
+`DAC_OVERRIDE` (a non-root user gets `NET_RAW` in the bounding set but not the effective set - the first version of this
+profile would have failed to capture; found by checking `CapEff`). **Packets were not captured from a real interface** in
+that run. Not covered: image signing, a Kubernetes manifest, trivy secret/misconfig scanners, scapy's GPL-2.0-only
 licence in the image (open decision for the owner).
