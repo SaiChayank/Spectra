@@ -18,7 +18,7 @@ dependencies = [
     "python-multipart>=0.0.9",
     "uvicorn[standard]>=0.29.0",
     "pydantic>=2.6.0",
-    "cryptography>=50.0.0,<51",
+    "cryptography>=50.0.2,<51",
 ]
 
 [project.optional-dependencies]
