@@ -100,6 +100,11 @@ jobs:
           uv pip install --python .sbom-venv/bin/python backend/dist/spectra-*.whl
           uvx --from cyclonedx-bom cyclonedx-py environment .sbom-venv/bin/python --of JSON -o sbom-python-runtime.cdx.json
           (cd frontend && npm sbom --sbom-format cyclonedx --omit dev > ../sbom-frontend.cdx.json)
+      # container image: build from the wheel, fail on fixable HIGH/CRITICAL vulnerabilities
+      - run: docker build -t spectra:ci .
+      - run: >
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.58.1
+          image --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 spectra:ci
       - uses: actions/upload-artifact@v4
         with:
           name: release-wheel-and-sbom

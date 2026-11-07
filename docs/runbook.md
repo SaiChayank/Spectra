@@ -55,3 +55,19 @@ production volume; re-run `scripts/restore_drill.py` with representative data be
   changing limits.
 * **Upgrade**: back up with keys, install the new wheel, start (migrations run on start and are forward-only), verify health and the
   audit chain; roll back by reinstalling the old wheel and restoring the backup taken first.
+
+## Container (rehearsed once, 2026-11-07)
+
+```bash
+scripts/build_release.sh && docker compose up -d api      # http://127.0.0.1:${SPECTRA_PORT:-8000}, data in volume spectra-data
+docker compose exec api cat /data/admin_bootstrap.txt     # first-run admin password (mode 0600, never logged)
+```
+
+Image: `python:3.13-slim` pinned by digest, non-root uid 10001, read-only root filesystem, all capabilities dropped,
+`no-new-privileges`, healthcheck on `/api/health`, dependencies constrained to `backend/requirements.lock`, pip/setuptools removed.
+Observed: container reaches `healthy`, `/api/health` and `/` return 200, writing outside `/data` and `/tmp` fails.
+Trivy 0.58.1 (`--severity HIGH,CRITICAL --ignore-unfixed`): 0 findings -> `docs/evidence/2026-11-07/phase11/trivy-image.txt`
+(the first build had 5 HIGH, all from pip's vendored msgpack/urllib3/setuptools; removing pip fixed them).
+The optional `capture` profile (host networking + `NET_RAW`, its own volume) is **written but not run** - live capture on a NIC
+was not exercised. Not covered: image signing, a Kubernetes manifest, trivy secret/misconfig scanners, scapy's GPL-2.0-only
+licence in the image (open decision for the owner).
