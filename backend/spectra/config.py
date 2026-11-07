@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import logging
 import os
+import sys
+from collections.abc import Mapping
 from dataclasses import dataclass, field, fields
 from pathlib import Path
 
@@ -16,7 +18,36 @@ BACKEND_DIR = Path(__file__).resolve().parent.parent
 #: Where the release build puts the compiled dashboard inside the wheel
 #: (absent in a source checkout until `scripts/build_release.sh` runs).
 PACKAGED_WEBUI_DIR = Path(__file__).resolve().parent / "webui"
-DEFAULT_DATA_DIR = BACKEND_DIR / "data"
+
+
+def default_home(backend_dir: Path = BACKEND_DIR, environ: Mapping[str, str] | None = None,
+                 platform: str | None = None, home: Path | None = None) -> Path:
+    """Directory that holds ``data/`` and ``models/`` unless the environment says otherwise.
+
+    * a **source checkout** (``pyproject.toml`` beside the package) keeps both next to the
+      code, as it always has;
+    * an **installed copy** must not write into ``site-packages`` (not writable on a system
+      Python, shared between users, and lost with the virtualenv), so it uses the platform's
+      per-user data directory: ``$XDG_DATA_HOME`` or ``~/.local/share`` on Linux,
+      ``~/Library/Application Support`` on macOS, ``%LOCALAPPDATA%`` on Windows - under
+      ``spectra/``.
+    """
+    environ = os.environ if environ is None else environ
+    platform = sys.platform if platform is None else platform
+    if (Path(backend_dir) / "pyproject.toml").is_file():
+        return Path(backend_dir)
+    home = Path.home() if home is None else home
+    if platform == "win32":
+        base = Path(environ.get("LOCALAPPDATA") or home / "AppData" / "Local")
+    elif platform == "darwin":
+        base = home / "Library" / "Application Support"
+    else:
+        base = Path(environ.get("XDG_DATA_HOME") or home / ".local" / "share")
+    return base / "spectra"
+
+
+_HOME = default_home()
+DEFAULT_DATA_DIR = _HOME / "data"
 
 
 def _env(name: str, default: str) -> str:
@@ -48,7 +79,7 @@ class Config:
     profile: str = field(default_factory=lambda: _env("PROFILE", "local"))
 
     # paths
-    data_dir: str = field(default_factory=lambda: _env("DATA_DIR", str(DEFAULT_DATA_DIR)))
+    data_dir: str = field(default_factory=lambda: _env("DATA_DIR", str(_HOME / "data")))
     db_path: str = ""              # resolved in __post_init__
     model_path: str = ""           # resolved in __post_init__
 
@@ -180,7 +211,7 @@ class Config:
             self.db_path = _env("DB_PATH", os.path.join(self.data_dir, "spectra.db"))
         if not self.model_path:
             self.model_path = _env(
-                "MODEL_PATH", str(BACKEND_DIR / "models" / "spectra_model.joblib")
+                "MODEL_PATH", str(_HOME / "models" / "spectra_model.joblib")
             )
         self.data_dir = os.environ.get("SPECTRA_DATA_DIR", self.data_dir)
         if not self.capture_store_dir:

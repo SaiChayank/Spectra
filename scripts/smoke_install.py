@@ -95,7 +95,11 @@ def main() -> int:
     wheel = os.path.abspath(args.wheel)
     tmp = tempfile.mkdtemp(prefix="spectra_smoke_")
     venv = os.path.join(tmp, "venv")
-    data = os.path.join(tmp, "data")
+    home = os.path.join(tmp, "home")                       # HOME for the server: defaults must land here
+    spectra_home = os.path.join(home, ".local", "share", "spectra")
+    data = os.path.join(spectra_home, "data")
+    models = os.path.join(spectra_home, "models")
+    os.makedirs(home)
     py = os.path.join(venv, "bin", "python")
     uv = shutil.which("uv")
     server: subprocess.Popen | None = None
@@ -127,9 +131,14 @@ def main() -> int:
 
         print("== serve")
         port = free_port()
-        env = {**os.environ, "SPECTRA_DATA_DIR": data, "SPECTRA_MODEL_PATH": os.path.join(data, "m.joblib"),
-               "PYTHONDONTWRITEBYTECODE": "1"}
-        env.pop("SPECTRA_ADMIN_PASSWORD", None)             # exercise the generated-password path
+        # No SPECTRA_DATA_DIR / SPECTRA_MODEL_PATH: an installed copy must pick sane defaults
+        # (per-user data directory), never site-packages.
+        env = {k: v for k, v in os.environ.items()
+               if not k.startswith("SPECTRA_") and k not in ("XDG_DATA_HOME", "HOME")}
+        env.update(HOME=home, PYTHONDONTWRITEBYTECODE="1")
+        site = run([py, "-c", "import sysconfig; print(sysconfig.get_paths()['purelib'])"]).stdout.strip()
+        before = {os.path.relpath(os.path.join(dp, f), site) for dp, ds, fs in os.walk(site)
+                  if "__pycache__" not in dp for f in fs}
         log = open(os.path.join(tmp, "server.log"), "w")
         server = subprocess.Popen([spectra_cmd, "serve", "--port", str(port)], env=env,
                                   stdout=log, stderr=subprocess.STDOUT, cwd=tmp)
@@ -196,10 +205,16 @@ def main() -> int:
         check("WebSocket from a foreign origin is refused", foreign.stdout.startswith("REFUSED"), foreign.stdout.strip())
 
         print("== files created on first run")
-        keys = [os.path.join(dp, f) for dp, _, fs in os.walk(data) for f in fs if f.endswith(".key")]
+        check("data lives under the per-user data directory", os.path.isdir(data) and os.path.isfile(os.path.join(data, "spectra.db")),
+              data.replace(home, "~"))
+        keys = [os.path.join(dp, f) for root in (data, models) for dp, _, fs in os.walk(root)
+                for f in fs if f.endswith(".key")]
         loose = [k for k in keys if stat.S_IMODE(os.stat(k).st_mode) & 0o077]
         check("every key file is mode 0600", not loose, f"{len(keys)} key file(s)")
-        check("database created", os.path.isfile(os.path.join(data, "spectra.db")))
+        after = {os.path.relpath(os.path.join(dp, f), site) for dp, ds, fs in os.walk(site)
+                 if "__pycache__" not in dp for f in fs}
+        check("nothing was written into site-packages", after == before,
+              f"{len(after - before)} new file(s): {sorted(after - before)[:3]}")
 
         print("== shutdown")
         server.send_signal(signal.SIGINT)

@@ -1,13 +1,13 @@
-date: 2026-11-07T02:43:44Z  commit: 6bf9bf5 (working tree)  wheel: spectra-1.0.0-py3-none-any.whl sha256 1c4c02fece9affe0...
+date: 2026-11-07T02:54:52Z  commit: d9a9fa4 + uncommitted default-path fix  wheel: spectra-1.0.0-py3-none-any.whl sha256 b7e8d7dda663235f...
 command: python scripts/smoke_install.py backend/dist/spectra-1.0.0-py3-none-any.whl --python 3.14
 
-== install spectra-1.0.0-py3-none-any.whl into a clean venv (/tmp/spectra_smoke_egmijkm6)
-  [PASS] clean venv created and wheel installed  - 2.4s
+== install spectra-1.0.0-py3-none-any.whl into a clean venv (/tmp/spectra_smoke_vjen2sh_)
+  [PASS] clean venv created and wheel installed  - 0.6s
   [PASS] package imports from site-packages  - 3.14.8 1.0.0
   [PASS] environment holds no test/dev tooling  - 33 packages
   [PASS] `spectra --help` runs
 == serve
-  [PASS] server answers /api/health  - port 37793
+  [PASS] server answers /api/health  - port 39233
   [PASS] GET / serves the dashboard
   [PASS] dashboard has CSP, nosniff, frame denial  - default-src 'self'; script-src 'self'; style-src 'self' 'uns
   [PASS] hashed JS asset is served and immutable  - /assets/index-CPqc2tWq.js
@@ -25,11 +25,12 @@ command: python scripts/smoke_install.py backend/dist/spectra-1.0.0-py3-none-any
   [PASS] WebSocket opens with the session from the page's own origin  - OPEN first-frame 1368
   [PASS] WebSocket from a foreign origin is refused  - REFUSED InvalidStatus None 403
 == files created on first run
+  [PASS] data lives under the per-user data directory  - ~/.local/share/spectra/data
   [PASS] every key file is mode 0600  - 2 key file(s)
-  [PASS] database created
+  [PASS] nothing was written into site-packages  - 0 new file(s): []
 == shutdown
   [PASS] server exits cleanly on SIGINT  - exit 0
   [PASS] server log never contains the generated password
 
-23 passed, 0 failed of 23 checks
+24 passed, 0 failed of 24 checks
 exit: 0
