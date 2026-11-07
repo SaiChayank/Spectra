@@ -32,7 +32,7 @@ jobs:
       # licence allowlist (security/license-policy.json): fails on an unknown or
       # copyleft licence with no exception; a *pending* exception is printed
       - run: .venv/bin/python backend/scripts/check_licenses.py --frontend --json license-report.json
-      - uses: gitleaks/gitleaks-action@v2
+      - uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   sast:
