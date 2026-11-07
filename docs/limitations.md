@@ -16,9 +16,9 @@ Handshake packets are counted, never opened; no application key material is
 ever derived.
 
 *Scope of "never persisted":* it holds for everything Spectra itself derives
-and stores. An uploaded capture file is stored as the operator supplied it, so
-payload bytes present in that file remain on disk until the capture is deleted
-(`docs/security.md` §4 item 9).
+and stores, and, since 2026-11-07, for uploaded capture files too: they are rewritten on import so only headers,
+lengths, TLS handshake records and QUIC Initial packets remain. Setting `SPECTRA_STORE_RAW_CAPTURES=1` opts back
+into verbatim storage (`docs/security.md` §4 item 9). Captures stored before the change are not rewritten.
 
 *Consequence:* content-level threats (malware signatures, DNS names inside a
 tunnel, file contents, body keywords) are **architecturally invisible**.

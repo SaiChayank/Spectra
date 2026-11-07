@@ -17,7 +17,7 @@ An unknown profile name stops startup with an error. An explicit `SPECTRA_FLOW_R
 |---|---|---|
 | `SPECTRA_FLOW_RETENTION_DAYS` (non-flagged flow rows) | 30 | behavioural metadata about connections; 30 days covers most baselining and review windows |
 | `SPECTRA_DETECTION_RETENTION_DAYS` (flagged rows) | 90 | investigation evidence outlives ordinary flows |
-| `SPECTRA_CAPTURE_RETENTION_DAYS` (finished capture sessions **and their stored files**) | 14 | uploaded captures are stored verbatim and may hold payload bytes (`docs/security.md` §4.9), so they are kept shortest |
+| `SPECTRA_CAPTURE_RETENTION_DAYS` (finished capture sessions **and their stored files**) | 14 | uploads are rewritten to metadata only by default (`docs/security.md` §4.9); with `SPECTRA_STORE_RAW_CAPTURES=1` they may hold payload bytes, so they are kept shortest |
 | `SPECTRA_EVENT_RETENTION_DAYS` (system event feed) | 30 | operational noise |
 
 **Never pruned by any profile:** the audit log and its key epochs (the hash chain needs the full sequence). Back it up instead; growth is bounded by archive practice (`docs/security.md` §6).

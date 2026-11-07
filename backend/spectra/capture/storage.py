@@ -190,6 +190,33 @@ class CaptureStorage:
         return StoredCapture(stored_name=final_name, path=final_path,
                              size=total, sha256=digest.hexdigest())
 
+    def sanitize(self, staged: "StoredCapture") -> "StoredCapture":
+        """Replace a staged upload by its metadata-only rewrite (classic pcap); fail closed.
+
+        The returned ``sha256`` is still the hash of the *original* upload (duplicate detection
+        compares uploads), ``size`` and ``stored_name`` describe the rewritten file.
+        """
+        from .sanitize import sanitize_pcap
+
+        base = staged.stored_name.rsplit(".", 1)[0]
+        final_name = f"{base}.pcap"
+        tmp = os.path.join(self.directory, f".{base}.san")
+        try:
+            sanitize_pcap(staged.path, tmp)
+            final_path = self.path_for(final_name)
+            os.replace(tmp, final_path)
+        except Exception as exc:
+            self.remove(staged.stored_name)
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
+            raise CaptureFileError(str(exc)) from exc
+        if final_name != staged.stored_name:
+            self.remove(staged.stored_name)
+        return StoredCapture(stored_name=final_name, path=final_path,
+                             size=os.path.getsize(final_path), sha256=staged.sha256)
+
     def remove(self, stored_name: str | None) -> bool:
         """Delete one stored file (best effort); True when it was removed."""
         if not stored_name:

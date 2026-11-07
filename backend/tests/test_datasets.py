@@ -45,7 +45,7 @@ def artifact(tmp_path):
 def test_catalog_matches_docs_mapping():
     """The catalog must list exactly the datasets docs/evaluation.md names."""
     names = {d.name for d in DATASET_CATALOG}
-    assert names == {"cicids2017", "ctu13", "vpn2016", "mawi",
+    assert names == {"cicids2017", "ctu13", "ctu_normal", "ctu_botnet", "vpn2016", "mawi",
                      "sslbl_ja3", "synthetic"}
     # mawi is reference-only (no attack labels); the rest carry labels
     assert CATALOG_BY_NAME["mawi"].labeled is False

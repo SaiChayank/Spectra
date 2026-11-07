@@ -10,11 +10,10 @@ is uploaded and processed, then:
   percent-encoded;
 * the engine's in-memory flow/detection buffers and the SQLite files hold no
   marker either;
-* the ONLY place the marker exists under the data directory is the operator's
-  own uploaded capture file in the managed store (``cap_*.pcap``).  That is
-  today's honest behaviour - uploads are stored verbatim - and this test pins
-  it, so changing it (e.g. stripping payload on ingest) forces this test, and
-  the docs, to be updated on purpose.
+* the marker exists NOWHERE under the data directory: uploads are rewritten on
+  import (``spectra.capture.sanitize``) so no payload bytes are stored.  Only the
+  explicit opt-in ``store_raw_captures`` keeps the upload verbatim, and a second
+  test pins that opt-in as the one place payload may then rest.
 """
 
 from __future__ import annotations
@@ -143,8 +142,20 @@ def test_marker_is_not_in_memory_buffers_or_database(probed):
             blob = fh.read()
         if any(n in blob for n in needles.values()):
             holders.append(os.path.relpath(path, data_dir))
-    # the one honest exception: the operator's own uploaded file, stored verbatim
-    other = [h for h in holders if not (h.startswith("captures" + os.sep + "cap_")
-                                        and h.endswith(".pcap"))]
-    assert not other, f"payload bytes at rest outside the managed capture file: {other}"
-    assert holders, "expected the verbatim stored upload to contain the marker"
+    assert not holders, f"payload bytes at rest by default: {holders}"
+
+
+def test_raw_storage_is_an_explicit_opt_in(client, upload_capture, tmp_path):
+    import spectra.api.app as app_module
+    engine = app_module.engine
+    cfg = engine.capture_resources.config
+    assert cfg.store_raw_captures is False                # the default
+    cfg.store_raw_captures = True
+    try:
+        pcap = _marked_pcap(str(tmp_path / "raw.pcap"))
+        cap = upload_capture(client, pcap, filename="raw-optin.pcap")
+        path = engine.capture_resources.storage.path_for(cap["stored_name"])
+        assert MARKER in open(path, "rb").read(), "opt-in should keep the verbatim upload"
+        client.delete(f"/api/captures/{cap['capture_id']}")
+    finally:
+        cfg.store_raw_captures = False

@@ -148,6 +148,8 @@ class CaptureResourceService:
                     f"capture {existing['id']}",
                     int(existing["id"]),
                 )
+            if not self.config.store_raw_captures:
+                staged = self.storage.sanitize(staged)    # payload never reaches disk (fails closed)
             capture_id = self.store.insert_capture_resource(
                 original_name=name,
                 stored_name=staged.stored_name,

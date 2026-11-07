@@ -171,18 +171,21 @@ upload through (`capture/storage.py`):
    `DELETE` removes row + file and is refused while the capture is running.
 8. **Read path** — every scapy read is clamped to the file's own size, so a
    crafted record length cannot trigger a multi-gigabyte allocation.
-9. **At rest, uploads are verbatim.** The managed store keeps the uploaded
-   file byte-for-byte, so if the capture contains payload (ciphertext, or
-   plaintext for unencrypted protocols) those bytes sit in
-   `captures/cap_<uuid>.pcap`. No route returns them and Spectra's own derived
-   data (database, audit log, API responses, logs) carries none -
-   `tests/test_metadata_only_probe.py` checks exactly that and pins this single
-   exception. Protect `SPECTRA_DATA_DIR` like the evidence it is (directory
-   permissions, disk encryption, retention via `SPECTRA_CAPTURE_RETENTION_DAYS`
-   - which now removes the stored file together with a finished capture's row;
-   an upload that is never processed is exempt, see `docs/retention.md`);
-   deleting a capture removes the file. Stripping payload on ingest is an open
-   design option (HANDOFF_FINDINGS.md, Phase 10).
+9. **At rest, uploads are rewritten to metadata only (default).** On import the file is rewritten
+   (`spectra/capture/sanitize.py`, owner decision of 2026-11-07): every packet keeps its headers, timestamp,
+   original length and the exact payload *length*, but payload bytes are zeroed except TLS record headers,
+   TLS handshake records and QUIC Initial packets - the only bytes Spectra's parsers read. Application data,
+   plaintext protocols (HTTP, SMTP, DNS ...) and anything that does not parse as TLS are zeroed ("unsure means
+   zeros"); a rewrite error rejects the upload instead of keeping the raw copy. The stored file is a classic pcap
+   whose checksums no longer match the zeroed packets (Spectra does not check them). Duplicate detection still
+   hashes the *original* upload. Features derived from sizes, counts, timing and TLS/QUIC handshakes are unchanged
+   (`tests/test_capture_sanitize.py` compares feature matrices before and after); anything that needs the dropped
+   bytes (for example re-running a different parser over application data) is gone. **Opt-out:**
+   `SPECTRA_STORE_RAW_CAPTURES=1` keeps the verbatim upload, which then stores whatever payload the capture holds in
+   `captures/cap_<uuid>.pcap`; protect `SPECTRA_DATA_DIR` accordingly (permissions, disk encryption, retention via
+   `SPECTRA_CAPTURE_RETENTION_DAYS`). `tests/test_metadata_only_probe.py` checks that by default the marker is nowhere
+   under the data directory and that raw storage is an explicit opt-in. Limits: captures stored before this change are
+   not rewritten; the TLS framing tracker assumes in-order segments.
 
 ## 5. Model & sidecar artifact integrity
 

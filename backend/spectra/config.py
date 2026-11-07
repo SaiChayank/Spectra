@@ -179,6 +179,10 @@ class Config:
     # empty = off.  Must be at least 32 characters when set.
     metrics_token: str = ""
     session_cookie_secure: bool = False   # set True only behind TLS
+    # Uploaded captures are rewritten on import so only headers, lengths and TLS handshake /
+    # QUIC Initial bytes remain (spectra.capture.sanitize).  True keeps the verbatim upload,
+    # which stores application payload at rest - opt-in only.
+    store_raw_captures: bool = False
 
     # service
     api_host: str = "127.0.0.1"
