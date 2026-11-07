@@ -41,16 +41,33 @@ class _SizeBoundedFile:
     contain, so their behaviour is unchanged.
     """
 
+    #: Largest read scapy makes where an *empty* result can still be a clean end of
+    #: file: a classic-pcap global header is 24 bytes, a record header 16 and a
+    #: PCAPNG block prefix 4+4.  An empty result to any bigger request is a record
+    #: body that is missing.
+    _HEADER_READ_MAX = 24
+
     def __init__(self, fh: IO[bytes], bound: int) -> None:
         # Stored in __dict__ (not attributes) so __getattr__ - which delegates
         # everything else to the wrapped file - can never recurse mid-init.
         self.__dict__["_fh"] = fh
         self.__dict__["_bound"] = int(bound)
+        self.__dict__["truncated"] = False
 
     def read(self, n: int = -1) -> bytes:
         if n is None or n < 0:
             return self._fh.read()            # read to EOF: bounded by itself
-        return self._fh.read(min(int(n), self._bound))
+        data = self._fh.read(min(int(n), self._bound))
+        # Truncation detector.  scapy >= 2.8 turns a short read into EOFError, which
+        # its iterator treats as a normal end of file, so a cut-off capture would be
+        # analysed as if complete.  A regular or gzip file returns exactly what was
+        # asked for unless it ends, so a partial result means the file ended inside a
+        # header or record; an empty result is a clean end only for a header-sized
+        # request (see _HEADER_READ_MAX).  Residual hole: a file cut right after a
+        # block prefix whose body is <= 24 bytes looks like a clean end.
+        if len(data) < int(n) and (data or int(n) > self._HEADER_READ_MAX):
+            self.__dict__["truncated"] = True
+        return data
 
     def read1(self, n: int = -1) -> bytes:
         return self.read(n)
@@ -138,6 +155,10 @@ class PcapFileSource(CaptureSource):
                 raise
             except Exception as exc:  # noqa: BLE001
                 raise failure(exc) from exc
+            if stream.truncated:
+                raise failure(EOFError(
+                    "the file ends inside a record (truncated capture); "
+                    "packets before the cut were read, the rest is missing"))
         finally:
             if reader is not None:
                 reader.close()

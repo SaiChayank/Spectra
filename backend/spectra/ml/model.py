@@ -117,8 +117,11 @@ class SpectraDetector:
         ``decision_path_lengths[leaf] + avg_path_lengths[leaf] - 1`` over the
         forest, so we pre-convert the tree node arrays to Python lists once and
         walk them directly. ``tests/test_model.py::test_fast_raw_matches_sklearn``
-        asserts bit-identical output; any environment where the prerequisites
-        are missing falls back to sklearn's decision_function.
+        asserts the same value to float rounding (relative 1e-12; the summation
+        order of sklearn's numpy reduction is CPU-dependent, so bit equality holds
+        on some machines only) and the neighbouring tests assert identical flags and
+        scores; any environment where the prerequisites are missing falls back to
+        sklearn's decision_function.
         """
         try:
             from sklearn.ensemble._iforest import _average_path_length
