@@ -27,3 +27,20 @@ ROC-AUC 0.71 [0.56, 0.82]. Today that value only feeds a bio "danger signal" and
 ## Risks
 Ten positive pairs is a tiny sample; jittered beacons (the technique designed to defeat this) will evade it; CDN and telemetry traffic is
 periodic. The result may be "useful as a ranking aid, not as a detector", and the report must say so if so.
+
+## Protocol as run (written 2026-11-07 BEFORE the first evaluation run; code: `backend/scripts/bench_beacon.py`)
+* **Detector, fixed before any result:** pair = (initiating host, destination IP); scored with at least 8 flows in the trailing 64-flow
+  window and a median start gap of at least 1 s; score = mean of (1 - cv of gaps, 1 - min(1, MAD/median of gaps), 1 - min(1, cv of flow
+  bytes)). Equal weights, nothing fitted. A pair "alerts" the first time any trailing window scores >= the threshold (same code as the
+  product's streaming tracker; the script cross-checks this).
+* **Threshold:** the 0.99 quantile of the scorable *benign* pair scores of the CIC-2018 calibration captures (every even-indexed
+  non-victim capture of the Bot day, sorted by file name). **No positive label of any dataset is used to choose it.** The odd-indexed
+  non-victim captures are the CIC-2018 test negatives; the ten victim-to-C2 pairs are the CIC-2018 positives.
+* **Other datasets use that threshold unchanged:** CTU (all pairs of the five botnet captures vs all pairs of the six CTU-Normal captures;
+  pcap-level labels) and HIKARI (pair label = majority of its 4-tuple-labelled flows, benign needs zero attack flows; mixed pairs dropped
+  and counted).
+* **Reported:** ROC-AUC / PR-AUC / recall at 1 % and 0.1 % false-alert rate on scorable pairs with 95 % bootstrap intervals (1000 resamples,
+  seed 1337); recall and false-alert rate at the fixed threshold, both over scorable pairs and over all pairs (a positive pair with too
+  few flows to score counts as missed in the "all pairs" view); per-component AUC (reporting only); the benign pairs that alert; a
+  synthetic jitter sweep (labelled synthetic).
+* **Not run here:** the owner's own-network baseline (task 12 is a human task); the nightly job (not added - see the report).
