@@ -1,0 +1,49 @@
+{
+  "machine": {
+    "cpu": "12th Gen Intel(R) Core(TM) i5-12450HX",
+    "cpus": 12,
+    "kernel": "7.2.15-1-omarchy",
+    "python": "3.14.8",
+    "commit": "228a85c"
+  },
+  "runs": [
+    {
+      "file": "ctu_normal--2017-05-01_normal.pcap",
+      "bytes": 143630116,
+      "flows": 11923,
+      "packets_in_flows": 261078,
+      "truncated_by_budget": false,
+      "wall_s": 46.58,
+      "cpu_s": 46.26,
+      "parse_only": {
+        "wall_s": 37.81,
+        "cpu_s": 37.53,
+        "packets_per_s": 6905,
+        "flows_per_s": 315
+      },
+      "packets_per_s": 5605,
+      "flows_per_s": 256,
+      "mb_per_s": 3.08,
+      "peak_rss_mb_so_far": 209
+    },
+    {
+      "file": "Monday_2022-04-11_0622_BRUTEFORCE_XML_150s.pcap",
+      "bytes": 270859896,
+      "flows": 20350,
+      "packets_in_flows": 208967,
+      "truncated_by_budget": false,
+      "wall_s": 47.7,
+      "cpu_s": 47.34,
+      "parse_only": {
+        "wall_s": 31.99,
+        "cpu_s": 31.7,
+        "packets_per_s": 6532,
+        "flows_per_s": 636
+      },
+      "packets_per_s": 4381,
+      "flows_per_s": 427,
+      "mb_per_s": 5.68,
+      "peak_rss_mb_so_far": 215
+    }
+  ]
+}

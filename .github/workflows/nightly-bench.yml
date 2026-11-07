@@ -1,0 +1,35 @@
+name: nightly-bench
+# Small fixed real-capture benchmark (CTU-Normal-26/28 + CTU-13 s2, ~290 MB, SHA-256 pinned in the script).
+# Fails when parsing, features or scoring move past the tolerances in ci/nightly_thresholds.json.
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv venv .venv && uv pip install --require-hashes -r backend/requirements.lock && uv pip install -e backend --no-deps
+      - uses: actions/cache@v4
+        id: cache
+        with:
+          path: bench-data
+          key: ctu-nightly-v1
+      - name: fetch captures (Stratosphere Lab, CTU Prague)
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p bench-data && cd bench-data
+          curl -fL --retry 4 -O https://mcfp.felk.cvut.cz/publicDatasets/CTU-Normal-26/2017-04-28_normal.pcap
+          curl -fL --retry 4 -O https://mcfp.felk.cvut.cz/publicDatasets/CTU-Normal-28/2017-05-01_normal.pcap
+          curl -fL --retry 4 -O https://mcfp.felk.cvut.cz/publicDatasets/CTU-Malware-Capture-Botnet-43/botnet-capture-20110811-neris.pcap
+      - run: cd backend && SPECTRA_DATA_DIR=$(mktemp -d) ../.venv/bin/python scripts/bench_nightly.py --data ../bench-data --thresholds ../ci/nightly_thresholds.json --write-measured ../nightly-measured.json
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-measured
+          path: nightly-measured.json

@@ -188,8 +188,7 @@ mistake (they are not Bot victims) and appear only as negatives.
 | `Wednesday-14-02-2018__capWIN-J6GMIG1DQE5-172.31.67.109` | 552.7 MB | `e3f9071170d31ee3b2275c21f6d649efa0a46b1e18ad9c3f082d7811527cc07c` |
 
 **Baselines fetched at run time:** Suricata 7.0.8 image (`jasonish/suricata:7.0.8`) with ET Open rules from `suricata-update` on
-2026-11-07 (69,342 rules, 53,373 enabled); Zeek 7.0.5 (`zeek/zeek:7.0.5`); abuse.ch SSLBL JA3 list (CC0, 16 entries, SHA-256
-prefix `37fcee5a0845b1f7`). A third-party Zeek JA3 package was NOT installed (blocked by the safety classifier).
+2026-11-07 (69,342 rules, 53,373 enabled); Zeek 7.0.5 (`zeek/zeek:7.0.5`); abuse.ch SSLBL JA3 list (CC0; 97 fingerprints parsed, SHA-256 prefix `6974182489b6e5f5`; the first download attempt on 2026-11-07 returned an HTTP 503 error page, which this file originally recorded wrongly as a 16-entry list). A third-party Zeek JA3 package was NOT installed (blocked by the safety classifier).
 
 ## 6. Results
 

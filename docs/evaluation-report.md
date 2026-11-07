@@ -117,7 +117,7 @@ Per botnet capture ROC-AUC vs the benign test: s1 0.635, s2 0.826, rbot 0.767, f
 | Suricata + ET Open, **ET rules only** (no `SURICATA …` engine/decoder events, no `ET INFO`) | 0.10% [0.06%, 0.15%] (20) | 0.17% [0.14%, 0.20%] (152) |
 | Stock Zeek notices | 0 | 0 |
 
-The "all alerts" row includes Suricata engine events (for example "invalid checksum", a capture artefact) and informational rules, which say nothing about threats; the "ET rules only" row is the fair signature-IDS reference. **Suricata detects essentially none of these botnet flows** (0.17%), and stock Zeek is not an IDS (zero notices is expected, not a tuned-Zeek result). The JA3-list reference ("Zeek + JA3") was **not run**: installing the third-party Zeek JA3 package was blocked, and the abuse.ch SSLBL list fetched (16 entries, frozen since 2021) is tiny.
+The "all alerts" row includes Suricata engine events (for example "invalid checksum", a capture artefact) and informational rules, which say nothing about threats; the "ET rules only" row is the fair signature-IDS reference. **Suricata detects essentially none of these botnet flows** (0.17%), and stock Zeek is not an IDS (zero notices is expected, not a tuned-Zeek result). The Zeek JA3 reference was not run as written (installing the third-party Zeek JA3 package was blocked); the fingerprint-list reference was measured with Spectra's own JA3 instead, see §13.
 
 **Supervised upper bound** (RandomForest on the same 39 features, trained **with** labels on the benign train slice vs the other four botnet captures, tested on the held-out one): ROC-AUC 0.91 (s1), 0.94 (s2), 0.97 (rbot), 0.98 (fast-flux), 0.93 (botnet2); recall at 1% FPR 0.58 / 0.68 / 0.81 / 0.79 / 0.07. Because positives are pcap-level and the environments differ, this number mostly shows how separable the capture environments are; it is an upper bound on the headroom of these features, not a competitor.
 
@@ -160,7 +160,39 @@ Per category (ROC-AUC vs all benign): Bruteforce 0.963, Bruteforce-XML 0.966, **
 
 **Caveats.** Positives are only the documented C2-address flows; other Bot-related flows are not labelled and not scored. Negatives are all flows of non-victim hosts, assumed benign because the schedule lists no attack on them, which is not an audit of their traffic. Same AWS lab for train and test; one botnet on ten hosts.
 
-## 13. Summary of what Phase B shows so far
+## 13. Gate B remainder: cross-dataset, ablations, adversarial run, throughput, fingerprint list
+
+Raw: `docs/evidence/2026-11-07/bench/gateb.json`, `throughput.json`; script `backend/scripts/bench_gateb.py`. To keep the run tractable the score metrics here use at most 20,000 flows per class (fixed-seed subsample) and 300 bootstrap resamples, unlike §10-§12 (full sets, 1000 resamples); the ROC-AUC values are therefore within sampling noise of the earlier ones, not identical.
+
+**Cross-dataset generalisation** (train on the row's benign slice; each cell = benign flag rate at that model's default threshold / ROC-AUC of the target's attacks vs the target's benign flows):
+
+| trained on ↓ / tested on → | CTU | HIKARI | CIC-2018 |
+|---|---|---|---|
+| CTU-Normal | 4.1% / 0.75 | 1.8% / 0.54 | 4.0% / 0.59 |
+| HIKARI | 15.4% / 0.61 | 1.9% / 0.62 | 15.8% / 0.25 |
+| CIC-2018 | 2.3% / 0.67 | 0.8% / 0.48 | 1.0% / 0.19 |
+
+This is the README's "baseline matching" warning, measured. Moving a HIKARI-trained model to CTU or CIC-2018 traffic raises benign false flags from about 2% to about 15-16%, roughly eight-fold; CTU-trained and CIC-trained models stay at 1-4% on the other networks but then detect little anywhere (the CTU-trained model flags 16% of HIKARI attack flows but only 0% of CIC-2018 Bot flows). The in-network cells repeat the §10-§12 results (CTU 0.75, HIKARI 0.62, CIC-2018 0.19).
+
+**Ablations** (with / without 1000 synthetic benign flows at train time, as `spectra train --augment 1000`):
+
+| dataset | ROC-AUC | benign flag rate | attack flag rate |
+|---|---|---|---|
+| CTU | 0.746 → 0.761 | 4.1% → 3.8% | 2.8% → 2.7% |
+| HIKARI | 0.617 → 0.616 | 1.9% → 2.0% | 0.4% → 0.4% |
+| CIC-2018 | 0.191 → 0.195 | 1.0% → 1.0% | 0.0% → 0.0% |
+
+9C (augmentation) changes nothing measurable on real data (all differences are small compared with the intervals in §10-§12). **9D (beaconing):** per host-pair gap regularity (`modules.corr.graph.cadence_stats`) on the CIC-2018 Bot victims: the ten C2 pairs have median regularity 0.3468 against 0.0 for the other 1572 pairs; ROC-AUC 0.71 [0.56, 0.82] at pair level. That is the one signal in this report that points towards the Bot traffic, but with 10 positive pairs and a lower bound barely above chance it is weak evidence, and it is a cadence statistic, not a detector verdict. **9H (JA4+): not applicable**: JA4 values are not among the model's 39 features (they feed `spectra intel` matching only), so there is no scoring effect to ablate.
+
+**9B adversarial robustness on real flows** (greedy feature-perturbation attack on flows the detector flags, up to 300 sampled): CTU 555 of the sampled positives flagged, evasion rate **100%** (300 of 300), HIKARI 43 flagged, evasion rate **100%**; CIC-2018: nothing flagged, so nothing to evade (the detector already misses every Bot flow). The median relative change needed to evade was tiny (0.0% and 2.5% of the feature vector). This repeats the synthetic result (§5): evasion is easy.
+
+**Fingerprint-list reference ("Zeek + JA3" substitute).** Spectra's own JA3 of every TLS-handshake flow in the CTU, HIKARI and CIC captures against the abuse.ch SSLBL JA3 blacklist (97 entries parsed; fetched 2026-11-07, the first download attempt returned an HTTP 503 page and was redone): **0 matches** among 14,153 flows with a JA3 (of 229,181 flows in the files processed). The list has been frozen since 2021, and most botnet flows here are not TLS, so this reference neither detects nor falsifies anything. It is Spectra's JA3, not Zeek's.
+
+**Offline throughput** (`backend/scripts/bench_throughput.py`; single process, no NIC; Intel i5-12450HX, 12 threads, Python 3.14; each file read twice): parse-only 6,905 and 6,532 packets/s (ctu_normal--2017-05-01_normal.pcap, Monday_2022-04-11_0622_BRUTEFORCE_XML_150s.pcap); parse + features + per-flow scoring 5,605 and 4,381 packets/s (256 and 427 flows/s); peak RSS about 215 MB. "Packets" counts packets assigned to flows. **One core digests roughly 4-7 thousand packets per second from disk; a 50 kpps link would not fit one core.** This is not the live-capture sizing (veth + tcpreplay, drop counters, p99 latency, an ARM box): `backend/scripts/bench_perf.sh` is written for that and **has not been run**; it needs `sudo`, which only the owner can supply.
+
+**Nightly regression job.** `.github/workflows/nightly-bench.yml` + `backend/scripts/bench_nightly.py` + `ci/nightly_thresholds.json`: trains on CTU-Normal-26, tests CTU-Normal-28 vs the CTU-13 s2 botnet capture (SHA-256 pinned, about 290 MB, cached), and fails on moved flow counts or wrong-direction metric changes. Run locally twice (passes), and with a threshold set to 0.99 it fails with exit 1. **It has not run in GitHub Actions yet**; thresholds are generous (another CPU and Python) and should be tightened after a few CI runs. Note what the baseline run shows: trained on a single 2017-04-28 capture the detector flags 64% of the botnet flows (benign 8.5%), against 2.9% when trained on four captures. The result is very sensitive to the training slice.
+
+## 14. Summary of what Phase B shows so far
 
 Three real public datasets were evaluated with a benign-only training slice from an earlier time and the same signature-IDS baseline (Suricata 7.0.8, ET Open, ET rules only): CTU-Normal vs CTU botnet captures (§10), HIKARI-2021/2022 (§11) and CSE-CIC-IDS2018 Bot day (§12). Across them:
 
@@ -170,4 +202,4 @@ Three real public datasets were evaluated with a benign-only training slice from
 * Suricata with ET Open (ET rules only) detects essentially nothing either: 0.17% of CTU botnet flows, 0 of 10,664 HIKARI attack flows, 0 of 98,700 CIC-2018 Bot flows. This comparison is weak (rule/era mismatch, lab-generated attacks, stock Zeek only), so it does not show that Spectra is better than a tuned IDS.
 * A supervised RandomForest on the same features separates the classes well on in-distribution splits (CIC-2018 1.0, CTU 0.91-0.98), so the features hold signal that the unsupervised scoring does not use. On unseen attack types (HIKARI) it did not generalise.
 
-**Gate B status: the dataset count (3 Tier-1 datasets) is met in the narrow sense; the gate as written is not met.** Missing: ablations, the real-data adversarial run, performance sizing, cross-dataset generalisation, Zeek+JA3 reference, the nightly CI job, and an owner's-own-network benign baseline. Labels are weak in all three (pcap-level, 4-tuple join, schedule windows). **No claim of detection performance on real networks follows from these runs, and the numbers argue against shipping the default threshold as a detector for these attack types.**
+**Gate B status.** Done: three Tier-1 datasets with a signature-IDS baseline (Suricata, ET rules only) and a supervised upper bound; bootstrap intervals, recall at 1% and 0.1% FPR, PR-AUC; cross-dataset generalisation; ablations (9C measured, 9D measured at pair level, 9H not applicable); the 9B evasion run on real flows; offline throughput; a nightly regression job (written, verified locally, not yet run in CI). **Not done, and why:** live-capture sizing (needs `sudo`; script written, not run); the Zeek + JA3 reference as specified (third-party package install blocked; a Spectra-JA3 substitute was run); the owner's own-network benign capture (human task); an ARM sizing box; Suricata/Zeek *tuned* baselines. Labels are weak in all three datasets (pcap-level, 4-tuple join, schedule windows). **No claim of detection performance on real networks follows from these runs, and the numbers argue against shipping the default threshold as a detector for these attack types.** Gate B as written ("every published number traceable to a JSON file and a hash") holds for the numbers in §10-§13, with the open items above.

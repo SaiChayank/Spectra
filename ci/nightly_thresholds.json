@@ -1,0 +1,10 @@
+{
+  "comment": "Measured locally 2026-11-07 (Python 3.14 venv, i5-12450HX). Regression guard only, not a quality claim. Tolerances are generous because CI uses another CPU/Python; tighten after a few CI runs (artifact nightly-measured.json).",
+  "counts": {"flows_train": 16772, "flows_benign": 11923, "flows_botnet": 22175},
+  "metrics": {
+    "benign_flag_rate": {"measured": 0.0846, "tolerance": 0.03, "fail_if": "higher"},
+    "botnet_flag_rate": {"measured": 0.6449, "tolerance": 0.15, "fail_if": "lower"},
+    "roc_auc": {"measured": 0.8223, "tolerance": 0.05, "fail_if": "lower"},
+    "null_roc_auc": {"measured": 0.4857, "tolerance": 0.06, "fail_if": "either"}
+  }
+}
