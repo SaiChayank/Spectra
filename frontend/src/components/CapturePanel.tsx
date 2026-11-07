@@ -317,7 +317,14 @@ export default function CapturePanel({ status, canManage, onError, onNotice }: P
                     </td>
                     <td>{formatBytes(c.size_bytes)}</td>
                     <td>{c.flows}</td>
-                    <td>{c.detections}</td>
+                    <td title={c.warnings?.join(" ") || undefined}>
+                      {c.detections}
+                      {c.unscored_flows ? (
+                        <span className="badge mid" style={{ marginLeft: 6 }}>
+                          {c.unscored_flows} unscored
+                        </span>
+                      ) : null}
+                    </td>
                     <td>
                       {c.imported_at
                         ? new Date(c.imported_at * 1000).toLocaleString()

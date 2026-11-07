@@ -271,6 +271,15 @@ class CaptureResourceService:
         """
         active = bool(self._capture.running
                       and self._capture.session.capture_id == row["id"])
+        unscored = 0
+        if (row.get("flows") or 0) and self.store is not None:
+            try:
+                unscored = self.store.capture_unscored_flows(row["id"])
+            except Exception:  # noqa: BLE001 - a count must never break the listing
+                log.warning("could not count unscored flows for capture %s", row.get("id"))
+        warnings = ([f"model not trained: {unscored} of {row['flows']} flows were parsed and stored but not scored, "
+                     "so this capture can show no detections - train a model and re-process it"]
+                    if unscored else [])
         return {
             "capture_id": row["id"],
             "original_name": row.get("original_name"),
@@ -287,6 +296,8 @@ class CaptureResourceService:
             "detections": row["detections"] or 0,
             "error": row["error"],
             "running": active,
+            "unscored_flows": unscored,
+            "warnings": warnings,
         }
 
     def _emit(self, action: str, capture_id: int,

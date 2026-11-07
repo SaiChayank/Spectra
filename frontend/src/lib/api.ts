@@ -182,6 +182,9 @@ export interface CaptureResource {
   detections: number;
   error: string | null;
   running: boolean;
+  /** Flows stored with no score because no model was trained when they were processed. */
+  unscored_flows?: number;
+  warnings?: string[];
 }
 
 /** 409 on import: identical content already stored under this id. */

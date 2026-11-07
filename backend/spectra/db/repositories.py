@@ -64,6 +64,13 @@ class FlowRepository:
     def count(self) -> int:
         return int(self._db.query("SELECT COUNT(*) AS n FROM flows")[0]["n"])
 
+    def unscored_count(self, capture_id: int) -> int:
+        """Flows of one capture stored with no score (no trained model scored them)."""
+        self._buffer.flush_if_pending()
+        return int(self._db.query(
+            "SELECT COUNT(*) AS n FROM flows WHERE capture_id = ? AND score IS NULL",
+            (capture_id,))[0]["n"])
+
     def newest_ts(self) -> float | None:
         """Newest persisted flow time (staged rows are flushed first)."""
         self._buffer.flush_if_pending()

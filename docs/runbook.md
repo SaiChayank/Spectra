@@ -58,8 +58,9 @@ and a size-limited container (`disk-full-drill.txt`). What an operator actually 
   yourself; retention (`docs/retention.md`) bounds growth.
 * **Model artifact corrupt** - the server starts, but the damaged model is **not** loaded and there is **no fallback to an
   older model** (the registry is authoritative). `GET /api/model` shows `trained: false`, `spectra_model_trained` is 0 (alert
-  `SpectraModelUntrained`). **Captures processed in that state complete with 0 detections and no error** - flows go unscored
-  silently, so alert on the gauge. Fix: retrain from a baseline capture (verified), or restore a backup.
+  `SpectraModelUntrained`). Captures processed in that state still complete with 0 detections, but the capture resource now reports
+  `unscored_flows` and a `warnings` entry, and the UI shows an "unscored" badge (added after the drill; covered by
+  `tests/test_unscored_captures.py`, not re-run in the drill); alert on the gauge as well. Fix: retrain from a baseline capture (verified), or restore a backup.
 * **Login storm** - after 10 bad attempts the pair gets HTTP 429 with `Retry-After` (observed 60 s); metrics stay behind auth.
   A restart clears throttle state.
 * **Upgrade / rollback** - back up with keys; stop; install the new wheel; start (migrations run at start); check

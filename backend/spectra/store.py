@@ -188,6 +188,9 @@ class Store:
 
     # -- flows / detections ---------------------------------------------------
 
+    def capture_unscored_flows(self, capture_id: int) -> int:
+        return self._flows.unscored_count(capture_id)
+
     def save_flow(self, record: dict, score: float | None, anomaly: bool,
                   reasons: list[dict] | None = None,
                   capture_id: int | None = None) -> int:
