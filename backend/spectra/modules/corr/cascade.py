@@ -14,12 +14,20 @@ from .graph import NODE_DOMAIN, NODE_HOST, NODE_IP, NODE_SECTOR, CorrelationGrap
 MAX_DEPTH = 4
 
 
-def cascade(graph: CorrelationGraph, start: str, max_depth: int = MAX_DEPTH) -> dict:
+def cascade(graph: CorrelationGraph, start: str, max_depth: int = MAX_DEPTH,
+            window_s: float | None = None) -> dict:
+    """Blast radius from ``start``.
+
+    ``window_s`` limits traversal to edges last seen within that many seconds
+    of the newest contact (None = all history). Node counters (flows,
+    detections, bytes) stay cumulative; only which nodes are reachable changes.
+    """
     if start not in graph.nodes:
-        return {"start": start, "found": False, "score": 0,
+        return {"start": start, "found": False, "score": 0, "window_s": window_s,
                 "affected": {}, "kill_chain": [], "reasons": []}
 
-    hops = graph.reachable(start, max_depth=max_depth)
+    cutoff = graph.cutoff(window_s)
+    hops = graph.reachable(start, max_depth=max_depth, window_s=window_s)
     affected = {NODE_HOST: [], NODE_IP: [], NODE_DOMAIN: [], NODE_SECTOR: []}
     detections = 0
     total_bytes = 0
@@ -64,6 +72,7 @@ def cascade(graph: CorrelationGraph, start: str, max_depth: int = MAX_DEPTH) -> 
     return {
         "start": start,
         "found": True,
+        "window_s": window_s,
         "score": score,
         "level": level,
         "max_depth_used": max_depth_used,
@@ -72,13 +81,13 @@ def cascade(graph: CorrelationGraph, start: str, max_depth: int = MAX_DEPTH) -> 
         "sectors": sorted(sectors),
         "detections": detections,
         "bytes_involved": total_bytes,
-        "kill_chain": _kill_chain(graph, start, hops),
+        "kill_chain": _kill_chain(graph, start, hops, cutoff),
         "reasons": reasons,
     }
 
 
 def _kill_chain(graph: CorrelationGraph, start: str,
-                hops: dict[str, int]) -> list[dict]:
+                hops: dict[str, int], cutoff: float | None = None) -> list[dict]:
     """Reconstruct a representative host -> ip -> domain -> sector path."""
     node = graph.nodes[start]
     chain = [{"step": 1, "node": start, "type": node["type"],
@@ -90,12 +99,14 @@ def _kill_chain(graph: CorrelationGraph, start: str,
         candidates = [
             (depth, nxt) for nxt, depth in hops.items()
             if nxt not in visited and nxt in graph.edges.get(current, {})
+            and graph.edge_active(current, nxt, cutoff)
         ]
         if not candidates:
             # try one hop outward anywhere (graph direction may be reversed)
             candidates = [
                 (depth, nxt) for nxt, depth in hops.items()
                 if nxt not in visited and current in graph.edges.get(nxt, {})
+                and graph.edge_active(nxt, current, cutoff)
             ]
             if not candidates:
                 break

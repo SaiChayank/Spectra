@@ -62,8 +62,9 @@ class CorrelationService:
             "edges": self.graph.edges_list(limit=min(limit * 4, 5000)),
         }
 
-    def cascade(self, node_id: str, max_depth: int = 4) -> dict:
-        return cascade(self.graph, node_id, max_depth=max_depth)
+    def cascade(self, node_id: str, max_depth: int = 4,
+                window_s: float | None = None) -> dict:
+        return cascade(self.graph, node_id, max_depth=max_depth, window_s=window_s)
 
     def summary(self) -> dict:
         return self.graph.summary()
@@ -71,5 +72,5 @@ class CorrelationService:
     def neighbors(self, node_id: str) -> dict:
         return self.graph.neighbors(node_id)
 
-    def shortest_path(self, src: str, dst: str):
-        return self.graph.shortest_path(src, dst)
+    def shortest_path(self, src: str, dst: str, window_s: float | None = None):
+        return self.graph.shortest_path(src, dst, window_s=window_s)

@@ -203,3 +203,91 @@ def test_engine_graph_and_api(tmp_path):
 
     res = client.get("/api/graph/path?src=host:10.0.0.5&dst=sector:zzz")
     assert res.status_code == 404
+
+
+# ---- 9A: time-windowed edges (FR-2.2) --------------------------------------
+
+DAY = 86_400.0
+NOW = 1_700_000_000.0
+
+
+def _two_sector_graph():
+    """One host: fintech contact 3 days ago, healthcare contact just now."""
+    g = CorrelationGraph()
+    g.observe({**rec(sni="pay.bank.example", dst="10.1.0.10:443", ts=NOW - 3 * DAY),
+               "id": 1})
+    g.observe({**rec(sni="portal.hospital.example", dst="10.2.0.20:443", ts=NOW),
+               "id": 2})
+    return g
+
+
+def test_edges_carry_contact_window_and_flow_ids():
+    g = CorrelationGraph()
+    g.observe({**rec(ts=NOW - 2 * DAY), "id": 7})
+    g.observe({**rec(ts=NOW), "id": 9})
+    edge = next(e for e in g.edges_list()
+                if e["source"] == "host:10.0.0.5" and e["type"] == "talks_to")
+    assert edge["first_ts"] == NOW - 2 * DAY
+    assert edge["last_ts"] == NOW + 1
+    assert edge["last_ts"] - edge["first_ts"] > 2 * DAY      # multi-day, distinguishable
+    assert edge["flow_ids"] == [7, 9]
+
+
+def test_wide_window_links_two_sectors_narrow_does_not():
+    g = _two_sector_graph()
+    wide = cascade(g, "host:10.0.0.5", window_s=7 * DAY)
+    narrow = cascade(g, "host:10.0.0.5", window_s=3600)
+    unwindowed = cascade(g, "host:10.0.0.5")
+
+    assert set(wide["sectors"]) == {"fintech", "healthcare"}
+    assert set(narrow["sectors"]) == {"healthcare"}
+    assert set(unwindowed["sectors"]) == {"fintech", "healthcare"}  # default unchanged
+    assert wide["window_s"] == 7 * DAY and narrow["window_s"] == 3600
+    assert unwindowed["window_s"] is None
+    assert not any(r.startswith("cross-sector") for r in narrow["reasons"])
+    # the kill chain must not step over an out-of-window edge either
+    assert all("fintech" not in s["label"] for s in narrow["kill_chain"])
+
+
+def test_shortest_path_respects_window():
+    g = _two_sector_graph()
+    assert g.shortest_path("host:10.0.0.5", "sector:fintech") is not None
+    assert g.shortest_path("host:10.0.0.5", "sector:fintech", window_s=7 * DAY)
+    assert g.shortest_path("host:10.0.0.5", "sector:fintech", window_s=3600) is None
+
+
+def test_hydrate_reproduces_windows_from_stored_flows(tmp_path):
+    from spectra.store import Store
+
+    store = Store(str(tmp_path / "w.db"))
+    store.save_flow(rec(sni="pay.bank.example", dst="10.1.0.10:443", ts=NOW - 3 * DAY),
+                    score=None, anomaly=False)
+    store.save_flow(rec(sni="portal.hospital.example", dst="10.2.0.20:443", ts=NOW),
+                    score=None, anomaly=False)
+    g = CorrelationGraph()
+    g.hydrate(store)
+    store.close()
+    assert set(cascade(g, "host:10.0.0.5", window_s=3600)["sectors"]) == {"healthcare"}
+    edge = next(e for e in g.edges_list() if e["type"] == "talks_to")
+    assert edge["flow_ids"]                                   # stored row ids carried over
+
+
+def test_api_window_param(tmp_path):
+    import spectra.api.app as app_module
+
+    app_module.engine.graph = _two_sector_graph()
+    app_module.engine.correlation.graph = app_module.engine.graph
+    client = TestClient(app_module.app)
+
+    ok = client.get("/api/graph/cascade?id=host:10.0.0.5&window_s=3600")
+    assert ok.status_code == 200
+    assert ok.json()["window_s"] == 3600
+    assert ok.json()["sectors"] == ["healthcare"]
+    assert client.get("/api/graph/cascade?id=host:10.0.0.5").json()["window_s"] is None
+    for bad in ("0", "-5"):
+        assert client.get(f"/api/graph/cascade?id=host:10.0.0.5&window_s={bad}"
+                          ).status_code == 400
+        assert client.get(f"/api/graph/path?src=host:10.0.0.5&dst=sector:fintech"
+                          f"&window_s={bad}").status_code == 400
+    assert client.get("/api/graph/path?src=host:10.0.0.5&dst=sector:fintech"
+                      "&window_s=3600").status_code == 404
