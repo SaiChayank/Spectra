@@ -28,6 +28,7 @@ as ``SIMULATED``, never as a failure.
 
 from __future__ import annotations
 
+import bisect
 import math
 import threading
 import time
@@ -147,15 +148,37 @@ class LatencyReservoir:
     the ring so lifetime sample counts survive eviction.
     """
 
+    #: Prometheus histogram bucket upper bounds (ms), fine at the sub-millisecond
+    #: end where per-flow scoring and SQLite commits live.
+    BOUNDS_MS = (0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 25.0, 50.0, 100.0, 250.0, 1000.0)
+
     def __init__(self, capacity: int = 1024) -> None:
         self._samples: deque[float] = deque(maxlen=capacity)
         self._lock = threading.Lock()
         self.total = 0
+        # lifetime (not ring-bounded) histogram state: per-bucket counts + sum
+        self._bucket_counts = [0] * (len(self.BOUNDS_MS) + 1)
+        self._sum_ms = 0.0
 
     def observe(self, ms: float) -> None:
+        ms = max(0.0, float(ms))
         with self._lock:
-            self._samples.append(max(0.0, float(ms)))
+            self._samples.append(ms)
             self.total += 1
+            self._bucket_counts[bisect.bisect_left(self.BOUNDS_MS, ms)] += 1
+            self._sum_ms += ms
+
+    def histogram(self) -> dict:
+        """Cumulative Prometheus-style histogram since this reservoir was created."""
+        with self._lock:
+            counts = list(self._bucket_counts)
+            total_ms = self._sum_ms
+        running, cumulative = 0, []
+        for c in counts:
+            running += c
+            cumulative.append(running)
+        return {"bounds_ms": list(self.BOUNDS_MS), "cumulative": cumulative,
+                "sum_ms": total_ms, "count": running}
 
     def summary(self) -> dict:
         """p50/p95/mean/max over the ring plus the lifetime sample count."""

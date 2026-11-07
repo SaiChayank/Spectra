@@ -1,0 +1,53 @@
+# Example alert rules for Spectra. Written against the metric names the service
+# emits (see docs/monitoring.md). NOT validated by a Prometheus server or promtool
+# (neither was available when this was written): load them in a test instance first.
+groups:
+  - name: spectra
+    rules:
+      - alert: SpectraDown
+        expr: up{job="spectra"} == 0
+        for: 2m
+        labels: {severity: critical}
+        annotations: {summary: "Spectra is not answering scrapes"}
+
+      - alert: SpectraDroppingPackets
+        expr: increase(spectra_packet_queue_dropped_total[5m]) > 0
+        for: 1m
+        labels: {severity: warning}
+        annotations:
+          summary: "Capture is shedding packets"
+          description: "The packet queue is full: add CPU, narrow the capture filter or raise SPECTRA_PACKET_QUEUE_SIZE."
+
+      - alert: SpectraStreamOverload
+        expr: spectra_stream_overload == 1
+        for: 5m
+        labels: {severity: warning}
+        annotations: {summary: "Streaming pipeline has been overloaded for 5 minutes"}
+
+      - alert: SpectraInferenceSlow
+        expr: histogram_quantile(0.95, sum by (le) (rate(spectra_inference_duration_seconds_bucket[5m]))) > 0.05
+        for: 10m
+        labels: {severity: warning}
+        annotations: {summary: "p95 time to score one flow is above 50 ms"}
+
+      - alert: SpectraDatabaseErrors
+        expr: increase(spectra_db_errors_total[10m]) > 0
+        labels: {severity: critical}
+        annotations: {summary: "Database writes are failing", description: "See docs/runbook.md: database locked / disk full."}
+
+      - alert: SpectraComponentFailing
+        expr: delta(spectra_pipeline_failures[10m]) > 0
+        labels: {severity: warning}
+        annotations: {summary: "An optional pipeline component is raising errors ({{ $labels.component }})"}
+
+      - alert: SpectraDriftSignificant
+        expr: spectra_drift_level == 2
+        for: 15m
+        labels: {severity: warning}
+        annotations: {summary: "Input traffic has drifted significantly from the model's baseline", description: "Scores may be unreliable; consider retraining on a fresh benign baseline."}
+
+      - alert: SpectraModelUntrained
+        expr: spectra_model_trained == 0
+        for: 10m
+        labels: {severity: warning}
+        annotations: {summary: "No trained model is loaded"}

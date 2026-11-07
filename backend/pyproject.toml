@@ -21,7 +21,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest", "httpx", "ruff", "pip-audit"]
+dev = ["pytest", "httpx", "ruff", "pip-audit", "prometheus-client"]
 
 [project.scripts]
 spectra = "spectra.cli:main"

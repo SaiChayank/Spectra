@@ -98,13 +98,36 @@ class _HealthInputs(TypedDict):
     capture_error: str | None
 
 
+#: bio response names by level (modules.bio.danger.RESPONSES), repeated here so the
+#: metrics text stays stable even if that tuple is ever extended
+_BIO_RESPONSES = ("ignore", "monitor", "alert", "isolate")
+
+
+def _label(value) -> str:
+    """Escape a Prometheus label value (backslash, double quote, newline)."""
+    return str(value).replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
+
+
+def _histogram(name: str, help_text: str, hist: dict | None) -> list[str]:
+    """Prometheus histogram lines from a ``LatencyReservoir.histogram()`` dict."""
+    if not hist:
+        return []
+    lines = [f"# HELP {name} {help_text}", f"# TYPE {name} histogram"]
+    for bound_ms, cumulative in zip(hist["bounds_ms"], hist["cumulative"], strict=False):
+        lines.append(f'{name}_bucket{{le="{bound_ms / 1000.0:.9g}"}} {cumulative}')
+    lines.append(f'{name}_bucket{{le="+Inf"}} {hist["count"]}')
+    lines.append(f"{name}_sum {hist['sum_ms'] / 1000.0:.9g}")
+    lines.append(f"{name}_count {hist['count']}")
+    return lines
+
+
 class SystemService:
     """Read-only reporting over the shared status dict and detection buffers."""
 
     def __init__(self, status: dict, config: Config, store: Store | None,
                  model: ModelService, detection: DetectionService,
                  failures: FailureTracker, boot_ts: float | None = None,
-                 *, events=None, capability_provider=None) -> None:
+                 *, events=None, capability_provider=None, audit=None) -> None:
         self.status = status
         self.config = config
         self.store = store
@@ -116,6 +139,8 @@ class SystemService:
         self._events = events
         #: Engine-supplied live capability probes (module self-descriptions).
         self._capability_provider = capability_provider
+        #: AuditService (head sequence for the metrics scrape); optional
+        self._audit = audit
         # Health-report bookkeeping: windowed-delta baseline (the first
         # report establishes it, so "since the previous check" never counts
         # process-start history) and the last state per subsystem for
@@ -677,6 +702,8 @@ class SystemService:
                 write = {}
         ws = status.get("websocket") or {}
         lines = [
+            "# TYPE spectra_build_info gauge",
+            f'spectra_build_info{{version="{_label(__version__)}"}} 1',
             "# TYPE spectra_packets_total counter",
             f"spectra_packets_total {status['packets']}",
             "# TYPE spectra_flows_total counter",
@@ -723,8 +750,8 @@ class SystemService:
                 f"{prefix}_max_depth {stage.get('max_depth', 0)}",
                 f"# TYPE {prefix}_limit gauge",
                 f"{prefix}_limit {stage.get('limit', 0)}",
-                f"# TYPE {prefix}_dropped counter",
-                f"{prefix}_dropped {stage.get('dropped', 0)}",
+                f"# TYPE {prefix}_dropped_total counter",
+                f"{prefix}_dropped_total {stage.get('dropped', 0)}",
             ]
         lines += [
             "# TYPE spectra_packets_per_second gauge",
@@ -739,10 +766,10 @@ class SystemService:
             f"spectra_active_flows {stream.get('active_flows', 0)}",
             "# TYPE spectra_active_flows_max gauge",
             f"spectra_active_flows_max {stream.get('active_flows_max', 0)}",
-            "# TYPE spectra_flow_evictions counter",
-            f"spectra_flow_evictions {stream.get('flows_evicted', 0)}",
-            "# TYPE spectra_flows_dropped counter",
-            f"spectra_flows_dropped {stream.get('dropped_flows', 0)}",
+            "# TYPE spectra_flow_evictions_total counter",
+            f"spectra_flow_evictions_total {stream.get('flows_evicted', 0)}",
+            "# TYPE spectra_flows_dropped_total counter",
+            f"spectra_flows_dropped_total {stream.get('dropped_flows', 0)}",
             "# TYPE spectra_stream_overload gauge",
             f"spectra_stream_overload {1 if stream.get('overload') else 0}",
             # health-layer latencies: scoring p50/p95 + database write p95
@@ -754,19 +781,55 @@ class SystemService:
             f"{stream.get('inference_latency_p95_ms', 0.0)}",
             "# TYPE spectra_db_write_latency_p95_ms gauge",
             f"spectra_db_write_latency_p95_ms {write.get('write_p95_ms', 0.0)}",
-            "# TYPE spectra_db_errors counter",
-            f"spectra_db_errors {write.get('errors', 0)}",
+            "# TYPE spectra_db_errors_total counter",
+            f"spectra_db_errors_total {write.get('errors', 0)}",
             # event-websocket telemetry (connected clients, slow-client drops)
             "# TYPE spectra_websocket_clients gauge",
             f"spectra_websocket_clients {ws.get('clients', 0)}",
-            "# TYPE spectra_websocket_slow_client_drops counter",
-            f"spectra_websocket_slow_client_drops "
+            "# TYPE spectra_websocket_slow_client_drops_total counter",
+            f"spectra_websocket_slow_client_drops_total "
             f"{ws.get('slow_client_drops', 0)}",
             # optional-module failure counts (component -> n)
             "# TYPE spectra_pipeline_failures gauge",
         ]
+        lines.append("# TYPE spectra_flows_by_proto gauge")
         for proto, n in snap["protocols"].items():
-            lines.append(f'spectra_flows_by_proto{{proto="{proto}"}} {n}')
+            lines.append(f'spectra_flows_by_proto{{proto="{_label(proto)}"}} {n}')
         for component, n in sorted(status.get("failures", {}).items()):
-            lines.append(f'spectra_pipeline_failures{{component="{component}"}} {n}')
+            lines.append(f'spectra_pipeline_failures{{component="{_label(component)}"}} {n}')
+
+        # cumulative latency histograms (seconds, per Prometheus convention)
+        lines += _histogram("spectra_inference_duration_seconds",
+                            "Wall-clock cost of scoring one flow (current capture).",
+                            stream.get("inference_histogram"))
+        lines += _histogram("spectra_db_write_duration_seconds",
+                            "Wall-clock cost of one database write.",
+                            write.get("write_histogram"))
+
+        # drift: the cached numbers of the newest check - a scrape never recomputes
+        # drift (that would be expensive and could raise an alert), so the series
+        # are simply absent until a check has run
+        drift = self._model.drift_cache()
+        if drift:
+            lines.append("# TYPE spectra_drift_psi gauge")
+            for baseline, key in (("train", "psi_train"), ("recent", "psi_recent")):
+                if drift.get(key) is not None:
+                    lines.append(f'spectra_drift_psi{{baseline="{baseline}"}} {float(drift[key]):.6g}')
+            level = {"stable": 0, "moderate": 1, "significant": 2}.get(drift.get("level"))
+            if level is not None:
+                lines += ["# TYPE spectra_drift_level gauge", f"spectra_drift_level {level}"]
+
+        # bio layer: how many flows landed on each response level
+        bio = self._detection.bio
+        lines.append("# TYPE spectra_bio_assessments_total counter")
+        for level_no, response in enumerate(_BIO_RESPONSES):
+            lines.append('spectra_bio_assessments_total{response="%s"} %d'
+                         % (response, int(bio.level_hist.get(level_no, 0))))
+
+        if self._audit is not None:
+            try:
+                head = int(self._audit.head().get("seq", 0))
+                lines += ["# TYPE spectra_audit_head_seq gauge", f"spectra_audit_head_seq {head}"]
+            except Exception:  # noqa: BLE001 - metrics must never raise
+                pass
         return "\n".join(lines) + "\n"

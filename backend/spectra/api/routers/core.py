@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import PlainTextResponse, Response
 from pydantic import BaseModel, Field
 
 from ...capabilities import module_capabilities
@@ -110,6 +110,12 @@ def capabilities() -> dict:
 
 @router.get("/api/metrics", response_class=PlainTextResponse,
            dependencies=[Depends(require("read"))])
-def metrics() -> str:
-    """Prometheus text exposition format (text/plain; version 0.0.4)."""
-    return engine.system.metrics()
+def metrics() -> Response:
+    """Prometheus text exposition format 0.0.4.
+
+    Needs a session with ``read``; a scraper that cannot hold a 12-hour session
+    can instead present the optional ``SPECTRA_METRICS_TOKEN`` as a bearer token
+    (this route only - see :func:`spectra.api.security.auth_gate`).
+    """
+    return Response(content=engine.system.metrics(),
+                    media_type="text/plain; version=0.0.4")

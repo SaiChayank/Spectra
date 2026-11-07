@@ -411,13 +411,13 @@ def test_stream_telemetry_is_published_and_scrapable(tmp_path):
     assert engine.status["queue"]["packets_dropped"] == 0
 
     text = engine.system.metrics()
-    for name in ("spectra_packet_queue_depth", "spectra_packet_queue_dropped",
-                 "spectra_flow_queue_depth", "spectra_flow_queue_dropped",
-                 "spectra_publish_queue_depth", "spectra_publish_queue_dropped",
+    for name in ("spectra_packet_queue_depth", "spectra_packet_queue_dropped_total",
+                 "spectra_flow_queue_depth", "spectra_flow_queue_dropped_total",
+                 "spectra_publish_queue_depth", "spectra_publish_queue_dropped_total",
                  "spectra_packets_per_second", "spectra_flows_per_second",
                  "spectra_processing_lag_ms", "spectra_inference_latency_ms",
                  "spectra_active_flows", "spectra_active_flows_max",
-                 "spectra_flow_evictions", "spectra_flows_dropped",
+                 "spectra_flow_evictions_total", "spectra_flows_dropped_total",
                  "spectra_stream_overload"):
         assert f"{name} " in text, name
     for line in text.splitlines():

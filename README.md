@@ -33,6 +33,7 @@ Three target verticals: **Fintech · Healthcare · Smart City Infrastructure**.
 | [`docs/testing.md`](./docs/testing.md) | 776 tests · 156 acceptance checks · performance · live-capture validation |
 | [`docs/limitations.md`](./docs/limitations.md) | detection, classification, TEE/twin/edge, metadata-only analysis, operational caveats |
 | [`docs/readiness-report.md`](./docs/readiness-report.md) | final readiness report (completed / partial / future / known limitations) |
+| [`docs/monitoring.md`](./docs/monitoring.md) | Prometheus metrics, the optional scrape token, example alert rules |
 | [`docs/retention.md`](./docs/retention.md) | data retention and the `local` / `hardened` deployment profiles (approved numbers, known limits) |
 | [`docs/evaluation-report.md`](./docs/evaluation-report.md) · [`docs/model-card.md`](./docs/model-card.md) | synthetic-only model evaluation with bootstrap intervals (real-data runs NOT RUN) and the detector model card |
 | [`docs/sast-report.md`](./docs/sast-report.md) · [`docs/sca-report.md`](./docs/sca-report.md) · [`docs/dast-report.md`](./docs/dast-report.md) · [`docs/threat-model.md`](./docs/threat-model.md) · [`docs/adr/`](./docs/adr/README.md) | Phase 10 security evidence (2026-11-06, raw output in `docs/evidence/`), refreshed threat model, proposed ADRs 005–009 |

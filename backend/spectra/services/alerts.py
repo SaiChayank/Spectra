@@ -50,6 +50,9 @@ class AlertService:
         self._scored = 0
         self.score_watch = ScoreWindow(contamination=contamination)
         self.drift_level: str | None = None
+        #: last computed drift numbers (None until a drift check ran); read by the
+        #: metrics scrape so a scrape never recomputes drift or raises an alert
+        self.last_drift: dict | None = None
         self.drift_alerted = False
         self._contamination = contamination
 
@@ -124,6 +127,7 @@ class AlertService:
         if not report.get("available"):
             return
         level = report.get("alert_level", report.get("level"))
+        self.cache_drift(report)
         self.drift_level = level
         drifted = level in ("moderate", "significant")
         if drifted and not self.drift_alerted:
@@ -137,6 +141,16 @@ class AlertService:
             })
         elif not drifted:
             self.drift_alerted = False
+
+    def cache_drift(self, report: dict) -> None:
+        """Remember the numbers of the newest drift report (for metrics)."""
+        recent = report.get("psi_vs_recent") or {}
+        self.last_drift = {
+            "psi_train": report.get("psi_vs_train", {}).get("psi", report.get("psi")),
+            "psi_recent": recent.get("psi") if recent.get("available") else None,
+            "level": report.get("alert_level", report.get("level")),
+            "n": report.get("n"),
+        }
 
     def set_drift_level(self, level: str | None) -> None:
         """Cache a freshly computed drift level (best-effort refresh)."""

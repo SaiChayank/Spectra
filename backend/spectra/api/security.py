@@ -23,6 +23,7 @@ Session tokens come from the HttpOnly cookie (browser), an
 
 from __future__ import annotations
 
+import hmac
 from collections.abc import Mapping
 
 from fastapi import HTTPException, Request, Response
@@ -141,6 +142,27 @@ def _error_response(status_code: int, detail: str,
                         headers=headers)
 
 
+#: The one route the optional ``SPECTRA_METRICS_TOKEN`` can open, and the
+#: synthetic principal it gets: read-only, no session, no user row.
+_METRICS_ROUTE = ("GET", "/api/metrics")
+
+
+def _metrics_token_principal(request: Request) -> dict | None:
+    """Principal for a valid metrics bearer token on the metrics route, else None.
+
+    Constant-time comparison; the token is never logged or echoed.  It is
+    honoured nowhere else: the caller only invokes this for ``_METRICS_ROUTE``.
+    """
+    configured = getattr(engine.config, "metrics_token", "")
+    header = request.headers.get("authorization", "")
+    if not configured or header[:7].lower() != "bearer ":
+        return None
+    if not hmac.compare_digest(header[7:].strip().encode(), configured.encode()):
+        return None
+    return {"user_id": 0, "username": "metrics-scraper", "role": "VIEWER",
+            "permissions": ["read"], "session": {"token_hash": "", "expires_at": 0.0}}
+
+
 async def auth_gate(request: Request, call_next):
     """Default-deny middleware (see module docstring). Registered per-app."""
     if request.method == "OPTIONS":
@@ -151,6 +173,11 @@ async def auth_gate(request: Request, call_next):
         return _no_store(await call_next(request), path)
     if not path.startswith("/api/"):
         return await call_next(request)  # not API surface (docs, 404s, ...)
+    if (request.method, path) == _METRICS_ROUTE:
+        scraper = _metrics_token_principal(request)
+        if scraper is not None:
+            request.state.spectra_principal = scraper   # read by require("read")
+            return await call_next(request)
     try:
         principal = resolve_principal(request)
     except AuthError as exc:

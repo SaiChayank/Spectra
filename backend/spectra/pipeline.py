@@ -255,6 +255,7 @@ class SpectraEngine:
             self.detection, self.failures,
             events=self.events,
             capability_provider=lambda: self.capability_status(),
+            audit=self.audit_service,
         )
         # Local authentication (login/session/user lifecycle) and incident
         # triage. AuthService keeps the construction-time store on purpose -

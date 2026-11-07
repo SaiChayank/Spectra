@@ -146,12 +146,17 @@ class ModelService:
         self._alerts.note_drift(report)
         return report
 
+    def drift_cache(self) -> dict | None:
+        """Newest drift numbers without recomputing (None before the first check)."""
+        return self._alerts.last_drift
+
     def refresh_drift_level(self) -> None:
         """Recompute the cached drift level feeding the immune danger axis."""
         try:
             report = self._drift()
             if report.get("available"):
                 self._alerts.set_drift_level(report.get("alert_level"))
+                self._alerts.cache_drift(report)
         except Exception:  # noqa: BLE001 - drift cache is best effort
             pass
 

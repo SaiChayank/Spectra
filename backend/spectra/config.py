@@ -137,6 +137,10 @@ class Config:
     # lives in this file (resolved next to the database), never in the database
     totp_key_path: str = ""
     totp_issuer: str = "Spectra"         # label shown in authenticator apps
+    # optional static bearer token that opens GET /api/metrics (and only that
+    # route) for a Prometheus server that cannot hold an expiring session;
+    # empty = off.  Must be at least 32 characters when set.
+    metrics_token: str = ""
     session_cookie_secure: bool = False   # set True only behind TLS
 
     # service
@@ -149,7 +153,13 @@ class Config:
     ])
     log_level: str = field(default_factory=lambda: _env("LOG_LEVEL", "INFO"))
 
+    def _validate(self) -> None:
+        if self.metrics_token and len(self.metrics_token) < 32:
+            raise ValueError("SPECTRA_METRICS_TOKEN must be at least 32 characters "
+                             "(generate one with: python -c 'import secrets;print(secrets.token_urlsafe(32))')")
+
     def __post_init__(self) -> None:
+        self._validate()
         if self.profile not in PROFILES:
             raise ValueError(
                 f"unknown SPECTRA_PROFILE {self.profile!r}; choose one of {', '.join(PROFILES)}")
@@ -203,6 +213,7 @@ class Config:
                         [v.strip() for v in raw.split(",") if v.strip()])
             else:
                 setattr(cfg, f.name, raw)
+        cfg._validate()   # env overrides are applied after __post_init__
         return cfg
 
     def ensure_dirs(self) -> None:
