@@ -35,6 +35,7 @@ import os
 from collections import deque
 from typing import Callable
 
+from .backup import consume_pending_restore
 from .config import Config, get_config
 from .db import RetentionPolicy
 from .domain import CaptureSession
@@ -203,6 +204,7 @@ class SpectraEngine:
         self.audit_service = AuditService(self._store, self.model_path,
                                           self.failures)
         self.registry.audit = self.audit_service
+        consume_pending_restore(self.config, self.audit_service)
         self.alerts = AlertService(
             self.config, self.events, self.audit_service, self.failures,
             contamination=getattr(detector, "contamination", 0.02),

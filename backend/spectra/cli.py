@@ -99,6 +99,57 @@ def cmd_auth(args: argparse.Namespace) -> int:
     return 2
 
 
+def cmd_backup(args: argparse.Namespace) -> int:
+    """Back up, verify and restore an instance (docs/runbook.md)."""
+    from . import backup as bk
+    from .config import get_config
+
+    try:
+        if args.backup_cmd == "create":
+            res = bk.create_backup(get_config(), args.out, include_keys=args.include_keys,
+                                   include_captures=args.include_captures)
+            m = res["manifest"]
+            if args.json:
+                print(json.dumps({k: res[k] for k in ("path", "sha256", "bytes")} | {"manifest": m}, indent=2))
+                return 0
+            print(f"backup written: {res['path']}")
+            print(f"  sha256 {res['sha256']}  ({res['bytes']:,} bytes)")
+            print(f"  schema v{m['schema_version']}, {len(m['files'])} files, rows: "
+                  + ", ".join(f"{k}={v}" for k, v in m["db"]["rows"].items()))
+            if args.include_keys:
+                print("WARNING: this archive contains PRIVATE KEYS. Store it like the keys themselves "
+                      "(encrypted, access-controlled).", file=sys.stderr)
+            else:
+                print("  keys and captures were NOT included (see docs/runbook.md for what a restore "
+                      "without keys means)")
+            return 0
+        if args.backup_cmd == "verify":
+            rep = bk.verify_backup(args.archive)
+            if args.json:
+                print(json.dumps(rep, indent=2))
+            elif rep["ok"]:
+                m = rep["manifest"]
+                print(f"OK: {len(m['files'])} files verified; created {m['created_at']} by Spectra "
+                      f"{m['spectra_version']} (schema v{m['schema_version']})")
+            else:
+                print("INVALID:\n  " + "\n  ".join(rep["problems"]), file=sys.stderr)
+            return 0 if rep["ok"] else 1
+        if args.backup_cmd == "restore":
+            res = bk.restore_backup(args.archive, get_config(), force=args.force)
+            if args.json:
+                print(json.dumps({k: v for k, v in res.items() if k != "manifest"}, indent=2))
+                return 0
+            print(f"restored {len(res['restored'])} file(s) in {res['elapsed_s']} s; audit chain verifies")
+            if res["pre_restore_dir"]:
+                print(f"previous files were moved to {res['pre_restore_dir']} (delete it yourself when sure)")
+            print("start Spectra now; the first start records the restore in the audit log")
+            return 0
+    except bk.BackupError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    return 2
+
+
 def cmd_intel(args: argparse.Namespace) -> int:
     from .config import get_config
     from .intel import IntelService
@@ -1119,6 +1170,23 @@ def build_parser() -> argparse.ArgumentParser:
     q = authsub.add_parser("totp-reset", help="remove a user's two-factor enrolment (lost device / key file)")
     q.add_argument("username")
     p.set_defaults(func=cmd_auth)
+
+    p = sub.add_parser("backup", help="back up, verify and restore this instance")
+    bsub = p.add_subparsers(dest="backup_cmd", required=True)
+    q = bsub.add_parser("create", help="write a verified .tar.gz of the database and models")
+    q.add_argument("--out", required=True, help="archive path (refuses to overwrite)")
+    q.add_argument("--include-keys", action="store_true", help="also archive the private keys (sensitive)")
+    q.add_argument("--include-captures", action="store_true", help="also archive uploaded capture files")
+    q.add_argument("--json", action="store_true")
+    q = bsub.add_parser("verify", help="check an archive against its manifest (writes nothing)")
+    q.add_argument("archive")
+    q.add_argument("--json", action="store_true")
+    q = bsub.add_parser("restore", help="restore an archive (stop Spectra first)")
+    q.add_argument("archive")
+    q.add_argument("--force", action="store_true",
+                   help="restore over an existing database (the old files are moved aside)")
+    q.add_argument("--json", action="store_true")
+    p.set_defaults(func=cmd_backup)
 
     p = sub.add_parser("intel",
                        help="local threat intel: JA3/JA4/SNI list status + load")
