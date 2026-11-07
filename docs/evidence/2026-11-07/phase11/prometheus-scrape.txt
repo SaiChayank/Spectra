@@ -1,0 +1,5 @@
+Prometheus v3.0.1 (docker) scraping spectra:1.0.0 container, bearer token from a 0644 file in a temp dir (value not recorded), 2026-11-07
+promtool check config: valid; rules: 8 rules found, SUCCESS
+target health: up (lastError empty)
+spectra_build_info{version=1.0.0} = 1
+series matching spectra_.+ : 77

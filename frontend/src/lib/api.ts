@@ -1,7 +1,10 @@
-/** API client for the Spectra backend (http://localhost:8000). */
+/** API client for the Spectra backend (dev: http://localhost:8787, built: same origin). */
 
-export const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:8787";
-export const WS_URL = import.meta.env.VITE_WS_URL ?? "ws://localhost:8787/ws/events";
+import { resolveEndpoints } from "./endpoints";
+
+const endpoints = resolveEndpoints(import.meta.env, window.location);
+export const API_BASE = endpoints.apiBase;
+export const WS_URL = endpoints.wsUrl;
 
 export interface FlowRecord {
   proto: string;

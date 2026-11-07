@@ -1,0 +1,169 @@
+{
+  "python": "3.13.15 1.0.0",
+  "timings": {
+    "backup_with_keys_s": 0.841,
+    "backup_without_keys_s": 0.844,
+    "archive_with_keys_bytes": 930779,
+    "archive_without_keys_bytes": 930152,
+    "db_rows_at_backup": {
+      "flows": 13,
+      "audit_log": 11,
+      "alerts": 2,
+      "incidents": 0,
+      "captures": 2,
+      "users": 2,
+      "model_registry": 1,
+      "audit_key_epochs": 1,
+      "model_runs": 1,
+      "events": 6
+    },
+    "rpo_observed_s": 4.5,
+    "restore_with_keys_s": 0.192,
+    "rto_with_keys_s": 5.27,
+    "flows_lost_since_backup": 13,
+    "restore_without_keys_s": 0.186,
+    "rto_without_keys_s": 5.247
+  },
+  "steps": [
+    {
+      "name": "A starts",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "A trains a model",
+      "ok": true,
+      "detail": "n_train 82"
+    },
+    {
+      "name": "A has an audit checkpoint",
+      "ok": true,
+      "detail": "seq 8"
+    },
+    {
+      "name": "a user (carol) enrolled a TOTP second factor",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "backup (with keys) of the running server",
+      "ok": true,
+      "detail": "0.841 s"
+    },
+    {
+      "name": "backup (without keys) of the running server",
+      "ok": true,
+      "detail": "0.844 s"
+    },
+    {
+      "name": "both archives verify",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "more data was written after the backup",
+      "ok": true,
+      "detail": "flows 13 -> 26"
+    },
+    {
+      "name": "instance A and its data are gone",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "restore into an empty home succeeds",
+      "ok": true,
+      "detail": "0.192 s"
+    },
+    {
+      "name": "server is healthy again (RTO = restore + start + first healthy answer)",
+      "ok": true,
+      "detail": "5.27 s"
+    },
+    {
+      "name": "the admin's password still works (users restored)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "flows equal the state at backup time, not at disaster time",
+      "ok": true,
+      "detail": "restored 13, at backup 13, at disaster 26"
+    },
+    {
+      "name": "audit chain verifies",
+      "ok": true,
+      "detail": "13 entries, epoch 1"
+    },
+    {
+      "name": "the restore itself is recorded in the audit chain",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "the pre-disaster checkpoint still verifies",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "the trained model came back",
+      "ok": true,
+      "detail": "n_train 82"
+    },
+    {
+      "name": "the TOTP user is still challenged for a code",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "and accepts a valid code (the key was restored)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "restore without keys succeeds",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "server healthy again",
+      "ok": true,
+      "detail": "5.247 s"
+    },
+    {
+      "name": "admin can sign in",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "a new audit key epoch started and the chain still verifies",
+      "ok": true,
+      "detail": "epoch 2"
+    },
+    {
+      "name": "the old checkpoint still verifies (from the public keys in the database)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "without totp.key the TOTP user cannot sign in (documented cost)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "`spectra auth totp-reset` clears it",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "after the reset the user signs in with the password",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "no server log contains the admin password",
+      "ok": true,
+      "detail": ""
+    }
+  ]
+}

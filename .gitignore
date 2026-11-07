@@ -36,3 +36,9 @@ frontend/.vite/
 Thumbs.db
 Desktop.ini
 backend/.schemathesis/
+
+# Compiled dashboard copied into the package by scripts/build_release.sh
+backend/spectra/webui/
+backend/build/
+backend/dist/
+*.whl

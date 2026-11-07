@@ -7,6 +7,7 @@ All notable changes to Spectra are documented here. The format follows
 ## [Unreleased]
 
 ### Added
+- Operations (Phase 11): validated Prometheus exposition with latency histograms and an optional metrics-only token (**breaking:** counters renamed to `*_total`); a wheel that serves the dashboard same-origin and keeps data in a per-user directory; `spectra backup create|verify|restore` with an executed restore drill (demo scale); `docs/runbook.md`; digest-pinned non-root Docker image, `compose.yaml`, trivy in CI.
 - Time-windowed correlation edges: graph edges carry first/last contact
   time, and paths, reachability and cascade accept `window_s` (Phase 9A).
 - Report-only adversarial-retraining harness, `POST /api/model/harden`, with
@@ -29,6 +30,7 @@ All notable changes to Spectra are documented here. The format follows
 - Optional TOTP second factor (`/api/auth/totp/{setup,enable,disable}`, `totp_code` on login, admin/CLI reset, secrets AES-GCM-encrypted under `totp.key`), awaiting security review (Phase 10, ADR-010).
 - Deployment profiles: `SPECTRA_PROFILE=hardened` turns on proposed retention defaults (flows 30 d, detections 90 d, captures 14 d, events 30 d; default `local` unchanged); numbers need data-owner approval (`docs/retention.md`).
 - `scripts/eval_real_pcap.py` and the first public-capture run (CTU-13 scenario 1): parser handled 21,254 real flows; the synthetic-trained detector flagged everything, benign control included, so the run is uninformative about detection (`docs/evaluation-report.md` §9).
+- Prometheus: exposition validated with the official parser; new series (cumulative inference/db latency histograms, drift PSI and level, bio verdict counts, audit head, build info); optional metrics-only bearer token `SPECTRA_METRICS_TOKEN`; example scrape config and alert rules (`docs/monitoring.md`, `deploy/prometheus/`). **Breaking:** seven counters were renamed to end in `_total`.
 - Ship plan for the public software release (`docs/34_ship_plan.md`).
 - `LICENSE` (Apache-2.0), `SECURITY.md`, `CONTRIBUTING.md`, issue/PR
   templates and Dependabot configuration.
@@ -40,10 +42,14 @@ All notable changes to Spectra are documented here. The format follows
   referenced as binding.
 
 ### Fixed
+- A truncated pcap/pcapng is no longer silently analysed as if complete (scapy 2.8 treats a short read as end-of-file); it now raises `CaptureError` (HTTP 400). CI on Python 3.13 was red because of this and two tests that demanded bit-identical floats across CPUs; the matrix no longer fails fast.
 - Dataset import no longer stores a second `<dataset>--<dataset>--<name>` copy of a file the fetch script just downloaded (it doubled disk use: 1.4 GB for the 696 MB CTU-13 flow file).
 - Capture retention now deletes the stored upload file together with the row; previously the verbatim PCAP stayed on disk until the next restart.
 - Ruff findings in merged Phase 7 code; react-hooks lint errors in the
   frontend.
+
+### Fixed (Phase 11)
+- A truncated capture file is now reported as an error instead of being read as a shorter, complete capture.
 
 ## [1.0.0] - 2026-09-29
 

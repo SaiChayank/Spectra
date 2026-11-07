@@ -35,6 +35,7 @@ import os
 from collections import deque
 from typing import Callable
 
+from .backup import consume_pending_restore
 from .config import Config, get_config
 from .db import RetentionPolicy
 from .domain import CaptureSession
@@ -203,6 +204,7 @@ class SpectraEngine:
         self.audit_service = AuditService(self._store, self.model_path,
                                           self.failures)
         self.registry.audit = self.audit_service
+        consume_pending_restore(self.config, self.audit_service)
         self.alerts = AlertService(
             self.config, self.events, self.audit_service, self.failures,
             contamination=getattr(detector, "contamination", 0.02),
@@ -255,6 +257,7 @@ class SpectraEngine:
             self.detection, self.failures,
             events=self.events,
             capability_provider=lambda: self.capability_status(),
+            audit=self.audit_service,
         )
         # Local authentication (login/session/user lifecycle) and incident
         # triage. AuthService keeps the construction-time store on purpose -

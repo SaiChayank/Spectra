@@ -1,0 +1,35 @@
+# docker compose up -d                       -> API + dashboard on http://127.0.0.1:8000, data in the `spectra-data` volume
+# docker compose --profile capture up -d     -> additionally a live-capture node (needs host networking + NET_RAW)
+x-spectra: &spectra
+  image: spectra:1.0.0
+  build: .
+  read_only: true
+  tmpfs: [/tmp]
+  cap_drop: [ALL]
+  security_opt: ["no-new-privileges:true"]
+  restart: unless-stopped
+  volumes: [spectra-data:/data]
+
+services:
+  api:
+    <<: *spectra
+    ports: ["127.0.0.1:${SPECTRA_PORT:-8000}:8000"]       # put a TLS reverse proxy in front before exposing it
+
+  # Opt-in. Only this service gets NET_RAW; it sees the host's interfaces, so run it on the sensor host.
+  capture:
+    <<: *spectra
+    profiles: [capture]
+    network_mode: host
+    cap_add: [NET_RAW, DAC_OVERRIDE]   # DAC_OVERRIDE: root must write the volume that the image owns as uid 10001
+    command: ["serve", "--host", "127.0.0.1", "--port", "${SPECTRA_CAPTURE_PORT:-8001}"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,os; urllib.request.urlopen('http://127.0.0.1:%s/api/health' % os.environ.get('SPECTRA_CAPTURE_PORT','8001'), timeout=4)"]
+      interval: 30s
+      start_period: 30s
+    environment: {SPECTRA_CAPTURE_PORT: "${SPECTRA_CAPTURE_PORT:-8001}"}
+    user: "0"          # NET_RAW is only effective for root in a container (no ambient caps); everything else is dropped
+    volumes: [spectra-capture-data:/data]   # its own instance: never share one SQLite DB between two servers
+
+volumes:
+  spectra-data:
+  spectra-capture-data:

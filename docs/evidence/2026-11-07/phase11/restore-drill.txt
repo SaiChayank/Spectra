@@ -1,0 +1,51 @@
+== drill on Spectra (python/version): 3.13.15 1.0.0; clean venv from spectra-1.0.0-py3-none-any.whl
+== 1. instance A
+  [PASS] A starts
+  [PASS] A trains a model  - n_train 82
+  [PASS] A has an audit checkpoint  - seq 8
+  [PASS] a user (carol) enrolled a TOTP second factor
+== 2. backups of the running instance
+  [PASS] backup (with keys) of the running server  - 0.841 s
+  [PASS] backup (without keys) of the running server  - 0.844 s
+  [PASS] both archives verify
+== 3. work continues after the backup
+  [PASS] more data was written after the backup  - flows 13 -> 26
+== 4. disaster: SIGKILL + the whole data directory destroyed
+  [PASS] instance A and its data are gone
+== 5. recovery from the archive with keys (timed)
+  [PASS] restore into an empty home succeeds  - 0.192 s
+  [PASS] server is healthy again (RTO = restore + start + first healthy answer)  - 5.27 s
+== 6. what came back
+  [PASS] the admin's password still works (users restored)
+  [PASS] flows equal the state at backup time, not at disaster time  - restored 13, at backup 13, at disaster 26
+  [PASS] audit chain verifies  - 13 entries, epoch 1
+  [PASS] the restore itself is recorded in the audit chain
+  [PASS] the pre-disaster checkpoint still verifies
+  [PASS] the trained model came back  - n_train 82
+  [PASS] the TOTP user is still challenged for a code
+  [PASS] and accepts a valid code (the key was restored)
+== 7. recovery from the archive WITHOUT keys
+  [PASS] restore without keys succeeds
+  [PASS] server healthy again  - 5.247 s
+  [PASS] admin can sign in
+  [PASS] a new audit key epoch started and the chain still verifies  - epoch 2
+  [PASS] the old checkpoint still verifies (from the public keys in the database)
+  [PASS] without totp.key the TOTP user cannot sign in (documented cost)
+  [PASS] `spectra auth totp-reset` clears it
+  [PASS] after the reset the user signs in with the password
+  [PASS] no server log contains the admin password
+
+== measurements (tiny scale, one machine: how long the steps take HERE)
+   backup_with_keys_s: 0.841
+   backup_without_keys_s: 0.844
+   archive_with_keys_bytes: 930779
+   archive_without_keys_bytes: 930152
+   db_rows_at_backup: {'flows': 13, 'audit_log': 11, 'alerts': 2, 'incidents': 0, 'captures': 2, 'users': 2, 'model_registry': 1, 'audit_key_epochs': 1, 'model_runs': 1, 'events': 6}
+   rpo_observed_s: 4.5
+   restore_with_keys_s: 0.192
+   rto_with_keys_s: 5.27
+   flows_lost_since_backup: 13
+   restore_without_keys_s: 0.186
+   rto_without_keys_s: 5.247
+
+28 passed, 0 failed of 28 checks

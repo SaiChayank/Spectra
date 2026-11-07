@@ -1,0 +1,15 @@
+# Example scrape config. Put the token (SPECTRA_METRICS_TOKEN on the Spectra side) in a
+# file readable only by Prometheus. Use scheme: https behind your TLS terminator.
+global:
+  scrape_interval: 15s
+rule_files:
+  - spectra.rules.yml
+scrape_configs:
+  - job_name: spectra
+    metrics_path: /api/metrics
+    scheme: http
+    authorization:
+      type: Bearer
+      credentials_file: /etc/prometheus/spectra_metrics_token
+    static_configs:
+      - targets: ["127.0.0.1:8787"]

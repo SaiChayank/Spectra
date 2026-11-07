@@ -9,6 +9,7 @@ jobs:
   backend:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false      # a failure on one Python must not hide the result on the other
       matrix:
         python: ["3.11", "3.13"]
     steps:
@@ -77,3 +78,39 @@ jobs:
       # production dependencies must be clean; no high/critical anywhere
       - run: npm audit --omit=dev
       - run: npm audit --audit-level=high
+  package:
+    # builds the release wheel with the dashboard inside, installs it into a clean
+    # virtualenv on two Pythons and exercises the real server (docs/runbook.md)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: astral-sh/setup-uv@v5
+      - run: scripts/build_release.sh
+      - run: python3 scripts/smoke_install.py backend/dist/spectra-*.whl --python 3.13
+      - run: python3 scripts/smoke_install.py backend/dist/spectra-*.whl --python 3.11
+      # disaster-recovery drill: backup a running instance, destroy it, restore, verify (docs/runbook.md)
+      - run: python3 scripts/restore_drill.py backend/dist/spectra-*.whl --python 3.13
+      # SBOMs: the runtime Python environment (wheel + its dependencies only) and the
+      # frontend production tree
+      - run: |
+          uv venv --python 3.13 .sbom-venv
+          uv pip install --python .sbom-venv/bin/python backend/dist/spectra-*.whl
+          uvx --from cyclonedx-bom cyclonedx-py environment .sbom-venv/bin/python --of JSON -o sbom-python-runtime.cdx.json
+          (cd frontend && npm sbom --sbom-format cyclonedx --omit dev > ../sbom-frontend.cdx.json)
+      # container image: build from the wheel, fail on fixable HIGH/CRITICAL vulnerabilities
+      - run: docker build -t spectra:ci .
+      - run: >
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.58.1
+          image --scanners vuln --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 spectra:ci
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-wheel-and-sbom
+          path: |
+            backend/dist/*.whl
+            sbom-python-runtime.cdx.json
+            sbom-frontend.cdx.json

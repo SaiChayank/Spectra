@@ -60,8 +60,91 @@ def roc_auc(scores_pos: list[float], scores_neg: list[float]) -> float | None:
     return (rank_sum_pos - n_pos * (n_pos + 1) / 2.0) / (n_pos * n_neg)
 
 
+def pr_auc(scores_pos: list[float], scores_neg: list[float]) -> float | None:
+    """Average precision (area under the precision-recall step curve).  Tied scores form one
+    block, so the value does not depend on the order of equal scores.  Null if a class is absent."""
+    if not scores_pos or not scores_neg:
+        return None
+    ranked = sorted([(s, 1) for s in scores_pos] + [(s, 0) for s in scores_neg], key=lambda t: -t[0])
+    n_pos = len(scores_pos)
+    tp = seen = 0
+    total = 0.0
+    i = 0
+    while i < len(ranked):
+        j = i
+        while j + 1 < len(ranked) and ranked[j + 1][0] == ranked[i][0]:
+            j += 1
+        block_pos = sum(r[1] for r in ranked[i:j + 1])
+        tp += block_pos
+        seen += j - i + 1
+        total += block_pos * (tp / seen)            # precision at the end of the tie block
+        i = j + 1
+    return total / n_pos
+
+
+def recall_at_fpr(scores_pos: list[float], scores_neg: list[float], fpr: float) -> dict | None:
+    """Best recall with benign FPR <= ``fpr`` for a rule "flag if score >= t".  Ties are never
+    split.  ``fpr`` in the result is the one actually reached (<= the budget)."""
+    if not scores_pos or not scores_neg:
+        return None
+    n_neg, n_pos = len(scores_neg), len(scores_pos)
+    best = {"recall": 0.0, "fpr": 0.0, "threshold": None}
+    for t in sorted(set(scores_pos) | set(scores_neg), reverse=True):
+        reached = sum(1 for s in scores_neg if s >= t) / n_neg
+        if reached > fpr:
+            break
+        best = {"recall": sum(1 for s in scores_pos if s >= t) / n_pos, "fpr": reached, "threshold": t}
+    return best
+
+
+def bootstrap_ci(scores_pos: list[float], scores_neg: list[float], stat, n: int = 1000,
+                 seed: int = 1337) -> dict | None:
+    """Percentile 95% interval of ``stat(pos, neg)``; positives and negatives are resampled
+    independently (the class sizes stay fixed).  Deterministic for a given ``seed``."""
+    import random
+    point = stat(scores_pos, scores_neg)
+    if point is None or n <= 0:
+        return None
+    rng = random.Random(seed)
+    values = []
+    for _ in range(n):
+        p = rng.choices(scores_pos, k=len(scores_pos))
+        q = rng.choices(scores_neg, k=len(scores_neg))
+        v = stat(p, q)
+        if v is not None:
+            values.append(v["recall"] if isinstance(v, dict) else v)
+    values.sort()
+    base = point["recall"] if isinstance(point, dict) else point
+    lo = values[int(0.025 * (len(values) - 1))]
+    hi = values[int(round(0.975 * (len(values) - 1)))]
+    return {"point": base, "lo": lo, "hi": hi, "n": n, "seed": seed}
+
+
+def score_metrics(pos: list[float], neg: list[float], bootstrap: int = 0, seed: int = 1337) -> dict | None:
+    """ROC-AUC, PR-AUC and recall at benign FPR 1% / 0.1% (the operator's numbers); with
+    ``bootstrap`` > 0 each also carries a 95% interval.  Null without both classes."""
+    if not pos or not neg:
+        return None
+    stats = {
+        "roc_auc": roc_auc,
+        "pr_auc": pr_auc,
+        "recall_at_fpr_1pct": lambda p, n: recall_at_fpr(p, n, 0.01),
+        "recall_at_fpr_0_1pct": lambda p, n: recall_at_fpr(p, n, 0.001),
+    }
+    out: dict = {"n_pos": len(pos), "n_neg": len(neg), "bootstrap": bootstrap, "seed": seed}
+    for name, fn in stats.items():
+        point = fn(pos, neg)
+        out[name] = point["recall"] if isinstance(point, dict) else point
+        if isinstance(point, dict):
+            out[name + "_fpr_reached"] = point["fpr"]
+        if bootstrap > 0:
+            ci = bootstrap_ci(pos, neg, fn, n=bootstrap, seed=seed)
+            out[name + "_ci95"] = [ci["lo"], ci["hi"]] if ci else None
+    return out
+
+
 def compute_metrics(result: JoinResult,
-                    labels: list) -> dict:
+                    labels: list, *, bootstrap: int = 0, seed: int = 1337) -> dict:
     """Per-category + overall metrics from one join (docs/evaluation.md §6).
 
     ``labels`` is the label list the join ran against (needed for support
@@ -166,6 +249,7 @@ def compute_metrics(result: JoinResult,
     all_pos = [s for lst in pos_scores.values() for s in lst]
     overall["anomaly_auc"] = roc_auc(all_pos, benign_scores)
     overall["benign_fpr"] = benign_fpr
+    overall["score_metrics"] = score_metrics(all_pos, benign_scores, bootstrap, seed)
 
     return {
         "per_category": dict(sorted(per_cat.items())),

@@ -35,7 +35,7 @@ import pytest
 from fastapi.testclient import TestClient
 from scapy.layers.inet import IP, TCP
 from scapy.layers.l2 import Ether
-from scapy.utils import PcapNgWriter
+from scapy.utils import PcapNgWriter, wrpcap
 from starlette.websockets import WebSocketDisconnect
 
 import spectra.api.app as app_module
@@ -597,7 +597,10 @@ def test_crafted_record_length_cannot_drive_a_gigabyte_allocation(tmp_path):
         tracemalloc.start()
     try:
         tracemalloc.reset_peak()
-        list(PcapFileSource(str(path)).packets())   # must not raise
+        # a record that claims 512 MiB in a 40-byte file is a truncated/corrupt
+        # capture: a clean CaptureError (HTTP 400), reached without allocating the claim
+        with pytest.raises(CaptureError, match="truncated"):
+            list(PcapFileSource(str(path)).packets())
         _, peak = tracemalloc.get_traced_memory()
     finally:
         if not already:
@@ -655,3 +658,52 @@ def test_pcapng_captures_still_read_through_the_bounded_stream(tmp_path):
     packets = list(PcapFileSource(str(path)).packets())
     assert len(packets) == 1
     assert packets[0][IP].src == "10.1.1.1"
+
+
+# -- truncated captures must not be analysed as if complete ---------------------------------
+# scapy 2.8's block/record readers turn a short read into EOFError, which its iterator
+# treats as a normal end of file: a cut-off capture then yields the packets before the
+# cut and no error.  PcapFileSource detects the short read itself.
+
+def _pcapng_head() -> bytes:
+    shb = struct.pack("<IIIHHqI", 0x0A0D0D0A, 28, 0x1A2B3C4D, 1, 0, -1, 28)
+    idb = struct.pack("<IIHHII", 1, 20, 1, 0, 65535, 20)
+    return shb + idb
+
+
+def test_a_capture_cut_exactly_at_a_block_boundary_is_not_an_error(tmp_path):
+    path = tmp_path / "clean.pcapng"
+    path.write_bytes(_pcapng_head())                  # valid file with zero packets
+    assert list(PcapFileSource(str(path)).packets()) == []
+
+
+def test_pcapng_cut_inside_a_block_header_is_an_error(tmp_path):
+    path = tmp_path / "hdr.pcapng"
+    path.write_bytes(_pcapng_head() + struct.pack("<I", 6) + b"\x28")   # 5 of 8 header bytes
+    with pytest.raises(CaptureError, match="hdr.pcapng"):
+        list(PcapFileSource(str(path)).packets())
+
+
+def test_classic_pcap_cut_inside_a_record_is_an_error(tmp_path):
+    good = tmp_path / "good.pcap"
+    pkt = Ether() / IP(src="10.1.1.1", dst="10.2.2.2") / TCP(sport=1234, dport=443, flags="S")
+    wrpcap(str(good), [pkt, pkt, pkt])
+    data = good.read_bytes()
+    assert len(list(PcapFileSource(str(good)).packets())) == 3        # control: intact file
+    cut = tmp_path / "cut.pcap"
+    cut.write_bytes(data[:-7])                                        # last record loses 7 bytes
+    with pytest.raises(CaptureError, match="cut.pcap"):
+        list(PcapFileSource(str(cut)).packets())
+    on_boundary = tmp_path / "boundary.pcap"
+    rec = (len(data) - 24) // 3
+    on_boundary.write_bytes(data[:24 + 2 * rec])                      # exactly two whole records
+    assert len(list(PcapFileSource(str(on_boundary)).packets())) == 2
+
+
+def test_truncation_error_never_leaks_the_server_path(tmp_path):
+    path = tmp_path / "secretdir" / "t.pcapng"
+    path.parent.mkdir()
+    path.write_bytes(_pcapng_head() + struct.pack("<III", 6, 64, 0) + b"\x00" * 8)
+    with pytest.raises(CaptureError) as exc:
+        list(PcapFileSource(str(path)).packets())
+    assert "secretdir" not in str(exc.value) and "t.pcapng" in str(exc.value)

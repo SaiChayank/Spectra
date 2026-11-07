@@ -271,6 +271,7 @@ Booleans accept `1/true/yes/on`. Defaults are the safe local values.
 | `SPECTRA_SESSION_TTL_MINUTES` | `720` | absolute session lifetime |
 | `SPECTRA_SESSION_COOKIE_SECURE` | `false` | set `true` behind TLS |
 | `SPECTRA_PROFILE` | `local` | `hardened` turns retention on with the approved defaults ([retention.md](./retention.md)) |
+| `SPECTRA_METRICS_TOKEN` | *(unset)* | optional bearer token (>= 32 chars) that opens **only** `GET /api/metrics` for Prometheus ([monitoring.md](./monitoring.md)) |
 | `SPECTRA_TOTP_KEY_PATH` | `<data dir>/totp.key` | key file that encrypts enrolled TOTP secrets (back it up with the database) |
 | `SPECTRA_TOTP_ISSUER` | `Spectra` | label shown in authenticator apps |
 | `SPECTRA_CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | comma-separated; also gates WS Origin |

@@ -8,12 +8,46 @@ from __future__ import annotations
 
 import logging
 import os
+import sys
+from collections.abc import Mapping
 from dataclasses import dataclass, field, fields
 from pathlib import Path
 
 # backend/ directory (the package lives at backend/spectra)
 BACKEND_DIR = Path(__file__).resolve().parent.parent
-DEFAULT_DATA_DIR = BACKEND_DIR / "data"
+#: Where the release build puts the compiled dashboard inside the wheel
+#: (absent in a source checkout until `scripts/build_release.sh` runs).
+PACKAGED_WEBUI_DIR = Path(__file__).resolve().parent / "webui"
+
+
+def default_home(backend_dir: Path = BACKEND_DIR, environ: Mapping[str, str] | None = None,
+                 platform: str | None = None, home: Path | None = None) -> Path:
+    """Directory that holds ``data/`` and ``models/`` unless the environment says otherwise.
+
+    * a **source checkout** (``pyproject.toml`` beside the package) keeps both next to the
+      code, as it always has;
+    * an **installed copy** must not write into ``site-packages`` (not writable on a system
+      Python, shared between users, and lost with the virtualenv), so it uses the platform's
+      per-user data directory: ``$XDG_DATA_HOME`` or ``~/.local/share`` on Linux,
+      ``~/Library/Application Support`` on macOS, ``%LOCALAPPDATA%`` on Windows - under
+      ``spectra/``.
+    """
+    environ = os.environ if environ is None else environ
+    platform = sys.platform if platform is None else platform
+    if (Path(backend_dir) / "pyproject.toml").is_file():
+        return Path(backend_dir)
+    home = Path.home() if home is None else home
+    if platform == "win32":
+        base = Path(environ.get("LOCALAPPDATA") or home / "AppData" / "Local")
+    elif platform == "darwin":
+        base = home / "Library" / "Application Support"
+    else:
+        base = Path(environ.get("XDG_DATA_HOME") or home / ".local" / "share")
+    return base / "spectra"
+
+
+_HOME = default_home()
+DEFAULT_DATA_DIR = _HOME / "data"
 
 
 def _env(name: str, default: str) -> str:
@@ -45,7 +79,7 @@ class Config:
     profile: str = field(default_factory=lambda: _env("PROFILE", "local"))
 
     # paths
-    data_dir: str = field(default_factory=lambda: _env("DATA_DIR", str(DEFAULT_DATA_DIR)))
+    data_dir: str = field(default_factory=lambda: _env("DATA_DIR", str(_HOME / "data")))
     db_path: str = ""              # resolved in __post_init__
     model_path: str = ""           # resolved in __post_init__
 
@@ -133,10 +167,17 @@ class Config:
     # hash, so both survive restarts and are invalidated by password changes.
     session_ttl_minutes: float = 720.0   # absolute session lifetime (12 h)
     admin_username: str = "admin"        # bootstrap account (first run only)
+    # compiled dashboard served by the API (SPECTRA_WEBUI_DIR overrides; empty =
+    # the packaged build when one is present, otherwise API only)
+    webui_dir: str = ""
     # optional TOTP second factor: the AES key that encrypts enrolled secrets
     # lives in this file (resolved next to the database), never in the database
     totp_key_path: str = ""
     totp_issuer: str = "Spectra"         # label shown in authenticator apps
+    # optional static bearer token that opens GET /api/metrics (and only that
+    # route) for a Prometheus server that cannot hold an expiring session;
+    # empty = off.  Must be at least 32 characters when set.
+    metrics_token: str = ""
     session_cookie_secure: bool = False   # set True only behind TLS
 
     # service
@@ -149,7 +190,13 @@ class Config:
     ])
     log_level: str = field(default_factory=lambda: _env("LOG_LEVEL", "INFO"))
 
+    def _validate(self) -> None:
+        if self.metrics_token and len(self.metrics_token) < 32:
+            raise ValueError("SPECTRA_METRICS_TOKEN must be at least 32 characters "
+                             "(generate one with: python -c 'import secrets;print(secrets.token_urlsafe(32))')")
+
     def __post_init__(self) -> None:
+        self._validate()
         if self.profile not in PROFILES:
             raise ValueError(
                 f"unknown SPECTRA_PROFILE {self.profile!r}; choose one of {', '.join(PROFILES)}")
@@ -164,12 +211,14 @@ class Config:
             self.db_path = _env("DB_PATH", os.path.join(self.data_dir, "spectra.db"))
         if not self.model_path:
             self.model_path = _env(
-                "MODEL_PATH", str(BACKEND_DIR / "models" / "spectra_model.joblib")
+                "MODEL_PATH", str(_HOME / "models" / "spectra_model.joblib")
             )
         self.data_dir = os.environ.get("SPECTRA_DATA_DIR", self.data_dir)
         if not self.capture_store_dir:
             self.capture_store_dir = _env(
                 "CAPTURE_STORE_DIR", os.path.join(self.data_dir, "captures"))
+        if not self.webui_dir:
+            self.webui_dir = _env("WEBUI_DIR", str(PACKAGED_WEBUI_DIR))
         if not self.totp_key_path:
             self.totp_key_path = _env(
                 "TOTP_KEY_PATH", os.path.join(self.data_dir, "totp.key"))
@@ -203,6 +252,7 @@ class Config:
                         [v.strip() for v in raw.split(",") if v.strip()])
             else:
                 setattr(cfg, f.name, raw)
+        cfg._validate()   # env overrides are applied after __post_init__
         return cfg
 
     def ensure_dirs(self) -> None:

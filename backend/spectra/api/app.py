@@ -33,6 +33,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .. import __version__
+from .webui import mount_webui
 from .routers import (
     alerts,
     audit,
@@ -366,3 +367,8 @@ async def _overflow(request: Request, exc: OverflowError) -> JSONResponse:
         "event": "request_overflow", "path": request.url.path})
     return JSONResponse(status_code=422,
                         content={"detail": "numeric parameter out of range"})
+
+
+# Registered last so every real route wins; serves the compiled dashboard when a
+# build is present (packaged wheel or SPECTRA_WEBUI_DIR) and is a no-op otherwise.
+mount_webui(app, cfg.webui_dir)

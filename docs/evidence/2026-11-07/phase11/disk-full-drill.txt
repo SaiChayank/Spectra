@@ -1,0 +1,9 @@
+Disk-full drill, 2026-11-07. spectra:1.0.0 container, /data = 4 MB tmpfs (uid 10001), read-only root.
+login before: 200
+filled /data with zeros until df showed 100% (0 KB available)
+login while full: HTTP 500 (the session row cannot be written)
+authenticated writes while full: not testable (no session could be created) - 401 on the stale cookie
+GET /api/health while full: 200  (health does NOT reflect a full data volume)
+freed the filler file (no restart)
+login after freeing: 200; POST /api/users: 200
+server log: one traceback during the full period

@@ -627,6 +627,7 @@ class Store:
             "write_p50_ms": latency["p50_ms"],
             "write_p95_ms": latency["p95_ms"],
             "write_samples": latency["samples"],
+            "write_histogram": self._db.write_latency.histogram(),
             "write_total": latency["total_samples"],
             "errors": self._db.error_count,
         }
