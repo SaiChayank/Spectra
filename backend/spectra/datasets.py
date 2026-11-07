@@ -68,6 +68,28 @@ DATASET_CATALOG: tuple[DatasetSpec, ...] = (
         labeled=True,
     ),
     DatasetSpec(
+        name="ctu_normal",
+        title="CTU-Normal captures (Stratosphere Laboratory, 2017)",
+        purpose="Benign TLS baseline (train/test slices by capture date). Scripted visits to "
+                "Alexa top-1000 HTTPS sites from one lab host: realistic TLS, NOT user diversity",
+        source="https://www.stratosphereips.org/datasets-normal",
+        license_note="No licence text found for these captures by the agent; CTU-13 is CC-BY "
+                     "per the Stratosphere site. Cite Stratosphere Lab; owner to confirm terms",
+        filename_hints=("ctu-normal", "normal"),
+        labeled=False,   # whole capture is benign by construction; no per-flow labels
+    ),
+    DatasetSpec(
+        name="ctu_botnet",
+        title="CTU-Malware-Capture-Botnet pcaps (Stratosphere Laboratory)",
+        purpose="Botnet host traffic. Pcap-level positives only (every flow is from the infected "
+                "host's capture); no per-flow labels",
+        source="https://www.stratosphereips.org/datasets-malware",
+        license_note="No licence text found for these captures by the agent; owner to confirm "
+                     "terms. Cite Stratosphere Lab",
+        filename_hints=("botnet", "malware", "capture"),
+        labeled=False,
+    ),
+    DatasetSpec(
         name="vpn2016",
         title="ISCX VPN-nonVPN 2016 (UNB CIC)",
         purpose="Encrypted-app / VPN behaviour: FPR on VPN traffic + "

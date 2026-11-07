@@ -1,0 +1,465 @@
+{
+  "kind": "REAL captures; pcap-level labels (every flow of a botnet capture = positive); unsupervised detector trained on benign only",
+  "environment": {
+    "commit": "0342337",
+    "python": "3.14.8",
+    "numpy": "2.5.4",
+    "seed": 1337,
+    "bootstrap": 1000,
+    "contamination": 0.02,
+    "model_fit": {
+      "n_train": 63567,
+      "threshold": 0.126835,
+      "train_score_mean": -0.10216,
+      "train_score_p99": 0.160471,
+      "contamination": 0.02
+    }
+  },
+  "files": {
+    "ctu_normal--2017-04-18_win-normal.pcap": {
+      "sha256": "50ccaa483200a73c87be73ce3cae95c16afe0941021ff6d5e8e1cacf5a90807b",
+      "bytes": 294700097,
+      "source": "https://mcfp.felk.cvut.cz/publicDatasets/CTU-Normal-23/2017-04-18_win-normal.pcap",
+      "flows": 17965,
+      "tls_share": 0.1713
+    },
+    "ctu_normal--2017-04-19_win-normal.pcap": {
+      "sha256": "31a9a2a88b0d24283288058f7c2dbad057e3d7d7bb2ad2427302dc954c7e1471",
+      "bytes": 211351915,
+      "source": "https://mcfp.felk.cvut.cz/publicDatasets/CTU-Normal-24/2017-04-19_win-normal.pcap",
+      "flows": 7823,
+      "tls_share": 0.1404
+    },
+    "ctu_normal--2017-04-28_normal.pcap": {
+      "sha256": "b66103fd89c8f0fc53b76e718f53320f3af27edd302c58695fc1870ede3663c5",
+      "bytes": 118444523,
+      "source": "https://mcfp.felk.cvut.cz/publicDatasets/CTU-Normal-26/2017-04-28_normal.pcap",
+      "flows": 16772,
+      "tls_share": 0.0843
+    },
+    "ctu_normal--2017-04-30_win-normal.pcap": {
+      "sha256": "c78a00728f115ab8fc495fd395894c43fd90cb61054eb9ef4f2d024658d5ffc5",
+      "bytes": 282415864,
+      "source": "https://mcfp.felk.cvut.cz/publicDatasets/CTU-Normal-20/2017-04-30_win-normal.pcap",
+      "flows": 21007,
+      "tls_share": 0.1156
+    },
+    "ctu_normal--2017-05-01_normal.pcap": {
+      "sha256": "a2f3e60fa0eb2a924a3795644ac09a0f1ea48c45c30ebcc663af9641580b9a5c",
+      "bytes": 143630116,
+      "source": "https://mcfp.felk.cvut.cz/publicDatasets/CTU-Normal-28/2017-05-01_normal.pcap",
+      "flows": 11923,
+      "tls_share": 0.2263
+    },
+    "ctu_normal--2017-05-02_kali-normal.pcap": {
+      "sha256": "53acb10b26ca6446b5bba2efd9d957a9faa15209029d58c10a8c1d1bd299c42b",
+      "bytes": 311638284,
+      "source": "https://mcfp.felk.cvut.cz/publicDatasets/CTU-Normal-21/2017-05-02_kali-normal.pcap",
+      "flows": 11455,
+      "tls_share": 0.2725
+    },
+    "ctu13--botnet-capture-20110810-neris.pcap": {
+      "sha256": "b89cd5931f62d87ceff266568c97c6e36e56dd0330813cacadbc14a6c5576a36",
+      "bytes": 58266506,
+      "source": "https://mcfp.felk.cvut.cz/publicDatasets/CTU-Malware-Capture-Botnet-42/botnet-capture-20110810-neris.pcap",
+      "flows": 21254,
+      "tls_share": 0.0058
+    },
+    "ctu13--botnet-capture-20110811-neris.pcap": {
+      "sha256": "189b38247b614ae51feee0e75b360552eecdee0b68843b88c7d9ed88d7be7631",
+      "bytes": 36261479,
+      "source": "https://mcfp.felk.cvut.cz/publicDatasets/CTU-Malware-Capture-Botnet-43/botnet-capture-20110811-neris.pcap",
+      "flows": 22175,
+      "tls_share": 0.0038
+    },
+    "ctu_botnet--botnet-capture-20110812-rbot.pcap": {
+      "sha256": "41880c3a3acfa5ef794abc7b9142b4b41670419c74900e1e953b4a0e75fe55ee",
+      "bytes": 128575191,
+      "source": "https://mcfp.felk.cvut.cz/publicDatasets/CTU-Malware-Capture-Botnet-44/botnet-capture-20110812-rbot.pcap",
+      "flows": 34907,
+      "tls_share": 0.0
+    },
+    "ctu_botnet--botnet-capture-20110815-fast-flux.pcap": {
+      "sha256": "716f7c43df5df7dff5b14b0cbe4767ca85a656769864fa66b6eda59764316efc",
+      "bytes": 30941919,
+      "source": "https://mcfp.felk.cvut.cz/publicDatasets/CTU-Malware-Capture-Botnet-46/botnet-capture-20110815-fast-flux.pcap",
+      "flows": 900,
+      "tls_share": 0.12
+    },
+    "ctu_botnet--capture.botnet2.infected.1.pcap": {
+      "sha256": "c8c66b3f4a56144eb3d0246e64cf65942d92afa07d1c18019f255225f93a5974",
+      "bytes": 27738197,
+      "source": "https://mcfp.felk.cvut.cz/publicDatasets/CTU-Malware-Capture-Botnet-91/capture.botnet2.infected.1.pcap",
+      "flows": 22740,
+      "tls_share": 0.0
+    }
+  },
+  "excluded": {
+    "ctu_botnet--2014-12-20_capture-win5.pcap": "CaptureError: the file ends inside a record (truncated capture) - reported, not silently partially used"
+  },
+  "split": {
+    "train": [
+      "ctu_normal--2017-04-18_win-normal.pcap",
+      "ctu_normal--2017-04-19_win-normal.pcap",
+      "ctu_normal--2017-04-28_normal.pcap",
+      "ctu_normal--2017-04-30_win-normal.pcap"
+    ],
+    "test_benign": [
+      "ctu_normal--2017-05-01_normal.pcap",
+      "ctu_normal--2017-05-02_kali-normal.pcap"
+    ],
+    "botnet": [
+      "ctu13--botnet-capture-20110810-neris.pcap",
+      "ctu13--botnet-capture-20110811-neris.pcap",
+      "ctu_botnet--botnet-capture-20110812-rbot.pcap",
+      "ctu_botnet--botnet-capture-20110815-fast-flux.pcap",
+      "ctu_botnet--capture.botnet2.infected.1.pcap"
+    ],
+    "note": "train = captures dated 2017-04-18..30; benign test = 2017-05-01..02 (later in time)"
+  },
+  "benign_flag_rate_at_default_threshold": {
+    "n": 23378,
+    "rate": 0.0416,
+    "ci95": [
+      0.0391,
+      0.0444
+    ]
+  },
+  "pooled": {
+    "n_pos": 101976,
+    "n_neg": 23378,
+    "bootstrap": 1000,
+    "seed": 1337,
+    "roc_auc": 0.7464190464921996,
+    "roc_auc_ci95": [
+      0.7423311250434003,
+      0.7504298345973662
+    ],
+    "pr_auc": 0.8968457765160895,
+    "pr_auc_ci95": [
+      0.8946888463840402,
+      0.8990537963902445
+    ],
+    "recall_at_fpr_1pct": 0.0010002353494939986,
+    "recall_at_fpr_1pct_fpr_reached": 0.009966635298143553,
+    "recall_at_fpr_1pct_ci95": [
+      0.0007256609398289793,
+      0.001441515650741351
+    ],
+    "recall_at_fpr_0_1pct": 9.80622891660783e-06,
+    "recall_at_fpr_0_1pct_fpr_reached": 0.0009838309521772606,
+    "recall_at_fpr_0_1pct_ci95": [
+      0.0,
+      6.86436024162548e-05
+    ],
+    "recall_at_default_threshold": {
+      "n": 101976,
+      "rate": 0.0288,
+      "ci95": [
+        0.0277,
+        0.0298
+      ]
+    }
+  },
+  "per_botnet_capture": {
+    "ctu13--botnet-capture-20110810-neris.pcap": {
+      "n_pos": 21254,
+      "n_neg": 23378,
+      "bootstrap": 1000,
+      "seed": 1337,
+      "roc_auc": 0.6345322039817048,
+      "roc_auc_ci95": [
+        0.6289093505282762,
+        0.6400246224806683
+      ],
+      "pr_auc": 0.577760206690241,
+      "pr_auc_ci95": [
+        0.5730405808827619,
+        0.5824697916877003
+      ],
+      "recall_at_fpr_1pct": 0.0019760986167309683,
+      "recall_at_fpr_1pct_fpr_reached": 0.009966635298143553,
+      "recall_at_fpr_1pct_ci95": [
+        0.0013173990778206455,
+        0.002587748188576268
+      ],
+      "recall_at_fpr_0_1pct": 0.0,
+      "recall_at_fpr_0_1pct_fpr_reached": 0.0009838309521772606,
+      "recall_at_fpr_0_1pct_ci95": [
+        0.0,
+        0.00014114990119506917
+      ],
+      "recall_at_default_threshold": {
+        "n": 21254,
+        "rate": 0.0172,
+        "ci95": [
+          0.0154,
+          0.0188
+        ]
+      }
+    },
+    "ctu13--botnet-capture-20110811-neris.pcap": {
+      "n_pos": 22175,
+      "n_neg": 23378,
+      "bootstrap": 1000,
+      "seed": 1337,
+      "roc_auc": 0.8256699835254973,
+      "roc_auc_ci95": [
+        0.8215243549399348,
+        0.8294257496255597
+      ],
+      "pr_auc": 0.7608973829748962,
+      "pr_auc_ci95": [
+        0.7550765180170529,
+        0.7663340061703539
+      ],
+      "recall_at_fpr_1pct": 0.00045095828635851183,
+      "recall_at_fpr_1pct_fpr_reached": 0.009966635298143553,
+      "recall_at_fpr_1pct_ci95": [
+        0.00022547914317925591,
+        0.0008117249154453213
+      ],
+      "recall_at_fpr_0_1pct": 0.0,
+      "recall_at_fpr_0_1pct_fpr_reached": 0.0009838309521772606,
+      "recall_at_fpr_0_1pct_ci95": [
+        0.0,
+        0.0
+      ],
+      "recall_at_default_threshold": {
+        "n": 22175,
+        "rate": 0.0101,
+        "ci95": [
+          0.0087,
+          0.0113
+        ]
+      }
+    },
+    "ctu_botnet--botnet-capture-20110812-rbot.pcap": {
+      "n_pos": 34907,
+      "n_neg": 23378,
+      "bootstrap": 1000,
+      "seed": 1337,
+      "roc_auc": 0.7670902684765523,
+      "roc_auc_ci95": [
+        0.7624101206426502,
+        0.7716184806303072
+      ],
+      "pr_auc": 0.8095475133791961,
+      "pr_auc_ci95": [
+        0.8059231066433914,
+        0.8132224574631485
+      ],
+      "recall_at_fpr_1pct": 0.00022918039361732604,
+      "recall_at_fpr_1pct_fpr_reached": 0.009966635298143553,
+      "recall_at_fpr_1pct_ci95": [
+        8.594264760649726e-05,
+        0.0005156558856389835
+      ],
+      "recall_at_fpr_0_1pct": 0.0,
+      "recall_at_fpr_0_1pct_fpr_reached": 0.0009838309521772606,
+      "recall_at_fpr_0_1pct_ci95": [
+        0.0,
+        0.0
+      ],
+      "recall_at_default_threshold": {
+        "n": 34907,
+        "rate": 0.0593,
+        "ci95": [
+          0.0569,
+          0.0616
+        ]
+      }
+    },
+    "ctu_botnet--botnet-capture-20110815-fast-flux.pcap": {
+      "n_pos": 900,
+      "n_neg": 23378,
+      "bootstrap": 1000,
+      "seed": 1337,
+      "roc_auc": 0.743918071120997,
+      "roc_auc_ci95": [
+        0.731342715373428,
+        0.7563204247107917
+      ],
+      "pr_auc": 0.09041732021710645,
+      "pr_auc_ci95": [
+        0.08337510775432742,
+        0.0988720572894826
+      ],
+      "recall_at_fpr_1pct": 0.028888888888888888,
+      "recall_at_fpr_1pct_fpr_reached": 0.009966635298143553,
+      "recall_at_fpr_1pct_ci95": [
+        0.015555555555555555,
+        0.06
+      ],
+      "recall_at_fpr_0_1pct": 0.0,
+      "recall_at_fpr_0_1pct_fpr_reached": 0.0009838309521772606,
+      "recall_at_fpr_0_1pct_ci95": [
+        0.0,
+        0.0033333333333333335
+      ],
+      "recall_at_default_threshold": {
+        "n": 900,
+        "rate": 0.1622,
+        "ci95": [
+          0.14,
+          0.1845
+        ]
+      }
+    },
+    "ctu_botnet--capture.botnet2.infected.1.pcap": {
+      "n_pos": 22740,
+      "n_neg": 23378,
+      "bootstrap": 1000,
+      "seed": 1337,
+      "roc_auc": 0.7420801702402631,
+      "roc_auc_ci95": [
+        0.7374509316616897,
+        0.7472640077309979
+      ],
+      "pr_auc": 0.6626642167991776,
+      "pr_auc_ci95": [
+        0.6580714598888017,
+        0.667785924392718
+      ],
+      "recall_at_fpr_1pct": 0.0007036059806508355,
+      "recall_at_fpr_1pct_fpr_reached": 0.009966635298143553,
+      "recall_at_fpr_1pct_ci95": [
+        0.00035180299032541777,
+        0.0010993843447669306
+      ],
+      "recall_at_fpr_0_1pct": 4.397537379067722e-05,
+      "recall_at_fpr_0_1pct_fpr_reached": 0.0009838309521772606,
+      "recall_at_fpr_0_1pct_ci95": [
+        0.0,
+        0.00017590149516270889
+      ],
+      "recall_at_default_threshold": {
+        "n": 22740,
+        "rate": 0.0057,
+        "ci95": [
+          0.0047,
+          0.0066
+        ]
+      }
+    }
+  },
+  "controls": {
+    "null_benign_vs_benign": {
+      "n_pos": 11689,
+      "n_neg": 11689,
+      "bootstrap": 1000,
+      "seed": 1337,
+      "roc_auc": 0.4944153128590625,
+      "roc_auc_ci95": [
+        0.48723382300203183,
+        0.5019014625347321
+      ],
+      "pr_auc": 0.49399439181954624,
+      "pr_auc_ci95": [
+        0.48785319534779986,
+        0.500643379949249
+      ],
+      "recall_at_fpr_1pct": 0.009325006416288818,
+      "recall_at_fpr_1pct_fpr_reached": 0.009923860039353237,
+      "recall_at_fpr_1pct_ci95": [
+        0.006844041406450509,
+        0.011463769355804603
+      ],
+      "recall_at_fpr_0_1pct": 0.001368808281290102,
+      "recall_at_fpr_0_1pct_fpr_reached": 0.000941055693386945,
+      "recall_at_fpr_0_1pct_ci95": [
+        0.0005133031054837882,
+        0.002138762939515784
+      ]
+    },
+    "tls_flows_only": {
+      "n_pos": 316,
+      "n_neg": 5819,
+      "bootstrap": 1000,
+      "seed": 1337,
+      "roc_auc": 0.8553880674612411,
+      "roc_auc_ci95": [
+        0.8369918708029784,
+        0.8726949691212331
+      ],
+      "pr_auc": 0.23143149128700508,
+      "pr_auc_ci95": [
+        0.20447416219669723,
+        0.2654138752789818
+      ],
+      "recall_at_fpr_1pct": 0.015822784810126583,
+      "recall_at_fpr_1pct_fpr_reached": 0.009967348341639457,
+      "recall_at_fpr_1pct_ci95": [
+        0.0,
+        0.06645569620253164
+      ],
+      "recall_at_fpr_0_1pct": 0.0,
+      "recall_at_fpr_0_1pct_fpr_reached": 0.0008592541673827118,
+      "recall_at_fpr_0_1pct_ci95": [
+        0.0,
+        0.0
+      ]
+    },
+    "supervised_random_forest_leave_one_botnet_out": {
+      "note": "trained WITH labels on benign train slice vs the other botnet captures; tested on the held-out botnet capture vs benign test. An upper bound, not a competitor; a high value here also shows how separable the capture environments are.",
+      "per_held_out_capture": {
+        "ctu13--botnet-capture-20110810-neris.pcap": {
+          "roc_auc": 0.907952605085713,
+          "pr_auc": 0.9085198475315543,
+          "recall_at_fpr_1pct": 0.5783852451303284,
+          "recall_at_fpr_0_1pct": 0.0,
+          "roc_auc_ci95": [
+            0.9051001973103906,
+            0.9103454203379816
+          ]
+        },
+        "ctu13--botnet-capture-20110811-neris.pcap": {
+          "roc_auc": 0.9425457123807031,
+          "pr_auc": 0.947838417579812,
+          "recall_at_fpr_1pct": 0.6777001127395715,
+          "recall_at_fpr_0_1pct": 0.0,
+          "roc_auc_ci95": [
+            0.9406078561995143,
+            0.9444762326291217
+          ]
+        },
+        "ctu_botnet--botnet-capture-20110812-rbot.pcap": {
+          "roc_auc": 0.9708515843412021,
+          "pr_auc": 0.9805878204724822,
+          "recall_at_fpr_1pct": 0.8108688801673017,
+          "recall_at_fpr_0_1pct": 0.0,
+          "roc_auc_ci95": [
+            0.9697871106237992,
+            0.971775749646428
+          ]
+        },
+        "ctu_botnet--botnet-capture-20110815-fast-flux.pcap": {
+          "roc_auc": 0.9845607931483541,
+          "pr_auc": 0.7359268135691098,
+          "recall_at_fpr_1pct": 0.7888888888888889,
+          "recall_at_fpr_0_1pct": 0.0,
+          "roc_auc_ci95": [
+            0.9813407191946845,
+            0.9869947766656211
+          ]
+        },
+        "ctu_botnet--capture.botnet2.infected.1.pcap": {
+          "roc_auc": 0.9311544370809802,
+          "pr_auc": 0.8975432042612885,
+          "recall_at_fpr_1pct": 0.0743183817062445,
+          "recall_at_fpr_0_1pct": 0.0,
+          "roc_auc_ci95": [
+            0.9284180638977343,
+            0.9332613367791306
+          ]
+        }
+      }
+    }
+  },
+  "caveats": [
+    "Benign = scripted visits to Alexa top-1000 HTTPS sites from lab hosts (CTU-Normal README), not user diversity.",
+    "Botnet captures are 2011/2014/2015 host traces, mostly NOT TLS; capture environment, era and protocol mix differ from the benign side, so AUC here partly measures 'looks unlike CTU-Normal HTTPS', not 'is malicious'.",
+    "Positives are pcap-level; botnet captures may contain benign background flows, which lowers measured recall.",
+    "No Suricata/Zeek baseline or cross-dataset run is in this report (see the Phase B ledger for status)."
+  ]
+}

@@ -1,0 +1,330 @@
+{
+  "kind": "REAL captures; per-flow labels from HIKARI ALLFLOWMETER CSV joined on the 4-tuple (no timestamps)",
+  "environment": {
+    "commit": "0342337",
+    "python": "3.14.8",
+    "numpy": "2.5.4",
+    "seed": 1337,
+    "bootstrap": 1000,
+    "contamination": 0.02,
+    "model_fit": {
+      "n_train": 32929,
+      "threshold": 0.140119,
+      "train_score_mean": -0.099285,
+      "train_score_p99": 0.186469,
+      "contamination": 0.02
+    }
+  },
+  "label_files": {
+    "ALLFLOWMETER_HIKARI2021.csv": "fddcf2a9fe496ed5a2306df4586f7029e2d4150b0fe7ad70337d5d63e61c645f",
+    "labels2022.csv": "bbb662754dc877d6a2ae406c9089461bff7d02766c06f86b46116a08326d686e",
+    "tuples": 439249,
+    "ambiguous_dropped": 23856
+  },
+  "files": {
+    "BRUTEFORCE_HTTPS__pcap__Sunday_2021-04-11_2154.pcap": {
+      "sha256": "30520b12ce52c33604df4b6f5182723e1db2ecb04eef7c41c7c351a5ea933d4f",
+      "flows": 22895,
+      "label_categories": {
+        "Background": 9162,
+        "Benign": 7036,
+        "unlabelled": 6450,
+        "Bruteforce": 247
+      }
+    },
+    "BRUTEFORCE_XML__pcap__Monday_2021-04-12_0611.pcap": {
+      "sha256": "c2d16c3a3b17f4e2f6ce82c6dbc952af9f67ac1e864e12a02e8731a274fc7ab1",
+      "flows": 17967,
+      "label_categories": {
+        "Background": 8151,
+        "Benign": 8580,
+        "unlabelled": 1236
+      }
+    },
+    "BRUTEFORCE_XML__pcap__Saturday_2021-04-17_0357.pcap": {
+      "sha256": "9a8000c232b69316ea43ec657489e792db10af9894dc53b4fe28a3fd84115f80",
+      "flows": 37251,
+      "label_categories": {
+        "Background": 15350,
+        "Benign": 17953,
+        "unlabelled": 3948
+      }
+    },
+    "Sunday_2022-04-10_2335_BRUTEFORCE_HTTPS_150s.pcap": {
+      "sha256": "efeee340ff4b150fac3f0d538839192bf2de27c5c6c87207b20666e3280e82a2",
+      "flows": 32060,
+      "label_categories": {
+        "Benign": 25463,
+        "Background": 1437,
+        "XMRIGCC CryptoMiner": 3109,
+        "Bruteforce": 2048,
+        "unlabelled": 3
+      }
+    },
+    "Monday_2022-04-11_0622_BRUTEFORCE_XML_150s.pcap": {
+      "sha256": "139e14e922b25f3ceadce6c1d6a26209317d42d49bb02d66dec27b757194306f",
+      "flows": 20350,
+      "label_categories": {
+        "Benign": 13985,
+        "XMRIGCC CryptoMiner": 1866,
+        "Background": 856,
+        "Bruteforce-XML": 3641,
+        "unlabelled": 2
+      }
+    }
+  },
+  "split": {
+    "train_benign_from": [
+      "BRUTEFORCE_HTTPS__pcap__Sunday_2021-04-11_2154.pcap",
+      "BRUTEFORCE_XML__pcap__Monday_2021-04-12_0611.pcap"
+    ],
+    "test": [
+      "BRUTEFORCE_XML__pcap__Saturday_2021-04-17_0357.pcap",
+      "Sunday_2022-04-10_2335_BRUTEFORCE_HTTPS_150s.pcap",
+      "Monday_2022-04-11_0622_BRUTEFORCE_XML_150s.pcap"
+    ]
+  },
+  "test_flows": {
+    "benign": 75044,
+    "attack": 10664,
+    "benign_categories": {
+      "Background": 17643,
+      "Benign": 57401
+    },
+    "attack_categories": {
+      "XMRIGCC CryptoMiner": 4975,
+      "Bruteforce": 2048,
+      "Bruteforce-XML": 3641
+    }
+  },
+  "spectra_unsupervised": {
+    "scores": {
+      "n_pos": 10664,
+      "n_neg": 75044,
+      "bootstrap": 1000,
+      "seed": 1337,
+      "roc_auc": 0.6171766395922444,
+      "roc_auc_ci95": [
+        0.6087847592528163,
+        0.6252760021197666
+      ],
+      "pr_auc": 0.3339652994222255,
+      "pr_auc_ci95": [
+        0.32699646945634875,
+        0.3415343726594309
+      ],
+      "recall_at_fpr_1pct": 0.0018754688672168042,
+      "recall_at_fpr_1pct_fpr_reached": 0.009994136773093118,
+      "recall_at_fpr_1pct_ci95": [
+        0.0009377344336084021,
+        0.002813203300825206
+      ],
+      "recall_at_fpr_0_1pct": 0.0,
+      "recall_at_fpr_0_1pct_fpr_reached": 0.000999413677309312,
+      "recall_at_fpr_0_1pct_ci95": [
+        0.0,
+        0.0
+      ]
+    },
+    "benign_flag_rate_at_default_threshold": {
+      "n": 75044,
+      "rate": 0.0188,
+      "ci95": [
+        0.0178,
+        0.0197
+      ]
+    },
+    "attack_flag_rate_at_default_threshold": {
+      "n": 10664,
+      "rate": 0.004,
+      "ci95": [
+        0.0028,
+        0.0053
+      ]
+    },
+    "per_attack_category": {
+      "Bruteforce": {
+        "n": 2048,
+        "flag_rate": {
+          "n": 2048,
+          "rate": 0.0005,
+          "ci95": [
+            0.0,
+            0.0015
+          ]
+        },
+        "scores_vs_all_benign": {
+          "n_pos": 2048,
+          "n_neg": 75044,
+          "bootstrap": 1000,
+          "seed": 1337,
+          "roc_auc": 0.9634369971699936,
+          "roc_auc_ci95": [
+            0.9621268022759981,
+            0.9647494888935991
+          ],
+          "pr_auc": 0.2510581018651438,
+          "pr_auc_ci95": [
+            0.24505571144107838,
+            0.25753385333553624
+          ],
+          "recall_at_fpr_1pct": 0.00048828125,
+          "recall_at_fpr_1pct_fpr_reached": 0.009994136773093118,
+          "recall_at_fpr_1pct_ci95": [
+            0.0,
+            0.00146484375
+          ],
+          "recall_at_fpr_0_1pct": 0.0,
+          "recall_at_fpr_0_1pct_fpr_reached": 0.000999413677309312,
+          "recall_at_fpr_0_1pct_ci95": [
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "Bruteforce-XML": {
+        "n": 3641,
+        "flag_rate": {
+          "n": 3641,
+          "rate": 0.0005,
+          "ci95": [
+            0.0,
+            0.0014
+          ]
+        },
+        "scores_vs_all_benign": {
+          "n_pos": 3641,
+          "n_neg": 75044,
+          "bootstrap": 1000,
+          "seed": 1337,
+          "roc_auc": 0.9660186357245533,
+          "roc_auc_ci95": [
+            0.9648330600913344,
+            0.9673318449843674
+          ],
+          "pr_auc": 0.3777598688456392,
+          "pr_auc_ci95": [
+            0.3701545843432617,
+            0.3862699419115412
+          ],
+          "recall_at_fpr_1pct": 0.0,
+          "recall_at_fpr_1pct_fpr_reached": 0.009994136773093118,
+          "recall_at_fpr_1pct_ci95": [
+            0.0,
+            0.0
+          ],
+          "recall_at_fpr_0_1pct": 0.0,
+          "recall_at_fpr_0_1pct_fpr_reached": 0.000999413677309312,
+          "recall_at_fpr_0_1pct_ci95": [
+            0.0,
+            0.0
+          ]
+        }
+      },
+      "XMRIGCC CryptoMiner": {
+        "n": 4975,
+        "flag_rate": {
+          "n": 4975,
+          "rate": 0.008,
+          "ci95": [
+            0.0056,
+            0.0109
+          ]
+        },
+        "scores_vs_all_benign": {
+          "n_pos": 4975,
+          "n_neg": 75044,
+          "bootstrap": 1000,
+          "seed": 1337,
+          "roc_auc": 0.21933243451948725,
+          "roc_auc_ci95": [
+            0.21081449569686286,
+            0.2290255592765812
+          ],
+          "pr_auc": 0.06010240429896974,
+          "pr_auc_ci95": [
+            0.05976486342786528,
+            0.06064028375833612
+          ],
+          "recall_at_fpr_1pct": 0.003819095477386935,
+          "recall_at_fpr_1pct_fpr_reached": 0.009994136773093118,
+          "recall_at_fpr_1pct_ci95": [
+            0.0018090452261306533,
+            0.005829145728643216
+          ],
+          "recall_at_fpr_0_1pct": 0.0,
+          "recall_at_fpr_0_1pct_fpr_reached": 0.000999413677309312,
+          "recall_at_fpr_0_1pct_ci95": [
+            0.0,
+            0.0
+          ]
+        }
+      }
+    }
+  },
+  "caveats": [
+    "Labels are joined on the 4-tuple only; repeated tuples with conflicting labels are dropped, flows absent from the CSV are excluded.",
+    "HIKARI's attacks are synthetic-in-the-lab (brute force, probing, miner) against a few servers; this is not a general encrypted-traffic claim.",
+    "Train and test come from the same lab and servers, so this is closer to in-distribution than a cross-network deployment."
+  ],
+  "supervised_random_forest_upper_bound": {
+    "train_flows": {
+      "benign": 32929,
+      "attack": 247
+    },
+    "scores": {
+      "n_pos": 10664,
+      "n_neg": 75044,
+      "bootstrap": 1000,
+      "seed": 1337,
+      "roc_auc": 0.5941874946493007,
+      "roc_auc_ci95": [
+        0.5904608125023767,
+        0.5977131288278869
+      ],
+      "pr_auc": 0.2832523366154229,
+      "pr_auc_ci95": [
+        0.27650292235753554,
+        0.2900574784960105
+      ],
+      "recall_at_fpr_1pct": 0.19486121530382597,
+      "recall_at_fpr_1pct_fpr_reached": 0.0076621715260380575,
+      "recall_at_fpr_1pct_ci95": [
+        0.18745311327831957,
+        0.20198799699924982
+      ],
+      "recall_at_fpr_0_1pct": 0.13100150037509378,
+      "recall_at_fpr_0_1pct_fpr_reached": 0.0008928095517296519,
+      "recall_at_fpr_0_1pct_ci95": [
+        0.111496624156039,
+        0.15491372843210802
+      ]
+    },
+    "benign_flag_rate_at_0.5": {
+      "n": 75044,
+      "rate": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ]
+    },
+    "attack_flag_rate_at_0.5": {
+      "n": 10664,
+      "rate": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ]
+    }
+  },
+  "suricata_et_open": {
+    "flows_with_alert_and_attack": 0,
+    "attack_flows_missed": 10664,
+    "benign_flows_alerted": 14758,
+    "benign_flows_quiet": 60286,
+    "recall": 0.0,
+    "benign_flag_rate": 0.1967,
+    "precision": 0.0,
+    "note": "an alert is joined to a flow by its 4-tuple; rules = ET Open as fetched 2026-11-07 (suricata-update), Suricata 7.0.8"
+  }
+}

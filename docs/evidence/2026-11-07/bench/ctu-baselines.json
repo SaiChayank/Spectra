@@ -1,0 +1,211 @@
+{
+  "suricata": "7.0.8, ET Open via suricata-update on 2026-11-07 (69,342 rules, 53,373 enabled), -k none",
+  "zeek": "7.0.5 stock scripts, no packages (the JA3 package install was not run)",
+  "per_capture": {
+    "ctu_normal--2017-05-01_normal": {
+      "group": "benign",
+      "zeek_flows": 9973,
+      "suricata_alert_events": 18,
+      "flows_with_suricata_alert": 16,
+      "suricata_flow_rate": 0.0016,
+      "suricata_flow_rate_ci95": [
+        0.001,
+        0.0026
+      ],
+      "zeek_notices": 0,
+      "top_signatures": [
+        [
+          "ET DNS Query for .to TLD",
+          17
+        ],
+        [
+          "SURICATA Ethernet packet too small",
+          1
+        ]
+      ]
+    },
+    "ctu_normal--2017-05-02_kali-normal": {
+      "group": "benign",
+      "zeek_flows": 10231,
+      "suricata_alert_events": 1008,
+      "flows_with_suricata_alert": 247,
+      "suricata_flow_rate": 0.0241,
+      "suricata_flow_rate_ci95": [
+        0.0213,
+        0.0273
+      ],
+      "zeek_notices": 0,
+      "top_signatures": [
+        [
+          "SURICATA STREAM Packet with invalid timestamp",
+          644
+        ],
+        [
+          "SURICATA STREAM 3way handshake wrong seq wrong ack",
+          96
+        ],
+        [
+          "SURICATA HTTP unable to match response to request",
+          81
+        ]
+      ]
+    },
+    "ctu13--botnet-capture-20110810-neris": {
+      "group": "botnet",
+      "zeek_flows": 14526,
+      "suricata_alert_events": 238,
+      "flows_with_suricata_alert": 209,
+      "suricata_flow_rate": 0.0144,
+      "suricata_flow_rate_ci95": [
+        0.0126,
+        0.0165
+      ],
+      "zeek_notices": 0,
+      "top_signatures": [
+        [
+          "SURICATA Applayer Detect protocol only one direction",
+          207
+        ],
+        [
+          "SURICATA SMTP invalid reply",
+          10
+        ],
+        [
+          "SURICATA STREAM 3way handshake SYNACK with wrong ack",
+          6
+        ]
+      ]
+    },
+    "ctu13--botnet-capture-20110811-neris": {
+      "group": "botnet",
+      "zeek_flows": 19524,
+      "suricata_alert_events": 133,
+      "flows_with_suricata_alert": 123,
+      "suricata_flow_rate": 0.0063,
+      "suricata_flow_rate_ci95": [
+        0.0053,
+        0.0075
+      ],
+      "zeek_notices": 0,
+      "top_signatures": [
+        [
+          "SURICATA Applayer Detect protocol only one direction",
+          124
+        ],
+        [
+          "SURICATA SMTP invalid reply",
+          3
+        ],
+        [
+          "SURICATA TLS handshake invalid length",
+          2
+        ]
+      ]
+    },
+    "ctu_botnet--botnet-capture-20110812-rbot": {
+      "group": "botnet",
+      "zeek_flows": 32811,
+      "suricata_alert_events": 3672,
+      "flows_with_suricata_alert": 252,
+      "suricata_flow_rate": 0.0077,
+      "suricata_flow_rate_ci95": [
+        0.0068,
+        0.0087
+      ],
+      "zeek_notices": 0,
+      "top_signatures": [
+        [
+          "ET CHAT IRC PONG response",
+          3336
+        ],
+        [
+          "SURICATA STREAM excessive retransmissions",
+          139
+        ],
+        [
+          "SURICATA Applayer Detect protocol only one direction",
+          106
+        ]
+      ]
+    },
+    "ctu_botnet--botnet-capture-20110815-fast-flux": {
+      "group": "botnet",
+      "zeek_flows": 872,
+      "suricata_alert_events": 210,
+      "flows_with_suricata_alert": 201,
+      "suricata_flow_rate": 0.2305,
+      "suricata_flow_rate_ci95": [
+        0.2038,
+        0.2596
+      ],
+      "zeek_notices": 0,
+      "top_signatures": [
+        [
+          "SURICATA Applayer Detect protocol only one direction",
+          198
+        ],
+        [
+          "SURICATA TLS invalid record type",
+          6
+        ],
+        [
+          "SURICATA TLS handshake invalid length",
+          6
+        ]
+      ]
+    },
+    "ctu_botnet--capture.botnet2.infected.1": {
+      "group": "botnet",
+      "zeek_flows": 22139,
+      "suricata_alert_events": 5974,
+      "flows_with_suricata_alert": 2160,
+      "suricata_flow_rate": 0.0976,
+      "suricata_flow_rate_ci95": [
+        0.0937,
+        0.1015
+      ],
+      "zeek_notices": 0,
+      "top_signatures": [
+        [
+          "SURICATA UDPv4 invalid checksum",
+          2436
+        ],
+        [
+          "SURICATA Applayer Detect protocol only one direction",
+          2023
+        ],
+        [
+          "ET MALWARE DNS Reply Sinkhole - Microsoft - 199.2.137.0/24",
+          801
+        ]
+      ]
+    }
+  },
+  "pooled": {
+    "benign": {
+      "flows": 20204,
+      "alerted": 263,
+      "rate": 0.013,
+      "ci95": [
+        0.0115,
+        0.0147
+      ],
+      "zeek_notices": 0
+    },
+    "botnet": {
+      "flows": 89872,
+      "alerted": 2945,
+      "rate": 0.0328,
+      "ci95": [
+        0.0316,
+        0.034
+      ],
+      "zeek_notices": 0
+    }
+  },
+  "caveats": [
+    "Positives are pcap-level; a 'miss' may be benign background in a botnet capture.",
+    "ET Open 2026 rules against 2011-2017 captures: old signatures may still be present, but rule/era mismatch is uncontrolled.",
+    "Stock Zeek is not an IDS: zero notices is expected and is not a tuned-Zeek result."
+  ]
+}
