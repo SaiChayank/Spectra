@@ -8,6 +8,8 @@ directly instead. These tests pin that the fast path reproduces
 back to sklearn when disabled.
 """
 
+import math
+
 import numpy as np
 
 from spectra.features.extractor import N_FEATURES
@@ -41,11 +43,25 @@ def _sklearn_raw(det: SpectraDetector, x: np.ndarray) -> float:
     return float(-det.model.decision_function(Z)[0])
 
 
+# The fast path adds the per-tree depths in Python's left-to-right order; sklearn sums them
+# with a vectorised numpy reduction whose association order depends on the CPU's SIMD
+# width.  Same pinned versions give bit-identical results on one machine and ~1e-16
+# relative differences on another (observed: GitHub's runners).  What the product relies
+# on is that scores agree to float rounding and flags/percentile scores are identical
+# (the next tests), so the raw comparison allows 1e-12 relative error, ~10^4 times the
+# observed noise and ~10^9 times below anything that changes a 2-decimal score.
+RAW_REL_TOL = 1e-12
+
+
+def _same_raw(got: float, want: float) -> bool:
+    return math.isclose(got, want, rel_tol=RAW_REL_TOL, abs_tol=1e-15)
+
+
 def test_fast_raw_matches_sklearn():
     det, train = _trained()
     for x in _probe_rows(train):
         got = float(det._raw(x.reshape(1, -1))[0])
-        assert got == _sklearn_raw(det, x), "fast path diverged from sklearn"
+        assert _same_raw(got, _sklearn_raw(det, x)), "fast path diverged from sklearn"
     assert det._fast, "fast path should be engaged after the first score"
 
 
@@ -75,7 +91,7 @@ def test_refit_invalidates_stale_fast_path():
     assert det._fast
     det.fit(X * 1.75 + 3.0)  # new forest; a stale walk would diverge
     for x in _probe_rows(X, seed=31):
-        assert float(det._raw(x.reshape(1, -1))[0]) == _sklearn_raw(det, x)
+        assert _same_raw(float(det._raw(x.reshape(1, -1))[0]), _sklearn_raw(det, x))
 
 
 def test_save_excludes_and_rebuilds_fast_path(tmp_path):

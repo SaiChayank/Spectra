@@ -9,6 +9,7 @@ jobs:
   backend:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false      # a failure on one Python must not hide the result on the other
       matrix:
         python: ["3.11", "3.13"]
     steps:
