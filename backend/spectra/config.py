@@ -13,6 +13,9 @@ from pathlib import Path
 
 # backend/ directory (the package lives at backend/spectra)
 BACKEND_DIR = Path(__file__).resolve().parent.parent
+#: Where the release build puts the compiled dashboard inside the wheel
+#: (absent in a source checkout until `scripts/build_release.sh` runs).
+PACKAGED_WEBUI_DIR = Path(__file__).resolve().parent / "webui"
 DEFAULT_DATA_DIR = BACKEND_DIR / "data"
 
 
@@ -133,6 +136,9 @@ class Config:
     # hash, so both survive restarts and are invalidated by password changes.
     session_ttl_minutes: float = 720.0   # absolute session lifetime (12 h)
     admin_username: str = "admin"        # bootstrap account (first run only)
+    # compiled dashboard served by the API (SPECTRA_WEBUI_DIR overrides; empty =
+    # the packaged build when one is present, otherwise API only)
+    webui_dir: str = ""
     # optional TOTP second factor: the AES key that encrypts enrolled secrets
     # lives in this file (resolved next to the database), never in the database
     totp_key_path: str = ""
@@ -180,6 +186,8 @@ class Config:
         if not self.capture_store_dir:
             self.capture_store_dir = _env(
                 "CAPTURE_STORE_DIR", os.path.join(self.data_dir, "captures"))
+        if not self.webui_dir:
+            self.webui_dir = _env("WEBUI_DIR", str(PACKAGED_WEBUI_DIR))
         if not self.totp_key_path:
             self.totp_key_path = _env(
                 "TOTP_KEY_PATH", os.path.join(self.data_dir, "totp.key"))

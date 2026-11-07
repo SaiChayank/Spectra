@@ -1,0 +1,35 @@
+date: 2026-11-07T02:43:26Z  commit: 6bf9bf5 (working tree)  wheel: spectra-1.0.0-py3-none-any.whl sha256 1c4c02fece9affe0...
+command: python scripts/smoke_install.py backend/dist/spectra-1.0.0-py3-none-any.whl --python 3.11
+
+== install spectra-1.0.0-py3-none-any.whl into a clean venv (/tmp/spectra_smoke_zwjuxxba)
+  [PASS] clean venv created and wheel installed  - 1.0s
+  [PASS] package imports from site-packages  - 3.11.16 1.0.0
+  [PASS] environment holds no test/dev tooling  - 33 packages
+  [PASS] `spectra --help` runs
+== serve
+  [PASS] server answers /api/health  - port 51505
+  [PASS] GET / serves the dashboard
+  [PASS] dashboard has CSP, nosniff, frame denial  - default-src 'self'; script-src 'self'; style-src 'self' 'uns
+  [PASS] hashed JS asset is served and immutable  - /assets/index-CPqc2tWq.js
+  [PASS] client-side route falls back to the index
+  [PASS] missing asset is a 404
+  [PASS] API needs a session (default-deny, even for unknown paths)
+== sign in with the generated bootstrap password
+  [PASS] bootstrap file exists with mode 0600
+  [PASS] login succeeds and sets an HttpOnly session cookie
+  [PASS] session is accepted (ADMIN)
+  [PASS] signed in, an unknown API path is a JSON 404 (never the dashboard)
+  [PASS] metrics endpoint answers in Prometheus format
+== event WebSocket
+  [PASS] WebSocket is refused without a session  - REFUSED InvalidStatus None 403
+  [PASS] WebSocket opens with the session from the page's own origin  - OPEN first-frame 1368
+  [PASS] WebSocket from a foreign origin is refused  - REFUSED InvalidStatus None 403
+== files created on first run
+  [PASS] every key file is mode 0600  - 2 key file(s)
+  [PASS] database created
+== shutdown
+  [PASS] server exits cleanly on SIGINT  - exit 0
+  [PASS] server log never contains the generated password
+
+23 passed, 0 failed of 23 checks
+exit: 0

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 
 
@@ -945,6 +946,16 @@ def cmd_serve(args: argparse.Namespace) -> int:
     # handshake line (with ?token=...) outside the structured formatter's
     # redaction. Routing uvicorn through the root handler emits it as JSON
     # with the session token masked.
+    from .config import get_config
+
+    cfg = get_config()
+    has_ui = bool(cfg.webui_dir) and os.path.isfile(os.path.join(cfg.webui_dir, "index.html"))
+    print(f"Spectra {'dashboard + API' if has_ui else 'API only (no dashboard build found)'}"
+          f" on http://{args.host}:{args.port}/", flush=True)
+    if args.host not in ("127.0.0.1", "localhost", "::1"):
+        print("WARNING: listening beyond loopback. Spectra serves plain HTTP: put a TLS "
+              "terminator in front and set SPECTRA_SESSION_COOKIE_SECURE=true "
+              "(docs/security.md).", file=sys.stderr, flush=True)
     uvicorn.run("spectra.api.app:app", host=args.host, port=args.port,
                 reload=args.reload, access_log=False, log_config=None)
     return 0
