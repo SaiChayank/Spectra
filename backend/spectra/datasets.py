@@ -226,7 +226,12 @@ def import_artifact(config: Config, path: str, dataset: str,
 
     dest_dir = datasets_dir(config)
     os.makedirs(dest_dir, exist_ok=True)
-    dest = os.path.join(dest_dir, f"{dataset}--{name}")
+    # a file the fetch script just downloaded already sits in the datasets dir under
+    # its final name: register it in place instead of copying it to <dataset>--<dataset>--<name>
+    in_place = (rename is None
+                and os.path.dirname(src) == os.path.abspath(dest_dir)
+                and os.path.basename(src).startswith(f"{dataset}--"))
+    dest = src if in_place else os.path.join(dest_dir, f"{dataset}--{name}")
     if os.path.abspath(src) != os.path.abspath(dest):
         shutil.copy2(src, dest)
 

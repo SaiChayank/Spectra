@@ -31,7 +31,7 @@ Schema/mapping: `docs/evaluation.md` §3–§4.
 
 | Key (`--only`) | Dataset | Size | Purpose / honest limits |
 |---|---|---|---|
-| `ctu13-s1-pcap` / `-flows` | CTU-13 scenario 1 (Botnet-42, neris) | 58.3 MB pcap + 696 MB binetflow | `C2_BEACONING` recall; normal rows are the FPR reference; background is excluded |
+| `ctu13-s1-pcap` / `-flows` | CTU-13 scenario 1 (Botnet-42, neris) | 58.3 MB pcap + 696 MB binetflow | `C2_BEACONING` recall. **The public pcap is botnet-host traffic only** (the full capture with normal and background traffic is not published, per the dataset page), so *normal rows in the flow-label file have no flows in this pcap*: it can score recall, never an FPR. Mostly plaintext (SMTP/DNS/HTTP/IRC), only 0.6 % TLS. Evaluation report §9 |
 | `ctu13-s2-pcap` / `-flows` | CTU-13 scenario 2 (Botnet-43) | 36.3 MB + 635 MB | second, independent C2 scenario (different bot + layout) |
 | `mawi` | MAWI samplepoint-F daily trace (2018-01-01 14:00) | 1.3 GB (gz) | **no labels**: parser coverage under real payload truncation + an *unscored* observational anomaly rate. Never an FPR/recall source. |
 | `sslbl` | abuse.ch SSLBL JA3 blacklist | ~8 KB (frozen 2021) | seeds `data/intel/ja3.txt` for `spectra intel`; **a signal, never a verdict** — the list stopped updating in 2021 and can false-positive |
@@ -106,6 +106,10 @@ python -m spectra.cli dataset verify --dataset ctu13
 sha256, size, import time and source URL for every artifact. Eval reports
 carry the artifact hash so a number is always traceable to exact bytes
 (`docs/evaluation.md` §2 rule 3).
+
+## 5b. Attribution (required by the dataset terms)
+
+CTU-13 is free to use "as long as you reference this project and the authors": Sebastian Garcia, Martin Grill, Jan Stiborek and Alejandro Zunino, *An empirical comparison of botnet detection methods*, Computers and Security, vol. 45, pp. 100-123, Elsevier, 2014 (DOI 10.1016/j.cose.2014.05.011). Capture provided by the Stratosphere Laboratory, CTU Prague (https://www.stratosphereips.org/datasets-ctu13). Spectra redistributes none of its bytes. The first use is recorded in `docs/evaluation-report.md` §9 (file SHA-256 `b89cd5931f62d87ceff266568c97c6e36e56dd0330813cacadbc14a6c5576a36`).
 
 ## 6. Results
 

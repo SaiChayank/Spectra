@@ -49,4 +49,4 @@ Custom Semgrep rule bars packet-payload reads outside `parse/` (gate in CI); a r
 5. **GPL-2.0-only scapy** under an Apache-2.0 licence (owner decision pending).
 6. **No in-process TLS**; deploy behind a TLS terminator and set `SPECTRA_SESSION_COOKIE_SECURE=true`.
 7. **Federation randomness is seeded** (reproducible, not a CSPRNG) — acceptable only while the capability is `SIMULATED`.
-8. Not yet tested: OWASP ZAP, gitleaks over history on this machine (CI runs it), real-traffic accuracy (Phase B).
+8. Not yet tested: OWASP ZAP and real-traffic accuracy (Phase B). gitleaks over full history: 0 findings (2026-11-07, `docs/evidence/2026-11-07/`).

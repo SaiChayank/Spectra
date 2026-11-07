@@ -1,8 +1,8 @@
 """Deployment profiles: ``local`` (default, unchanged) and ``hardened`` (Phase 10 §7).
 
-The numbers in HARDENED_RETENTION_DAYS are a PROPOSAL pending the owner's
-data-governance decision (project rules §3: a retention change needs the data
-owner's approval) - these tests pin the mechanism, not the right numbers.
+The numbers in HARDENED_RETENTION_DAYS were approved as proposed by the project
+owner on 2026-11-07 (docs/retention.md) - these tests pin the mechanism, so a
+later change to the numbers is a deliberate edit of that constant and its docs.
 """
 
 from __future__ import annotations

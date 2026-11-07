@@ -17,7 +17,7 @@ Automated blocking or enforcement; judging people; payload or content inspection
 * **Optional training aids (off by default):** synthetic benign augmentation (`--augment N`, always labelled synthetic in the run record, audit entry and UI).
 
 ## Training data
-Operator-supplied benign PCAP of their own network. The repository's demo generators (`spectra.demo`) produce synthetic baselines for tests and demonstrations only. **No real or public dataset has been used to validate this model** — see the evaluation report.
+Operator-supplied benign PCAP of their own network. The repository's demo generators (`spectra.demo`) produce synthetic baselines for tests and demonstrations only. One public capture (CTU-13 scenario 1, botnet-host traffic) has been *scored* but not used for validation: with no labels and a TLS-only synthetic baseline it flagged everything, benign control included, so it says nothing about detection (evaluation report §9).
 
 ## Performance (synthetic only — read the caveats there)
 * Trained on a single-profile demo baseline, the model **flagged 58.2 % [53.5, 63.0] of held-out diverse benign traffic** (1.5 % on traffic like its own training data). Baseline-matching is the dominant failure mode.
@@ -32,7 +32,7 @@ Operator-supplied benign PCAP of their own network. The repository's demo genera
 * Not evasion-robust (above); a patient adversary who shapes timing and sizes can hide.
 * Periodic benign traffic (NTP, updates, health checks) looks like beaconing; the pair-cadence signal is unvalidated on real traffic.
 * Class imbalance: precision falls sharply at realistic attack prevalence.
-* Unvalidated on any real or public labelled data; the synthetic attack families were written by the detector's authors.
+* Unvalidated on real labelled data. On the one real capture tried, synthetic-trained baselines flagged 100 % of flows including a benign plaintext control (evaluation report §9): train on your own network's baseline, never on synthetic data alone. The synthetic attack families were written by the detector's authors.
 * The 0–100 score saturates at 100; use the raw score for ranking analyses.
 
 ## Ethical and privacy considerations

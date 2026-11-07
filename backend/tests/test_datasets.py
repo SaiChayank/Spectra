@@ -141,3 +141,16 @@ def test_manifest_not_tracked_by_git(tmp_path):
     with open(gitignore, "r", encoding="utf-8") as f:
         rules = [ln.strip() for ln in f if ln.strip() and not ln.startswith("#")]
     assert "backend/data/" in rules
+
+
+def test_importing_a_file_already_in_the_datasets_dir_does_not_copy_it_again(cfg, artifact):
+    """The fetch script downloads to <dataset>--<name> inside the datasets dir and then
+    imports that same file; the import used to copy it to <dataset>--<dataset>--<name>,
+    doubling disk use (1.4 GB for the 696 MB CTU-13 flow file)."""
+    first = import_artifact(cfg, artifact, "synthetic")
+    in_place = artifact_path(first, cfg)
+    again = import_artifact(cfg, in_place, "synthetic")
+    assert again.filename == first.filename == os.path.basename(in_place)
+    assert not [f for f in os.listdir(datasets_dir(cfg)) if f.startswith("synthetic--synthetic--")]
+    assert len(load_manifest(cfg)) == 1
+    assert again.sha256 == first.sha256

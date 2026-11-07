@@ -1,17 +1,17 @@
 # Spectra — data retention and deployment profiles
 
-**Status:** the mechanism is implemented and tested; the hardened **numbers are a proposal** awaiting the data owner's approval (`docs/project-rules.md` §3: any retention change needs it). Nothing here changes behaviour unless you set `SPECTRA_PROFILE=hardened` or an explicit `SPECTRA_*_RETENTION_DAYS`.
+**Status:** the mechanism is implemented and tested. The hardened numbers were **approved as proposed by the project owner in chat on 2026-11-07** (the owner's decision, recorded here by the agent at their instruction; no separate data-governance sign-off document exists). Nothing here changes behaviour unless you set `SPECTRA_PROFILE=hardened` or an explicit `SPECTRA_*_RETENTION_DAYS`.
 
 ## Profiles
 
 | Profile | Set with | Retention | For |
 |---|---|---|---|
 | `local` (default) | nothing | **off** — nothing is deleted by age; growth is bounded only by the row caps (`SPECTRA_MAX_HISTORY_ROWS`, `SPECTRA_EVENT_MAX_ROWS`, alert cap) | a developer's machine, demos, evaluation runs |
-| `hardened` | `SPECTRA_PROFILE=hardened` | **on**, using the proposed defaults below | a shipped, monitored deployment |
+| `hardened` | `SPECTRA_PROFILE=hardened` | **on**, using the approved defaults below | a shipped, monitored deployment |
 
 An unknown profile name stops startup with an error. An explicit `SPECTRA_FLOW_RETENTION_DAYS`, `SPECTRA_DETECTION_RETENTION_DAYS`, `SPECTRA_CAPTURE_RETENTION_DAYS` or `SPECTRA_EVENT_RETENTION_DAYS` always wins over the profile, including `0` (retention off for that table).
 
-## Proposed hardened defaults (days) — to be confirmed
+## Hardened defaults (days) — approved 2026-11-07
 
 | Setting | Days | Why |
 |---|---|---|

@@ -52,3 +52,29 @@ def test_auc_with_ci_orders_separable_and_overlapping_scores():
     sep = ev.auc_with_ci(rng.normal(5, 1, 80), rng.normal(0, 1, 80), np.random.default_rng(3))
     same = ev.auc_with_ci(rng.normal(0, 1, 80), rng.normal(0, 1, 80), np.random.default_rng(3))
     assert sep["auc"] > 0.95 and same["ci95"][0] < 0.5 < same["ci95"][1]
+
+
+# -- scripts/eval_real_pcap.py -------------------------------------------------------------
+
+_rspec = importlib.util.spec_from_file_location(
+    "eval_real_pcap", os.path.join(os.path.dirname(HERE), "scripts", "eval_real_pcap.py"))
+rp = importlib.util.module_from_spec(_rspec)
+_rspec.loader.exec_module(rp)
+
+
+def test_plain_http_control_is_plaintext_one_flow_per_unit(tmp_path):
+    pkts = sorted(rp.plain_http_benign(15, random.Random(2)), key=lambda p: float(p.time))
+    flows = collect_flows(write_pcap(str(tmp_path / "ctrl.pcap"), pkts))
+    assert len(flows) == 15
+    assert not any(f.client_tls or f.server_tls for f in flows)      # the point of the control
+    assert {f.dst_port for f in flows} == {80}
+
+
+def test_real_pcap_script_refuses_bytes_that_do_not_match_the_expected_hash(tmp_path, monkeypatch, capsys):
+    fake = tmp_path / "x.pcap"
+    fake.write_bytes(b"\xd4\xc3\xb2\xa1" + bytes(40))
+    monkeypatch.setattr("sys.argv", ["eval_real_pcap.py", "--pcap", str(fake),
+                                     "--sha256", "0" * 64, "--out", str(tmp_path / "o.json")])
+    assert rp.main() == 2
+    assert "SHA-256 mismatch" in capsys.readouterr().err
+    assert not (tmp_path / "o.json").exists()

@@ -1,0 +1,230 @@
+{
+  "kind": "REAL capture scored by SYNTHETIC-trained baselines - flag rate, NOT recall",
+  "capture": {
+    "sha256": "b89cd5931f62d87ceff266568c97c6e36e56dd0330813cacadbc14a6c5576a36",
+    "bytes": 58266506,
+    "flows": 21254,
+    "tcp": 13175,
+    "udp": 8079,
+    "tls_handshake_parsed": 124,
+    "tls_share": 0.0058,
+    "distinct_src": 26,
+    "distinct_dst": 4193,
+    "top_dst_ports": [
+      [
+        25,
+        8392
+      ],
+      [
+        53,
+        7698
+      ],
+      [
+        80,
+        1315
+      ],
+      [
+        6667,
+        974
+      ],
+      [
+        4506,
+        867
+      ],
+      [
+        65500,
+        278
+      ],
+      [
+        8399,
+        265
+      ],
+      [
+        5231,
+        260
+      ]
+    ]
+  },
+  "environment": {
+    "commit": "efae847",
+    "seed": 20261106,
+    "control_sha256": "33d839a20b77da71d0282ad03d33287fd5036a807f1efccb9faa424bf7534a7f",
+    "control_flows": 300,
+    "control": "synthetic plaintext HTTP-style benign TCP flows (scripts/eval_real_pcap.py)"
+  },
+  "baselines": {
+    "A_demo_baseline": {
+      "flag_rate_capture": {
+        "n": 21254,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "flag_rate_capture_tls_flows": {
+        "n": 124,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "flag_rate_capture_non_tls_flows": {
+        "n": 21130,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "flag_rate_by_top_dst_port": {
+        "25": {
+          "n": 8392,
+          "rate": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        },
+        "53": {
+          "n": 7698,
+          "rate": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        },
+        "80": {
+          "n": 1315,
+          "rate": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        },
+        "6667": {
+          "n": 974,
+          "rate": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        },
+        "4506": {
+          "n": 867,
+          "rate": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        },
+        "65500": {
+          "n": 278,
+          "rate": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        }
+      },
+      "flag_rate_plain_http_benign_control": {
+        "n": 300,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      }
+    },
+    "B_benign_diversity": {
+      "flag_rate_capture": {
+        "n": 21254,
+        "rate": 1.0,
+        "ci95": [
+          0.9999,
+          1.0
+        ]
+      },
+      "flag_rate_capture_tls_flows": {
+        "n": 124,
+        "rate": 0.9919,
+        "ci95": [
+          0.9758,
+          1.0
+        ]
+      },
+      "flag_rate_capture_non_tls_flows": {
+        "n": 21130,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      },
+      "flag_rate_by_top_dst_port": {
+        "25": {
+          "n": 8392,
+          "rate": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        },
+        "53": {
+          "n": 7698,
+          "rate": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        },
+        "80": {
+          "n": 1315,
+          "rate": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        },
+        "6667": {
+          "n": 974,
+          "rate": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        },
+        "4506": {
+          "n": 867,
+          "rate": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        },
+        "65500": {
+          "n": 278,
+          "rate": 1.0,
+          "ci95": [
+            1.0,
+            1.0
+          ]
+        }
+      },
+      "flag_rate_plain_http_benign_control": {
+        "n": 300,
+        "rate": 1.0,
+        "ci95": [
+          1.0,
+          1.0
+        ]
+      }
+    }
+  },
+  "caveats": [
+    "No per-flow ground truth was used, so this is a flag rate, not recall or precision.",
+    "The baselines are synthetic and TLS/QUIC-only; plaintext flows are far outside them by construction.",
+    "The capture is botnet-host traffic from 2011 (SMTP spam, DNS, HTTP, IRC), not modern encrypted C2."
+  ]
+}

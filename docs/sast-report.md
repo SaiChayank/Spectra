@@ -11,7 +11,7 @@
 | Semgrep (rule *blocks* a violation) | 1.184.0 | same command after appending `bytes(pkt["TCP"].payload)` to `features/extractor.py`, then reverted | **1 finding, exit 1**; tree clean after revert — `semgrep-violating-patch-blocked.txt` |
 | Semgrep registry packs | 1.184.0 | `--config p/python --config p/owasp-top-ten` over `backend/spectra backend/scripts` | **4 findings** (all triaged false positives, §3) — `semgrep-registry.json` |
 | Bandit | 1.9.4 | `bandit -r backend/spectra backend/scripts -f json` (26 943 LOC, 134 files) | **0 High, 34 Medium, 23 Low** (all triaged, §4) — `bandit.json` |
-| gitleaks | — | — | **NOT RUN locally**: no binary on this machine; running it needs a download that has not been approved. CI already runs `gitleaks/gitleaks-action` on every push/PR (full history) — its result is the evidence, and has not been collected here. |
+| gitleaks | 8.30.1 | `gitleaks git --log-opts=--all --redact --report-format json .` (binary downloaded with the owner's approval on 2026-11-07, SHA-256 checked against the release checksums) | **0 findings** over all refs (77 commits with diffs; the other 2 are merge commits) — `docs/evidence/2026-11-07/gitleaks.txt`, `gitleaks.json`. An independent `git log --diff-filter=A` finds no key, `.env`, `.pem` or bootstrap file ever added. CI runs `gitleaks-action` on every push/PR as well. |
 | pip-audit | 2.10.1 | see `docs/sca-report.md` | |
 
 ## 2. The custom rule (project rule: payload only in `parse/`)
@@ -37,4 +37,4 @@ It is a gate in CI (`sast` job), tested by `semgrep --test` on annotated fixture
 
 ## 6. Not covered
 
-gitleaks run (see above); CodeQL (needs the repository to be public or Advanced Security); taint analysis; the frontend source (only `eslint`/`tsc`). Findings in third-party dependencies are in `docs/sca-report.md`.
+CodeQL (needs the repository to be public or Advanced Security); taint analysis; the frontend source (only `eslint`/`tsc`). Findings in third-party dependencies are in `docs/sca-report.md`.

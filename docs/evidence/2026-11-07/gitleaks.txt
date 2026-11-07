@@ -1,0 +1,13 @@
+date: 2026-11-07T01:07:12Z  commit: efae847  branch: phase10/gate-10
+gitleaks: 8.30.1 (linux_x64 tarball sha256 551f6fc8...2470eb, verified against the release checksums file)
+commits scanned: 79 (all refs)
+$ gitleaks git --log-opts=--all --redact --no-banner --report-format json --report-path gitleaks.json .
+[90m6:37AM[0m [32mINF[0m [1m77 commits scanned.[0m
+[90m6:37AM[0m [32mINF[0m [1mscanned ~4204096 bytes (4.20 MB) in 377ms[0m
+[90m6:37AM[0m [32mINF[0m [1mno leaks found[0m
+exit: 0
+
+note: 79 commits are reachable from all refs; gitleaks scanned 77 because the other 2 are merge commits
+(5e37df7, 8b19566), which carry no diff of their own. Independent check:
+`git log --all --diff-filter=A -- '*.key' '*admin_bootstrap*' '.env*' '*.pem'` returns nothing, i.e. no
+key, bootstrap, .env or .pem file was ever added in any commit. Findings were redacted (--redact); none existed.

@@ -12,4 +12,4 @@ Raw, unedited tool output behind `docs/sast-report.md`, `docs/sca-report.md` and
 | `licenses.json` | `backend/scripts/check_licenses.py --frontend` |
 | `schemathesis.txt`, `schemathesis-junit.xml` | Schemathesis 4.33.1 against a throwaway loopback instance |
 
-Not here, and why: gitleaks and OWASP ZAP (**NOT RUN** — would need downloads that have not been approved).
+Not here: OWASP ZAP (**NOT RUN** — needs a large image download that has not been approved). The gitleaks and CTU-13 evidence, produced a day later after the owner approved the downloads, is in `docs/evidence/2026-11-07/`.

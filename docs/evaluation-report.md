@@ -7,7 +7,7 @@ This is the document `docs/datasets.md` and `docs/34_ship_plan.md` call `evaluat
 ## 1. Read this first
 
 * **Everything below is SYNTHETIC.** Benign traffic comes from `spectra.demo` (the 7-profile library and the demo baseline); attack traffic from four families written for this report (`scripts/eval_synthetic.py`). Nothing was captured from a network. The families were written by the people who wrote the detector, so the recall figures say how the detector behaves on *these* generators, **not** how well it detects real attacks.
-* **NOT RUN: the real-capture baseline** the plan calls for ("two baselines: synthetic + real capture, mirroring acceptance §6"). That capture is not on this machine. **NOT RUN: any public labelled dataset** (CTU-13, CICIDS2017/2018, …) — each needs your approval of source, licence and size before download (`docs/datasets.md`). No claim is made about real traffic anywhere in this report.
+* **Partly run (see §9): one public capture, CTU-13 scenario 1, scored for flag rate only and found uninformative.** **NOT RUN: the real-capture *baseline*** the plan calls for ("two baselines: synthetic + real capture, mirroring acceptance §6"). That capture is not on this machine. **NOT RUN: any labelled evaluation** (no per-flow ground truth was fetched; CICIDS2017/2018 and others untouched). No claim is made about detection on real traffic anywhere in this report.
 * "Two baselines" here are two **synthetic** training sets (A: the single-profile demo baseline; B: the 7-profile benign-diversity library). They are a stability comparison, not the requested real/synthetic pair.
 * Intervals are 95 % percentile bootstraps over flows (1000 resamples; AUC 300). Flows from one generator are not independent draws from a real population, so the intervals are optimistic.
 
@@ -69,7 +69,7 @@ The spread across sectors is 1.0% for A and 0.0% for B, inside the bootstrap int
 
 ## 7. What would make this a real validation
 
-1. Approved public datasets (e.g. CTU-13 scenario 1, a 58.3 MB pcap per `docs/datasets.md`; its licence terms have **not** been checked yet and must be, before download) hashed into a fresh directory, labels via `scripts/make_labels.py`, evaluated with `spectra eval run` under the honesty rules.
+1. Approved public datasets hashed into a fresh directory with per-flow labels (`scripts/make_labels.py`), evaluated with `spectra eval run` under the honesty rules — the one capture fetched so far (§9) has no labels and is botnet-only.
 2. A real benign capture from a network the operator owns, as the second baseline, held out in time from training.
 3. Attack traffic not written by the detector's authors, and the 9B harness's evasion rate re-measured on it.
 4. Re-run this script's tables on each.
@@ -79,3 +79,16 @@ The spread across sectors is 1.0% for A and 0.0% for B, inside the bootstrap int
 * The 0–100 production score saturates at 100 and ties; any ranking metric must use the raw score.
 * The single-profile demo baseline is a poor operating point on varied traffic (58 % false flags): train on what the network actually carries (`docs/ml.md`).
 * The model is not evasion-robust (§5).
+
+## 9. Real capture: CTU-13 scenario 1 (flag rate only — and confounded)
+
+**What was run (approved by the owner on 2026-11-07).** `botnet-capture-20110810-neris.pcap` from the CTU-13 dataset (Stratosphere/CTU Prague; SHA-256 `b89cd5931f62d87ceff266568c97c6e36e56dd0330813cacadbc14a6c5576a36`, 58,266,506 bytes), fetched with `scripts/fetch_datasets.py --only ctu13-s1-pcap` into a fresh directory and verified with `spectra dataset verify`. Scored by `scripts/eval_real_pcap.py` (raw output `docs/evidence/2026-11-07/ctu13-s1-flagrate.json`) with the same two synthetic-trained baselines as §2, plus a control of 300 synthetic, plainly benign plaintext-HTTP flows. Terms: free to use with attribution (see `docs/datasets.md` for the required citation). The per-flow label file (696 MB) was not fetched, so there is **no ground truth here and nothing below is recall, precision or an FPR**.
+
+**What the capture is.** Botnet-host traffic from 2011: 21,254 flows (13,175 TCP, 8,079 UDP), 26 source and 4,193 destination addresses; only **124 flows (0.6%) carry a TLS handshake**. Destination ports: 25 (8,392), 53 (7,698), 80 (1,315), 6667 (974), 4506 (867), 65500 (278) — mostly SMTP spam, DNS, HTTP and IRC, i.e. not encrypted C2.
+
+| Scored by | Capture flag rate | TLS flows in capture | non-TLS flows in capture | **Benign plaintext-HTTP control** |
+|---|---|---|---|---|
+| A — demo baseline | 100.0% [100.0%, 100.0%] | 100.0% [100.0%, 100.0%] | 100.0% [100.0%, 100.0%] | **100.0% [100.0%, 100.0%]** |
+| B — benign-diversity | 100.0% [100.0%, 100.0%] | 99.2% [97.6%, 100.0%] | 100.0% [100.0%, 100.0%] | **100.0% [100.0%, 100.0%]** |
+
+**Reading.** Every flow is flagged, **including the benign control**, on every port. A flag rate that is the same for malicious and benign plaintext flows is not detection; it is the baseline-matching limitation in its extreme form: a detector fitted to synthetic TLS/QUIC traffic treats anything else, and even real TLS flows (flagged 99.2% by B), as anomalous. This run therefore shows two things and no more: **(1)** the parser and feature extractor process a real 58 MB, 21,254-flow capture end to end without failure (about 50 s to parse); **(2)** synthetic-trained models do not transfer to real traffic. It does **not** show that Spectra detects botnets. A meaningful test needs a *real benign baseline from the network under test* plus per-flow labels (`docs/evaluation.md` §3–§4), and for modern encrypted C2 a capture with TLS C2 rather than this 2011 plaintext botnet.

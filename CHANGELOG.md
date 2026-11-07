@@ -28,6 +28,7 @@ All notable changes to Spectra are documented here. The format follows
 - Model evaluation report and model card (`docs/evaluation-report.md`, `docs/model-card.md`) from a reproducible synthetic evaluation (`scripts/eval_synthetic.py`, bootstrap intervals, 2 baselines, evasion rates, cross-sector table). Synthetic only; real-data runs not done.
 - Optional TOTP second factor (`/api/auth/totp/{setup,enable,disable}`, `totp_code` on login, admin/CLI reset, secrets AES-GCM-encrypted under `totp.key`), awaiting security review (Phase 10, ADR-010).
 - Deployment profiles: `SPECTRA_PROFILE=hardened` turns on proposed retention defaults (flows 30 d, detections 90 d, captures 14 d, events 30 d; default `local` unchanged); numbers need data-owner approval (`docs/retention.md`).
+- `scripts/eval_real_pcap.py` and the first public-capture run (CTU-13 scenario 1): parser handled 21,254 real flows; the synthetic-trained detector flagged everything, benign control included, so the run is uninformative about detection (`docs/evaluation-report.md` §9).
 - Ship plan for the public software release (`docs/34_ship_plan.md`).
 - `LICENSE` (Apache-2.0), `SECURITY.md`, `CONTRIBUTING.md`, issue/PR
   templates and Dependabot configuration.
@@ -39,6 +40,7 @@ All notable changes to Spectra are documented here. The format follows
   referenced as binding.
 
 ### Fixed
+- Dataset import no longer stores a second `<dataset>--<dataset>--<name>` copy of a file the fetch script just downloaded (it doubled disk use: 1.4 GB for the 696 MB CTU-13 flow file).
 - Capture retention now deletes the stored upload file together with the row; previously the verbatim PCAP stayed on disk until the next restart.
 - Ruff findings in merged Phase 7 code; react-hooks lint errors in the
   frontend.

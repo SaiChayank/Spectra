@@ -25,8 +25,8 @@ def _env(name: str, default: str) -> str:
 #: on, and anything the operator did not set explicitly takes the value below.
 PROFILES: tuple[str, ...] = ("local", "hardened")
 
-#: PROPOSED hardened retention (days) - NOT yet approved by the data owner
-#: (docs/project-rules.md section 3: any retention change needs their approval).
+#: Hardened retention (days): proposed by the agent, APPROVED AS PROPOSED by the
+#: project owner in chat on 2026-11-07 (docs/retention.md; project rules section 3).
 #: Flagged rows are investigation evidence so they outlive ordinary flows;
 #: uploaded captures are kept shortest because they are stored verbatim and may
 #: hold payload bytes.  ``audit_log`` is never pruned by any profile.
