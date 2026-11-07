@@ -67,3 +67,8 @@ docs/33 §9G asks for "public commitments per share". Feldman VSS (commit g^coef
 4. **Review requested:** the optional metrics token adds a synthetic principal inside the default-deny auth gate; it can read only /api/metrics, but it is auth code.
 5. **Restore semantics:** restoring appends a `backup.restore` audit entry after the restored head; history after the backup is gone by design (RPO = backup interval). Without keys in the archive a new audit key epoch starts and TOTP users must be reset.
 6. **Not measured:** RTO/RPO at production volume; the drill is demo scale on one machine.
+
+## Phase 11 runbook-drill findings (2026-11-07)
+7. **A corrupt/missing active model makes captures complete silently with 0 detections** (no error, no alert in the capture record). The only signals are `spectra_model_trained` = 0 and `/api/model`. The earlier runbook text claimed a fallback to the previous model; the code deliberately does not do that. Runbook corrected. Open design question: should processing refuse (or mark the capture) when the model is untrained?
+8. **DB lock and disk-full both surface as bare HTTP 500**, and `/api/health` stays 200 when the data volume is full. Recovery needs no restart. Candidate fix: map SQLite "locked/full" to 503 + Retry-After and add a writability probe to health. Not changed here.
+9. **Not exercised:** a real version upgrade with a schema migration (drill reinstalls the same wheel), live NIC capture in the container.

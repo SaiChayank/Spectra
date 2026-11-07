@@ -1,7 +1,7 @@
 # Operations runbook
 
-Status of each procedure is stated per section: **Rehearsed** = executed end to end on a private instance with the output kept
-under `docs/evidence/`; **Not yet rehearsed** = written from the code, never run as a drill - treat as a draft until it is.
+Status of each procedure is stated per section: **Rehearsed** = executed on a private instance with the output kept under
+`docs/evidence/`. Limits of each rehearsal are stated where they apply.
 
 Paths: `~/.local/share/spectra/{data,models}` for an installed copy (override with `SPECTRA_DATA_DIR`, `SPECTRA_MODEL_PATH`).
 Health: `GET /api/health`; metrics: `GET /api/metrics` (see `docs/monitoring.md`).
@@ -43,18 +43,29 @@ production volume; re-run `scripts/restore_drill.py` with representative data be
 * Audit signing key lost: restore creates a new key epoch automatically; history stays verifiable from the public keys stored in
   the database. Nothing to do beyond noting the epoch change.
 
-## Not yet rehearsed (drafts)
+## Failure scenarios (rehearsed 2026-11-07)
 
-* **Capture failure** (`spectra_ingest_*` counters stop moving / capture status FAILED): check the capture's error, whether it is
-  truncated (the reader now reports truncated files rather than silently stopping), and disk space; re-upload.
-* **Database locked**: stop extra writers (a second `spectra serve`, a CLI command run during heavy ingest); SQLite is WAL, so a
-  `-wal` file next to the DB is normal. Never delete it by hand.
-* **Disk full**: free space, then check `GET /api/health`; retention (`docs/retention.md`) bounds growth - confirm it is enabled.
-* **Corrupt model**: the service falls back to the previous registered model; retrain from a baseline capture if none is left.
-* **Session storm / login flood**: per-account back-off and the rate limits already apply; look at `spectra_auth_*` metrics before
-  changing limits.
-* **Upgrade**: back up with keys, install the new wheel, start (migrations run on start and are forward-only), verify health and the
-  audit chain; roll back by reinstalling the old wheel and restoring the backup taken first.
+`scripts/runbook_drill.py` (19 checks, clean Python 3.13 venv, output in `docs/evidence/2026-11-07/phase11/runbook-drill.txt`)
+and a size-limited container (`disk-full-drill.txt`). What an operator actually sees:
+
+* **Capture failure** - a truncated upload ends `FAILED` with "the file ends inside a record"; the server stays healthy. Fix:
+  re-upload an intact file (verified).
+* **Database locked** - while another process holds the write lock, writes wait the 5 s busy timeout and then return **HTTP 500**
+  (not 503); reads and `/api/health` keep working; once the lock is released writes succeed with no restart. Look for a second
+  `spectra serve` or a CLI/backup job holding a transaction. SQLite is WAL, so a `-wal` file is normal - never delete it.
+* **Disk full** - login (it writes a session row) returns **HTTP 500**, and `/api/health` still says 200, so a plain health
+  check will not notice. Free space (or grow the volume); recovery needed no restart. Watch free space on the data volume
+  yourself; retention (`docs/retention.md`) bounds growth.
+* **Model artifact corrupt** - the server starts, but the damaged model is **not** loaded and there is **no fallback to an
+  older model** (the registry is authoritative). `GET /api/model` shows `trained: false`, `spectra_model_trained` is 0 (alert
+  `SpectraModelUntrained`). **Captures processed in that state complete with 0 detections and no error** - flows go unscored
+  silently, so alert on the gauge. Fix: retrain from a baseline capture (verified), or restore a backup.
+* **Login storm** - after 10 bad attempts the pair gets HTTP 429 with `Retry-After` (observed 60 s); metrics stay behind auth.
+  A restart clears throttle state.
+* **Upgrade / rollback** - back up with keys; stop; install the new wheel; start (migrations run at start); check
+  `/api/audit/verify`. Rollback: stop, `spectra backup restore <pre-upgrade archive> --force` (the replaced files are moved to
+  a `pre-restore-<time>` directory). Rehearsed only as a same-version reinstall: no real version change or migration was
+  exercised.
 
 ## Container (rehearsed once, 2026-11-07)
 

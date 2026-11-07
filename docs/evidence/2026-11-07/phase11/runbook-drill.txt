@@ -1,0 +1,27 @@
+== 1. capture failure (truncated upload)
+  [PASS] truncated capture ends FAILED with a truncation message  - cannot read PCAP cap_42cf13954daa4759895a2a2a68230570.pcap: the file ends inside a record 
+  [PASS] server stays healthy
+  [PASS] runbook step (re-upload an intact file) completes
+== 2. database lock
+  [PASS] a write during a held lock fails or waits, it does not corrupt  - HTTP 500 after 5.2s
+  [PASS] health answers while the lock is held  - HTTP 200
+  [PASS] after the lock is released writes succeed (no restart needed)  - HTTP 200
+== 3. corrupt model
+  [PASS] registry model artifact exists  - 1 file(s)
+  [PASS] server still starts; the damaged model is NOT loaded (untrained, no silent fallback)  - trained=False
+  [PASS] the operator signal: spectra_model_trained is 0 in /api/metrics
+   untrained capture -> {'status': 'COMPLETED', 'flow_count': None, 'detection_count': None, 'flows': 13, 'detections': 0, 'error': None}
+  [PASS] runbook step: retrain from a baseline capture restores a working model
+  [PASS] and /api/model is trained again
+== 4. login storm
+  [PASS] repeated bad logins are throttled (HTTP 429 appears)  - 10x401 20x429
+  [PASS] a Retry-After is sent  - 60
+  [PASS] metrics need a session (storm does not expose them)
+  [PASS] runbook step: restart clears throttle state; legit admin signs in
+== 5. upgrade and rollback
+  [PASS] pre-upgrade backup with keys
+  [PASS] after reinstall + start: data intact and audit chain verifies
+  [PASS] rollback: restore --force over the live data succeeds (old files moved aside)
+  [PASS] the replaced files were moved aside, not deleted  - pre-restore-20261107T061117Z
+
+19 passed, 0 failed of 19 checks
