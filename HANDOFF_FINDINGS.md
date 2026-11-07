@@ -59,3 +59,11 @@ docs/33 §9G asks for "public commitments per share". Feldman VSS (commit g^coef
 3. **SAST**: custom payload rule added and proven to block a violation; Bandit 0 High (27 B608 SQL hits reviewed and pinned by a hostile-input test); Semgrep registry packs 4 false positives (docs/sast-report.md). Changed: JA3 `usedforsecurity=False`, two `assert` -> `StoreError`.
 4. **SCA**: pip-audit clean; npm audit had 2 high (vite dev server, source-map-js) - fixed by a lockfile-only `npm audit fix`; 10 dev-only moderates remain (minimatch ReDoS via the ESLint chain; fix is a breaking downgrade). Licence check: scapy (GPL-2.0-only) is a visible pending exception (docs/sca-report.md).
 5. **TOTP design note for the plan item "stored as scrypt'd secret":** a TOTP shared secret must be recoverable to compute codes, so it cannot be a one-way hash like a password. It has to be encrypted at rest under a key held outside the database (or stored plain in a mode-0600 file). This is a key-management decision and security-sensitive auth code: build only with the owner's go-ahead and review.
+
+## Phase 11 findings (2026-11-07)
+1. **main CI was red since PR #1** and I had reported it as passing without checking. Root causes: truncated-capture handling (scapy 2.8 EOFError on a short read looked like end of file - real silent data loss, now an explicit CaptureError), CPU-dependent float summation, matrix fail-fast. Fix is local only (fix/ci-green-py313).
+2. **An installed wheel wrote data and models into site-packages** (defaults were relative to the source tree). Fixed with a per-user data dir; smoke test sets only HOME and asserts nothing is written to site-packages.
+3. **Metrics counters renamed to `_total`** to satisfy the exposition format: breaking for anyone already scraping the old names.
+4. **Review requested:** the optional metrics token adds a synthetic principal inside the default-deny auth gate; it can read only /api/metrics, but it is auth code.
+5. **Restore semantics:** restoring appends a `backup.restore` audit entry after the restored head; history after the backup is gone by design (RPO = backup interval). Without keys in the archive a new audit key epoch starts and TOTP users must be reset.
+6. **Not measured:** RTO/RPO at production volume; the drill is demo scale on one machine.
