@@ -53,6 +53,9 @@ def test_index_and_security_headers(site):
     assert res.headers["x-content-type-options"] == "nosniff"
     assert res.headers["x-frame-options"] == "DENY"
     assert res.headers["referrer-policy"] == "no-referrer"
+    assert "camera=()" in res.headers["permissions-policy"] and "microphone=()" in res.headers["permissions-policy"]
+    assert res.headers["cross-origin-opener-policy"] == "same-origin"
+    assert res.headers["cross-origin-resource-policy"] == "same-origin"
     csp = res.headers["content-security-policy"]
     for part in ("default-src 'self'", "frame-ancestors 'none'", "object-src 'none'",
                  "base-uri 'self'", "connect-src 'self'"):

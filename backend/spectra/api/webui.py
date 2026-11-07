@@ -42,6 +42,10 @@ _SECURITY_HEADERS = {
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",
     "Referrer-Policy": "no-referrer",
+    # ZAP baseline 2026-11-07: the dashboard needs none of these browser features and shares nothing cross-origin.
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()",
+    "Cross-Origin-Opener-Policy": "same-origin",
+    "Cross-Origin-Resource-Policy": "same-origin",
 }
 _IMMUTABLE = "public, max-age=31536000, immutable"   # Vite emits content-hashed asset names
 _REVALIDATE = "no-cache"
