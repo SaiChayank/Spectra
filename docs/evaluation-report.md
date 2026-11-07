@@ -1,6 +1,6 @@
 # Spectra — Model evaluation and validation report
 
-**Date:** 2026-11-06 · **Commit:** `a0ef02a` (branch `phase10/gate-10`) · **Status:** engineering evidence, **not a sign-off**; synthetic data only.
+**Date:** 2026-11-06 · **Commit:** `a0ef02a` (branch `phase10/gate-10`) · **Status:** engineering evidence, **not a sign-off**; sections 2-8 synthetic data only, sections 9-12 real public captures (read their caveats).
 
 This is the document `docs/datasets.md` and `docs/34_ship_plan.md` call `evaluation-report.md`, and the "model evaluation and validation report" of the project rules (the numbered `docs/10_…` template was removed in `09638ce`). It follows the honesty rules in `docs/evaluation.md` §2.
 
