@@ -236,3 +236,17 @@ Positives are **synthetic** beacons (30 flows, 200 per cell, intervals 30 s / 30
 * A supervised model transfers to unseen families here much better than the isolation forest (AUC 0.93-0.98 vs 0.73-0.77; recall at 1 % FPR 0.07-0.86 vs about 0), unlike the HIKARI result in §11 where it did not generalise. High AUC does **not** guarantee usable recall: botnet2 has AUC 0.93 and recall 0.07.
 * **Confound not ruled out.** Dropping the TLS, SNI, ALPN, handshake-timing and port features barely changes anything (AUC -0.00 to -0.02), so the separation does not come from those. It may still come from capture environment (2011 captures vs 2017 captures: packet sizes, timing, MTU), which cannot be separated from attack behaviour with this data. Do not read 0.93-0.98 as "detects botnets"; read it as "an upper bound that includes era effects". The unsupervised AUC (0.73-0.77) is subject to the same confound.
 * Same-era benign/malicious data (HIKARI, CIC-2018, the lab corpus) is the fix; this section is not evidence for E3.
+
+## 17. Phase E0: real RITA v5.1.2 vs Spectra on the CIC-2018 Bot day (2026-11-08)
+
+`backend/scripts/bench_rita_cic.py` -> `docs/evidence/2026-11-08/bench/rita-cic.json`. Zeek 7.0.5 logs of the ten Bot-victim captures were imported into RITA v5.1.2 (GPL-3.0, run unmodified as an external tool in a container on an internal-only network; threat-intel feeds and update checks off). Pairs are (victim, external IP) as in §13 / stage 9D, restricted to pairs with >= 20 Zeek connections (RITA's own analysed set): **53 pairs, 10 of them to the C2 address 18.219.211.138** (the Ares C2, about one connection every 1.3 s, 15,811 connections in one victim). Spectra's score is the gap regularity of its flows; RITA's is its beacon score (SNI beacons expanded to the IPs behind them).
+
+| Scorer | ROC-AUC [95 % CI] | PR-AUC | recall at 0 false pairs (1 % FPR budget) | C2 pair scores |
+|---|---|---|---|---|
+| Spectra gap regularity | 0.85 [0.69, 0.98] | 0.55 | **0.0** | 0.34-0.37 for 8 pairs, 0.0 for 2 |
+| **RITA beacon score** | **0.99 [0.97, 1.00]** | **0.97** | **0.9** | 0.90-0.95 for 9 pairs, 0.5 for 1 |
+
+* **On the one real C2 family we have, the open-source reference is far better than Spectra's current beacon signal.** This is the direct answer to docs/35's "beat Zeek+RITA" gate: at present we do not, and E2.1 must close this gap before any claim of leadership. RITA wins here because it combines gap scores with data-size, **duration over many hours and a connection-count histogram**, and it aggregates by SNI; Spectra's score is one number, `1 - cv` of start gaps, which a few long idle gaps ruin.
+* 3 non-C2 pairs also score above 0.5 in RITA (false alerts), so RITA is not a free win: at a strict budget its recall is 0.9, not 1.0.
+* **Limits:** 53 pairs and 10 positives from a single C2 family (Ares), one network, one day, high connection counts (15k per pair; RITA is known to do less well on slow low-count beacons, which this data does not test). The Spectra jitter sweep of §15 and this result are not comparable (synthetic vs real positives). Not shown: RITA on the jitter sweep, which needs synthetic pcaps, i.e. the lab corpus.
+* A bug caught while writing this script, kept as a lesson: RITA reports SNI beacons with the destination IP blank (the addresses are in `server_ips`); keyed on the IP column alone, the first version showed RITA at AUC 0.13 ("RITA misses the C2"). That was wrong; the numbers above come from the corrected join.
