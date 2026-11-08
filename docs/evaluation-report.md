@@ -221,3 +221,18 @@ Positives are **synthetic** beacons (30 flows, 200 per cell, intervals 30 s / 30
 **What this means for the engine (docs/35 E2.1):** gap regularity is a useful but narrow signal. Jitter above ~50 % defeats it, and periodic benign services look the same, so a beacon detector needs destination rarity, size and long-session features and allow-lists on top, which is why docs/35 fuses evidence per host. **Limits:** the real benign set has only 177 pairs (confidence intervals at the 1 % operating point are wide, e.g. [0.0, 1.0]); it has no periodic benign services, so false alerts from NTP/telemetry are not measured here; the real C2 pairs of CIC-2018 (pair-level AUC 0.71 earlier) remain the only real positives. Run RITA on Zeek logs of the same data before any statement about RITA.
 
 **E0 reproduction (2026-11-08).** `scripts/spectra_bench.py --prereg ci/prereg/e0.json` re-ran the CTU benchmark, the beacon sweep and the Gate B script on the same hashed inputs (80 min total, manifest at `docs/evidence/2026-11-08/bench-run/manifest.json`, clean tree at def6f5a). Every numeric value in `ctu-bench.json` and `gateb.json` equals the 2026-11-07 evidence files (0 differences over 91 values each); the beacon sweep equals the earlier run cell for cell. Not covered by the runner yet: HIKARI, CIC-2018 and the Suricata/Zeek baselines (they need the external IDS outputs), RITA, the lab corpus.
+
+## 16. Phase E0: leave-attack-family-out, CTU botnet families (2026-11-08)
+
+`backend/scripts/bench_lofo.py` -> `docs/evidence/2026-11-08/bench/lofo.json`. Each botnet family is held out in turn: a RandomForest trains on benign (CTU-Normal train slice) vs the *other* families and is tested on the held-out family vs the later benign slice (<=20,000 flows per class, 300 bootstrap resamples, seed 1337). Families: neris (2 captures), rbot, fast-flux, botnet2. Labels are pcap-level.
+
+| Held-out family | Supervised ROC-AUC | recall @ 1 % FPR [95 % CI] | Without TLS/port features: AUC / recall | Isolation forest: AUC / recall |
+|---|---|---|---|---|
+| neris | 0.933 | 0.68 [0.67, 0.68] | 0.917 / 0.68 | 0.731 / 0.001 |
+| rbot | 0.972 | 0.86 [0.81, 0.87] | 0.968 / 0.81 | 0.766 / 0.000 |
+| fast-flux | 0.975 | 0.74 [0.71, 0.77] | 0.972 / 0.73 | 0.743 / 0.031 |
+| botnet2 | 0.934 | 0.07 [0.07, 0.08] | 0.926 / 0.07 | 0.741 / 0.001 |
+
+* A supervised model transfers to unseen families here much better than the isolation forest (AUC 0.93-0.98 vs 0.73-0.77; recall at 1 % FPR 0.07-0.86 vs about 0), unlike the HIKARI result in §11 where it did not generalise. High AUC does **not** guarantee usable recall: botnet2 has AUC 0.93 and recall 0.07.
+* **Confound not ruled out.** Dropping the TLS, SNI, ALPN, handshake-timing and port features barely changes anything (AUC -0.00 to -0.02), so the separation does not come from those. It may still come from capture environment (2011 captures vs 2017 captures: packet sizes, timing, MTU), which cannot be separated from attack behaviour with this data. Do not read 0.93-0.98 as "detects botnets"; read it as "an upper bound that includes era effects". The unsupervised AUC (0.73-0.77) is subject to the same confound.
+* Same-era benign/malicious data (HIKARI, CIC-2018, the lab corpus) is the fix; this section is not evidence for E3.
