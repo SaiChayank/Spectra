@@ -1,0 +1,414 @@
+{
+  "environment": {
+    "python": "3.14.8",
+    "numpy": "2.5.4",
+    "seed": 1337,
+    "bootstrap_resamples": 300,
+    "max_flows_per_class": 20000
+  },
+  "data": {
+    "ctu": {
+      "train": 63567,
+      "neg": 20000,
+      "pos": 20000
+    },
+    "hikari": {
+      "train": 32929,
+      "neg": 20000,
+      "pos": 10664
+    },
+    "cic": {
+      "train": 31983,
+      "neg": 20000,
+      "pos": 20000
+    }
+  },
+  "cross_dataset": {
+    "ctu": {
+      "train_flows": 63567,
+      "ctu": {
+        "n_neg": 20000,
+        "n_pos": 20000,
+        "benign_flag_rate": 0.0409,
+        "attack_flag_rate": 0.0278,
+        "roc_auc": 0.74617959,
+        "roc_auc_ci95": [
+          0.74116733375,
+          0.750355685
+        ],
+        "pr_auc": 0.6820778705513207,
+        "recall_at_fpr_1pct": 0.0011,
+        "same_dataset": true,
+        "shift_auc_target_benign_vs_source_train": 0.7847
+      },
+      "hikari": {
+        "n_neg": 20000,
+        "n_pos": 10664,
+        "benign_flag_rate": 0.0179,
+        "attack_flag_rate": 0.1631,
+        "roc_auc": 0.5359230729557389,
+        "roc_auc_ci95": [
+          0.5275759541447862,
+          0.5455321525693924
+        ],
+        "pr_auc": 0.46805317308033323,
+        "recall_at_fpr_1pct": 0.003000750187546887,
+        "same_dataset": false,
+        "shift_auc_target_benign_vs_source_train": 0.7828
+      },
+      "cic": {
+        "n_neg": 20000,
+        "n_pos": 20000,
+        "benign_flag_rate": 0.0398,
+        "attack_flag_rate": 0.0,
+        "roc_auc": 0.58984359,
+        "roc_auc_ci95": [
+          0.5829251225,
+          0.5968575
+        ],
+        "pr_auc": 0.5291713078879052,
+        "recall_at_fpr_1pct": 0.0,
+        "same_dataset": false,
+        "shift_auc_target_benign_vs_source_train": 0.8697
+      }
+    },
+    "hikari": {
+      "train_flows": 32929,
+      "ctu": {
+        "n_neg": 20000,
+        "n_pos": 20000,
+        "benign_flag_rate": 0.1545,
+        "attack_flag_rate": 0.0193,
+        "roc_auc": 0.61182148125,
+        "roc_auc_ci95": [
+          0.6058837475,
+          0.617772135
+        ],
+        "pr_auc": 0.5401457842104064,
+        "recall_at_fpr_1pct": 0.00065,
+        "same_dataset": false,
+        "shift_auc_target_benign_vs_source_train": 0.8429
+      },
+      "hikari": {
+        "n_neg": 20000,
+        "n_pos": 10664,
+        "benign_flag_rate": 0.0195,
+        "attack_flag_rate": 0.004,
+        "roc_auc": 0.6170863606526632,
+        "roc_auc_ci95": [
+          0.608371063859715,
+          0.626939312171793
+        ],
+        "pr_auc": 0.5900940674724832,
+        "recall_at_fpr_1pct": 0.0016879219804951237,
+        "same_dataset": true,
+        "shift_auc_target_benign_vs_source_train": 0.5776
+      },
+      "cic": {
+        "n_neg": 20000,
+        "n_pos": 20000,
+        "benign_flag_rate": 0.158,
+        "attack_flag_rate": 0.0,
+        "roc_auc": 0.248364355,
+        "roc_auc_ci95": [
+          0.24267001,
+          0.2547186125
+        ],
+        "pr_auc": 0.4710884863694345,
+        "recall_at_fpr_1pct": 0.0,
+        "same_dataset": false,
+        "shift_auc_target_benign_vs_source_train": 0.8752
+      }
+    },
+    "cic": {
+      "train_flows": 31983,
+      "ctu": {
+        "n_neg": 20000,
+        "n_pos": 20000,
+        "benign_flag_rate": 0.0226,
+        "attack_flag_rate": 0.0048,
+        "roc_auc": 0.67044933125,
+        "roc_auc_ci95": [
+          0.665483475,
+          0.67515431125
+        ],
+        "pr_auc": 0.6009886331621477,
+        "recall_at_fpr_1pct": 0.00145,
+        "same_dataset": false,
+        "shift_auc_target_benign_vs_source_train": 0.4916
+      },
+      "hikari": {
+        "n_neg": 20000,
+        "n_pos": 10664,
+        "benign_flag_rate": 0.0081,
+        "attack_flag_rate": 0.0003,
+        "roc_auc": 0.4819494490810203,
+        "roc_auc_ci95": [
+          0.47426376828582145,
+          0.4892100923668417
+        ],
+        "pr_auc": 0.41113523255764267,
+        "recall_at_fpr_1pct": 0.0009377344336084021,
+        "same_dataset": false,
+        "shift_auc_target_benign_vs_source_train": 0.7028
+      },
+      "cic": {
+        "n_neg": 20000,
+        "n_pos": 20000,
+        "benign_flag_rate": 0.0104,
+        "attack_flag_rate": 0.0,
+        "roc_auc": 0.191224385,
+        "roc_auc_ci95": [
+          0.186272295,
+          0.1959788225
+        ],
+        "pr_auc": 0.4003270899123185,
+        "recall_at_fpr_1pct": 0.0,
+        "same_dataset": true,
+        "shift_auc_target_benign_vs_source_train": 0.6727
+      }
+    }
+  },
+  "ablation_9c_augmentation": {
+    "synthetic_flows_added": 1000,
+    "note": "demo-profile synthetic TLS/QUIC benign flows, as `spectra train --augment 1000`",
+    "ctu": {
+      "without": {
+        "n_neg": 20000,
+        "n_pos": 20000,
+        "benign_flag_rate": 0.0409,
+        "attack_flag_rate": 0.0278,
+        "roc_auc": 0.74617959,
+        "roc_auc_ci95": [
+          0.74116733375,
+          0.750355685
+        ],
+        "pr_auc": 0.6820778705513207,
+        "recall_at_fpr_1pct": 0.0011
+      },
+      "with_augmentation": {
+        "n_neg": 20000,
+        "n_pos": 20000,
+        "benign_flag_rate": 0.0382,
+        "attack_flag_rate": 0.0272,
+        "roc_auc": 0.76127189,
+        "roc_auc_ci95": [
+          0.7562324375,
+          0.76540899
+        ],
+        "pr_auc": 0.6969756944550587,
+        "recall_at_fpr_1pct": 0.00135
+      }
+    },
+    "hikari": {
+      "without": {
+        "n_neg": 20000,
+        "n_pos": 10664,
+        "benign_flag_rate": 0.0195,
+        "attack_flag_rate": 0.004,
+        "roc_auc": 0.6170863606526632,
+        "roc_auc_ci95": [
+          0.608371063859715,
+          0.626939312171793
+        ],
+        "pr_auc": 0.5900940674724832,
+        "recall_at_fpr_1pct": 0.0016879219804951237
+      },
+      "with_augmentation": {
+        "n_neg": 20000,
+        "n_pos": 10664,
+        "benign_flag_rate": 0.0203,
+        "attack_flag_rate": 0.0041,
+        "roc_auc": 0.6157615481995499,
+        "roc_auc_ci95": [
+          0.6070109738372093,
+          0.6256361754501125
+        ],
+        "pr_auc": 0.5857220124965165,
+        "recall_at_fpr_1pct": 0.002250562640660165
+      }
+    },
+    "cic": {
+      "without": {
+        "n_neg": 20000,
+        "n_pos": 20000,
+        "benign_flag_rate": 0.0104,
+        "attack_flag_rate": 0.0,
+        "roc_auc": 0.191224385,
+        "roc_auc_ci95": [
+          0.186272295,
+          0.1959788225
+        ],
+        "pr_auc": 0.4003270899123185,
+        "recall_at_fpr_1pct": 0.0
+      },
+      "with_augmentation": {
+        "n_neg": 20000,
+        "n_pos": 20000,
+        "benign_flag_rate": 0.0096,
+        "attack_flag_rate": 0.0,
+        "roc_auc": 0.1945172325,
+        "roc_auc_ci95": [
+          0.1895480275,
+          0.199281015
+        ],
+        "pr_auc": 0.400250554859116,
+        "recall_at_fpr_1pct": 0.0
+      }
+    }
+  },
+  "ablation_9d_beaconing_cic2018": {
+    "pairs_with_enough_history": 1582,
+    "c2_pairs": 10,
+    "other_pairs": 1572,
+    "note": "pairs among the ten Bot-victim captures; 'c2 pair' = victim <-> 18.219.211.138; all flows of the pair, not only in-window",
+    "regularity_median_c2": 0.3468,
+    "regularity_median_other": 0.0,
+    "roc_auc_c2_vs_other": 0.7100508905852417,
+    "roc_auc_ci95": [
+      0.5630407124681934,
+      0.8155216284987278
+    ]
+  },
+  "adversarial_9b": {
+    "ctu": {
+      "attack_flows": 20000,
+      "flagged": 555,
+      "attacked": 300,
+      "evasion_rate": 1.0,
+      "evaded": 300,
+      "median_relative_l1": 0.0,
+      "level": "fragile",
+      "most_targeted_features": [
+        [
+          "rst_count",
+          221
+        ],
+        [
+          "bytes_std",
+          39
+        ],
+        [
+          "bytes_mean",
+          38
+        ],
+        [
+          "syn_count",
+          35
+        ],
+        [
+          "fwd_bwd_pkt_ratio",
+          27
+        ]
+      ]
+    },
+    "hikari": {
+      "attack_flows": 10664,
+      "flagged": 43,
+      "attacked": 43,
+      "evasion_rate": 1.0,
+      "evaded": 43,
+      "median_relative_l1": 0.0247,
+      "level": "fragile",
+      "most_targeted_features": [
+        [
+          "iat_std_s",
+          39
+        ],
+        [
+          "duration_s",
+          25
+        ],
+        [
+          "iat_max_s",
+          22
+        ],
+        [
+          "iat_fwd_std_s",
+          17
+        ],
+        [
+          "packets_fwd",
+          4
+        ]
+      ]
+    },
+    "cic": {
+      "attack_flows": 20000,
+      "flagged": 0,
+      "note": "nothing flagged, so nothing to evade (the detector already misses every attack flow)"
+    }
+  },
+  "ja3_list_reference": {
+    "sslbl_entries": 97,
+    "files": {
+      "ctu13--botnet-capture-20110810-neris.pcap": {
+        "flows": 21254,
+        "with_ja3": 124,
+        "sslbl_hits": 0
+      },
+      "ctu13--botnet-capture-20110811-neris.pcap": {
+        "flows": 22175,
+        "with_ja3": 84,
+        "sslbl_hits": 0
+      },
+      "errors": [
+        "ctu_botnet--2014-12-20_capture-win5.pcap: cannot read PCAP ctu_botnet--2014-12-20_capture-win5.pcap: t"
+      ],
+      "ctu_botnet--2014-12-20_capture-win5.pcap": {
+        "flows": 40260,
+        "with_ja3": 0,
+        "sslbl_hits": 0
+      },
+      "ctu_botnet--botnet-capture-20110812-rbot.pcap": {
+        "flows": 34907,
+        "with_ja3": 0,
+        "sslbl_hits": 0
+      },
+      "ctu_botnet--botnet-capture-20110815-fast-flux.pcap": {
+        "flows": 900,
+        "with_ja3": 108,
+        "sslbl_hits": 0
+      },
+      "ctu_botnet--capture.botnet2.infected.1.pcap": {
+        "flows": 22740,
+        "with_ja3": 0,
+        "sslbl_hits": 0
+      },
+      "ctu_normal--2017-04-18_win-normal.pcap": {
+        "flows": 17965,
+        "with_ja3": 3077,
+        "sslbl_hits": 0
+      },
+      "ctu_normal--2017-04-19_win-normal.pcap": {
+        "flows": 7823,
+        "with_ja3": 1098,
+        "sslbl_hits": 0
+      },
+      "ctu_normal--2017-04-28_normal.pcap": {
+        "flows": 16772,
+        "with_ja3": 1414,
+        "sslbl_hits": 0
+      },
+      "ctu_normal--2017-04-30_win-normal.pcap": {
+        "flows": 21007,
+        "with_ja3": 2429,
+        "sslbl_hits": 0
+      },
+      "ctu_normal--2017-05-01_normal.pcap": {
+        "flows": 11923,
+        "with_ja3": 2698,
+        "sslbl_hits": 0
+      },
+      "ctu_normal--2017-05-02_kali-normal.pcap": {
+        "flows": 11455,
+        "with_ja3": 3121,
+        "sslbl_hits": 0
+      }
+    }
+  },
+  "ablation_9h_ja4": {
+    "applicable": false,
+    "reason": "JA4/JA4+ values are not among the 39 model features; they feed intel matching (`spectra intel`) only, and no JA4 list relevant to these captures exists, so there is no scoring effect to ablate."
+  }
+}
