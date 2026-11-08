@@ -1,0 +1,11 @@
+{
+  "name": "E0 baseline reproduction",
+  "frozen": "2026-11-08",
+  "note": "Steps, parameters and metrics are fixed before running. {bench} = --bench-data root, {out} = output directory. Each script pins its own input hashes and seeds.",
+  "metrics": ["roc_auc", "pr_auc", "recall_at_fpr_1pct", "recall_at_fpr_0_1pct", "bootstrap 95% CI (seed 1337)"],
+  "steps": [
+    {"id": "ctu",      "script": "scripts/bench_ctu.py",          "args": ["--datasets", "{bench}/datasets", "--out", "{out}/ctu-bench.json"], "out": "ctu-bench.json"},
+    {"id": "beacon",   "script": "scripts/bench_beacon_sweep.py", "args": ["--data", "{bench}/datasets", "--out", "{out}/beacon-sweep.json"],  "out": "beacon-sweep.json"},
+    {"id": "gateb",    "script": "scripts/bench_gateb.py",        "args": ["--bench-data", "{bench}", "--out", "{out}/gateb.json"],          "out": "gateb.json"}
+  ]
+}
