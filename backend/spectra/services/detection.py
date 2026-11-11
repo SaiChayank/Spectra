@@ -69,7 +69,8 @@ class DetectionService:
 
         # C2_BEACONING pair detector: absent unless the operator turned it on
         self._beacons = (BeaconTracker(config.beaconing_threshold, config.beaconing_min_flows,
-                                       allowlist=config.beaconing_allowlist)
+                                       allowlist=config.beaconing_allowlist,
+                                       internal_nets=config.beaconing_internal_nets)
                          if config.beaconing_enabled else None)
 
         # Module 6: bio-inspired layer (immune + SNN + swarm)

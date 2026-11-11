@@ -64,11 +64,36 @@ def test_bursty_benign_pair_does_not_alert():
 
 
 def test_long_lived_single_session_has_no_verdict_but_fills_its_hour_bins():
-    tr = BeaconTracker()
-    assert tr.observe(rec(0, dur=6 * H)) is None
+    tr = BeaconTracker(threshold=0.0)
+    assert tr.observe(rec(0, dur=6 * H)) is None     # "now" = its end (6 h): D and H exist, but G does not -> no verdict
     st = tr.pairs[("10.0.0.5", "203.0.113.9")]
     assert sorted(st["hours"]) == list(range(7))                 # hours 0..6 inclusive each count it once
-    assert beacon.score_pair([(0.0, 1000, 6 * H)], st["hours"], 0.0, 0.0) is None   # span 0, one flow
+    assert tr.now == 6 * H
+    assert tr.observe(rec(6 * H, dur=1)) is None                 # a second session: still no timing evidence
+
+
+def test_one_flow_per_hour_does_not_alert():
+    # persistence and a flat histogram (D = H = 1) but only 4 unique seconds: no G, so no verdict
+    _, out = run([i * H for i in range(5)], threshold=0.0)
+    assert not any(out)
+
+
+def test_inbound_and_internal_pairs_are_ignored():
+    starts = steady(300, 4)
+    tr = BeaconTracker(threshold=0.0)
+    assert not any(tr.observe(rec(t, src="203.0.113.9:40000", dst="10.0.0.5:443")) for t in starts)   # external -> internal
+    assert not any(tr.observe(rec(t, dst="10.9.9.9:443")) for t in starts)                          # internal -> internal
+    assert not tr.pairs
+    tr = BeaconTracker(internal_nets=["203.0.113.0/24"])        # the inside is configurable
+    assert [tr.observe(rec(t, src="203.0.113.9:1", dst="198.51.100.1:443")) for t in starts][-1]["score"] == 1.0
+    with pytest.raises(ValueError):
+        BeaconTracker(internal_nets=["not-a-net"])
+
+
+def test_gap_timestamps_are_unique_whole_seconds():
+    # two flows per beat (0.0 and 0.5 s): unique seconds give the same G as one flow per beat; S sees every flow
+    _, out = run([t + o for t in steady(300, 4) for o in (0.0, 0.5)])
+    assert out[-1]["components"]["G"] == 1.0 and out[-1]["n"] == 98 and out[-1]["unique_seconds"] == 49
 
 
 def test_nothing_alerts_before_three_hours_of_span():
@@ -76,17 +101,18 @@ def test_nothing_alerts_before_three_hours_of_span():
     assert all(v is None for v in out)
     _, out = run(steady(60, 3))
     first = next(i for i, v in enumerate(out) if v)
-    assert first == 180 and out[first]["span_h"] == 3.0          # exactly 3 h after the first flow
+    assert first == 180 and out[first]["span_h"] == 3.0          # flow 180 starts at 3 h; flow 179 ends at 10741 s < 3 h
 
 
-def test_gap_and_size_components_need_twelve_flows_and_one_second():
-    # 3 h span with only 11 flows: D and H exist (score = mean(D, H)), G and S do not
+def test_g_needs_twelve_unique_seconds_and_s_twelve_flows():
+    # 3 h span, 11 flows: D and H exist but G does not -> no verdict
     starts = [0, 600, 1200, 2000, 3000, 4000, 5000, 6000, 8000, 9000, 10800]
-    tr, out = run(starts, threshold=0.0)
-    assert set(out[-1]["components"]) == {"D", "H"}
-    # median gap < 1 s: G and S absent even with many flows
-    tr, out = run([i * 0.5 for i in range(30)] + [3 * H], threshold=0.0)
-    assert set(out[-1]["components"]) == {"D", "H"}
+    assert not any(run(starts, threshold=0.0)[1])
+    # 12 flows -> G, S, D, H all exist
+    starts = [0, 600, 1200, 2000, 3000, 4000, 5000, 6000, 8000, 9000, 10000, 10800]
+    assert set(run(starts, threshold=0.0)[1][-1]["components"]) == {"G", "S", "D", "H"}
+    # many flows but only 6 unique seconds: no G, no verdict
+    assert not any(run([i // 10 for i in range(60)] + [3 * H], threshold=0.0)[1])
 
 
 def test_sni_aggregates_destination_ips_into_one_pair():
@@ -187,7 +213,7 @@ def test_metadata_only_no_payload_is_kept_or_reported():
         assert not any("SECRET" in str(x) or x in ("payload", "raw", "ja3") for x in leaves)
     assert set(tr.pairs[("10.0.0.5", "203.0.113.9")]) == {"flows", "first", "hours", "ips"}
     assert all(isinstance(x, float | int) for f in tr.pairs[("10.0.0.5", "203.0.113.9")]["flows"] for x in f)
-    assert set(v) == {"score", "components", "n", "span_h", "median_gap_s", "median_duration_s", "pair", "sni", "dst_ips"}
+    assert set(v) == {"score", "components", "n", "unique_seconds", "span_h", "median_gap_s", "median_duration_s", "pair", "sni", "dst_ips"}
 
 
 def test_threat_dict_shows_available_components_and_feeds_the_evidence_summary():
@@ -229,7 +255,7 @@ def test_engine_raises_beaconing_alert_only_when_enabled(tmp_path, monkeypatch, 
         assert len(alerts) == 1                      # grouped, not one alert per flow
         a = alerts[0]
         first = next(i for i, x in enumerate(stamped) if x)
-        assert first == 180                          # t = 3 h exactly: the earliest a verdict can exist
+        assert first == 180                          # the flow starting at 3 h: the earliest a verdict can exist
         assert stamped[first:] == [a["alert_id"]] * (300 - first)   # flow rows link back to the alert
         assert a["occurrences"] == 300 - first
         assert a["source"] == "10.0.0.5:40000" and a["severity"] in ("HIGH", "CRITICAL")

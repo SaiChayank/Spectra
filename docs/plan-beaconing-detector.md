@@ -66,3 +66,14 @@ data; the numbers below are decided and are not tuned after seeing results.**
   1,000), bootstrap 95 % lower bound >= 0.6, and recall not more than 0.05 below real RITA v5.1.2 on the same pairs; B is gated at jitter
   <= 50 %, 75 % is a reported curve only. **On failure:** report "ranking aid, not a detector", the flag stays off, numbers are published, no
   retuning in the same session. Any change after a held-out run needs a committed amendment with its reason.
+
+### Amendment 1 (2026-11-12; before any held-out run; weights and the 0.8 threshold unchanged)
+Decided from the CIC-2018 dev smoke (seen data): all ten C2 pairs had no G/S (sub-second cadence) and 50 of the 51 benign pairs scoring >= 0.8
+were inbound (external source). Three structural changes, which supersede the matching v2 bullets above:
+1. **G on unique whole seconds.** G uses the gaps between the sorted unique `floor(start_ts)` values (RITA analyses unique one-second
+   timestamps); the "median gap >= 1 s" rule is removed; G needs >= 12 unique timestamps. S still uses every flow's forward bytes (>= 12 flows).
+2. **Direction.** Only pairs with an internal source and an external destination are tracked and scored. Inside = `beaconing_internal_nets`
+   (default RFC1918 + fc00::/7). Set A (CTU-13) uses 147.32.0.0/16, the capture network documented by the dataset; fixed before set A was
+   scored. Internal-to-internal pairs are out of scope for this detector.
+3. **G required.** A verdict exists only when G and D are both available (S and H join the mean when available). Persistence without timing
+   evidence is not a beacon; long-lived single sessions will be a separate signal (docs/35 E1). "Now" is the largest flow end time.

@@ -143,6 +143,9 @@ class Config:
     beaconing_threshold: float = 0.8
     beaconing_min_flows: int = 12
     beaconing_allowlist: list[str] = field(default_factory=list)
+    # "Inside" networks: only internal-source -> external-destination pairs are scored.
+    beaconing_internal_nets: list[str] = field(
+        default_factory=lambda: ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "fc00::/7"])
 
     # 9B adversarial-retraining harness: hours between report-only runs on the
     # live window; 0 (default) = off, manual POST /api/model/harden only.

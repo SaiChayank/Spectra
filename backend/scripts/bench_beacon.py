@@ -270,9 +270,9 @@ def hikari_sets(root: str) -> dict:
                 elif (k[2], k[3], k[0], k[1]) in want:
                     lab.setdefault((k[2], k[3], k[0], k[1]), set()).add(int(r["Label"]))
     pos, neg, unl = [], [], 0
-    for n, fl in flows.items():
+    for fl in flows.values():
         votes: dict = {}
-        for i, k in enumerate(zip(fl["src"].tolist(), fl["sport"].tolist(), fl["dst"].tolist(), fl["dport"].tolist(), strict=True)):
+        for k in (zip(fl["src"].tolist(), fl["sport"].tolist(), fl["dst"].tolist(), fl["dport"].tolist(), strict=True)):
             ls = lab.get(k)
             if ls and len(ls) == 1:
                 votes.setdefault((k[0], k[2]), []).append(next(iter(ls)))

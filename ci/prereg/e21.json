@@ -6,7 +6,7 @@
   "scorer": {
     "pair_key": "(source host, SNI if the flow has one else destination IP); verdict carries the SNI and the set of destination IPs seen",
     "state_per_pair": "newest 512 flows as (start_ts, forward bytes, duration_s); first_seen; hourly flow counts; PAIR_CAP kept; all state bounded",
-    "now": "largest flow timestamp the tracker has observed (capture clock, never wall clock)",
+    "now": "largest flow END time (start + duration) the tracker has observed (capture clock, never wall clock) (amendment 1)",
     "long_flows": "a flow longer than 1 h counts in every hour bin it spans",
     "components": {
       "G": "mean of (1 - |bowley(gaps)|) and (1 - min(1, MAD(gaps)/median(gaps))); bowley = (Q3 + Q1 - 2*Q2)/(Q3 - Q1), 0 when Q3 == Q1; gaps between consecutive start times",
@@ -15,9 +15,10 @@
       "H": "1 - min(1, MAD(counts)/median(counts)) over the same hour bins including empty ones; 0 if median count is 0"
     },
     "minimum_evidence": {
-      "G_and_S": ">= 12 flows and median gap >= 1 s",
+      "G": ">= 12 unique whole-second start times",
+      "S": ">= 12 flows",
       "D_and_H": "span (now - first_seen) >= 3 h",
-      "score_exists": "D available and at least one of G or H available; otherwise no verdict"
+      "verdict_exists": "G and D both available (amendment 1)"
     },
     "score": "unweighted mean of the available components",
     "alert_threshold": 0.8,
@@ -26,7 +27,8 @@
       "nothing can alert in the first 3 h of a pair",
       "a 1 h beacon needs about 12 h",
       "captures shorter than 3 h give no verdict"
-    ]
+    ],
+    "direction": "only internal-source to external-destination pairs (amendment 1)"
   },
   "evaluation": {
     "dev_smoke_only": "CIC-2018 Bot day has already been seen: reported in its own row, never in the gate",
@@ -41,6 +43,32 @@
       "set_B_jitter": "gated at jitter <= 50 %; 75 % reported as a curve only"
     },
     "on_failure": "report 'ranking aid, not a detector'; flag stays off; numbers published; no retuning in the same session",
-    "bootstrap": {"resamples": 1000, "seed": 1337}
-  }
+    "bootstrap": {
+      "resamples": 1000,
+      "seed": 1337
+    }
+  },
+  "amendments": [
+    {
+      "date": "2026-11-12",
+      "note": "Amendment 1, decided from the CIC-2018 dev smoke (seen data); no held-out run (set A or B) has happened. Weights (equal) and the 0.8 threshold are unchanged. This is the only amendment round on CIC.",
+      "changes": [
+        {
+          "id": 1,
+          "change": "G is computed on gaps between the sorted UNIQUE floor(start_ts) whole-second timestamps (RITA's public method); the 'median gap >= 1 s' rule is removed; G needs >= 12 unique timestamps. S still uses every flow's forward bytes and needs >= 12 flows.",
+          "reason": "The median-gap rule excluded the fastest real beacons entirely: all ten CIC C2 pairs had no G or S."
+        },
+        {
+          "id": 2,
+          "change": "Direction: only pairs whose source is inside the monitored network and whose destination IP is outside it are tracked and scored. Inside = config beaconing_internal_nets, default RFC1918 + fc00::/7. For set A (CTU-13) the inside network is 147.32.0.0/16 (the capture network documented by the dataset); this was fixed before set A was scored. Internal-to-internal pairs are out of scope for this detector.",
+          "reason": "A beacon is an internal host calling out; inbound scanners are not beacons (50 of the 51 CIC negatives scoring >= 0.8 had an external source)."
+        },
+        {
+          "id": 3,
+          "change": "G is required: a verdict exists only when G and D are both available; S and H join the mean when available. 'Now' is the largest flow END time (start + duration), so long flows are not clipped.",
+          "reason": "Persistence with no timing evidence is not a beacon verdict; long-lived single sessions are a separate later signal (docs/35 E1) and must not alert here."
+        }
+      ]
+    }
+  ]
 }

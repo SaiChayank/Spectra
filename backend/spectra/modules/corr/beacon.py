@@ -4,14 +4,16 @@ Independent of the isolation forest: one score per (source host, SNI-or-destinat
 *metadata only* (start time, forward byte count, duration).  Design after RITA's published method; every
 number is preregistered and nothing is fitted to data.  Components, each in [0, 1], robust statistics only:
 
-  G gaps        mean of (1 - |bowley|) and (1 - min(1, MAD/median)) of start-to-start gaps
+  G gaps        mean of (1 - |bowley|) and (1 - min(1, MAD/median)) of the gaps between the sorted unique
+                whole-second start times (RITA analyses unique one-second timestamps)
   S sizes       the same two formulas on forward bytes (0 if the median is 0)
   D persistence active hour bins / total hour bins from first_seen to now (newest 24)
   H flatness    1 - min(1, MAD/median) of the hourly flow counts, empty hours included (0 if median 0)
 
-G and S need >= 12 flows and a median gap >= 1 s; D and H need a span >= 3 h.  A score exists only when D
-and at least one of G/H are available; it is the unweighted mean of the available components.  "Now" is the
-largest flow start time seen (capture clock).  Quartiles use the inclusive method (statistics.quantiles).
+G needs >= 12 unique seconds, S >= 12 flows; D and H need a span >= 3 h.  A verdict exists only when G and D
+are both available; the score is the unweighted mean of the available components.  "Now" is the largest flow
+end time (start + duration) seen (capture clock).  Only pairs from an internal source to an external
+destination are tracked (a beacon is an internal host calling out; internal-to-internal is out of scope).  Quartiles use the inclusive method (statistics.quantiles).
 Nothing can alert in the first 3 h of a pair.  Known periodic services belong in the allow-list.
 """
 
@@ -25,9 +27,9 @@ from .graph import PAIR_CAP, _strip_port
 
 MIN_FLOWS = 12       # flows before G and S exist
 KEEP = 512           # newest flows kept per pair
-MIN_GAP_S = 1.0      # median start-to-start gap below this is not a beacon
 MIN_SPAN_S = 3 * 3600.0   # D and H need this much first_seen -> now
 BINS = 24            # newest hour bins used for D and H
+INTERNAL_NETS = ("10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "fc00::/7")   # default "inside"
 MAX_IPS = 16         # destination IPs remembered per SNI pair
 DEFAULT_THRESHOLD = 0.8   # preregistered, ci/prereg/e21.json
 
@@ -47,12 +49,13 @@ def score_pair(flows, hours: dict, first_seen: float, now: float, min_flows: int
     ``{hour: flow_count}`` bins; None when there is no verdict (too little evidence)."""
     comps: dict[str, float] = {}
     med_gap = None
-    if len(flows) >= max(min_flows, 4):
-        gaps = [b[0] - a[0] for a, b in zip(flows, flows[1:], strict=False)]
+    secs = sorted({int(f[0] // 1) for f in flows})
+    if len(secs) >= max(min_flows, 4):
+        gaps = [b - a for a, b in zip(secs, secs[1:], strict=False)]
         med_gap = statistics.median(gaps)
-        if med_gap >= MIN_GAP_S:
-            comps["G"] = _spread(gaps)
-            comps["S"] = _spread([float(f[1]) for f in flows])
+        comps["G"] = _spread(gaps)
+    if len(flows) >= max(min_flows, 4):
+        comps["S"] = _spread([float(f[1]) for f in flows])
     if now - first_seen >= MIN_SPAN_S:
         hi = int(now // 3600)
         lo = max(int(first_seen // 3600), hi - BINS + 1)
@@ -60,12 +63,12 @@ def score_pair(flows, hours: dict, first_seen: float, now: float, min_flows: int
         comps["D"] = sum(1 for c in counts if c) / len(counts)
         med = statistics.median(counts)
         comps["H"] = 1.0 - min(1.0, statistics.median(abs(c - med) for c in counts) / med) if med > 0 else 0.0
-    if "D" not in comps or not ("G" in comps or "H" in comps):
+    if "D" not in comps or "G" not in comps:
         return None
     return {
         "score": round(sum(comps.values()) / len(comps), 4), "components": {k: round(v, 4) for k, v in comps.items()},
-        "n": len(flows), "span_h": round((now - first_seen) / 3600.0, 2),
-        "median_gap_s": round(med_gap, 3) if med_gap is not None else None,
+        "n": len(flows), "unique_seconds": len(secs), "span_h": round((now - first_seen) / 3600.0, 2),
+        "median_gap_s": round(med_gap, 3),
         "median_duration_s": round(statistics.median(f[2] for f in flows), 3),
     }
 
@@ -99,16 +102,21 @@ def is_allowed(allow: tuple[list, list[str]], ip: str, sni: str | None) -> bool:
 class BeaconTracker:
     """Streaming wrapper: feed flow records, get a verdict when a pair crosses the threshold."""
 
-    def __init__(self, threshold: float = DEFAULT_THRESHOLD, min_flows: int = MIN_FLOWS, allowlist=()):
+    def __init__(self, threshold: float = DEFAULT_THRESHOLD, min_flows: int = MIN_FLOWS, allowlist=(),
+                 internal_nets=INTERNAL_NETS):
         self.threshold = float(threshold)
         self.min_flows = int(min_flows)
         self.allow = parse_allowlist(allowlist)
+        self.internal = [ipaddress.ip_network(str(n).strip(), strict=False) for n in internal_nets]   # bad entry: raises
         self.pairs: OrderedDict[tuple[str, str], dict] = OrderedDict()
         self.now = float("-inf")
 
     def reset(self) -> None:
         self.pairs.clear()
         self.now = float("-inf")
+
+    def _inside(self, addr) -> bool:
+        return any(addr in n for n in self.internal if n.version == addr.version)
 
     def observe(self, record: dict) -> dict | None:
         """Count this flow; return the pair verdict (``pair``, ``sni``, ``dst_ips``, stats) if it alerts."""
@@ -118,11 +126,17 @@ class BeaconTracker:
             t = record.get("last_ts")
         if not host or not ip or t is None:
             return None
+        try:
+            src_ip, dst_ip = ipaddress.ip_address(host), ipaddress.ip_address(ip)
+        except ValueError:
+            return None
+        if not self._inside(src_ip) or self._inside(dst_ip):     # only internal -> external pairs are beacons
+            return None
         t = float(t)
         sni = (record.get("sni") or "").lower().rstrip(".") or None
         key = (host, sni or ip)
         dur = float(record.get("duration") or 0.0)
-        self.now = max(self.now, t)
+        self.now = max(self.now, t + dur)
         st = self.pairs.pop(key, None) or {"flows": deque(maxlen=KEEP), "first": t, "hours": {}, "ips": set()}
         self.pairs[key] = st
         while len(self.pairs) > PAIR_CAP:
@@ -151,13 +165,13 @@ def as_threat(v: dict) -> dict:
         return {"signal": name, "weight": 0.5, "detail": detail, "value": value, "unit": unit}
     comps = ", ".join(f"{k} {x:.2f}" for k, x in v["components"].items())
     dest = v["sni"] or ", ".join(v["dst_ips"])
-    timing = (f"{v['n']} flows over {v['span_h']:.1f} h from {v['pair'][0]} to {dest}"
-              + (f", one every ~{v['median_gap_s']:.1f}s" if v["median_gap_s"] else ""))
+    timing = (f"{v['n']} flows over {v['span_h']:.1f} h from {v['pair'][0]} to {dest}, "
+              f"one every ~{v['median_gap_s']:.1f}s")
     return {
         "threat_type": "C2_BEACONING",
         "confidence": round(min(0.95, v["score"]), 3),
         "supporting": [
-            sig("periodic_forward_timing", timing, v["median_gap_s"] or 0.0, "s"),
+            sig("periodic_forward_timing", timing, v["median_gap_s"], "s"),
             sig("pair_beacon_score", f"pair score {v['score']:.2f} (components available: {comps})",
                 v["score"], "ratio"),
         ],
