@@ -24,6 +24,7 @@ from ..features.extractor import extract_features
 from ..intel import IntelService
 from ..modules.audit.log import MAX_LEAVES as AUDIT_MAX_LEAVES
 from ..modules.bio import RESPONSES, BioSystem
+from ..modules.corr.beacon import BeaconTracker, as_threat
 from ..modules.edge import SLICES, EdgeSystem, apply_slice_policy, classify_slice
 from ..modules.pqc import PQCInventory, assess_handshake, screen_flows
 from ..modules.pqc.roadmap import generate_roadmap
@@ -66,6 +67,11 @@ class DetectionService:
         self.intel = self.failures.guard(
             "intel", lambda: IntelService(config.intel_dir), default=None)
 
+        # C2_BEACONING pair detector: absent unless the operator turned it on
+        self._beacons = (BeaconTracker(config.beaconing_threshold, config.beaconing_min_flows,
+                                       allowlist=config.beaconing_allowlist)
+                         if config.beaconing_enabled else None)
+
         # Module 6: bio-inspired layer (immune + SNN + swarm)
         self.bio = BioSystem(contamination=model.contamination)
         self._bio_path = os.path.splitext(model.model_path)[0] + ".bio.joblib"
@@ -104,6 +110,8 @@ class DetectionService:
         self.timeline = {}
         self.counters = self._new_counters()
         self.pqc.reset()
+        if self._beacons is not None:
+            self._beacons.reset()
 
     # -- sidecar paths (used by the training service) ---------------------------
 
@@ -284,6 +292,20 @@ class DetectionService:
                 )
             if alert is not None:
                 record["alert_id"] = alert["alert_id"]
+
+        if self._beacons is not None and self.threat_alerts is not None:
+            # Pair beaconing is independent of the forest: it may alert on a flow the model
+            # called normal.  The record keeps the first alert id if it already has one.
+            verdict = self.failures.guard("beaconing", lambda: self._beacons.observe(record),
+                                          default=None)
+            if verdict is not None:
+                alert = self.failures.guard(
+                    "threat_alerts",
+                    lambda: self.threat_alerts.observe(record, as_threat(verdict), score=None,
+                                                       capture_id=self.session.capture_id),
+                    default=None)
+                if alert is not None and not record.get("alert_id"):
+                    record["alert_id"] = alert["alert_id"]
 
         self._correlation.observe(record)
         self._events.emit(

@@ -103,7 +103,9 @@ class BeaconTracker:
     def observe(self, record: dict) -> dict | None:
         """Count this flow; return the pair verdict (``pair``, ``sni``, stats) if it alerts."""
         host, ip = _strip_port(record.get("src")), _strip_port(record.get("dst"))
-        t = record.get("start_ts") or record.get("last_ts")
+        t = record.get("start_ts")
+        if t is None:
+            t = record.get("last_ts")
         if not host or not ip or t is None:
             return None
         key = (host, ip)

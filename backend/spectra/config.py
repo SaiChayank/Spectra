@@ -136,6 +136,14 @@ class Config:
     # signal and the graph edge's ``regularity``.
     pair_window_flows: int = 32
 
+    # C2_BEACONING pair detector (spectra.modules.corr.beacon, docs/plan-beaconing-detector.md):
+    # OFF until validated on your own network.  Allow-list = IPs, CIDRs and domain suffixes of
+    # known periodic services (NTP, update checks, monitoring probes) that must never alert.
+    beaconing_enabled: bool = False
+    beaconing_threshold: float = 0.8
+    beaconing_min_flows: int = 8
+    beaconing_allowlist: list[str] = field(default_factory=list)
+
     # 9B adversarial-retraining harness: hours between report-only runs on the
     # live window; 0 (default) = off, manual POST /api/model/harden only.
     harden_interval_h: float = 0.0
