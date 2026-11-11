@@ -657,7 +657,7 @@ def test_pcapng_captures_still_read_through_the_bounded_stream(tmp_path):
 
     packets = list(PcapFileSource(str(path)).packets())
     assert len(packets) == 1
-    assert packets[0][IP].src == "10.1.1.1"
+    assert packets[0].src == "10.1.1.1"
 
 
 # -- truncated captures must not be analysed as if complete ---------------------------------

@@ -2,9 +2,8 @@
 
 import time
 
-from scapy.utils import PcapWriter
 
-from spectra.demo import tls_flow_packets
+from spectra.demo import tls_flow_packets, write_pcap
 from spectra.modules.pqc import (
     PQCInventory,
     assess_flow,
@@ -22,12 +21,7 @@ from spectra.tools import collect_flows
 
 
 def _write_pcap(path, flows):
-    writer = PcapWriter(str(path), sync=True)
-    for pkts in flows:
-        for p in pkts:
-            writer.write(p)
-    writer.close()
-    return str(path)
+    return write_pcap(str(path), [p for pkts in flows for p in pkts])
 
 
 # -- registry ----------------------------------------------------------------
@@ -125,9 +119,7 @@ def test_plaintext_flow_not_applicable(tmp_path):
     pkt = IP(src="10.0.0.9", dst="198.51.100.7") / UDP(sport=5555, dport=4444) / Raw(b"\x01" * 32)
     pkt.time = 1_700_000_000.0
     pcap = tmp_path / "plain.pcap"
-    w = PcapWriter(str(pcap), sync=True)
-    w.write(pkt)
-    w.close()
+    write_pcap(str(pcap), [pkt])
     flows = collect_flows(str(pcap))
     a = assess_flow(flows[0])
     assert a["applicable"] is False

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import numpy as np
-from scapy.all import IP, UDP, PcapWriter, Raw
+from scapy.all import IP, UDP, Raw
 
 from spectra.capture.sanitize import sanitize_pcap
 from spectra.demo import BASE, _pkt, make_baseline_pcap, quic_flow_packets, tls_flow_packets, write_pcap
@@ -15,7 +15,7 @@ MARK = b"SANITIZE-MARK-5b1e90c4a7d2"
 def _marked(path: str) -> str:
     full = tls_flow_packets(src="10.77.0.5", dst="203.0.113.50", sni="probe.example", start=BASE)
     # the demo flow's filler "application data" is not valid TLS framing; keep its handshake packets and add real records
-    pkts = [p for p in full if not bytes(p["TCP"].payload) or bytes(p["TCP"].payload)[0] == 0x16]
+    pkts = [p for p in full if not p.payload or p.payload[0] == 0x16]
     rec = b"\x17\x03\x03" + (len(MARK) + 16).to_bytes(2, "big") + MARK + bytes(16)
     pkts.append(_pkt("10.77.0.5", "203.0.113.50", 40000, 443, "PA", 9000, 9000, payload=rec, t=BASE + 3.0))
     # a second record split across two segments (header in the first, body continues in the second)
@@ -25,11 +25,9 @@ def _marked(path: str) -> str:
     http = b"GET /?token=" + MARK + b" HTTP/1.1\r\nHost: plain.example\r\n\r\n"
     pkts += [_pkt("10.77.0.6", "203.0.113.51", 41000, 80, "S", 1, 0, t=BASE + 4.0),
              _pkt("10.77.0.6", "203.0.113.51", 41000, 80, "PA", 2, 1, payload=http, t=BASE + 4.1)]
-    w = PcapWriter(path, sync=True)
-    for p in pkts:
-        w.write(p)
-    w.write(IP(src="10.77.0.7", dst="203.0.113.52") / UDP(sport=5353, dport=5353) / Raw(load=MARK))
-    w.close()
+    udp = IP(src="10.77.0.7", dst="203.0.113.52") / UDP(sport=5353, dport=5353) / Raw(load=MARK)
+    udp.time = BASE + 5.0
+    write_pcap(path, pkts + [udp])
     return path
 
 

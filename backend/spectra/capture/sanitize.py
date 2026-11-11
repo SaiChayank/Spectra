@@ -16,13 +16,12 @@ match them); Spectra does not validate checksums.
 """
 from __future__ import annotations
 
+import struct
 from dataclasses import dataclass
-
-from scapy.all import IP, TCP, UDP, IPv6
-from scapy.utils import PcapWriter
 
 from ..parse.quic import parse_long_header
 from .base import CaptureError
+from .packet import Packet
 from .pcap_file import PcapFileSource
 
 _TLS_TYPES = (0x14, 0x15, 0x16, 0x17)       # change_cipher_spec, alert, handshake, application_data
@@ -65,44 +64,39 @@ def _is_quic_initial(payload: bytes) -> bool:
     return bool(hdr and hdr.get("type") == "initial")
 
 
-def sanitize_packet(pkt, states: dict) -> tuple[bytes, bool]:
-    """Return (new raw bytes, changed) for one scapy packet."""
-    raw = bytes(pkt)
-    ip = pkt.getlayer(IP) or pkt.getlayer(IPv6)
-    if ip is None:
+def sanitize_packet(pkt: Packet, states: dict) -> tuple[bytes, bool]:
+    """Return (new raw bytes, changed) for one packet."""
+    raw = pkt.data
+    if not pkt.l4:
         return raw, False
-    tcp, udp = pkt.getlayer(TCP), pkt.getlayer(UDP)
-    layer = tcp or udp
-    if layer is None:
-        return raw, False
-    payload = bytes(layer.payload)
+    payload = pkt.payload
     if not payload:
         return raw, False
-    off = len(raw) - len(payload)
-    if tcp is not None:
-        key = (ip.src, ip.dst, tcp.sport, tcp.dport)
+    if pkt.l4 == 6:
+        key = (pkt.src, pkt.dst, pkt.sport, pkt.dport)
         new = bytes(_tls_mask(payload, states.setdefault(key, _Dir())))
     else:
         new = payload if _is_quic_initial(payload) else bytes(len(payload))
-    return raw[:off] + new, new != payload
+    return raw[:pkt.poff] + new, new != payload
 
 
 def sanitize_pcap(src: str, dst: str) -> dict:
     """Write the metadata-only copy of ``src`` (pcap/pcapng/gz) to ``dst`` (classic pcap); return counts."""
     states: dict = {}
     packets = changed = 0
-    writer = None
+    out = None
+    linktype = 0
     try:
         for pkt in PcapFileSource(src).packets():
             new, did = sanitize_packet(pkt, states)
-            out = pkt.__class__(new) if did else pkt
-            out.time = pkt.time
-            wirelen = getattr(pkt, "wirelen", None)
-            if wirelen is not None:
-                out.wirelen = wirelen
-            if writer is None:
-                writer = PcapWriter(dst, sync=False)
-            writer.write(out)
+            if out is None:
+                linktype = pkt.linktype
+                out = open(dst, "wb")
+                out.write(struct.pack("<IHHiIII", 0xA1B2C3D4, 2, 4, 0, 0, 65535, linktype))
+            elif pkt.linktype != linktype:      # a classic pcap has one link type; keeping the raw frame is not an option
+                raise CaptureError("the capture mixes link types and cannot be rewritten as a classic pcap")
+            usec = round(pkt.time * 1_000_000)
+            out.write(struct.pack("<IIII", usec // 1_000_000, usec % 1_000_000, len(new), pkt.wirelen) + new)
             packets += 1
             changed += did
     except CaptureError:
@@ -110,8 +104,8 @@ def sanitize_pcap(src: str, dst: str) -> dict:
     except Exception as exc:  # noqa: BLE001 - fail closed: never keep the raw copy on a sanitising error
         raise CaptureError(f"could not sanitise the capture: {exc}") from exc
     finally:
-        if writer is not None:
-            writer.close()
+        if out is not None:
+            out.close()
     if packets == 0:
         raise CaptureError("the capture holds no packets to keep")
     return {"packets": packets, "packets_payload_zeroed_or_trimmed": changed}

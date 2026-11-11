@@ -25,9 +25,9 @@ import os
 import urllib.parse
 
 import pytest
-from scapy.all import IP, UDP, PcapWriter, Raw
+from scapy.all import IP, UDP, Raw
 
-from spectra.demo import BASE, _pkt, tls_flow_packets
+from spectra.demo import BASE, _pkt, tls_flow_packets, write_pcap
 
 MARKER = b"SPECTRA-PROBE-9d41c7e2b0a8"
 
@@ -62,10 +62,7 @@ def _marked_pcap(path: str) -> str:
     udp.time = BASE + 5.0
     pkts.append(udp)
     pkts.sort(key=lambda p: float(p.time))
-    w = PcapWriter(path, sync=True)
-    for p in pkts:
-        w.write(p)
-    w.close()
+    write_pcap(path, pkts)
     return path
 
 

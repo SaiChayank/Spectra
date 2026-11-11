@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Iterator
 
-from scapy.packet import Packet
+from .packet import Packet
 
 
 class CaptureError(RuntimeError):
@@ -13,7 +13,7 @@ class CaptureError(RuntimeError):
 
 
 class CaptureSource(ABC):
-    """A source of packets. Implementations yield scapy packets."""
+    """A source of packets. Implementations yield :class:`Packet` objects."""
 
     name: str = "capture"
 

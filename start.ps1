@@ -35,7 +35,7 @@ if (-not $py) {
 } else {
     $pyver = & python -c "import sys; print('%d.%d.%d' % sys.version_info[:3])"
     Step "Python $pyver"
-    & python -c 'import fastapi, scapy, sklearn, numpy' *> $null
+    & python -c 'import fastapi, sklearn, numpy' *> $null
     if ($LASTEXITCODE -ne 0) {
         Warn 'backend dependencies missing - run:  cd backend; pip install -r requirements.txt'
         $failed = $true

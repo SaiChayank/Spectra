@@ -13,7 +13,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Callable, Iterator
 
-from scapy.packet import Packet
+from ..capture.packet import Packet, as_packet
 
 from .tls import TlsMetadata, TlsStreamParser, parse_handshake
 
@@ -115,22 +115,9 @@ class Flow:
 
 def _endpoints(pkt: Packet) -> tuple[str, int, str, int, int] | None:
     """Return (src_ip, src_port, dst_ip, dst_port, proto) or None."""
-    from scapy.layers.inet import IP, TCP, UDP
-    from scapy.layers.inet6 import IPv6
-
-    if pkt.haslayer(IP):
-        ip = pkt[IP]
-    elif pkt.haslayer(IPv6):
-        ip = pkt[IPv6]
-    else:
+    if pkt.src is None or not pkt.l4:
         return None
-    if pkt.haslayer(TCP):
-        t = pkt[TCP]
-        return ip.src, int(t.sport), ip.dst, int(t.dport), FLOW_TCP
-    if pkt.haslayer(UDP):
-        u = pkt[UDP]
-        return ip.src, int(u.sport), ip.dst, int(u.dport), FLOW_UDP
-    return None
+    return pkt.src, pkt.sport, pkt.dst, pkt.dport, pkt.l4
 
 
 class FlowTracker:
@@ -173,6 +160,7 @@ class FlowTracker:
 
     def process(self, pkt: Packet, ts: float | None = None) -> Flow | None:
         """Feed one packet; returns the flow it belongs to (may be unfinished)."""
+        pkt = as_packet(pkt)
         eps = _endpoints(pkt)
         if eps is None:
             return None
@@ -181,24 +169,12 @@ class FlowTracker:
         rev_key = (proto, dst, dport, src, sport)
 
         if ts is None:
-            ts = float(pkt.time)
+            ts = pkt.time
         if self._drop_completed(fwd_key, rev_key, ts):
             return None
 
-        from scapy.layers.inet import IP, TCP
-        from scapy.layers.inet6 import IPv6
-
-        if pkt.haslayer(IP) and pkt[IP].len is not None:
-            size = int(pkt[IP].len)
-        elif pkt.haslayer(IPv6) and pkt[IPv6].plen is not None:
-            size = int(pkt[IPv6].plen) + 40
-        else:
-            size = len(pkt)
-        payload_len = 0
-        if pkt.haslayer(TCP):
-            payload_len = len(bytes(pkt[TCP].payload)) if pkt[TCP].payload else 0
-        elif pkt.haslayer("UDP"):
-            payload_len = len(bytes(pkt["UDP"].payload)) if pkt["UDP"].payload else 0
+        size = pkt.size
+        payload_len = pkt.payload_len
 
         flow = self._flows.get(fwd_key)
         direction = 0
@@ -227,10 +203,10 @@ class FlowTracker:
             flow.packets_bwd += 1
 
         syn = fin = rst = psh = ack = False
-        if pkt.haslayer(TCP):
-            flags = pkt[TCP].flags
-            syn, fin, rst, psh, ack = bool(flags.S), bool(flags.F), bool(
-                flags.R), bool(flags.P), bool(flags.A)
+        if proto == FLOW_TCP:
+            flags = pkt.flags
+            syn, fin, rst, psh, ack = bool(flags & 2), bool(flags & 1), bool(
+                flags & 4), bool(flags & 8), bool(flags & 16)
 
         rec = PacketRec(ts=ts, size=size, direction=direction, syn=syn, ack=ack,
                         fin=fin, rst=rst, psh=psh, payload=payload_len)
@@ -240,9 +216,9 @@ class FlowTracker:
             flow.truncated = True
 
         if proto == FLOW_TCP and payload_len:
-            self._feed_tls(flow, direction, bytes(pkt[TCP].payload), ts)
+            self._feed_tls(flow, direction, pkt.payload, ts)
         elif proto == FLOW_UDP and payload_len:
-            self._feed_quic(flow, direction, bytes(pkt["UDP"].payload), ts)
+            self._feed_quic(flow, direction, pkt.payload, ts)
 
         if proto == FLOW_TCP:
             if fin:

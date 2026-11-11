@@ -4,9 +4,8 @@ import time
 
 import numpy as np
 from fastapi.testclient import TestClient
-from scapy.utils import PcapWriter
 
-from spectra.demo import beacon_flow_packets, make_baseline_pcap, tls_flow_packets
+from spectra.demo import beacon_flow_packets, make_baseline_pcap, tls_flow_packets, write_pcap
 from spectra.features.extractor import N_FEATURES
 from spectra.ml.model import SpectraDetector
 from spectra.modules.adv import attack, attack_batch, score_boundary, watch
@@ -156,12 +155,7 @@ def test_psi_unavailable_without_baseline():
 # -- engine + API integration ------------------------------------------------
 
 def _write(path, flows):
-    w = PcapWriter(str(path), sync=True)
-    for pkts in flows:
-        for p in pkts:
-            w.write(p)
-    w.close()
-    return str(path)
+    return write_pcap(str(path), [p for pkts in flows for p in pkts])
 
 
 def test_engine_phase3_and_api(tmp_path, upload_capture):
