@@ -44,3 +44,25 @@ periodic. The result may be "useful as a ranking aid, not as a detector", and th
   few flows to score counts as missed in the "all pairs" view); per-component AUC (reporting only); the benign pairs that alert; a
   synthetic jitter sweep (labelled synthetic).
 * **Not run here:** the owner's own-network baseline (task 12 is a human task); the nightly job (not added - see the report).
+
+## v2 (preregistered 2026-11-11, before any v2 scoring code is run on data; machine-readable copy: `ci/prereg/e21.json`)
+v1 (above) was a ranking aid on one dataset. v2 follows RITA's published method plus `docs/evaluation-report.md` §15. **Nothing is fitted to
+data; the numbers below are decided and are not tuned after seeing results.**
+* **Pair** = (source host, SNI if the flow has one, else destination IP); the verdict carries the SNI and the set of destination IPs seen.
+* **State per pair:** newest 512 flows as (start_ts, forward bytes, duration_s), first_seen, hourly flow counts; the pair cap stays; all state
+  is bounded. "Now" = the largest flow timestamp seen (capture clock, never wall clock). A flow longer than 1 h counts in every hour bin it spans.
+* **Components, each in [0, 1], robust statistics only:** **G** gaps = mean of (1 - |bowley|) and (1 - min(1, MAD/median)) of start-to-start
+  gaps (bowley = (Q3 + Q1 - 2*Q2)/(Q3 - Q1), 0 when Q3 == Q1); **S** sizes = the same two formulas on forward bytes (0 if the median is 0);
+  **D** persistence = active hour bins / total hour bins from first_seen to now inclusive, newest 24 bins; **H** histogram flatness =
+  1 - min(1, MAD/median) of the hourly counts over those bins including empty ones (0 if the median count is 0).
+* **Minimum evidence:** G and S need >= 12 flows and a median gap >= 1 s. D and H need a span (now - first_seen) >= 3 h. A score exists only
+  when D is available and at least one of G or H is; otherwise no verdict.
+* **Score** = unweighted mean of the available components; **alert at score >= 0.8**. Allow-list semantics unchanged; the allow-list is EMPTY
+  for every gate run.
+* **Known consequences:** nothing can alert in the first 3 h of a pair; a 1 h beacon needs about 12 h; captures shorter than 3 h give no verdict.
+* **Evaluation:** CIC-2018 Bot day has been seen: dev/smoke only, its own row, never in the gate. Held-out set A = CTU-13 botnet C2 pairs vs
+  CTU-Normal 2017 benign pairs; held-out set B = a lab C2 corpus generated after this file is committed (dataset hashes added by amendment).
+  Pairs with >= 20 flows. **Gate (needs A and B):** recall >= 0.8 at <= 1 false pair per 1,000 benign pairs (zero false pairs when fewer than
+  1,000), bootstrap 95 % lower bound >= 0.6, and recall not more than 0.05 below real RITA v5.1.2 on the same pairs; B is gated at jitter
+  <= 50 %, 75 % is a reported curve only. **On failure:** report "ranking aid, not a detector", the flag stays off, numbers are published, no
+  retuning in the same session. Any change after a held-out run needs a committed amendment with its reason.

@@ -1,0 +1,46 @@
+{
+  "name": "E21 beaconing scorer v2 (preregistration)",
+  "frozen": "2026-11-11",
+  "note": "Design and gate fixed before any v2 scoring code is run on data. Nothing is fitted to data. Any change after a held-out run needs a committed amendment with its reason. Dataset hashes for held-out sets A and B are added by amendment when they exist.",
+  "design_source": "RITA published method + docs/evaluation-report.md section 15",
+  "scorer": {
+    "pair_key": "(source host, SNI if the flow has one else destination IP); verdict carries the SNI and the set of destination IPs seen",
+    "state_per_pair": "newest 512 flows as (start_ts, forward bytes, duration_s); first_seen; hourly flow counts; PAIR_CAP kept; all state bounded",
+    "now": "largest flow timestamp the tracker has observed (capture clock, never wall clock)",
+    "long_flows": "a flow longer than 1 h counts in every hour bin it spans",
+    "components": {
+      "G": "mean of (1 - |bowley(gaps)|) and (1 - min(1, MAD(gaps)/median(gaps))); bowley = (Q3 + Q1 - 2*Q2)/(Q3 - Q1), 0 when Q3 == Q1; gaps between consecutive start times",
+      "S": "same two formulas on forward bytes; 0 if median is 0",
+      "D": "active hour bins / total hour bins between first_seen and now inclusive, capped at the 24 newest bins",
+      "H": "1 - min(1, MAD(counts)/median(counts)) over the same hour bins including empty ones; 0 if median count is 0"
+    },
+    "minimum_evidence": {
+      "G_and_S": ">= 12 flows and median gap >= 1 s",
+      "D_and_H": "span (now - first_seen) >= 3 h",
+      "score_exists": "D available and at least one of G or H available; otherwise no verdict"
+    },
+    "score": "unweighted mean of the available components",
+    "alert_threshold": 0.8,
+    "allow_list": "semantics unchanged; EMPTY for every gate run",
+    "known_consequences": [
+      "nothing can alert in the first 3 h of a pair",
+      "a 1 h beacon needs about 12 h",
+      "captures shorter than 3 h give no verdict"
+    ]
+  },
+  "evaluation": {
+    "dev_smoke_only": "CIC-2018 Bot day has already been seen: reported in its own row, never in the gate",
+    "set_A": "CTU-13 botnet C2 pairs vs CTU-Normal 2017 benign pairs (held out)",
+    "set_B": "lab C2 corpus generated after this file is committed (held out); dataset hashes added by amendment when they exist",
+    "pairs": ">= 20 flows",
+    "gate": {
+      "needs": "both A and B",
+      "recall": ">= 0.8 at <= 1 false pair per 1000 benign pairs (zero false pairs when fewer than 1000)",
+      "bootstrap_95_lower_bound": ">= 0.6",
+      "vs_rita": "recall not more than 0.05 below real RITA v5.1.2 on the same pairs",
+      "set_B_jitter": "gated at jitter <= 50 %; 75 % reported as a curve only"
+    },
+    "on_failure": "report 'ranking aid, not a detector'; flag stays off; numbers published; no retuning in the same session",
+    "bootstrap": {"resamples": 1000, "seed": 1337}
+  }
+}
