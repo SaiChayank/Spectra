@@ -1,0 +1,29 @@
+{
+ "prereg": "e0.json",
+ "prereg_sha256": "b51e08d46b57969692262e8e913673c38498b572631e3492425a73faab765890",
+ "git_commit": "def6f5a3eb6e278e449261fa26926c7d6bbbb145",
+ "git_dirty": false,
+ "steps": [
+  {
+   "id": "ctu",
+   "ok": true,
+   "seconds": 4832.7,
+   "output": "ctu-bench.json",
+   "sha256": "e5ca9b3735db96176abe131991c550e278d5d908315bad519988c7ba7b800803"
+  },
+  {
+   "id": "beacon",
+   "ok": true,
+   "seconds": 258.4,
+   "output": "beacon-sweep.json",
+   "sha256": "2341aeaf78e03d4fb2a7bce4eae5dcc80cdd2764f07b58e6de49d597f05d8b91"
+  },
+  {
+   "id": "gateb",
+   "ok": true,
+   "seconds": 1661.1,
+   "output": "gateb.json",
+   "sha256": "0efa9397b782f19b7352d7deb444eaaac6e3a8b1f51aa4447973d401e0bbb7d2"
+  }
+ ]
+}
