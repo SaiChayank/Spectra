@@ -1,70 +1,117 @@
-"""Pair beaconing scorer (spectra.modules.corr.beacon): hand-computed cases, allow-list, alert path."""
+"""Pair beaconing scorer v2 (spectra.modules.corr.beacon): hand-computed cases, allow-list, bounds, alert path."""
 
 from __future__ import annotations
 
 import pytest
 
 from spectra.config import Config
-from spectra.modules.corr.beacon import (
-    BeaconTracker,
-    as_threat,
-    is_allowed,
-    parse_allowlist,
-    score_pair,
-)
+from spectra.modules.corr import beacon
+from spectra.modules.corr.beacon import BeaconTracker, as_threat, is_allowed, parse_allowlist
+
+H = 3600.0
 
 
-def flows(starts, size=1000, dur=1.0):
-    sizes = size if isinstance(size, list) else [size] * len(starts)
-    return [(float(t), b, dur) for t, b in zip(starts, sizes, strict=True)]
+def rec(t, src="10.0.0.5:40000", dst="203.0.113.9:443", b=1000, sni=None, dur=1.0):
+    return {"src": src, "dst": dst, "start_ts": float(t), "last_ts": t + dur, "duration": dur,
+            "bytes": b * 2, "bytes_fwd": b, "sni": sni}
 
 
-def rec(t, src="10.0.0.5:40000", dst="203.0.113.9:443", b=1000, sni=None):
-    return {"src": src, "dst": dst, "start_ts": float(t), "last_ts": t + 1.0, "duration": 1.0,
-            "bytes": b, "sni": sni}
+def run(starts, **kw):
+    """Feed flows at ``starts`` (seconds) to a fresh tracker; return (tracker, verdicts in order)."""
+    tr = BeaconTracker(threshold=kw.pop("threshold", 0.8))
+    return tr, [tr.observe(rec(t, **kw)) for t in starts]
+
+
+def steady(period, hours):
+    return [i * period for i in range(int(hours * H / period) + 1)]
+
+
+def jittered_starts():
+    # gaps alternate 150, 450 (mean 300 s, +-50 % jitter): flows at 600k and 600k+150, then one at 4 h
+    return [600 * k + o for k in range(24) for o in (0, 150)] + [14400]
 
 
 # -- hand-computed scores -----------------------------------------------------------------
 
-def test_metronome_scores_one():
-    s = score_pair(flows(range(0, 80, 10)))               # 8 flows, every 10 s, same size
-    assert s["score"] == 1.0
-    assert (s["n"], s["median_gap_s"], s["regularity"], s["jitter_ratio"], s["size_cv"]) == (8, 10.0, 1.0, 0.0, 0.0)
+def test_steady_beacon_over_four_hours_alerts_with_full_score():
+    # every 300 s for 4 h = 49 flows; hour bins 0..4 hold 12,12,12,12,1 flows.
+    # G: Q1=Q2=Q3 -> bowley 0, MAD 0 -> 1.  S the same.  D = 5/5.  H: median 12, MAD 0 -> 1.  mean = 1.0
+    _, out = run(steady(300, 4))
+    v = out[-1]
+    assert v["score"] == 1.0 and v["components"] == {"G": 1.0, "S": 1.0, "D": 1.0, "H": 1.0}
+    assert v["pair"] == ("10.0.0.5", "203.0.113.9") and v["n"] == 49 and v["span_h"] == 4.0
+    assert v["median_gap_s"] == 300.0 and v["dst_ips"] == ["203.0.113.9"] and v["sni"] is None
 
 
-def test_one_outage_hurts_cv_but_not_the_robust_part():
-    # gaps 10 x6 then 30: mean 90/7, pstdev sqrt(16800/343)=6.9985, cv 0.5443 -> regularity 0.4557
-    # median gap 10, MAD 0 -> robust part 1, sizes equal -> 1;  (0.4557 + 1 + 1) / 3 = 0.8186
-    s = score_pair(flows([0, 10, 20, 30, 40, 50, 60, 90]))
-    assert s["regularity"] == 0.4557
-    assert s["score"] == 0.8186
+def test_fifty_percent_jitter_scores_as_documented():
+    # 48 gaps, 24 of 150 and 24 of 450.  Inclusive quartiles of the sorted gaps: Q1 = 150, Q2 = (150 + 450)/2 = 300,
+    # Q3 = 450 -> bowley = (450 + 150 - 600)/300 = 0 -> 1;  |g - 300| = 150 for all -> MAD/median = 0.5 -> 0.5;  G = 0.75.
+    # S = 1 (constant sizes), D = 5/5 = 1, H = 1 (counts 12,12,12,12,1 -> MAD 0).   score = (0.75 + 1 + 1 + 1)/4 = 0.9375
+    _, out = run(jittered_starts())
+    v = out[-1]
+    assert v["components"] == {"G": 0.75, "S": 1.0, "D": 1.0, "H": 1.0} and v["score"] == 0.9375
 
 
-def test_jitter_ratio_is_mad_over_median():
-    # gaps 9,10,11,10,9,11,10: mean 10, var 4/7 -> cv 0.0756 -> regularity 0.9244;
-    # |gap - 10| = 1,0,1,0,1,1,0 -> MAD 1 -> jitter 0.1 -> robust part 0.9;  (0.9244 + 0.9 + 1) / 3 = 0.9415
-    s = score_pair(flows([0, 9, 19, 30, 40, 49, 60, 70]))
-    assert s["jitter_ratio"] == 0.1
-    assert s["score"] == 0.9415
+def test_bursty_benign_pair_does_not_alert():
+    # 100 flows 20 s apart in hour 0, silence, one flow at 4 h.  G = S = 1 (the burst is perfectly regular), but
+    # D = 2 active of 5 bins = 0.4 and H = 0 (median count 0):  (1 + 1 + 0.4 + 0)/4 = 0.6 < 0.8
+    tr, out = run([20 * i for i in range(100)] + [4 * H])
+    assert all(v is None for v in out[:-1])      # span < 3 h until the last flow
+    assert out[-1] is None
+    s = beacon.score_pair(sorted(tr.pairs[("10.0.0.5", "203.0.113.9")]["flows"]),
+                          tr.pairs[("10.0.0.5", "203.0.113.9")]["hours"], 0.0, 4 * H)
+    assert s["components"] == {"G": 1.0, "S": 1.0, "D": 0.4, "H": 0.0} and s["score"] == 0.6
 
 
-def test_size_consistency_part():
-    # sizes alternate 1000/3000: mean 2000, pstdev 1000, cv 0.5 -> part 0.5;  (1 + 1 + 0.5) / 3 = 0.8333
-    s = score_pair(flows(range(0, 80, 10), size=[1000, 3000] * 4))
-    assert s["size_cv"] == 0.5
-    assert s["score"] == 0.8333
+def test_long_lived_single_session_has_no_verdict_but_fills_its_hour_bins():
+    tr = BeaconTracker()
+    assert tr.observe(rec(0, dur=6 * H)) is None
+    st = tr.pairs[("10.0.0.5", "203.0.113.9")]
+    assert sorted(st["hours"]) == list(range(7))                 # hours 0..6 inclusive each count it once
+    assert beacon.score_pair([(0.0, 1000, 6 * H)], st["hours"], 0.0, 0.0) is None   # span 0, one flow
 
 
-def test_not_scorable_cases():
-    assert score_pair(flows(range(0, 70, 10))) is None                  # 7 flows < 8
-    assert score_pair(flows([i * 0.5 for i in range(8)])) is None       # median gap 0.5 s: a burst, not a beacon
-    assert score_pair(flows([5.0] * 8)) is None                         # all at one instant (mean gap 0)
+def test_nothing_alerts_before_three_hours_of_span():
+    _, out = run(steady(60, 2.9))
+    assert all(v is None for v in out)
+    _, out = run(steady(60, 3))
+    first = next(i for i, v in enumerate(out) if v)
+    assert first == 180 and out[first]["span_h"] == 3.0          # exactly 3 h after the first flow
 
 
-def test_random_arrivals_score_low():
-    starts = [0, 3, 4, 40, 41, 90, 200, 201]
-    assert score_pair(flows(starts))["score"] < 0.5
+def test_gap_and_size_components_need_twelve_flows_and_one_second():
+    # 3 h span with only 11 flows: D and H exist (score = mean(D, H)), G and S do not
+    starts = [0, 600, 1200, 2000, 3000, 4000, 5000, 6000, 8000, 9000, 10800]
+    tr, out = run(starts, threshold=0.0)
+    assert set(out[-1]["components"]) == {"D", "H"}
+    # median gap < 1 s: G and S absent even with many flows
+    tr, out = run([i * 0.5 for i in range(30)] + [3 * H], threshold=0.0)
+    assert set(out[-1]["components"]) == {"D", "H"}
 
+
+def test_sni_aggregates_destination_ips_into_one_pair():
+    tr = BeaconTracker()
+    out = [tr.observe(rec(t, dst=f"203.0.113.{1 + i % 2}:443", sni="C2.Example.com.")) for i, t in enumerate(steady(300, 4))]
+    assert len(tr.pairs) == 1
+    v = out[-1]
+    assert v["sni"] == "c2.example.com" and v["pair"] == ("10.0.0.5", "c2.example.com")
+    assert v["dst_ips"] == ["203.0.113.1", "203.0.113.2"] and v["n"] == 49 and v["score"] == 1.0
+    assert "c2.example.com" in as_threat(v)["supporting"][0]["detail"]
+
+
+def test_threshold_is_the_boundary():
+    def last(threshold):
+        return run(jittered_starts(), threshold=threshold)[1][-1]
+    assert last(0.9375)["score"] == 0.9375        # score >= threshold alerts
+    assert last(0.9376) is None
+
+
+def test_random_arrivals_do_not_alert():
+    starts = [0, 3, 4, 40, 41, 90, 200, 201, 900, 5000, 5001, 5100, 7000, 9000, 9001, 11000, 11500, 12000]
+    assert not any(run(starts)[1])
+
+
+# -- allow-list ---------------------------------------------------------------------------
 
 # -- allow-list ---------------------------------------------------------------------------
 
@@ -81,59 +128,75 @@ def test_allowlist_matching():
 
 # -- streaming tracker --------------------------------------------------------------------
 
-def test_tracker_alerts_at_eighth_regular_flow_only():
-    tr = BeaconTracker(threshold=0.8)
-    out = [tr.observe(rec(10 * i)) for i in range(8)]
-    assert out[:7] == [None] * 7
-    v = out[7]
-    assert v["pair"] == ("10.0.0.5", "203.0.113.9") and v["score"] == 1.0 and v["n"] == 8
-
-
-def test_tracker_threshold_is_the_boundary():
-    starts = [0, 10, 20, 30, 40, 50, 60, 90]                 # scores 0.8186 (see above)
-    def last(threshold):
-        tr = BeaconTracker(threshold=threshold)
-        return [tr.observe(rec(t)) for t in starts][-1]
-    assert last(0.82) is None
-    assert last(0.81)["score"] == 0.8186
-
-
-def test_tracker_ignores_irregular_and_other_pairs():
-    tr = BeaconTracker(threshold=0.8)
-    assert all(tr.observe(rec(t)) is None for t in [0, 3, 4, 40, 41, 90, 200, 201, 500])
-    # eight regular flows spread over eight different destinations never form a pair
-    assert all(tr.observe(rec(10 * i, dst=f"203.0.113.{i}:443")) is None for i in range(8))
+def test_tracker_ignores_other_pairs_and_bad_records():
+    tr = BeaconTracker()
+    # a regular beacon that moves to a new destination every hour never builds a pair with 3 h of span
+    assert not any(tr.observe(rec(t, dst=f"203.0.113.{i // 12}:443")) for i, t in enumerate(steady(300, 4)))
+    assert tr.observe({"src": "10.0.0.5:1", "dst": "", "start_ts": 1.0}) is None
+    assert tr.observe({"src": "10.0.0.5:1", "dst": "1.2.3.4:5"}) is None
 
 
 def test_tracker_allowlist_suppresses_alert():
-    tr = BeaconTracker(threshold=0.8, allowlist=["203.0.113.0/24"])
-    assert all(tr.observe(rec(10 * i)) is None for i in range(12))
-    tr = BeaconTracker(threshold=0.8, allowlist=["time.example.com"])
-    assert all(tr.observe(rec(10 * i, sni="eu.time.example.com")) is None for i in range(12))
+    tr = BeaconTracker(allowlist=["203.0.113.0/24"])
+    assert not any(tr.observe(rec(t)) for t in steady(300, 4))
+    tr = BeaconTracker(allowlist=["time.example.com"])
+    assert not any(tr.observe(rec(t, sni="eu.time.example.com")) for t in steady(300, 4))
 
 
-def test_tracker_handles_out_of_order_replay_and_is_bounded():
-    tr = BeaconTracker(threshold=0.8, window=16)
-    for i in reversed(range(12)):
-        last = tr.observe(rec(10 * i))
-    assert last is not None and last["n"] == 12
-    for i in range(100):
-        tr.observe(rec(10 * i))
-    assert len(tr.pairs[("10.0.0.5", "203.0.113.9")]) == 16
+def test_tracker_handles_out_of_order_replay():
+    _, out = run(list(reversed(steady(300, 4))))
+    assert out[-1]["score"] == 1.0 and out[-1]["n"] == 49
+
+
+def test_state_is_bounded(monkeypatch):
+    tr = BeaconTracker()
+    for i in range(1200):                                   # one pair, a flow every 60 s for 20 h
+        tr.observe(rec(60 * i))
+    st = tr.pairs[("10.0.0.5", "203.0.113.9")]
+    assert len(st["flows"]) == beacon.KEEP == 512
+    assert len(st["hours"]) <= beacon.BINS                  # old hour bins are dropped
+    for i in range(40):                                     # one SNI, many destination IPs
+        tr.observe(rec(i, dst=f"198.51.100.{i}:443", sni="many.example.com"))
+    assert len(tr.pairs[("10.0.0.5", "many.example.com")]["ips"]) == beacon.MAX_IPS
+    monkeypatch.setattr(beacon, "PAIR_CAP", 5)
+    for i in range(20):
+        tr.observe(rec(i, src=f"10.1.0.{i}:1"))
+    assert len(tr.pairs) == 5
     tr.reset()
-    assert not tr.pairs
+    assert not tr.pairs and tr.now == float("-inf")
 
 
-def test_threat_dict_is_metadata_only_and_feeds_the_evidence_summary():
+def test_metadata_only_no_payload_is_kept_or_reported():
+    def walk(o):
+        if isinstance(o, dict):
+            for k, x in o.items():
+                yield k
+                yield from walk(x)
+        elif isinstance(o, (list, tuple, set, frozenset)) or hasattr(o, "maxlen"):
+            for x in o:
+                yield from walk(x)
+        else:
+            yield o
+    tr = BeaconTracker()
+    r = rec(0)
+    r.update(payload=b"SECRET-PAYLOAD", raw=bytearray(b"xx"), ja3="abc")
+    v = [tr.observe({**r, "start_ts": float(t)}) for t in steady(300, 4)][-1]
+    for obj in (tr.pairs, v, as_threat(v)):
+        leaves = list(walk(obj))
+        assert not any(isinstance(x, (bytes, bytearray)) for x in leaves)
+        assert not any("SECRET" in str(x) or x in ("payload", "raw", "ja3") for x in leaves)
+    assert set(tr.pairs[("10.0.0.5", "203.0.113.9")]) == {"flows", "first", "hours", "ips"}
+    assert all(isinstance(x, float | int) for f in tr.pairs[("10.0.0.5", "203.0.113.9")]["flows"] for x in f)
+    assert set(v) == {"score", "components", "n", "span_h", "median_gap_s", "median_duration_s", "pair", "sni", "dst_ips"}
+
+
+def test_threat_dict_shows_available_components_and_feeds_the_evidence_summary():
     from spectra.evidence import build_evidence
-    tr = BeaconTracker(threshold=0.8)
-    v = [tr.observe(rec(30 * i)) for i in range(8)][-1]
+    v = run(steady(300, 4))[1][-1]
     threat = as_threat(v)
     assert threat["threat_type"] == "C2_BEACONING" and 0.0 < threat["confidence"] <= 0.95
-    ev = build_evidence(rec(0), threat)
-    assert "30 seconds" in ev["summary"]
-    assert set(v) <= {"score", "n", "median_gap_s", "regularity", "jitter_ratio", "size_cv",
-                      "median_duration_s", "pair", "sni"}          # numbers, addresses, SNI: no payload field
+    assert "G 1.00, S 1.00, D 1.00, H 1.00" in threat["supporting"][1]["detail"]
+    assert "300 seconds" in build_evidence(rec(0), threat)["summary"]
 
 
 # -- the alert path: flag off by default, flag on raises one grouped C2_BEACONING alert --------
@@ -152,7 +215,7 @@ def test_engine_raises_beaconing_alert_only_when_enabled(tmp_path, monkeypatch, 
     cfg = Config(persist=False, beaconing_enabled=enabled)
     eng = SpectraEngine(model_path=str(tmp_path / "m.joblib"), config=cfg)
     records = []
-    for i in range(10):
+    for i in range(300):
         r = rec(60 * i)
         records.append(r)
         r.update(proto="TCP", tls_version=None, alpn=None, ja3=None, ja4=None, cipher_count=0,
@@ -165,7 +228,9 @@ def test_engine_raises_beaconing_alert_only_when_enabled(tmp_path, monkeypatch, 
     else:
         assert len(alerts) == 1                      # grouped, not one alert per flow
         a = alerts[0]
-        assert stamped[:7] == [None] * 7 and stamped[7:] == [a["alert_id"]] * 3   # flow rows link back to the alert
-        assert a["occurrences"] == 3                 # flows 8, 9, 10
+        first = next(i for i, x in enumerate(stamped) if x)
+        assert first == 180                          # t = 3 h exactly: the earliest a verdict can exist
+        assert stamped[first:] == [a["alert_id"]] * (300 - first)   # flow rows link back to the alert
+        assert a["occurrences"] == 300 - first
         assert a["source"] == "10.0.0.5:40000" and a["severity"] in ("HIGH", "CRITICAL")
         assert "60 seconds" in a["evidence"]["summary"]

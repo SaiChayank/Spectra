@@ -141,7 +141,7 @@ class Config:
     # known periodic services (NTP, update checks, monitoring probes) that must never alert.
     beaconing_enabled: bool = False
     beaconing_threshold: float = 0.8
-    beaconing_min_flows: int = 8
+    beaconing_min_flows: int = 12
     beaconing_allowlist: list[str] = field(default_factory=list)
 
     # 9B adversarial-retraining harness: hours between report-only runs on the
