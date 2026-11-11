@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import glob
+import ipaddress
 import json
 import os
 import sys
@@ -72,8 +73,10 @@ def main() -> int:
         for r in sorted(recs, key=lambda r: r["start_ts"]):
             host, ip = r["src"].rsplit(":", 1)[0], r["dst"].rsplit(":", 1)[0]
             key = (host, (r["sni"] or "").lower().rstrip(".") or ip)
-            counts[key] = counts.get(key, 0) + 1
             v = tr.observe(r)
+            if key not in tr.pairs:      # not tracked: inbound or internal-to-internal pair (amendment 1)
+                continue
+            counts[key] = counts.get(key, 0) + 1
             if v is not None:
                 last[key] = v
         for key, n in counts.items():
@@ -83,12 +86,18 @@ def main() -> int:
             ips = sorted(tr.pairs[key]["ips"])
             rows.append({"capture": name, "pair": list(key), "flows": n, "dst_ips": ips, "positive": cic.C2 in ips,
                          "score": v["score"] if v else 0.0, "components": v["components"] if v else None,
-                         "span_h": v["span_h"] if v else None, "verdict": v is not None})
+                         "span_h": v["span_h"] if v else None, "unique_seconds": v["unique_seconds"] if v else None,
+                         "components_available": sorted(v["components"]) if v else [], "verdict": v is not None})
     pos = [r for r in rows if r["positive"]]
     neg = [r for r in rows if not r["positive"]]
     sp, sn = [r["score"] for r in pos], [r["score"] for r in neg]
     m = score_metrics(sp, sn, BOOT, SEED)
-    out = {"benchmark": "CIC-2018 Bot day, scorer v2 smoke", "status": "SEEN DATA, dev/smoke only, NOT gate evidence (ci/prereg/e21.json)",
+    hi = [r for r in neg if r["score"] >= DEFAULT_THRESHOLD]
+    breakdown = {"n": len(hi), "external_source_inbound": sum(1 for r in hi if not ipaddress.ip_address(r["pair"][0]).is_private),
+                 "no_G_only_D_H": sum(1 for r in hi if "G" not in r["components"]),
+                 "both_G_and_S": sum(1 for r in hi if "G" in r["components"] and "S" in r["components"]),
+                 "external_source_and_no_G": sum(1 for r in hi if not ipaddress.ip_address(r["pair"][0]).is_private and "G" not in r["components"])}
+    out = {"benchmark": "CIC-2018 Bot day, scorer v2 smoke (amendment 1 rules when run after commit of 2026-11-12)", "status": "SEEN DATA, dev/smoke only, NOT gate evidence (ci/prereg/e21.json)",
            "git_commit": cic.git("rev-parse", "HEAD"), "threshold": DEFAULT_THRESHOLD, "min_flows": MIN_FLOWS,
            "bootstrap": BOOT, "seed": SEED, "victim_capture_sha256": hashes,
            "pairs": len(rows), "c2_pairs": len(pos), "other_pairs": len(neg),
@@ -99,6 +108,8 @@ def main() -> int:
            "roc_auc": m and m["roc_auc"], "roc_auc_ci95": m and m["roc_auc_ci95"],
            "recall_at_zero_false_pairs": (recall_at_fpr(sp, sn, 0.0) or {}).get("recall"),
            "metrics": m, "positives": sorted(pos, key=lambda r: -r["score"]),
+           "negatives_ge_threshold_breakdown": breakdown,
+           "negatives_ge_threshold": sorted(hi, key=lambda r: -r["score"]),
            "top_negatives": sorted(neg, key=lambda r: -r["score"])[:10]}
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
     json.dump(out, open(a.out, "w"), indent=1)

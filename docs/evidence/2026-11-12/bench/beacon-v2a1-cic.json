@@ -1,0 +1,618 @@
+{
+ "benchmark": "CIC-2018 Bot day, scorer v2 smoke (amendment 1 rules when run after commit of 2026-11-12)",
+ "status": "SEEN DATA, dev/smoke only, NOT gate evidence (ci/prereg/e21.json)",
+ "git_commit": "bfdaeaaabb7d3e92c807c84403202fc7cca58ae8",
+ "threshold": 0.8,
+ "min_flows": 20,
+ "bootstrap": 1000,
+ "seed": 1337,
+ "victim_capture_sha256": {
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.10": "48265cd901fe91e95b4a6552cfb822daf682b68359494ef153c9ff0278854243",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.12": "00e2d2d175de6a93821dd19961c2f00b45c39b48bb1fd2f054843b8785af03fd",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.14": "d701711685967c7564ea4442d272f877f31005ce3803ffcd6e8e7593db0b36a4",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.17": "560e8e123189a1d63a734757c2de47f2e768b2226c9097e9e54e85046be1bb48",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.23": "56fc8375d9104615ec08952bf811cc17e0579af5d2fc98e54dea669cc9d5d58e",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.26": "ed0b57eac080732e41535b0228b114a7c90a9e4da88faa140621ff8117cbeebd",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.29": "799081247a14ea82ccfda77756bc6212f428e59b474b5b18fe688326a7b4a378",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.30": "4e129df72cf04e3bc425d649bace9dddf214d25f1461de3b229aa86add0ab01b",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.6": "4e116afc21ba8b8609127c2ef476987d589851ae7bb7f258a9cec36a67de3bfd",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.8": "dfdfdf3e850e8910fc3e2cb1cd5ada03bcc68e29db78809b6c62f7fe46a70992"
+ },
+ "pairs": 23,
+ "c2_pairs": 10,
+ "other_pairs": 13,
+ "positives_without_verdict": 0,
+ "negatives_without_verdict": 5,
+ "negatives_scoring_ge_threshold": 0,
+ "positives_scoring_ge_threshold": 0,
+ "roc_auc": 1.0,
+ "roc_auc_ci95": [
+  1.0,
+  1.0
+ ],
+ "recall_at_zero_false_pairs": 1.0,
+ "metrics": {
+  "n_pos": 10,
+  "n_neg": 13,
+  "bootstrap": 1000,
+  "seed": 1337,
+  "roc_auc": 1.0,
+  "roc_auc_ci95": [
+   1.0,
+   1.0
+  ],
+  "pr_auc": 1.0,
+  "pr_auc_ci95": [
+   1.0,
+   1.0
+  ],
+  "recall_at_fpr_1pct": 1.0,
+  "recall_at_fpr_1pct_fpr_reached": 0.0,
+  "recall_at_fpr_1pct_ci95": [
+   1.0,
+   1.0
+  ],
+  "recall_at_fpr_0_1pct": 1.0,
+  "recall_at_fpr_0_1pct_fpr_reached": 0.0,
+  "recall_at_fpr_0_1pct_ci95": [
+   1.0,
+   1.0
+  ]
+ },
+ "positives": [
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.30",
+   "pair": [
+    "172.31.69.30",
+    "18.219.211.138"
+   ],
+   "flows": 15866,
+   "dst_ips": [
+    "18.219.211.138"
+   ],
+   "positive": true,
+   "score": 0.7772,
+   "components": {
+    "G": 1.0,
+    "S": 1.0,
+    "D": 0.75,
+    "H": 0.3586
+   },
+   "span_h": 7.28,
+   "unique_seconds": 252,
+   "components_available": [
+    "D",
+    "G",
+    "H",
+    "S"
+   ],
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.6",
+   "pair": [
+    "172.31.69.6",
+    "18.219.211.138"
+   ],
+   "flows": 15683,
+   "dst_ips": [
+    "18.219.211.138"
+   ],
+   "positive": true,
+   "score": 0.7752,
+   "components": {
+    "G": 1.0,
+    "S": 1.0,
+    "D": 0.75,
+    "H": 0.351
+   },
+   "span_h": 7.16,
+   "unique_seconds": 253,
+   "components_available": [
+    "D",
+    "G",
+    "H",
+    "S"
+   ],
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.10",
+   "pair": [
+    "172.31.69.10",
+    "18.219.211.138"
+   ],
+   "flows": 15791,
+   "dst_ips": [
+    "18.219.211.138"
+   ],
+   "positive": true,
+   "score": 0.7751,
+   "components": {
+    "G": 1.0,
+    "S": 1.0,
+    "D": 0.75,
+    "H": 0.3503
+   },
+   "span_h": 7.05,
+   "unique_seconds": 253,
+   "components_available": [
+    "D",
+    "G",
+    "H",
+    "S"
+   ],
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.17",
+   "pair": [
+    "172.31.69.17",
+    "18.219.211.138"
+   ],
+   "flows": 15295,
+   "dst_ips": [
+    "18.219.211.138"
+   ],
+   "positive": true,
+   "score": 0.7733,
+   "components": {
+    "G": 1.0,
+    "S": 1.0,
+    "D": 0.75,
+    "H": 0.3432
+   },
+   "span_h": 6.94,
+   "unique_seconds": 253,
+   "components_available": [
+    "D",
+    "G",
+    "H",
+    "S"
+   ],
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.14",
+   "pair": [
+    "172.31.69.14",
+    "18.219.211.138"
+   ],
+   "flows": 15238,
+   "dst_ips": [
+    "18.219.211.138"
+   ],
+   "positive": true,
+   "score": 0.7708,
+   "components": {
+    "G": 1.0,
+    "S": 1.0,
+    "D": 0.75,
+    "H": 0.3331
+   },
+   "span_h": 6.97,
+   "unique_seconds": 252,
+   "components_available": [
+    "D",
+    "G",
+    "H",
+    "S"
+   ],
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.23",
+   "pair": [
+    "172.31.69.23",
+    "18.219.211.138"
+   ],
+   "flows": 15217,
+   "dst_ips": [
+    "18.219.211.138"
+   ],
+   "positive": true,
+   "score": 0.7671,
+   "components": {
+    "G": 1.0,
+    "S": 1.0,
+    "D": 0.75,
+    "H": 0.3185
+   },
+   "span_h": 6.64,
+   "unique_seconds": 253,
+   "components_available": [
+    "D",
+    "G",
+    "H",
+    "S"
+   ],
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.8",
+   "pair": [
+    "172.31.69.8",
+    "18.219.211.138"
+   ],
+   "flows": 15169,
+   "dst_ips": [
+    "18.219.211.138"
+   ],
+   "positive": true,
+   "score": 0.764,
+   "components": {
+    "G": 1.0,
+    "S": 1.0,
+    "D": 0.75,
+    "H": 0.306
+   },
+   "span_h": 6.87,
+   "unique_seconds": 253,
+   "components_available": [
+    "D",
+    "G",
+    "H",
+    "S"
+   ],
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.29",
+   "pair": [
+    "172.31.69.29",
+    "18.219.211.138"
+   ],
+   "flows": 14895,
+   "dst_ips": [
+    "18.219.211.138"
+   ],
+   "positive": true,
+   "score": 0.752,
+   "components": {
+    "G": 1.0,
+    "S": 1.0,
+    "D": 0.75,
+    "H": 0.2579
+   },
+   "span_h": 6.55,
+   "unique_seconds": 261,
+   "components_available": [
+    "D",
+    "G",
+    "H",
+    "S"
+   ],
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.26",
+   "pair": [
+    "172.31.69.26",
+    "18.219.211.138"
+   ],
+   "flows": 14868,
+   "dst_ips": [
+    "18.219.211.138"
+   ],
+   "positive": true,
+   "score": 0.7504,
+   "components": {
+    "G": 1.0,
+    "S": 1.0,
+    "D": 0.75,
+    "H": 0.2518
+   },
+   "span_h": 6.69,
+   "unique_seconds": 248,
+   "components_available": [
+    "D",
+    "G",
+    "H",
+    "S"
+   ],
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.12",
+   "pair": [
+    "172.31.69.12",
+    "18.219.211.138"
+   ],
+   "flows": 4989,
+   "dst_ips": [
+    "18.219.211.138"
+   ],
+   "positive": true,
+   "score": 0.5938,
+   "components": {
+    "G": 1.0,
+    "S": 1.0,
+    "D": 0.375,
+    "H": 0.0
+   },
+   "span_h": 6.96,
+   "unique_seconds": 250,
+   "components_available": [
+    "D",
+    "G",
+    "H",
+    "S"
+   ],
+   "verdict": true
+  }
+ ],
+ "negatives_ge_threshold_breakdown": {
+  "n": 0,
+  "external_source_inbound": 0,
+  "no_G_only_D_H": 0,
+  "both_G_and_S": 0,
+  "external_source_and_no_G": 0
+ },
+ "negatives_ge_threshold": [],
+ "top_negatives": [
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.8",
+   "pair": [
+    "172.31.69.8",
+    "72.21.91.29"
+   ],
+   "flows": 20,
+   "dst_ips": [
+    "72.21.91.29"
+   ],
+   "positive": false,
+   "score": 0.3878,
+   "components": {
+    "G": 0.6231,
+    "S": 0.7283,
+    "D": 0.2,
+    "H": 0.0
+   },
+   "span_h": 8.71,
+   "unique_seconds": 13,
+   "components_available": [
+    "D",
+    "G",
+    "H",
+    "S"
+   ],
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.30",
+   "pair": [
+    "172.31.69.30",
+    "216.92.2.155"
+   ],
+   "flows": 20,
+   "dst_ips": [
+    "216.92.2.155"
+   ],
+   "positive": false,
+   "score": 0.3761,
+   "components": {
+    "G": 0.3934,
+    "S": 1.0,
+    "D": 0.1111,
+    "H": 0.0
+   },
+   "span_h": 8.34,
+   "unique_seconds": 13,
+   "components_available": [
+    "D",
+    "G",
+    "H",
+    "S"
+   ],
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.8",
+   "pair": [
+    "172.31.69.8",
+    "secure.livechatinc.com"
+   ],
+   "flows": 23,
+   "dst_ips": [
+    "23.218.62.30"
+   ],
+   "positive": false,
+   "score": 0.3573,
+   "components": {
+    "G": 0.6506,
+    "S": 0.5787,
+    "D": 0.2,
+    "H": 0.0
+   },
+   "span_h": 8.62,
+   "unique_seconds": 14,
+   "components_available": [
+    "D",
+    "G",
+    "H",
+    "S"
+   ],
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.10",
+   "pair": [
+    "172.31.69.10",
+    "23.218.63.234"
+   ],
+   "flows": 24,
+   "dst_ips": [
+    "23.218.63.234"
+   ],
+   "positive": false,
+   "score": 0.3355,
+   "components": {
+    "G": 0.5,
+    "S": 0.5087,
+    "D": 0.3333,
+    "H": 0.0
+   },
+   "span_h": 7.71,
+   "unique_seconds": 14,
+   "components_available": [
+    "D",
+    "G",
+    "H",
+    "S"
+   ],
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.29",
+   "pair": [
+    "172.31.69.29",
+    "23.218.63.234"
+   ],
+   "flows": 24,
+   "dst_ips": [
+    "23.218.63.234"
+   ],
+   "positive": false,
+   "score": 0.3148,
+   "components": {
+    "G": 0.5,
+    "S": 0.5093,
+    "D": 0.25,
+    "H": 0.0
+   },
+   "span_h": 7.26,
+   "unique_seconds": 13,
+   "components_available": [
+    "D",
+    "G",
+    "H",
+    "S"
+   ],
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.29",
+   "pair": [
+    "172.31.69.29",
+    "72.21.91.29"
+   ],
+   "flows": 45,
+   "dst_ips": [
+    "72.21.91.29"
+   ],
+   "positive": false,
+   "score": 0.3146,
+   "components": {
+    "G": 0.3805,
+    "S": 0.2781,
+    "D": 0.6,
+    "H": 0.0
+   },
+   "span_h": 8.68,
+   "unique_seconds": 29,
+   "components_available": [
+    "D",
+    "G",
+    "H",
+    "S"
+   ],
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.6",
+   "pair": [
+    "172.31.69.6",
+    "23.218.63.234"
+   ],
+   "flows": 24,
+   "dst_ips": [
+    "23.218.63.234"
+   ],
+   "positive": false,
+   "score": 0.269,
+   "components": {
+    "G": 0.252,
+    "S": 0.4908,
+    "D": 0.3333,
+    "H": 0.0
+   },
+   "span_h": 7.97,
+   "unique_seconds": 12,
+   "components_available": [
+    "D",
+    "G",
+    "H",
+    "S"
+   ],
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.29",
+   "pair": [
+    "172.31.69.29",
+    "216.58.198.78"
+   ],
+   "flows": 27,
+   "dst_ips": [
+    "216.58.198.78"
+   ],
+   "positive": false,
+   "score": 0.2564,
+   "components": {
+    "G": 0.1224,
+    "S": 0.5033,
+    "D": 0.4,
+    "H": 0.0
+   },
+   "span_h": 8.45,
+   "unique_seconds": 12,
+   "components_available": [
+    "D",
+    "G",
+    "H",
+    "S"
+   ],
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.12",
+   "pair": [
+    "172.31.69.12",
+    "www.news.cnet.com"
+   ],
+   "flows": 22,
+   "dst_ips": [
+    "64.30.228.118"
+   ],
+   "positive": false,
+   "score": 0.0,
+   "components": null,
+   "span_h": null,
+   "unique_seconds": null,
+   "components_available": [],
+   "verdict": false
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.29",
+   "pair": [
+    "172.31.69.29",
+    "img-getpocket.cdn.mozilla.net"
+   ],
+   "flows": 20,
+   "dst_ips": [
+    "13.32.83.53",
+    "52.84.140.41",
+    "52.84.58.35",
+    "54.192.16.165",
+    "54.230.36.144"
+   ],
+   "positive": false,
+   "score": 0.0,
+   "components": null,
+   "span_h": null,
+   "unique_seconds": null,
+   "components_available": [],
+   "verdict": false
+  }
+ ]
+}
