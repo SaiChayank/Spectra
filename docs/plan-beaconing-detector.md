@@ -77,3 +77,19 @@ were inbound (external source). Three structural changes, which supersede the ma
    scored. Internal-to-internal pairs are out of scope for this detector.
 3. **G required.** A verdict exists only when G and D are both available (S and H join the mean when available). Persistence without timing
    evidence is not a beacon; long-lived single sessions will be a separate signal (docs/35 E1). "Now" is the largest flow end time.
+
+### Amendment 2 (2026-11-12; clarification and data only; written after the CIC smoke and before set A was scored)
+* **Gate metric** (as originally worded): recall at the best operating point with <= 1 false pair per 1,000 benign pairs (zero false pairs when
+  fewer than 1,000), `spectra.eval.metrics.recall_at_fpr(pos, neg, 0.001)`, bootstrap 95 % lower bound >= 0.6, and not more than 0.05 below real RITA
+  v5.1.2 scored by the same rule on the same pairs. Recall and false pairs **at the fixed 0.8 threshold** are reported for every set; they are not
+  part of the gate, but the detector may not be switched on by default unless fixed-threshold recall is also >= 0.8 with zero false pairs on
+  both held-out sets. This was written after the CIC smoke, where C2 pairs scored 0.75-0.78, and before set A.
+* **Set A:** the four CTU-13 captures (scenarios 1, 2, 3, 5: Botnet-42, 43, 44, 46) vs the six CTU-Normal 2017 captures; hashes in `ci/prereg/e21.json`.
+  Positives = pairs (infected host -> destination, >= 20 flows) whose flows the dataset's own labels mark C2 (Stratosphere `capture*.binetflow.2format`,
+  label contains "CC"; oriented as inside host -> other end); labels downloaded 2026-11-12 into `~/Projects/Spectra_bench_data/datasets/labels/`
+  (URLs, sizes, SHA-256 in the prereg and `docs/datasets.md`), parsed as text only. Negatives = every scored CTU-Normal pair. Botnet non-C2 pairs are
+  reported outside the gate. Botnet-91 and Botnet-100 are not CTU-13 and are not part of set A. Inside networks: 147.32.0.0/16 for the botnet
+  captures; for CTU-Normal the capturing hosts are 10.0.2.15 / 192.168.1.191 (from the Zeek conn.log), covered by the defaults. A pair with no verdict
+  scores 0. RITA: beacon_score from the same captures' Zeek logs; its default alert level is `base` 50 (0.5).
+* **Known limits, up front:** 2011 botnets vs 2017 benign traffic (pcap-era mismatch); captures of about 3-6 h, so slow beacons cannot be scored;
+  few positive pairs (the public CTU-13 pcaps hold botnet-host traffic only).

@@ -198,3 +198,14 @@ are `docs/evaluation.md` §2 — notably: unlabeled time is never benign time,
 `METADATA_INVISIBLE` attacks are counted but never scored, and a good score
 on one dataset does not license a general accuracy claim
 (`docs/limitations.md` §2).
+
+## CTU-13 label files for beaconing set A (downloaded 2026-11-12, text, untrusted)
+Stratosphere bidirectional NetFlow label files, stored in `~/Projects/Spectra_bench_data/datasets/labels/` (not in git). Used only to mark
+command-and-control pairs (label contains "CC"); see `ci/prereg/e21.json` amendment 2.
+
+| File | Size | SHA-256 | URL |
+|---|---|---|---|
+| `capture20110810.binetflow.2format` | 696,057,501 B | `e9d2d3c5adc6ea61e9149fdb12ad49a3aa84d296da9bacd0da07e95a05d43912` | https://mcfp.felk.cvut.cz/publicDatasets/CTU-Malware-Capture-Botnet-42/capture20110810.binetflow.2format |
+| `capture20110811.binetflow.2format` | 444,103,095 B | `1236bb60d922c72e0b002792ce92ab3156dbbdab0765080a16ce86484fd27a8c` | https://mcfp.felk.cvut.cz/publicDatasets/CTU-Malware-Capture-Botnet-43/capture20110811.binetflow.2format |
+| `capture20110812.binetflow.2format` | 1,158,617,731 B | `3b97733f26890631bbf36a0fb8f92395d6fbb21e7aa5e3e42a97ff5540e389d7` | https://mcfp.felk.cvut.cz/publicDatasets/CTU-Malware-Capture-Botnet-44/capture20110812.binetflow.2format |
+| `capture20110815-2.binetflow.2format` | 32,079,494 B | `f6fd1d0fd8e13cbd54a2e8e5235dc6dce0d2beee58b78ce2c176646cf00c3807` | https://mcfp.felk.cvut.cz/publicDatasets/CTU-Malware-Capture-Botnet-46/capture20110815-2.binetflow.2format |
