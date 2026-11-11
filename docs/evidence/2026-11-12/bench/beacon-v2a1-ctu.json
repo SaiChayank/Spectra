@@ -1,0 +1,1121 @@
+{
+ "benchmark": "Held-out set A (CTU-13 C2 pairs vs CTU-Normal 2017 benign pairs): Spectra beacon v2a1 vs RITA v5.1.2",
+ "git_commit": "4395b90baa242c4566680131a3b1fde4c20cc31e",
+ "min_flows": 20,
+ "bootstrap": 1000,
+ "seed": 1337,
+ "spectra_threshold": 0.8,
+ "rita_alert_levels": {
+  "default_base": 0.5,
+  "low": 0.7,
+  "note": "scoring.beacon.score_thresholds base=50 low=70 in RITA's config.hjson (beacon_score is 0-1 here)"
+ },
+ "capture_sha256": {
+  "ctu13--botnet-capture-20110810-neris.pcap": "b89cd5931f62d87ceff266568c97c6e36e56dd0330813cacadbc14a6c5576a36",
+  "ctu13--botnet-capture-20110811-neris.pcap": "189b38247b614ae51feee0e75b360552eecdee0b68843b88c7d9ed88d7be7631",
+  "ctu_botnet--botnet-capture-20110812-rbot.pcap": "41880c3a3acfa5ef794abc7b9142b4b41670419c74900e1e953b4a0e75fe55ee",
+  "ctu_botnet--botnet-capture-20110815-fast-flux.pcap": "716f7c43df5df7dff5b14b0cbe4767ca85a656769864fa66b6eda59764316efc",
+  "ctu_normal--2017-04-18_win-normal.pcap": "50ccaa483200a73c87be73ce3cae95c16afe0941021ff6d5e8e1cacf5a90807b",
+  "ctu_normal--2017-04-19_win-normal.pcap": "31a9a2a88b0d24283288058f7c2dbad057e3d7d7bb2ad2427302dc954c7e1471",
+  "ctu_normal--2017-04-28_normal.pcap": "b66103fd89c8f0fc53b76e718f53320f3af27edd302c58695fc1870ede3663c5",
+  "ctu_normal--2017-04-30_win-normal.pcap": "c78a00728f115ab8fc495fd395894c43fd90cb61054eb9ef4f2d024658d5ffc5",
+  "ctu_normal--2017-05-01_normal.pcap": "a2f3e60fa0eb2a924a3795644ac09a0f1ea48c45c30ebcc663af9641580b9a5c",
+  "ctu_normal--2017-05-02_kali-normal.pcap": "53acb10b26ca6446b5bba2efd9d957a9faa15209029d58c10a8c1d1bd299c42b"
+ },
+ "label_files": {
+  "capture20110810.binetflow.2format": {
+   "sha256": "e9d2d3c5adc6ea61e9149fdb12ad49a3aa84d296da9bacd0da07e95a05d43912",
+   "size": 696057501,
+   "counts": {
+    "rows": 2824636,
+    "cc_rows": 341
+   },
+   "c2_hosts": {
+    "147.32.84.165": [
+     "173.192.170.88",
+     "184.106.213.57",
+     "200.171.4.222",
+     "202.112.126.218",
+     "213.246.53.125",
+     "217.34.4.225",
+     "218.189.208.34",
+     "221.207.141.60",
+     "222.88.205.195",
+     "31.192.109.167",
+     "58.42.247.143",
+     "58.42.247.165",
+     "60.173.109.42",
+     "60.190.223.75",
+     "61.150.114.216",
+     "61.167.116.133",
+     "61.17.216.15",
+     "61.17.216.4",
+     "61.17.216.86",
+     "61.17.216.92",
+     "61.17.216.94",
+     "61.177.120.254"
+    ]
+   }
+  },
+  "capture20110811.binetflow.2format": {
+   "sha256": "1236bb60d922c72e0b002792ce92ab3156dbbdab0765080a16ce86484fd27a8c",
+   "size": 444103095,
+   "counts": {
+    "rows": 1808122,
+    "cc_rows": 673
+   },
+   "c2_hosts": {
+    "147.32.84.165": [
+     "115.85.238.119",
+     "173.192.170.88",
+     "184.106.213.57",
+     "184.82.147.251",
+     "184.82.148.43",
+     "184.82.155.107",
+     "217.34.4.225",
+     "217.34.4.226",
+     "218.189.208.34",
+     "219.145.198.122",
+     "221.207.141.60",
+     "31.192.109.161",
+     "58.215.78.1",
+     "58.42.247.143",
+     "60.173.109.42",
+     "60.190.223.75",
+     "61.167.116.133",
+     "61.17.216.15",
+     "61.17.216.22",
+     "61.17.216.4",
+     "61.17.216.92",
+     "61.177.120.254",
+     "74.3.164.222",
+     "89.103.213.96"
+    ]
+   }
+  },
+  "capture20110812.binetflow.2format": {
+   "sha256": "3b97733f26890631bbf36a0fb8f92395d6fbb21e7aa5e3e42a97ff5540e389d7",
+   "size": 1158617731,
+   "counts": {
+    "rows": 4710638,
+    "cc_rows": 63
+   },
+   "c2_hosts": {
+    "147.32.84.165": [
+     "38.229.70.20"
+    ]
+   }
+  },
+  "capture20110815-2.binetflow.2format": {
+   "sha256": "f6fd1d0fd8e13cbd54a2e8e5235dc6dce0d2beee58b78ce2c176646cf00c3807",
+   "size": 32079494,
+   "counts": {
+    "rows": 129832,
+    "cc_rows": 24
+   },
+   "c2_hosts": {
+    "147.32.84.165": [
+     "184.106.213.57",
+     "217.34.4.225",
+     "61.150.114.216",
+     "61.17.216.4",
+     "74.3.164.222",
+     "91.220.0.52",
+     "94.63.150.63"
+    ]
+   }
+  }
+ },
+ "captures": {
+  "ctu13--botnet-capture-20110810-neris.pcap": {
+   "group": "botnet",
+   "flow_records": 14592,
+   "tracked_pairs": 4189,
+   "pairs_ge_20_flows": 80,
+   "c2_pairs": 3,
+   "no_verdict": 0
+  },
+  "ctu13--botnet-capture-20110811-neris.pcap": {
+   "group": "botnet",
+   "flow_records": 19942,
+   "tracked_pairs": 1656,
+   "pairs_ge_20_flows": 90,
+   "c2_pairs": 5,
+   "no_verdict": 29
+  },
+  "ctu_botnet--botnet-capture-20110812-rbot.pcap": {
+   "group": "botnet",
+   "flow_records": 32317,
+   "tracked_pairs": 28756,
+   "pairs_ge_20_flows": 0,
+   "c2_pairs": 0,
+   "no_verdict": 0
+  },
+  "ctu_botnet--botnet-capture-20110815-fast-flux.pcap": {
+   "group": "botnet",
+   "flow_records": 864,
+   "tracked_pairs": 183,
+   "pairs_ge_20_flows": 3,
+   "c2_pairs": 0,
+   "no_verdict": 3
+  },
+  "ctu_normal--2017-04-18_win-normal.pcap": {
+   "group": "normal",
+   "flow_records": 12707,
+   "tracked_pairs": 848,
+   "pairs_ge_20_flows": 21,
+   "c2_pairs": 0,
+   "no_verdict": 21
+  },
+  "ctu_normal--2017-04-19_win-normal.pcap": {
+   "group": "normal",
+   "flow_records": 6358,
+   "tracked_pairs": 428,
+   "pairs_ge_20_flows": 9,
+   "c2_pairs": 0,
+   "no_verdict": 6
+  },
+  "ctu_normal--2017-04-28_normal.pcap": {
+   "group": "normal",
+   "flow_records": 11053,
+   "tracked_pairs": 340,
+   "pairs_ge_20_flows": 18,
+   "c2_pairs": 0,
+   "no_verdict": 8
+  },
+  "ctu_normal--2017-04-30_win-normal.pcap": {
+   "group": "normal",
+   "flow_records": 13681,
+   "tracked_pairs": 742,
+   "pairs_ge_20_flows": 29,
+   "c2_pairs": 0,
+   "no_verdict": 24
+  },
+  "ctu_normal--2017-05-01_normal.pcap": {
+   "group": "normal",
+   "flow_records": 9969,
+   "tracked_pairs": 847,
+   "pairs_ge_20_flows": 26,
+   "c2_pairs": 0,
+   "no_verdict": 26
+  },
+  "ctu_normal--2017-05-02_kali-normal.pcap": {
+   "group": "normal",
+   "flow_records": 10228,
+   "tracked_pairs": 1212,
+   "pairs_ge_20_flows": 46,
+   "c2_pairs": 0,
+   "no_verdict": 46
+  }
+ },
+ "rita_import": {
+  "ctu13--botnet-capture-20110810-neris.pcap": {
+   "conn_rows": 30939,
+   "scored_pairs": 73
+  },
+  "ctu13--botnet-capture-20110811-neris.pcap": {
+   "conn_rows": 39660,
+   "scored_pairs": 98
+  },
+  "ctu_botnet--botnet-capture-20110812-rbot.pcap": {
+   "conn_rows": 57268,
+   "scored_pairs": 0
+  },
+  "ctu_botnet--botnet-capture-20110815-fast-flux.pcap": {
+   "conn_rows": 1498,
+   "scored_pairs": 13
+  },
+  "ctu_normal--2017-04-18_win-normal.pcap": {
+   "conn_rows": 4074,
+   "scored_pairs": 0
+  },
+  "ctu_normal--2017-04-19_win-normal.pcap": {
+   "conn_rows": 1729,
+   "scored_pairs": 0
+  },
+  "ctu_normal--2017-04-28_normal.pcap": {
+   "conn_rows": 15023,
+   "scored_pairs": 0
+  },
+  "ctu_normal--2017-04-30_win-normal.pcap": {
+   "conn_rows": 3960,
+   "scored_pairs": 0
+  },
+  "ctu_normal--2017-05-01_normal.pcap": {
+   "conn_rows": 4678,
+   "scored_pairs": 0
+  },
+  "ctu_normal--2017-05-02_kali-normal.pcap": {
+   "conn_rows": 6150,
+   "scored_pairs": 523
+  }
+ },
+ "n_pos": 8,
+ "n_neg": 149,
+ "n_botnet_non_c2": 165,
+ "positives_without_verdict": 0,
+ "negatives_without_verdict": 131,
+ "results": {
+  "spectra_v2a1": {
+   "metrics": {
+    "n_pos": 8,
+    "n_neg": 149,
+    "bootstrap": 1000,
+    "seed": 1337,
+    "roc_auc": 0.9848993288590604,
+    "roc_auc_ci95": [
+     0.962248322147651,
+     1.0
+    ],
+    "pr_auc": 0.8147817460317459,
+    "pr_auc_ci95": [
+     0.6071428571428571,
+     1.0
+    ],
+    "recall_at_fpr_1pct": 0.75,
+    "recall_at_fpr_1pct_fpr_reached": 0.006711409395973154,
+    "recall_at_fpr_1pct_ci95": [
+     0.125,
+     1.0
+    ],
+    "recall_at_fpr_0_1pct": 0.375,
+    "recall_at_fpr_0_1pct_fpr_reached": 0.0,
+    "recall_at_fpr_0_1pct_ci95": [
+     0.125,
+     1.0
+    ]
+   },
+   "gate_operating_point": {
+    "recall": 0.375,
+    "fpr": 0.0,
+    "threshold": 0.7884
+   },
+   "fixed": [
+    {
+     "threshold": 0.8,
+     "recall": 0.125,
+     "false_pairs": 0,
+     "of_negatives": 149
+    }
+   ],
+   "botnet_non_c2_pairs": {
+    "n": 165,
+    "scoring_ge_0.8": 31
+   }
+  },
+  "rita_v5.1.2": {
+   "metrics": {
+    "n_pos": 8,
+    "n_neg": 149,
+    "bootstrap": 1000,
+    "seed": 1337,
+    "roc_auc": 0.9161073825503355,
+    "roc_auc_ci95": [
+     0.7504194630872483,
+     1.0
+    ],
+    "pr_auc": 0.8270539505611161,
+    "pr_auc_ci95": [
+     0.5667273278738246,
+     1.0
+    ],
+    "recall_at_fpr_1pct": 0.875,
+    "recall_at_fpr_1pct_fpr_reached": 0.006711409395973154,
+    "recall_at_fpr_1pct_ci95": [
+     0.25,
+     1.0
+    ],
+    "recall_at_fpr_0_1pct": 0.5,
+    "recall_at_fpr_0_1pct_fpr_reached": 0.0,
+    "recall_at_fpr_0_1pct_ci95": [
+     0.25,
+     1.0
+    ]
+   },
+   "gate_operating_point": {
+    "recall": 0.5,
+    "fpr": 0.0,
+    "threshold": 0.769
+   },
+   "fixed": [
+    {
+     "threshold": 0.5,
+     "recall": 0.875,
+     "false_pairs": 10,
+     "of_negatives": 149
+    },
+    {
+     "threshold": 0.7,
+     "recall": 0.875,
+     "false_pairs": 8,
+     "of_negatives": 149
+    }
+   ],
+   "botnet_non_c2_pairs": {
+    "n": 165,
+    "scoring_ge_0.5": 26,
+    "scoring_ge_0.7": 21
+   }
+  }
+ },
+ "gate_set_a": {
+  "recall_at_gate_operating_point": 0.375,
+  "bootstrap_lower_bound": 0.125,
+  "rita_recall_same_rule": 0.5,
+  "n_pos": 8,
+  "n_neg": 149,
+  "n_neg_lt_1000_so_zero_false_pairs_required": true,
+  "checks": {
+   "recall_ge_0.8": false,
+   "lower_bound_ge_0.6": false,
+   "not_more_than_0.05_below_rita": false
+  },
+  "pass": false,
+  "fixed_threshold_default_on_condition": {
+   "recall_at_0.8": 0.125,
+   "false_pairs_at_0.8": 0,
+   "met": false
+  }
+ },
+ "positives": [
+  {
+   "pair": [
+    "147.32.84.165",
+    "184.82.155.107"
+   ],
+   "flows": 93,
+   "dst_ips": [
+    "184.82.155.107"
+   ],
+   "score": 0.8167,
+   "components": {
+    "G": 0.7324,
+    "S": 0.9978,
+    "D": 1.0,
+    "H": 0.5366
+   },
+   "span_h": 3.33,
+   "verdict": true,
+   "capture": "ctu13--botnet-capture-20110811-neris.pcap",
+   "group": "botnet",
+   "c2": true,
+   "rita": 0.833
+  },
+  {
+   "pair": [
+    "147.32.84.165",
+    "31.192.109.161"
+   ],
+   "flows": 49,
+   "dst_ips": [
+    "31.192.109.161"
+   ],
+   "score": 0.7946,
+   "components": {
+    "G": 0.4982,
+    "S": 1.0,
+    "D": 1.0,
+    "H": 0.68
+   },
+   "span_h": 3.32,
+   "verdict": true,
+   "capture": "ctu13--botnet-capture-20110811-neris.pcap",
+   "group": "botnet",
+   "c2": true,
+   "rita": 0.751
+  },
+  {
+   "pair": [
+    "147.32.84.165",
+    "184.82.148.43"
+   ],
+   "flows": 183,
+   "dst_ips": [
+    "184.82.148.43"
+   ],
+   "score": 0.7884,
+   "components": {
+    "G": 0.556,
+    "S": 0.9978,
+    "D": 1.0,
+    "H": 0.6
+   },
+   "span_h": 3.3,
+   "verdict": true,
+   "capture": "ctu13--botnet-capture-20110811-neris.pcap",
+   "group": "botnet",
+   "c2": true,
+   "rita": 0.769
+  },
+  {
+   "pair": [
+    "147.32.84.165",
+    "184.82.147.251"
+   ],
+   "flows": 202,
+   "dst_ips": [
+    "184.82.147.251"
+   ],
+   "score": 0.7768,
+   "components": {
+    "G": 0.7639,
+    "S": 0.8289,
+    "D": 1.0,
+    "H": 0.5143
+   },
+   "span_h": 3.05,
+   "verdict": true,
+   "capture": "ctu13--botnet-capture-20110811-neris.pcap",
+   "group": "botnet",
+   "c2": true,
+   "rita": 0.742
+  },
+  {
+   "pair": [
+    "147.32.84.165",
+    "173.192.170.88"
+   ],
+   "flows": 265,
+   "dst_ips": [
+    "173.192.170.88"
+   ],
+   "score": 0.7762,
+   "components": {
+    "G": 0.5364,
+    "S": 0.7799,
+    "D": 1.0,
+    "H": 0.7885
+   },
+   "span_h": 4.65,
+   "verdict": true,
+   "capture": "ctu13--botnet-capture-20110810-neris.pcap",
+   "group": "botnet",
+   "c2": true,
+   "rita": 0.775
+  },
+  {
+   "pair": [
+    "147.32.84.165",
+    "173.192.170.88"
+   ],
+   "flows": 130,
+   "dst_ips": [
+    "173.192.170.88"
+   ],
+   "score": 0.7274,
+   "components": {
+    "G": 0.5091,
+    "S": 0.7173,
+    "D": 1.0,
+    "H": 0.6833
+   },
+   "span_h": 3.28,
+   "verdict": true,
+   "capture": "ctu13--botnet-capture-20110811-neris.pcap",
+   "group": "botnet",
+   "c2": true,
+   "rita": 0.739
+  },
+  {
+   "pair": [
+    "147.32.84.165",
+    "31.192.109.167"
+   ],
+   "flows": 54,
+   "dst_ips": [
+    "31.192.109.167"
+   ],
+   "score": 0.573,
+   "components": {
+    "G": 0.6919,
+    "S": 1.0,
+    "D": 0.6,
+    "H": 0.0
+   },
+   "span_h": 4.67,
+   "verdict": true,
+   "capture": "ctu13--botnet-capture-20110810-neris.pcap",
+   "group": "botnet",
+   "c2": true,
+   "rita": 0.953
+  },
+  {
+   "pair": [
+    "147.32.84.165",
+    "222.88.205.195"
+   ],
+   "flows": 29,
+   "dst_ips": [
+    "222.88.205.195"
+   ],
+   "score": 0.4012,
+   "components": {
+    "G": 0.7536,
+    "S": 0.6513,
+    "D": 0.2,
+    "H": 0.0
+   },
+   "span_h": 4.68,
+   "verdict": true,
+   "capture": "ctu13--botnet-capture-20110810-neris.pcap",
+   "group": "botnet",
+   "c2": true,
+   "rita": 0.0
+  }
+ ],
+ "top_negatives_spectra": [
+  {
+   "capture": "ctu_normal--2017-04-28_normal.pcap",
+   "pair": [
+    "10.0.2.15",
+    "208.91.112.53"
+   ],
+   "flows": 9049,
+   "dst_ips": [
+    "208.91.112.53"
+   ],
+   "score": 0.7841,
+   "components": {
+    "G": 0.4524,
+    "S": 0.9621,
+    "D": 1.0,
+    "H": 0.7219
+   },
+   "rita": 0.0
+  },
+  {
+   "capture": "ctu_normal--2017-04-30_win-normal.pcap",
+   "pair": [
+    "10.0.2.15",
+    "scontent-vie1-1.xx.fbcdn.net"
+   ],
+   "flows": 30,
+   "dst_ips": [
+    "31.13.84.4"
+   ],
+   "score": 0.7113,
+   "components": {
+    "G": 0.4281,
+    "S": 0.5169,
+    "D": 1.0,
+    "H": 0.9
+   },
+   "rita": 0.0
+  },
+  {
+   "capture": "ctu_normal--2017-04-28_normal.pcap",
+   "pair": [
+    "10.0.2.15",
+    "208.91.112.52"
+   ],
+   "flows": 130,
+   "dst_ips": [
+    "208.91.112.52"
+   ],
+   "score": 0.634,
+   "components": {
+    "G": 0.1391,
+    "S": 0.647,
+    "D": 1.0,
+    "H": 0.75
+   },
+   "rita": 0.0
+  },
+  {
+   "capture": "ctu_normal--2017-04-30_win-normal.pcap",
+   "pair": [
+    "10.0.2.15",
+    "www.google.cz"
+   ],
+   "flows": 20,
+   "dst_ips": [
+    "172.217.22.227",
+    "172.217.23.163",
+    "172.217.23.227"
+   ],
+   "score": 0.6278,
+   "components": {
+    "G": 0.4422,
+    "S": 0.5236,
+    "D": 1.0,
+    "H": 0.5455
+   },
+   "rita": 0.0
+  },
+  {
+   "capture": "ctu_normal--2017-04-30_win-normal.pcap",
+   "pair": [
+    "10.0.2.15",
+    "23.51.123.27"
+   ],
+   "flows": 180,
+   "dst_ips": [
+    "23.51.123.27"
+   ],
+   "score": 0.6258,
+   "components": {
+    "G": 0.1513,
+    "S": 0.5991,
+    "D": 1.0,
+    "H": 0.7528
+   },
+   "rita": 0.0
+  },
+  {
+   "capture": "ctu_normal--2017-04-28_normal.pcap",
+   "pair": [
+    "10.0.2.15",
+    "178.255.83.1"
+   ],
+   "flows": 30,
+   "dst_ips": [
+    "178.255.83.1"
+   ],
+   "score": 0.5407,
+   "components": {
+    "G": 0.0304,
+    "S": 0.4992,
+    "D": 0.8333,
+    "H": 0.8
+   },
+   "rita": 0.0
+  },
+  {
+   "capture": "ctu_normal--2017-04-30_win-normal.pcap",
+   "pair": [
+    "10.0.2.15",
+    "93.184.220.29"
+   ],
+   "flows": 55,
+   "dst_ips": [
+    "93.184.220.29"
+   ],
+   "score": 0.4857,
+   "components": {
+    "G": 0.2619,
+    "S": 0.5078,
+    "D": 0.75,
+    "H": 0.4231
+   },
+   "rita": 0.0
+  },
+  {
+   "capture": "ctu_normal--2017-04-19_win-normal.pcap",
+   "pair": [
+    "10.0.2.15",
+    "216.58.201.110"
+   ],
+   "flows": 28,
+   "dst_ips": [
+    "216.58.201.110"
+   ],
+   "score": 0.4243,
+   "components": {
+    "G": 0.4845,
+    "S": 0.6126,
+    "D": 0.6,
+    "H": 0.0
+   },
+   "rita": 0.0
+  },
+  {
+   "capture": "ctu_normal--2017-04-30_win-normal.pcap",
+   "pair": [
+    "10.0.2.15",
+    "172.217.23.142"
+   ],
+   "flows": 25,
+   "dst_ips": [
+    "172.217.23.142"
+   ],
+   "score": 0.4077,
+   "components": {
+    "G": 0.3337,
+    "S": 0.2396,
+    "D": 0.75,
+    "H": 0.3077
+   },
+   "rita": 0.0
+  },
+  {
+   "capture": "ctu_normal--2017-04-19_win-normal.pcap",
+   "pair": [
+    "10.0.2.15",
+    "93.184.220.29"
+   ],
+   "flows": 37,
+   "dst_ips": [
+    "93.184.220.29"
+   ],
+   "score": 0.4066,
+   "components": {
+    "G": 0.115,
+    "S": 0.5782,
+    "D": 0.6,
+    "H": 0.3333
+   },
+   "rita": 0.0
+  }
+ ],
+ "top_negatives_rita": [
+  {
+   "capture": "ctu_normal--2017-05-02_kali-normal.pcap",
+   "pair": [
+    "192.168.1.191",
+    "platform.twitter.com"
+   ],
+   "flows": 39,
+   "dst_ips": [
+    "192.229.233.25",
+    "199.96.57.6",
+    "93.184.220.66"
+   ],
+   "score": 0.0,
+   "components": null,
+   "rita": 0.763
+  },
+  {
+   "capture": "ctu_normal--2017-05-02_kali-normal.pcap",
+   "pair": [
+    "192.168.1.191",
+    "pagead2.googlesyndication.com"
+   ],
+   "flows": 39,
+   "dst_ips": [
+    "172.217.23.194",
+    "172.217.23.226",
+    "216.58.201.98"
+   ],
+   "score": 0.0,
+   "components": null,
+   "rita": 0.736
+  },
+  {
+   "capture": "ctu_normal--2017-05-02_kali-normal.pcap",
+   "pair": [
+    "192.168.1.191",
+    "sb.scorecardresearch.com"
+   ],
+   "flows": 20,
+   "dst_ips": [
+    "23.74.182.180",
+    "95.100.191.4"
+   ],
+   "score": 0.0,
+   "components": null,
+   "rita": 0.736
+  },
+  {
+   "capture": "ctu_normal--2017-05-02_kali-normal.pcap",
+   "pair": [
+    "192.168.1.191",
+    "172.217.23.194"
+   ],
+   "flows": 44,
+   "dst_ips": [
+    "172.217.23.194"
+   ],
+   "score": 0.0,
+   "components": null,
+   "rita": 0.736
+  },
+  {
+   "capture": "ctu_normal--2017-05-02_kali-normal.pcap",
+   "pair": [
+    "192.168.1.191",
+    "172.217.23.226"
+   ],
+   "flows": 31,
+   "dst_ips": [
+    "172.217.23.226"
+   ],
+   "score": 0.0,
+   "components": null,
+   "rita": 0.736
+  },
+  {
+   "capture": "ctu_normal--2017-05-02_kali-normal.pcap",
+   "pair": [
+    "192.168.1.191",
+    "www.google-analytics.com"
+   ],
+   "flows": 44,
+   "dst_ips": [
+    "172.217.23.238"
+   ],
+   "score": 0.0,
+   "components": null,
+   "rita": 0.725
+  },
+  {
+   "capture": "ctu_normal--2017-05-02_kali-normal.pcap",
+   "pair": [
+    "192.168.1.191",
+    "secure.quantserve.com"
+   ],
+   "flows": 38,
+   "dst_ips": [
+    "95.172.94.19",
+    "95.172.94.25",
+    "95.172.94.31",
+    "95.172.94.34",
+    "95.172.94.36",
+    "95.172.94.38",
+    "95.172.94.45",
+    "95.172.94.48",
+    "95.172.94.51",
+    "95.172.94.60",
+    "95.172.94.61",
+    "95.172.94.66"
+   ],
+   "score": 0.0,
+   "components": null,
+   "rita": 0.702
+  },
+  {
+   "capture": "ctu_normal--2017-05-02_kali-normal.pcap",
+   "pair": [
+    "192.168.1.191",
+    "pixel.quantserve.com"
+   ],
+   "flows": 69,
+   "dst_ips": [
+    "95.172.94.12",
+    "95.172.94.19",
+    "95.172.94.25",
+    "95.172.94.29",
+    "95.172.94.31",
+    "95.172.94.34",
+    "95.172.94.36",
+    "95.172.94.50",
+    "95.172.94.54",
+    "95.172.94.55",
+    "95.172.94.58",
+    "95.172.94.60"
+   ],
+   "score": 0.0,
+   "components": null,
+   "rita": 0.702
+  },
+  {
+   "capture": "ctu_normal--2017-05-02_kali-normal.pcap",
+   "pair": [
+    "192.168.1.191",
+    "173.241.240.143"
+   ],
+   "flows": 36,
+   "dst_ips": [
+    "173.241.240.143"
+   ],
+   "score": 0.0,
+   "components": null,
+   "rita": 0.555
+  },
+  {
+   "capture": "ctu_normal--2017-05-02_kali-normal.pcap",
+   "pair": [
+    "192.168.1.191",
+    "23.64.15.8"
+   ],
+   "flows": 26,
+   "dst_ips": [
+    "23.64.15.8"
+   ],
+   "score": 0.0,
+   "components": null,
+   "rita": 0.505
+  }
+ ],
+ "top_botnet_non_c2_spectra": [
+  {
+   "capture": "ctu13--botnet-capture-20110810-neris.pcap",
+   "pair": [
+    "147.32.84.165",
+    "209.85.225.27"
+   ],
+   "flows": 896,
+   "dst_ips": [
+    "209.85.225.27"
+   ],
+   "score": 0.9331,
+   "components": {
+    "G": 0.7557,
+    "S": 1.0,
+    "D": 1.0,
+    "H": 0.9769
+   },
+   "rita": 0.0
+  },
+  {
+   "capture": "ctu13--botnet-capture-20110811-neris.pcap",
+   "pair": [
+    "147.32.84.165",
+    "209.191.88.254"
+   ],
+   "flows": 84,
+   "dst_ips": [
+    "209.191.88.254"
+   ],
+   "score": 0.9178,
+   "components": {
+    "G": 0.6711,
+    "S": 1.0,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "rita": 0.0
+  },
+  {
+   "capture": "ctu13--botnet-capture-20110810-neris.pcap",
+   "pair": [
+    "147.32.84.165",
+    "212.117.174.7"
+   ],
+   "flows": 784,
+   "dst_ips": [
+    "212.117.174.7"
+   ],
+   "score": 0.9108,
+   "components": {
+    "G": 0.7563,
+    "S": 1.0,
+    "D": 1.0,
+    "H": 0.8867
+   },
+   "rita": 0.0
+  },
+  {
+   "capture": "ctu13--botnet-capture-20110811-neris.pcap",
+   "pair": [
+    "147.32.84.165",
+    "46.4.36.120"
+   ],
+   "flows": 1285,
+   "dst_ips": [
+    "46.4.36.120"
+   ],
+   "score": 0.9003,
+   "components": {
+    "G": 0.7273,
+    "S": 1.0,
+    "D": 1.0,
+    "H": 0.8739
+   },
+   "rita": 0.0
+  },
+  {
+   "capture": "ctu13--botnet-capture-20110811-neris.pcap",
+   "pair": [
+    "147.32.84.165",
+    "74.125.93.27"
+   ],
+   "flows": 49,
+   "dst_ips": [
+    "74.125.93.27"
+   ],
+   "score": 0.898,
+   "components": {
+    "G": 0.8614,
+    "S": 1.0,
+    "D": 1.0,
+    "H": 0.7308
+   },
+   "rita": 0.0
+  },
+  {
+   "capture": "ctu13--botnet-capture-20110811-neris.pcap",
+   "pair": [
+    "147.32.84.165",
+    "65.55.92.168"
+   ],
+   "flows": 31,
+   "dst_ips": [
+    "65.55.92.168"
+   ],
+   "score": 0.8839,
+   "components": {
+    "G": 0.6357,
+    "S": 1.0,
+    "D": 1.0,
+    "H": 0.9
+   },
+   "rita": 0.0
+  },
+  {
+   "capture": "ctu13--botnet-capture-20110811-neris.pcap",
+   "pair": [
+    "147.32.84.165",
+    "65.54.188.72"
+   ],
+   "flows": 30,
+   "dst_ips": [
+    "65.54.188.72"
+   ],
+   "score": 0.8771,
+   "components": {
+    "G": 0.6901,
+    "S": 1.0,
+    "D": 1.0,
+    "H": 0.8182
+   },
+   "rita": 0.0
+  },
+  {
+   "capture": "ctu13--botnet-capture-20110810-neris.pcap",
+   "pair": [
+    "147.32.84.165",
+    "77.238.184.241"
+   ],
+   "flows": 42,
+   "dst_ips": [
+    "77.238.184.241"
+   ],
+   "score": 0.8768,
+   "components": {
+    "G": 0.5072,
+    "S": 1.0,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "rita": 0.0
+  },
+  {
+   "capture": "ctu13--botnet-capture-20110810-neris.pcap",
+   "pair": [
+    "147.32.84.165",
+    "217.72.192.149"
+   ],
+   "flows": 36,
+   "dst_ips": [
+    "217.72.192.149"
+   ],
+   "score": 0.8753,
+   "components": {
+    "G": 0.6442,
+    "S": 1.0,
+    "D": 1.0,
+    "H": 0.8571
+   },
+   "rita": 0.0
+  },
+  {
+   "capture": "ctu13--botnet-capture-20110810-neris.pcap",
+   "pair": [
+    "147.32.84.165",
+    "74.125.127.27"
+   ],
+   "flows": 46,
+   "dst_ips": [
+    "74.125.127.27"
+   ],
+   "score": 0.8568,
+   "components": {
+    "G": 0.5523,
+    "S": 1.0,
+    "D": 1.0,
+    "H": 0.875
+   },
+   "rita": 0.0
+  }
+ ]
+}
