@@ -34,10 +34,12 @@ distinct distribution name. Availability on PyPI checked the same day (404 = not
 * Project licence: Apache-2.0 (`backend/LICENSE`).
 * **JA4+ is not implemented** and will not be shipped. Only base JA4 (client, BSD-3-Clause) is implemented in `parse/tls.py`. JA4S, JA4L, JA4H, JA4X,
   JA4T and the rest are under FoxIO License 1.1 (non-commercial, patent-pending) and are excluded. This keeps the Apache-2.0 release clean.
-* **scapy is GPL-2.0-only** and is a runtime dependency (offline pcap reading and live capture). That is incompatible with distributing an
-  Apache-2.0 product that bundles it. The owner chose the recommended route: **replace scapy with a pure-Python pcap reader and make scapy an
-  optional extra for live capture only**. That work is not done; until it is, the licence checker (`backend/scripts/check_licenses.py`) keeps scapy
-  listed as a pending exception and the image and any offline bundle must not be described as Apache-2.0-clean. See `HANDOFF_FINDINGS.md`.
+* **scapy is GPL-2.0-only.** The owner chose to replace it with an in-tree pcap reader and make scapy an optional extra for live capture only
+  (ADR-011, implemented on branch `claude/nostalgic-moore-fd6f1f`, not yet merged to main). On that branch the wheel's core `Requires-Dist`
+  and the default container image no longer contain scapy; `spectra[live]` and the compose `capture` image (`spectra-live`) do, under scapy's own
+  licence. `check_licenses.py` lists scapy as `optional-extra`; that is a statement of fact, not an owner approval of shipping the extra.
+  An offline bundle must still be built from the core install only. Until the branch is merged and released, this paragraph describes the
+  branch, not main.
 * No dataset bytes are redistributed; the attribution list is in `docs/datasets.md` §5b/§5c.
 
 ## Acceptable use and privacy (to appear in the README and the docs site)

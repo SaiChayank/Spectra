@@ -10,4 +10,4 @@ ADR-001..004 lived in the planning documents removed in commit `09638ce` (ADR-00
 | [008](./008-drift-alert-on-worse-of-train-and-recent.md) | Drift alerts fire on the worse of the training and recent PSI |
 | [009](./009-payload-rule-and-runtime-probe.md) | Payload-access rule in CI and a runtime metadata-only probe |
 | [010](./010-optional-totp-second-factor.md) | Optional TOTP second factor with an off-database encryption key |
-| [011](./011-in-tree-pcap-reader-scapy-optional.md) | In-tree pcap reader; scapy becomes an optional extra for live capture (owner-decided, not implemented) |
+| [011](./011-in-tree-pcap-reader-scapy-optional.md) | In-tree pcap reader; scapy becomes an optional extra for live capture (owner-decided; implemented on a branch, see the ADR) |

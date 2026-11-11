@@ -30,8 +30,9 @@ that turn, point `SPECTRA_DATA_DIR` at a temp dir for ad-hoc work.
 ## 3. Work that exists only on the owner's machine until committed
 
 * Two session worktrees under `.claude/worktrees/`:
-  * `claude/nostalgic-moore-fd6f1f`: scapy -> in-tree pcap reader (ADR-011). No commits; edits uncommitted in `pyproject.toml`,
-    `capture/{base,live,pcap_file,sanitize}.py`. Unverified.
+  * `claude/nostalgic-moore-fd6f1f`: scapy -> in-tree pcap reader (ADR-011). Committed, main merged in, full suite green; differential,
+    throughput, wheel and image checks are in `docs/evidence/2026-11-12/reader/` (see ADR-011 for the results and what is still open).
+    Not pushed, not merged into main.
   * `claude/focused-volhard-ffb223`: host-pair beaconing detector (`docs/plan-beaconing-detector.md`). One commit (the evaluation
     protocol), uncommitted `config.py`, `modules/corr/beacon.py`, `services/detection.py`, new `tests/test_beacon.py`. Unverified.
   Commit and push each branch from its worktree before anything else; do not merge either into `main` without the owner's say-so, and run the

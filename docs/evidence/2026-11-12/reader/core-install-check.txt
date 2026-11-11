@@ -1,0 +1,10 @@
+== fresh venv, core install of the rebuilt wheel
+Using Python 3.13.15 environment at: /tmp/claude-1000/-home-saikrishna-Projects-Spectra/e1bbf5f2-bc03-4a45-a6a9-4bbcc8fd353a/scratchpad/venv
+Name: spectra
+Version: 1.0.0
+Requires: cryptography, fastapi, joblib, numpy, pydantic, python-multipart, scikit-learn, uvicorn
+-- scapy installed?
+Using Python 3.13.15 environment at: /tmp/claude-1000/-home-saikrishna-Projects-Spectra/e1bbf5f2-bc03-4a45-a6a9-4bbcc8fd353a/scratchpad/venv
+warning: Package(s) not found for: scapy
+offline pcap -> flows: 7 | scapy imported: False
+live without extra -> CaptureError Live capture needs the optional 'live' extra (scapy, GPL-2.0, not installed by default): pip install 'spectra[

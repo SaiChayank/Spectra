@@ -1,0 +1,20 @@
+backend/dist/spectra-1.0.0-py3-none-any.whl 4feb79ce944f985e60457d0812c5e88c41115106cbb5c65214ebd666cb8af163
+Requires-Dist / Provides-Extra lines:
+  Requires-Dist: numpy>=1.26.0
+  Requires-Dist: scikit-learn>=1.4.0
+  Requires-Dist: joblib>=1.3.0
+  Requires-Dist: fastapi>=0.110.0
+  Requires-Dist: python-multipart>=0.0.9
+  Requires-Dist: uvicorn[standard]>=0.29.0
+  Requires-Dist: pydantic>=2.6.0
+  Requires-Dist: cryptography<51,>=50.0.0
+  Provides-Extra: live
+  Requires-Dist: scapy>=2.5.0; extra == "live"
+  Provides-Extra: dev
+  Requires-Dist: pytest; extra == "dev"
+  Requires-Dist: httpx; extra == "dev"
+  Requires-Dist: ruff; extra == "dev"
+  Requires-Dist: pip-audit; extra == "dev"
+  Requires-Dist: prometheus-client; extra == "dev"
+  Requires-Dist: scapy>=2.5.0; extra == "dev"
+scapy modules imported by shipped code: ['spectra/capture/live.py']

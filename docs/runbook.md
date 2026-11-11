@@ -84,5 +84,8 @@ The optional `capture` profile (`docker compose --profile capture up -d capture`
 it reaches `healthy`, runs read-only, and can open an `AF_PACKET` raw socket. It has to run as root with only `NET_RAW` and
 `DAC_OVERRIDE` (a non-root user gets `NET_RAW` in the bounding set but not the effective set - the first version of this
 profile would have failed to capture; found by checking `CapEff`). **Packets were not captured from a real interface** in
-that run. Not covered: image signing, a Kubernetes manifest, trivy secret/misconfig scanners, scapy's GPL-2.0-only
-licence in the image (open decision for the owner).
+that run. Not covered: image signing, a Kubernetes manifest, trivy secret/misconfig scanners.
+**scapy licence question for the image: closed (ADR-011).** The default image no longer contains scapy (checked after the rebuild, see
+`docs/evidence/2026-11-12/reader/`). Live capture in a container needs the `live` extra: the compose `capture` service therefore builds its
+own image (`spectra-live`, `build.args.EXTRAS="[live]"`, i.e. `docker build --build-arg EXTRAS='[live]' -t spectra-live:1.0.0 .`); that image
+does contain scapy (GPL-2.0-only) and should not be redistributed as part of the Apache-2.0 release.

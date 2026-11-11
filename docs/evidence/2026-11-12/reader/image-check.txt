@@ -1,0 +1,22 @@
+== image spectra:1.0.0 (default build, no EXTRAS)
+id=sha256:c69a9a7dcc5ddaf050e53d7237482562146b8568fb85f0cdf22d0eedec796374 created=2026-11-12T01:43:30.223182827+05:30
+-- pip list | grep -i scapy (expect nothing):
+scapy spec: None
+dist scapy: []
+container health: healthy
+GET /api/health -> 200
+
+== image spectra-live:1.0.0 (compose capture service: build.args.EXTRAS=[live])
+#12 DONE 0.0s
+ Image spectra-live:1.0.0 Built 
+scapy 2.8.0 importable in spectra-live
+    image: spectra:1.0.0
+    image: spectra-live:1.0.0
+        EXTRAS: '[live]'
+  image: spectra:1.0.0
+-- capture service start (host network, NET_RAW):
+ Container nostalgic-moore-fd6f1f-capture-1 Starting 
+ Container nostalgic-moore-fd6f1f-capture-1 Started 
+capture container health: healthy
+ Volume nostalgic-moore-fd6f1f_spectra-capture-data Removing 
+ Volume nostalgic-moore-fd6f1f_spectra-capture-data Removed 

@@ -48,7 +48,7 @@ def test_no_copyleft_exception_package_is_a_core_dependency():
 
     with open(os.path.join(os.path.dirname(HERE), "pyproject.toml"), "rb") as fh:
         proj = tomllib.load(fh)["project"]
-    core = {re.split(r"[<>=!\[; ]", d, 1)[0].lower() for d in proj["dependencies"]}
+    core = {re.split(r"[<>=!\[; ]", d, maxsplit=1)[0].lower() for d in proj["dependencies"]}
     excepted = {e["package"].lower() for e in POLICY["exceptions"]}
     assert not core & excepted, core & excepted
     assert any(d.startswith("scapy") for d in proj["optional-dependencies"]["live"])

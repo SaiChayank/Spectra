@@ -97,7 +97,7 @@ def test_gre_tunnelled_transport_is_seen_like_scapy_sees_it():
 def test_every_cut_off_message_says_truncated(tmp_path):
     """bench_cic2018.tolerant_flows tolerates a cut-off tail by looking for 'truncated' in the error text."""
     raw = open(make_baseline_pcap(str(tmp_path / "m.pcap"), n_flows=2), "rb").read()
-    for cut, where in ((24 + 8, "record header"), (24 + 16 + 3, "packet record"), (len(raw) - 1, "packet record")):
+    for cut in (24 + 8, 24 + 16 + 3, len(raw) - 1):   # inside a record header, inside a record, one byte short
         f = tmp_path / f"c{cut}.pcap"
         f.write_bytes(raw[:cut])
         with pytest.raises(CaptureError, match=r"truncated"):
