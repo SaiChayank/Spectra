@@ -1,0 +1,466 @@
+{
+ "benchmark": "CIC-2018 Bot day, scorer v2 smoke",
+ "status": "SEEN DATA, dev/smoke only, NOT gate evidence (ci/prereg/e21.json)",
+ "git_commit": "25895891783c57617fc6f244c48c462106d5360b",
+ "threshold": 0.8,
+ "min_flows": 20,
+ "bootstrap": 1000,
+ "seed": 1337,
+ "victim_capture_sha256": {
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.10": "48265cd901fe91e95b4a6552cfb822daf682b68359494ef153c9ff0278854243",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.12": "00e2d2d175de6a93821dd19961c2f00b45c39b48bb1fd2f054843b8785af03fd",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.14": "d701711685967c7564ea4442d272f877f31005ce3803ffcd6e8e7593db0b36a4",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.17": "560e8e123189a1d63a734757c2de47f2e768b2226c9097e9e54e85046be1bb48",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.23": "56fc8375d9104615ec08952bf811cc17e0579af5d2fc98e54dea669cc9d5d58e",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.26": "ed0b57eac080732e41535b0228b114a7c90a9e4da88faa140621ff8117cbeebd",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.29": "799081247a14ea82ccfda77756bc6212f428e59b474b5b18fe688326a7b4a378",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.30": "4e129df72cf04e3bc425d649bace9dddf214d25f1461de3b229aa86add0ab01b",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.6": "4e116afc21ba8b8609127c2ef476987d589851ae7bb7f258a9cec36a67de3bfd",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.8": "dfdfdf3e850e8910fc3e2cb1cd5ada03bcc68e29db78809b6c62f7fe46a70992"
+ },
+ "pairs": 182,
+ "c2_pairs": 10,
+ "other_pairs": 172,
+ "positives_without_verdict": 0,
+ "negatives_without_verdict": 27,
+ "negatives_scoring_ge_threshold": 51,
+ "positives_scoring_ge_threshold": 9,
+ "roc_auc": 0.8002906976744186,
+ "roc_auc_ci95": [
+  0.6406976744186047,
+  0.911046511627907
+ ],
+ "recall_at_zero_false_pairs": 0.0,
+ "metrics": {
+  "n_pos": 10,
+  "n_neg": 172,
+  "bootstrap": 1000,
+  "seed": 1337,
+  "roc_auc": 0.8002906976744186,
+  "roc_auc_ci95": [
+   0.6406976744186047,
+   0.911046511627907
+  ],
+  "pr_auc": 0.1668808554743741,
+  "pr_auc_ci95": [
+   0.11207031048646716,
+   0.3142008318478907
+  ],
+  "recall_at_fpr_1pct": 0.0,
+  "recall_at_fpr_1pct_fpr_reached": 0.005813953488372093,
+  "recall_at_fpr_1pct_ci95": [
+   0.0,
+   0.0
+  ],
+  "recall_at_fpr_0_1pct": 0.0,
+  "recall_at_fpr_0_1pct_fpr_reached": 0.0,
+  "recall_at_fpr_0_1pct_ci95": [
+   0.0,
+   0.0
+  ]
+ },
+ "positives": [
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.30",
+   "pair": [
+    "172.31.69.30",
+    "18.219.211.138"
+   ],
+   "flows": 15866,
+   "dst_ips": [
+    "18.219.211.138"
+   ],
+   "positive": true,
+   "score": 0.9316,
+   "components": {
+    "D": 1.0,
+    "H": 0.8633
+   },
+   "span_h": 5.68,
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.10",
+   "pair": [
+    "172.31.69.10",
+    "18.219.211.138"
+   ],
+   "flows": 15791,
+   "dst_ips": [
+    "18.219.211.138"
+   ],
+   "positive": true,
+   "score": 0.9238,
+   "components": {
+    "D": 1.0,
+    "H": 0.8476
+   },
+   "span_h": 5.62,
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.6",
+   "pair": [
+    "172.31.69.6",
+    "18.219.211.138"
+   ],
+   "flows": 15683,
+   "dst_ips": [
+    "18.219.211.138"
+   ],
+   "positive": true,
+   "score": 0.9134,
+   "components": {
+    "D": 1.0,
+    "H": 0.8268
+   },
+   "span_h": 5.57,
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.17",
+   "pair": [
+    "172.31.69.17",
+    "18.219.211.138"
+   ],
+   "flows": 15295,
+   "dst_ips": [
+    "18.219.211.138"
+   ],
+   "positive": true,
+   "score": 0.865,
+   "components": {
+    "D": 1.0,
+    "H": 0.7299
+   },
+   "span_h": 5.35,
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.14",
+   "pair": [
+    "172.31.69.14",
+    "18.219.211.138"
+   ],
+   "flows": 15238,
+   "dst_ips": [
+    "18.219.211.138"
+   ],
+   "positive": true,
+   "score": 0.8604,
+   "components": {
+    "D": 1.0,
+    "H": 0.7209
+   },
+   "span_h": 5.38,
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.23",
+   "pair": [
+    "172.31.69.23",
+    "18.219.211.138"
+   ],
+   "flows": 15217,
+   "dst_ips": [
+    "18.219.211.138"
+   ],
+   "positive": true,
+   "score": 0.8543,
+   "components": {
+    "D": 1.0,
+    "H": 0.7086
+   },
+   "span_h": 5.3,
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.8",
+   "pair": [
+    "172.31.69.8",
+    "18.219.211.138"
+   ],
+   "flows": 15169,
+   "dst_ips": [
+    "18.219.211.138"
+   ],
+   "positive": true,
+   "score": 0.8488,
+   "components": {
+    "D": 1.0,
+    "H": 0.6975
+   },
+   "span_h": 5.27,
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.29",
+   "pair": [
+    "172.31.69.29",
+    "18.219.211.138"
+   ],
+   "flows": 14895,
+   "dst_ips": [
+    "18.219.211.138"
+   ],
+   "positive": true,
+   "score": 0.828,
+   "components": {
+    "D": 1.0,
+    "H": 0.6559
+   },
+   "span_h": 5.18,
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.26",
+   "pair": [
+    "172.31.69.26",
+    "18.219.211.138"
+   ],
+   "flows": 14868,
+   "dst_ips": [
+    "18.219.211.138"
+   ],
+   "positive": true,
+   "score": 0.8253,
+   "components": {
+    "D": 1.0,
+    "H": 0.6505
+   },
+   "span_h": 5.16,
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.12",
+   "pair": [
+    "172.31.69.12",
+    "18.219.211.138"
+   ],
+   "flows": 4989,
+   "dst_ips": [
+    "18.219.211.138"
+   ],
+   "positive": true,
+   "score": 0.25,
+   "components": {
+    "D": 0.5,
+    "H": 0.0
+   },
+   "span_h": 5.37,
+   "verdict": true
+  }
+ ],
+ "top_negatives": [
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.17",
+   "pair": [
+    "69.10.63.210",
+    "172.31.69.17"
+   ],
+   "flows": 32,
+   "dst_ips": [
+    "172.31.69.17"
+   ],
+   "positive": false,
+   "score": 0.9994,
+   "components": {
+    "G": 0.9975,
+    "S": 1.0,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 8.33,
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.6",
+   "pair": [
+    "69.10.63.210",
+    "172.31.69.6"
+   ],
+   "flows": 32,
+   "dst_ips": [
+    "172.31.69.6"
+   ],
+   "positive": false,
+   "score": 0.9992,
+   "components": {
+    "G": 0.9969,
+    "S": 1.0,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 8.33,
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.29",
+   "pair": [
+    "69.10.63.210",
+    "172.31.69.29"
+   ],
+   "flows": 32,
+   "dst_ips": [
+    "172.31.69.29"
+   ],
+   "positive": false,
+   "score": 0.9902,
+   "components": {
+    "G": 0.961,
+    "S": 1.0,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 8.33,
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.30",
+   "pair": [
+    "212.92.112.41",
+    "172.31.69.30"
+   ],
+   "flows": 1544,
+   "dst_ips": [
+    "172.31.69.30"
+   ],
+   "positive": false,
+   "score": 0.9816,
+   "components": {
+    "G": 0.949,
+    "S": 1.0,
+    "D": 1.0,
+    "H": 0.9772
+   },
+   "span_h": 8.71,
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.6",
+   "pair": [
+    "212.92.112.41",
+    "172.31.69.6"
+   ],
+   "flows": 1535,
+   "dst_ips": [
+    "172.31.69.6"
+   ],
+   "positive": false,
+   "score": 0.9632,
+   "components": {
+    "G": 0.8787,
+    "S": 1.0,
+    "D": 1.0,
+    "H": 0.9743
+   },
+   "span_h": 8.71,
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.6",
+   "pair": [
+    "66.45.81.53",
+    "172.31.69.6"
+   ],
+   "flows": 2073,
+   "dst_ips": [
+    "172.31.69.6"
+   ],
+   "positive": false,
+   "score": 0.9558,
+   "components": {
+    "G": 0.8664,
+    "S": 1.0,
+    "D": 1.0,
+    "H": 0.9567
+   },
+   "span_h": 8.71,
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.12",
+   "pair": [
+    "66.45.81.53",
+    "172.31.69.12"
+   ],
+   "flows": 2073,
+   "dst_ips": [
+    "172.31.69.12"
+   ],
+   "positive": false,
+   "score": 0.9519,
+   "components": {
+    "G": 0.8532,
+    "S": 1.0,
+    "D": 1.0,
+    "H": 0.9544
+   },
+   "span_h": 8.71,
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.6",
+   "pair": [
+    "109.236.89.133",
+    "172.31.69.6"
+   ],
+   "flows": 30,
+   "dst_ips": [
+    "172.31.69.6"
+   ],
+   "positive": false,
+   "score": 0.9339,
+   "components": {
+    "G": 0.7354,
+    "S": 1.0,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 4.84,
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.10",
+   "pair": [
+    "94.102.48.210",
+    "172.31.69.10"
+   ],
+   "flows": 43,
+   "dst_ips": [
+    "172.31.69.10"
+   ],
+   "positive": false,
+   "score": 0.9298,
+   "components": {
+    "G": 0.8926,
+    "S": 0.8265,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 8.45,
+   "verdict": true
+  },
+  {
+   "capture": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.6",
+   "pair": [
+    "220.231.90.220",
+    "172.31.69.6"
+   ],
+   "flows": 132,
+   "dst_ips": [
+    "172.31.69.6"
+   ],
+   "positive": false,
+   "score": 0.919,
+   "components": {
+    "G": 0.7938,
+    "S": 1.0,
+    "D": 1.0,
+    "H": 0.8824
+   },
+   "span_h": 8.37,
+   "verdict": true
+  }
+ ]
+}
