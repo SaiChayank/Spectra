@@ -1,0 +1,6 @@
+Throughput, in-tree reader vs scapy (scripts/diff_reader_vs_scapy.py bench, 3 runs each, median reported in the JSON).
+Machine: 12 logical CPUs, 11 GB RAM, Python 3.14 venv of the main checkout; whole files, no packet cap.
+"read_only" = iterate packets (in-tree: PcapFileSource incl. dissection; scapy: PcapReader + the pre-ADR layer extraction).
+"to_flows" = the same + FlowTracker (idle 30 s, 5 s expiry buckets); flows/s = completed flows / that wall time.
+Not a perfectly idle machine: load average was 2.0 at the start and 1.5 at the end (a process unrelated to this work was
+running; nothing else of this task ran at the same time). The three runs per figure agree within about 5 %.

@@ -1,0 +1,1 @@
+{"file": "Sunday_2021-03-28.anonymized.pcap", "cap_packets": 2000000, "packets_in_tree": 523335, "packets_scapy": 523335, "flows_in_tree": 18761, "flows_scapy": 18761, "in_tree_error": null, "scapy_error": null, "mismatches": [], "flow_records_differing": 0, "feature_matrix_shape": [18761, 39], "feature_matrix_exactly_equal": true, "ok": true}

@@ -1,0 +1,1 @@
+{"file": "Friday-02-03-2018__UCAP172.31.69.21", "cap_packets": 2000000, "packets_in_tree": 6407, "packets_scapy": 6407, "flows_in_tree": 878, "flows_scapy": 878, "in_tree_error": null, "scapy_error": null, "mismatches": [], "flow_records_differing": 0, "feature_matrix_shape": [878, 39], "feature_matrix_exactly_equal": true, "ok": true}

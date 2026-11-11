@@ -77,3 +77,28 @@ def test_huge_claimed_record_is_not_allocated(tmp_path):
     f.write_bytes(struct.pack("<IHHiIII", 0xA1B2C3D4, 2, 4, 0, 0, 65535, 1) + struct.pack("<IIII", 0, 0, 0xFFFFFFF0, 0xFFFFFFF0) + b"x" * 8)
     with pytest.raises(CaptureError):
         _drain(str(f))
+
+
+def test_gre_tunnelled_transport_is_seen_like_scapy_sees_it():
+    """Found by the HIKARI differential: scapy decodes GRE (IP and transparent Ethernet bridging) and finds the inner UDP."""
+    from scapy.all import GRE, IP, UDP, Ether, Raw
+
+    from spectra.capture.packet import dissect
+
+    inner_ip = IP(src="10.9.9.1", dst="10.9.9.2") / UDP(sport=1111, dport=2222) / Raw(b"x" * 20)
+    for gre in (GRE(proto=0x0800) / inner_ip, GRE(proto=0x6558) / (Ether() / inner_ip), GRE(chksum_present=1, proto=0x0800) / inner_ip):
+        frame = Ether() / IP(src="192.0.2.1", dst="192.0.2.2") / gre
+        ours, theirs = dissect(bytes(frame)), Ether(bytes(frame))
+        assert theirs.haslayer(UDP) and ours.l4 == 17
+        assert (ours.sport, ours.dport, ours.payload) == (1111, 2222, bytes(theirs[UDP].payload))
+        assert (ours.src, ours.dst) == (theirs[IP].src, theirs[IP].dst)      # outer addresses, as before
+
+
+def test_every_cut_off_message_says_truncated(tmp_path):
+    """bench_cic2018.tolerant_flows tolerates a cut-off tail by looking for 'truncated' in the error text."""
+    raw = open(make_baseline_pcap(str(tmp_path / "m.pcap"), n_flows=2), "rb").read()
+    for cut, where in ((24 + 8, "record header"), (24 + 16 + 3, "packet record"), (len(raw) - 1, "packet record")):
+        f = tmp_path / f"c{cut}.pcap"
+        f.write_bytes(raw[:cut])
+        with pytest.raises(CaptureError, match=r"truncated"):
+            _drain(str(f))

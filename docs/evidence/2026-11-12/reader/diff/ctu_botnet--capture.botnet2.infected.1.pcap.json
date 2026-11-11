@@ -1,0 +1,1 @@
+{"file": "ctu_botnet--capture.botnet2.infected.1.pcap", "cap_packets": 2000000, "packets_in_tree": 198818, "packets_scapy": 198818, "flows_in_tree": 22740, "flows_scapy": 22740, "in_tree_error": null, "scapy_error": null, "mismatches": [], "flow_records_differing": 0, "feature_matrix_shape": [22740, 39], "feature_matrix_exactly_equal": true, "ok": true}

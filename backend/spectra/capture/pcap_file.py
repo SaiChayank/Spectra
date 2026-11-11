@@ -51,7 +51,7 @@ class _Stream:
             raise _Truncated(f"the file ends inside {what} (truncated capture): it claims {n} bytes the file does not hold")
         data = self.fh.read(n)
         if len(data) != n:
-            raise _Truncated(f"the file ends inside {what}")
+            raise _Truncated(f"the file ends inside {what} (truncated capture)")
         return data
 
     def read_or_eof(self, n: int, what: str) -> bytes | None:
@@ -60,7 +60,7 @@ class _Stream:
         if not data:
             return None
         if len(data) != n:
-            raise _Truncated(f"the file ends inside {what}")
+            raise _Truncated(f"the file ends inside {what} (truncated capture)")
         return data
 
 

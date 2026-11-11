@@ -1,7 +1,7 @@
 """In-tree packet dissector (ADR-011): replaces scapy for everything Spectra reads.
 
 Only what the pipeline needs is decoded - link layer (Ethernet + VLAN, 802.3/SNAP, raw IP, BSD loopback, Linux cooked), IPv4
-(+options, fragments), IPv6 (+extension headers), IP-in-IP / 6in4 tunnels, TCP and UDP headers.  The rules follow what scapy
+(+options, fragments), IPv6 (+extension headers), IP-in-IP / 6in4 / GRE tunnels, TCP and UDP headers.  The rules follow what scapy
 did on the same bytes (the differential test in ``tests/test_pcap_differential.py`` and ``docs/evidence/`` pins this): a layer
 exists only when its fixed header is present inside the length the layer below declares; a non-first IPv4 fragment has no
 transport layer; the transport payload runs to the end of the captured frame (so link-layer padding counts), and the size
@@ -163,6 +163,19 @@ def dissect(data: bytes, linktype: int = LINKTYPE_ETHERNET, ts: float = 0.0, wir
             break
         if nxt == 1:
             p.icmp = end - l4 >= 4
+            break
+        if nxt == 47 and end - l4 >= 4:                        # GRE (RFC 2784/2890): checksum, key and sequence words are optional
+            gf = _U16(data, l4)[0]
+            gre_len = 4 + 4 * bool(gf & 0x8000) + 4 * bool(gf & 0x2000) + 4 * bool(gf & 0x1000)
+            inner = _U16(data, l4 + 2)[0]
+            if gf & 7 == 0 and end - l4 >= gre_len and inner in (0x0800, 0x86DD):
+                kind, off = (4 if inner == 0x0800 else 6), l4 + gre_len
+                continue
+            if gf & 7 == 0 and end - l4 >= gre_len and inner == 0x6558:      # transparent Ethernet bridging: an Ethernet frame follows
+                rel, kind = _l3_start(data[l4 + gre_len:end], LINKTYPE_ETHERNET)
+                if kind:
+                    off = l4 + gre_len + rel
+                    continue
             break
         if nxt == 4:
             kind, off = 4, l4

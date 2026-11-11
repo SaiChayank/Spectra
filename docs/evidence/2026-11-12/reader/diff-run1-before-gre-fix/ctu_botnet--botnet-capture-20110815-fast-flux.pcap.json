@@ -1,0 +1,1 @@
+{"file": "ctu_botnet--botnet-capture-20110815-fast-flux.pcap", "cap_packets": 2000000, "packets_in_tree": 45853, "packets_scapy": 45853, "flows_in_tree": 900, "flows_scapy": 900, "in_tree_error": null, "scapy_error": null, "mismatches": [], "flow_records_differing": 0, "feature_matrix_shape": [900, 39], "feature_matrix_exactly_equal": true, "ok": true}
