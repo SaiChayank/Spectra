@@ -6,6 +6,9 @@ ARG WHEEL=backend/dist/spectra-1.0.0-py3-none-any.whl
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 \
     HOME=/home/spectra SPECTRA_DATA_DIR=/data SPECTRA_MODEL_PATH=/data/models/model.joblib
 
+# Pull in Debian security fixes newer than the pinned base (zlib1g CVE-2026-76844 / -85091, trivy 2026-11-08); drop once the base catches up.
+RUN apt-get update && apt-get install -y --no-install-recommends --only-upgrade zlib1g \
+ && rm -rf /var/lib/apt/lists/*
 RUN useradd --system --create-home --home-dir /home/spectra --uid 10001 spectra \
  && mkdir -p /data/models && chown -R spectra:spectra /data
 COPY ${WHEEL} backend/requirements.lock /tmp/

@@ -203,3 +203,50 @@ Three real public datasets were evaluated with a benign-only training slice from
 * A supervised RandomForest on the same features separates the classes well on in-distribution splits (CIC-2018 1.0, CTU 0.91-0.98), so the features hold signal that the unsupervised scoring does not use. On unseen attack types (HIKARI) it did not generalise.
 
 **Gate B status.** Done: three Tier-1 datasets with a signature-IDS baseline (Suricata, ET rules only) and a supervised upper bound; bootstrap intervals, recall at 1% and 0.1% FPR, PR-AUC; cross-dataset generalisation; ablations (9C measured, 9D measured at pair level, 9H not applicable); the 9B evasion run on real flows; offline throughput; a nightly regression job (written, verified locally, not yet run in CI). **Not done, and why:** live-capture sizing (needs `sudo`; script written, not run); the Zeek + JA3 reference as specified (third-party package install blocked; a Spectra-JA3 substitute was run); the owner's own-network benign capture (human task); an ARM sizing box; Suricata/Zeek *tuned* baselines. Labels are weak in all three datasets (pcap-level, 4-tuple join, schedule windows). **No claim of detection performance on real networks follows from these runs, and the numbers argue against shipping the default threshold as a detector for these attack types.** Gate B as written ("every published number traceable to a JSON file and a hash") holds for the numbers in §10-§13, with the open items above.
+
+## 15. Phase E0: pair-level beaconing sweep (2026-11-08, synthetic positives)
+
+`backend/scripts/bench_beacon_sweep.py` -> `docs/evidence/2026-11-08/bench/beacon-sweep.json` (inputs hashed, commit recorded, 500-sample bootstrap).
+Scorers: Spectra's current gap regularity (`1 - cv`), a **RITA-style re-implementation** (skew/MAD of gaps and sizes; *not RITA*, which has not been run), and a gap-histogram mode share.
+Positives are **synthetic** beacons (30 flows, 200 per cell, intervals 30 s / 300 s / 1 h, uniform jitter 0-90 %): idealised, so hits are an upper bound, not a measurement of any real C2 framework. Negatives: (a) 177 real benign pairs (>=10 flows) from CTU-Normal 2017-04-28 and 05-01; (b) *hard negatives*, synthetic steady non-beacon services with gamma-renewal gaps (cv 0.5) and the beacon's size spread (0.05) or a wide one (0.5).
+
+| Finding (300 s interval; other intervals alike unless noted) | Evidence |
+|---|---|
+| Against real benign pairs, gap regularity separates beacons up to ~50 % jitter (recall 1.0 at 0.6 % pair FPR) and **collapses at 75 % (recall 0.09) and 90 % (0.01)** | the cells, `recall_at_fpr_1pct` |
+| The ROC-AUC of 0.98 at 90 % jitter against real pairs is misleading: real benign pairs here are bursty (cv > 1), so *any* steady series ranks above them. Against steady non-beacon services with the same gap spread, AUC is **0.77 at 75 % and 0.36 (below chance) at 90 %** | `hard_negatives` |
+| Timing alone cannot separate a heavily jittered beacon from a steady service; size consistency can, **if** services vary in size (RITA-style AUC 1.0 vs wide-size services) and **cannot if** they do not (0.29-0.48 vs identical-size services) | `steady_size_cv_*` |
+| The gap-mode-share scorer degrades faster than regularity (AUC 0.69 at 50 % jitter) | cells |
+| The RITA-style scorer loses accuracy at long intervals (AUC 0.70 at 1 h with >=10 % jitter) because the absolute MAD scale (30 s, 128 B) penalises long gaps; this may be an artefact of this re-implementation | cells, interval 3600 |
+
+**What this means for the engine (docs/35 E2.1):** gap regularity is a useful but narrow signal. Jitter above ~50 % defeats it, and periodic benign services look the same, so a beacon detector needs destination rarity, size and long-session features and allow-lists on top, which is why docs/35 fuses evidence per host. **Limits:** the real benign set has only 177 pairs (confidence intervals at the 1 % operating point are wide, e.g. [0.0, 1.0]); it has no periodic benign services, so false alerts from NTP/telemetry are not measured here; the real C2 pairs of CIC-2018 (pair-level AUC 0.71 earlier) remain the only real positives. Run RITA on Zeek logs of the same data before any statement about RITA.
+
+**E0 reproduction (2026-11-08).** `scripts/spectra_bench.py --prereg ci/prereg/e0.json` re-ran the CTU benchmark, the beacon sweep and the Gate B script on the same hashed inputs (80 min total, manifest at `docs/evidence/2026-11-08/bench-run/manifest.json`, clean tree at def6f5a). Every numeric value in `ctu-bench.json` and `gateb.json` equals the 2026-11-07 evidence files (0 differences over 91 values each); the beacon sweep equals the earlier run cell for cell. Not covered by the runner yet: HIKARI, CIC-2018 and the Suricata/Zeek baselines (they need the external IDS outputs), RITA, the lab corpus.
+
+## 16. Phase E0: leave-attack-family-out, CTU botnet families (2026-11-08)
+
+`backend/scripts/bench_lofo.py` -> `docs/evidence/2026-11-08/bench/lofo.json`. Each botnet family is held out in turn: a RandomForest trains on benign (CTU-Normal train slice) vs the *other* families and is tested on the held-out family vs the later benign slice (<=20,000 flows per class, 300 bootstrap resamples, seed 1337). Families: neris (2 captures), rbot, fast-flux, botnet2. Labels are pcap-level.
+
+| Held-out family | Supervised ROC-AUC | recall @ 1 % FPR [95 % CI] | Without TLS/port features: AUC / recall | Isolation forest: AUC / recall |
+|---|---|---|---|---|
+| neris | 0.933 | 0.68 [0.67, 0.68] | 0.917 / 0.68 | 0.731 / 0.001 |
+| rbot | 0.972 | 0.86 [0.81, 0.87] | 0.968 / 0.81 | 0.766 / 0.000 |
+| fast-flux | 0.975 | 0.74 [0.71, 0.77] | 0.972 / 0.73 | 0.743 / 0.031 |
+| botnet2 | 0.934 | 0.07 [0.07, 0.08] | 0.926 / 0.07 | 0.741 / 0.001 |
+
+* A supervised model transfers to unseen families here much better than the isolation forest (AUC 0.93-0.98 vs 0.73-0.77; recall at 1 % FPR 0.07-0.86 vs about 0), unlike the HIKARI result in §11 where it did not generalise. High AUC does **not** guarantee usable recall: botnet2 has AUC 0.93 and recall 0.07.
+* **Confound not ruled out.** Dropping the TLS, SNI, ALPN, handshake-timing and port features barely changes anything (AUC -0.00 to -0.02), so the separation does not come from those. It may still come from capture environment (2011 captures vs 2017 captures: packet sizes, timing, MTU), which cannot be separated from attack behaviour with this data. Do not read 0.93-0.98 as "detects botnets"; read it as "an upper bound that includes era effects". The unsupervised AUC (0.73-0.77) is subject to the same confound.
+* Same-era benign/malicious data (HIKARI, CIC-2018, the lab corpus) is the fix; this section is not evidence for E3.
+
+## 17. Phase E0: real RITA v5.1.2 vs Spectra on the CIC-2018 Bot day (2026-11-08)
+
+`backend/scripts/bench_rita_cic.py` -> `docs/evidence/2026-11-08/bench/rita-cic.json`. Zeek 7.0.5 logs of the ten Bot-victim captures were imported into RITA v5.1.2 (GPL-3.0, run unmodified as an external tool in a container on an internal-only network; threat-intel feeds and update checks off). Pairs are (victim, external IP) as in §13 / stage 9D, restricted to pairs with >= 20 Zeek connections (RITA's own analysed set): **53 pairs, 10 of them to the C2 address 18.219.211.138** (the Ares C2, about one connection every 1.3 s, 15,811 connections in one victim). Spectra's score is the gap regularity of its flows; RITA's is its beacon score (SNI beacons expanded to the IPs behind them).
+
+| Scorer | ROC-AUC [95 % CI] | PR-AUC | recall at 0 false pairs (1 % FPR budget) | C2 pair scores |
+|---|---|---|---|---|
+| Spectra gap regularity | 0.85 [0.69, 0.98] | 0.55 | **0.0** | 0.34-0.37 for 8 pairs, 0.0 for 2 |
+| **RITA beacon score** | **0.99 [0.97, 1.00]** | **0.97** | **0.9** | 0.90-0.95 for 9 pairs, 0.5 for 1 |
+
+* **On the one real C2 family we have, the open-source reference is far better than Spectra's current beacon signal.** This is the direct answer to docs/35's "beat Zeek+RITA" gate: at present we do not, and E2.1 must close this gap before any claim of leadership. RITA wins here because it combines gap scores with data-size, **duration over many hours and a connection-count histogram**, and it aggregates by SNI; Spectra's score is one number, `1 - cv` of start gaps, which a few long idle gaps ruin.
+* 3 non-C2 pairs also score above 0.5 in RITA (false alerts), so RITA is not a free win: at a strict budget its recall is 0.9, not 1.0.
+* **Limits:** 53 pairs and 10 positives from a single C2 family (Ares), one network, one day, high connection counts (15k per pair; RITA is known to do less well on slow low-count beacons, which this data does not test). The Spectra jitter sweep of §15 and this result are not comparable (synthetic vs real positives). Not shown: RITA on the jitter sweep, which needs synthetic pcaps, i.e. the lab corpus.
+* A bug caught while writing this script, kept as a lesson: RITA reports SNI beacons with the destination IP blank (the addresses are in `server_ips`); keyed on the IP column alone, the first version showed RITA at AUC 0.13 ("RITA misses the C2"). That was wrong; the numbers above come from the corrected join.

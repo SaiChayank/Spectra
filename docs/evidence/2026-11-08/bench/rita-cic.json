@@ -1,0 +1,132 @@
+{
+ "benchmark": "CIC-2018 Bot day pair-level, Spectra vs real RITA v5.1.2",
+ "min_zeek_conns": 20,
+ "pairs": 53,
+ "c2_pairs": 10,
+ "other_pairs": 43,
+ "victim_capture_sha256": {
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.10": "48265cd901fe91e95b4a6552cfb822daf682b68359494ef153c9ff0278854243",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.12": "00e2d2d175de6a93821dd19961c2f00b45c39b48bb1fd2f054843b8785af03fd",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.14": "d701711685967c7564ea4442d272f877f31005ce3803ffcd6e8e7593db0b36a4",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.17": "560e8e123189a1d63a734757c2de47f2e768b2226c9097e9e54e85046be1bb48",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.23": "56fc8375d9104615ec08952bf811cc17e0579af5d2fc98e54dea669cc9d5d58e",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.26": "ed0b57eac080732e41535b0228b114a7c90a9e4da88faa140621ff8117cbeebd",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.29": "799081247a14ea82ccfda77756bc6212f428e59b474b5b18fe688326a7b4a378",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.30": "4e129df72cf04e3bc425d649bace9dddf214d25f1461de3b229aa86add0ab01b",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.6": "4e116afc21ba8b8609127c2ef476987d589851ae7bb7f258a9cec36a67de3bfd",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.8": "dfdfdf3e850e8910fc3e2cb1cd5ada03bcc68e29db78809b6c62f7fe46a70992"
+ },
+ "rita_version": "v5.1.2",
+ "results": {
+  "spectra_regularity": {
+   "metrics": {
+    "n_pos": 10,
+    "n_neg": 43,
+    "bootstrap": 1000,
+    "seed": 1337,
+    "roc_auc": 0.8465116279069768,
+    "roc_auc_ci95": [
+     0.686046511627907,
+     0.9767441860465116
+    ],
+    "pr_auc": 0.5519421982629529,
+    "pr_auc_ci95": [
+     0.34277328541479485,
+     0.9188679245283019
+    ],
+    "recall_at_fpr_1pct": 0.0,
+    "recall_at_fpr_1pct_fpr_reached": 0.0,
+    "recall_at_fpr_1pct_ci95": [
+     0.0,
+     0.9
+    ],
+    "recall_at_fpr_0_1pct": 0.0,
+    "recall_at_fpr_0_1pct_fpr_reached": 0.0,
+    "recall_at_fpr_0_1pct_ci95": [
+     0.0,
+     0.9
+    ]
+   },
+   "positive_scores": [
+    0.367,
+    0.362,
+    0.361,
+    0.349,
+    0.348,
+    0.346,
+    0.346,
+    0.345,
+    0.0,
+    0.0
+   ],
+   "positive_ranks_among_pairs": [
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    33,
+    42
+   ],
+   "negatives_scoring_above_0_5": 0
+  },
+  "rita_beacon_score": {
+   "metrics": {
+    "n_pos": 10,
+    "n_neg": 43,
+    "bootstrap": 1000,
+    "seed": 1337,
+    "roc_auc": 0.9906976744186047,
+    "roc_auc_ci95": [
+     0.9674418604651163,
+     1.0
+    ],
+    "pr_auc": 0.9666666666666666,
+    "pr_auc_ci95": [
+     0.8875,
+     1.0
+    ],
+    "recall_at_fpr_1pct": 0.9,
+    "recall_at_fpr_1pct_fpr_reached": 0.0,
+    "recall_at_fpr_1pct_ci95": [
+     0.7,
+     1.0
+    ],
+    "recall_at_fpr_0_1pct": 0.9,
+    "recall_at_fpr_0_1pct_fpr_reached": 0.0,
+    "recall_at_fpr_0_1pct_ci95": [
+     0.7,
+     1.0
+    ]
+   },
+   "positive_scores": [
+    0.947,
+    0.938,
+    0.929,
+    0.929,
+    0.922,
+    0.917,
+    0.9,
+    0.9,
+    0.9,
+    0.5
+   ],
+   "positive_ranks_among_pairs": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    13
+   ],
+   "negatives_scoring_above_0_5": 3
+  }
+ }
+}
