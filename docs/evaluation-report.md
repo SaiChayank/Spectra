@@ -250,3 +250,28 @@ Positives are **synthetic** beacons (30 flows, 200 per cell, intervals 30 s / 30
 * 3 non-C2 pairs also score above 0.5 in RITA (false alerts), so RITA is not a free win: at a strict budget its recall is 0.9, not 1.0.
 * **Limits:** 53 pairs and 10 positives from a single C2 family (Ares), one network, one day, high connection counts (15k per pair; RITA is known to do less well on slow low-count beacons, which this data does not test). The Spectra jitter sweep of §15 and this result are not comparable (synthetic vs real positives). Not shown: RITA on the jitter sweep, which needs synthetic pcaps, i.e. the lab corpus.
 * A bug caught while writing this script, kept as a lesson: RITA reports SNI beacons with the destination IP blank (the addresses are in `server_ips`); keyed on the IP column alone, the first version showed RITA at AUC 0.13 ("RITA misses the C2"). That was wrong; the numbers above come from the corrected join.
+
+## 18. Beacon scorer v2: preregistered gate, held-out set A (2026-11-12): NOT MET
+
+Protocol and amendments: `ci/prereg/e21.json`, `docs/plan-beaconing-detector.md` (v2). Scorer: per internal->external pair (keyed by SNI when present), equal-weight mean of gap regularity on unique seconds (G), forward-size regularity (S), hourly persistence (D) and hourly flatness (H); a verdict needs G and D, i.e. >= 12 distinct seconds and a 3 h span. Weights and the 0.8 threshold were fixed before any run and never changed.
+
+**Dev history on seen data (CIC-2018 Bot day, not evidence).** First smoke (`docs/evidence/2026-11-11/bench/beacon-v2-cic.json`): 51 of 172 non-C2 pairs scored >= 0.8 (50 of them inbound, external source) and the C2 pairs had no timing score because of a "median gap >= 1 s" rule. Amendment 1 (unique-second gaps as in RITA's public method, internal->external only, G required) was the single correction round on this data. Rerun (`2026-11-12/bench/beacon-v2a1-cic.json`): the 10 C2 pairs score 0.59-0.78, the 13 other outbound pairs at most 0.39; nothing reaches 0.8. The threshold was deliberately not moved.
+
+**Held-out set A** (`backend/scripts/bench_beacon_v2_ctu.py` -> `docs/evidence/2026-11-12/bench/beacon-v2a1-ctu.json`). Positives: the 8 pairs (>= 20 flows) that the CTU-13 label files mark as command-and-control, all from one infected host (neris, two captures); rbot and fast-flux yielded no scorable C2 pair. Negatives: 149 pairs from the CTU-Normal captures. A pair without a verdict counts as score 0.
+
+| | Spectra v2a1 | RITA v5.1.2 |
+|---|---|---|
+| ROC-AUC [95 % CI] | 0.985 [0.962, 1.0] | 0.916 [0.750, 1.0] |
+| Recall at zero false pairs (gate) [95 % CI] | **0.375 [0.125, 1.0]** | 0.5 [0.25, 1.0] |
+| Recall at <= 1 % false pairs | 0.75 | 0.875 |
+| At the tool's alert level | 0.8: recall 0.125, 0 false pairs | 0.5: recall 0.875, 10 false pairs |
+| Botnet host's non-C2 pairs alerting (outside the gate) | 31 of 165 | 26 of 165 |
+
+**Gate: FAIL on all three checks** (recall 0.375 < 0.8; lower bound 0.125 < 0.6; 0.125 below RITA, allowed 0.05). Per the preregistration the beacon scorer is **a ranking aid, not a detector**; `beaconing_enabled` stays off by default; no retuning was done after this run.
+
+What the run does and does not show:
+* Spectra ranks C2 pairs above benign pairs slightly better than RITA here (AUC 0.985 vs 0.916, intervals overlap), but its scores bunch at 0.73-0.82, so one benign pair at 0.784 (10.0.2.15 -> 208.91.112.53, 9,049 flows) costs five of eight positives at the zero-false-pair point. The fixed 0.8 threshold catches one C2 pair. The same pattern appeared on CIC-2018: the scale is compressed just under the threshold by H and D.
+* **The set is too weak to pass or to conclude much from**: 8 positives from one host, wide intervals; 131 of 149 negatives got no Spectra verdict because five of six benign captures are shorter than 3 h, so "0 false pairs at 0.8" is mostly absence of evidence; RITA produced no scores at all for the five benign captures with 1970-based timestamps (cause not investigated), so its false pairs come from one capture; 2011 botnets against 2017 benign traffic.
+* 31 non-C2 pairs of the infected host score >= 0.8 (e.g. to Google and Yahoo addresses). They are not labelled C2 (spam and click-fraud traffic of the bot), so they are neither hits nor false alarms under this protocol; on a clean host such periodic pairs would be false alarms. Periodic benign traffic remains the unmeasured risk.
+
+Consequences: the 3 h / 12-second evidence rules make short captures nearly unusable as benchmarks; a credible verdict needs long captures with known beacons and real benign periodic services, i.e. set B (lab corpus) and the owner's own-network capture. Any redesign (for example how H and D enter the score) requires a new preregistration and must be judged on data not used here; CIC-2018 and set A are both spent for that purpose.
