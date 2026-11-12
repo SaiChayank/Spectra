@@ -30,7 +30,7 @@ Retention runs when the store opens and after every capture finishes (there is n
 
 ## Known limits
 
-* **Uploaded-but-never-processed captures do not expire.** Retention only ages *finished* capture rows; a capture still in `UPLOADED` state is "a resource waiting to be processed" and only `DELETE /api/captures/{id}` removes it. In the hardened profile this leaves a payload-bearing file indefinitely. Options for the owner: expire `UPLOADED` rows after the capture window too, or require processing/deletion in the runbook.
+* **Uploaded-but-never-processed captures** (`UPLOADED`) age out under `SPECTRA_CAPTURE_RETENTION_DAYS` like finished captures (row and stored file), measured from upload time; live/`PROCESSING` sessions are never aged. Changed after the drill; covered by `test_retention_files.py`. With retention off (the `local` profile) nothing expires.
 * Flow and detection rows are aged by the flow's **own timestamp** against the current time, so the flows of a freshly imported old PCAP (say 2 months old) are removed by the next retention run under a 30-day flow retention.
 * Backups are not pruned by retention: restore drills and snapshots (Phase 11) keep whatever they captured until you delete them.
 * Row-level deletes do not scrub SQLite free pages; use full-disk encryption if deleted metadata must be unrecoverable.
@@ -40,4 +40,4 @@ Retention runs when the store opens and after every capture finishes (there is n
 1. Get the numbers approved by whoever owns data governance; edit them in `HARDENED_RETENTION_DAYS` (`backend/spectra/config.py`) or set the four environment variables explicitly.
 2. Start with `SPECTRA_PROFILE=hardened`; confirm `GET /api/stats` row counts stop growing past the window.
 3. Protect `SPECTRA_DATA_DIR` (permissions, disk encryption) — see `docs/security.md` §4.9 and the `totp.key` note in §2.
-4. Delete unneeded uploads yourself (limit above), and keep audit/database backups under the same retention rules.
+4. Keep audit/database backups under the same retention rules.

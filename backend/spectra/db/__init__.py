@@ -20,7 +20,7 @@ Public surface:
 from __future__ import annotations
 
 from .batch import WriteBuffer
-from .connection import Database, StoreError
+from .connection import Database, StoreError, StoreUnavailable
 from .migrations import (
     MIGRATIONS,
     Migration,
@@ -61,6 +61,7 @@ __all__ = [
     "RetentionPolicy",
     "SessionRepository",
     "StoreError",
+    "StoreUnavailable",
     "TotpRepository",
     "UserRepository",
     "WriteBuffer",

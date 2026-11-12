@@ -30,6 +30,26 @@ class StoreError(RuntimeError):
     """Every persistence failure surfaced to callers uses this type."""
 
 
+class StoreUnavailable(StoreError):
+    """The database is busy (write lock held past the timeout) or out of space.
+
+    Operational and usually transient: the API answers 503 + ``Retry-After``
+    (one central handler) instead of a 500. Never carries SQL in its message.
+    """
+
+
+#: sqlite3 error text for "busy" and "no space" conditions.
+_UNAVAILABLE = ("database is locked", "database table is locked",
+                "database is busy", "database or disk is full")
+
+
+def _wrap(exc: sqlite3.Error) -> StoreError:
+    if isinstance(exc, sqlite3.OperationalError) \
+            and any(m in str(exc).lower() for m in _UNAVAILABLE):
+        return StoreUnavailable(str(exc))
+    return StoreError(str(exc))
+
+
 class Database:
     """One guarded connection plus transaction/exec helpers.
 
@@ -90,7 +110,7 @@ class Database:
                 cursor = self._conn.execute(sql, params)
             except sqlite3.Error as exc:
                 self.error_count += 1
-                raise StoreError(str(exc)) from exc
+                raise _wrap(exc) from exc
             if self._is_write(sql):
                 self._observe_write(started)
             return cursor
@@ -101,7 +121,7 @@ class Database:
                 rows = self._conn.execute(sql, params).fetchall()
             except sqlite3.Error as exc:
                 self.error_count += 1
-                raise StoreError(str(exc)) from exc
+                raise _wrap(exc) from exc
         return [dict(r) for r in rows]
 
     def commit(self) -> None:
@@ -112,7 +132,7 @@ class Database:
                 self._conn.commit()
             except sqlite3.Error as exc:
                 self.error_count += 1
-                raise StoreError(str(exc)) from exc
+                raise _wrap(exc) from exc
             self.commit_count += 1
             self._observe_write(started)
 
@@ -129,7 +149,7 @@ class Database:
                 self._conn.execute("BEGIN IMMEDIATE")
             except sqlite3.Error as exc:
                 self.error_count += 1
-                raise StoreError(str(exc)) from exc
+                raise _wrap(exc) from exc
             try:
                 yield
             except BaseException:
@@ -148,7 +168,7 @@ class Database:
                         self._conn.execute("ROLLBACK")
                     except sqlite3.Error:
                         pass
-                    raise StoreError(str(exc)) from exc
+                    raise _wrap(exc) from exc
                 self.commit_count += 1
                 self._observe_write(started)
 

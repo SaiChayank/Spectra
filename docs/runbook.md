@@ -50,11 +50,16 @@ and a size-limited container (`disk-full-drill.txt`). What an operator actually 
 
 * **Capture failure** - a truncated upload ends `FAILED` with "the file ends inside a record"; the server stays healthy. Fix:
   re-upload an intact file (verified).
-* **Database locked** - while another process holds the write lock, writes wait the 5 s busy timeout and then return **HTTP 500**
-  (not 503); reads and `/api/health` keep working; once the lock is released writes succeed with no restart. Look for a second
+* **Database locked** - *changed after the drill, covered by `tests/test_storage_unavailable.py`, not re-drilled.* The drill saw
+  HTTP 500; now a write that hits the 5 s busy timeout returns **HTTP 503** with `Retry-After` and a plain body
+  (`storage temporarily unavailable`, no SQL). Reads keep working; `/api/health` stays 200 and reports
+  `writable.database: "busy"`; once the lock is released writes succeed with no restart. Look for a second
   `spectra serve` or a CLI/backup job holding a transaction. SQLite is WAL, so a `-wal` file is normal - never delete it.
-* **Disk full** - login (it writes a session row) returns **HTTP 500**, and `/api/health` still says 200, so a plain health
-  check will not notice. Free space (or grow the volume); recovery needed no restart. Watch free space on the data volume
+* **Disk full** - *changed after the drill, covered by tests, not re-drilled.* The drill saw login return 500 and `/api/health`
+  say 200. Now writes that fail for lack of space (SQLite "database or disk is full", or ENOSPC on the data directory) return the
+  same **503 + `Retry-After`**, and `/api/health` runs a cheap write probe (a tiny temp file in the data dir plus a rolled-back
+  write transaction): it returns **503** with `ok: false` and `writable.data_dir` / `writable.database` = `"failed"`, so a plain
+  health check notices. Free space (or grow the volume); recovery needs no restart. Watch free space on the data volume
   yourself; retention (`docs/retention.md`) bounds growth.
 * **Model artifact corrupt** - the server starts, but the damaged model is **not** loaded and there is **no fallback to an
   older model** (the registry is authoritative). `GET /api/model` shows `trained: false`, `spectra_model_trained` is 0 (alert
