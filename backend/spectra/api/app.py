@@ -21,6 +21,7 @@ Security layout:
 from __future__ import annotations
 
 import asyncio
+import errno
 import logging
 import time
 from contextlib import asynccontextmanager
@@ -52,6 +53,7 @@ from .routers import (
     twin,
     users,
 )
+from ..store import StoreUnavailable
 from .middleware import RequestIdMiddleware
 from .runtime import cfg, engine  # noqa: F401  (re-exported for tests/tools)
 from .security import (
@@ -367,6 +369,30 @@ async def _overflow(request: Request, exc: OverflowError) -> JSONResponse:
         "event": "request_overflow", "path": request.url.path})
     return JSONResponse(status_code=422,
                         content={"detail": "numeric parameter out of range"})
+
+
+def _unavailable(reason: str) -> JSONResponse:
+    log.warning("storage unavailable", extra={"event": "storage_unavailable",
+                                              "reason": reason})
+    return JSONResponse(status_code=503, headers={"Retry-After": "5"},
+                        content={"detail": "storage temporarily unavailable"})
+
+
+@app.exception_handler(StoreUnavailable)
+async def _store_unavailable(request: Request,
+                             exc: StoreUnavailable) -> JSONResponse:
+    """Database busy (write lock held past the timeout) or disk full: 503 +
+    ``Retry-After``, a fixed body - the exception text is never echoed."""
+    return _unavailable("busy_or_full")
+
+
+@app.exception_handler(OSError)
+async def _os_error(request: Request, exc: OSError) -> JSONResponse:
+    """ENOSPC on the data directory answers 503 like a full database; any
+    other OSError keeps the default 500 behaviour."""
+    if exc.errno != errno.ENOSPC:
+        raise exc
+    return _unavailable("no_space")
 
 
 # Registered last so every real route wins; serves the compiled dashboard when a

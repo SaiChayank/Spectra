@@ -20,7 +20,7 @@ from ...services.captures import (
     CaptureDuplicate,
     CaptureNotFound,
 )
-from ...store import StoreError
+from ...store import StoreError, StoreUnavailable
 from ..runtime import engine
 from ..security import require
 
@@ -52,6 +52,8 @@ def _translate():
         raise HTTPException(status_code=413, detail=str(exc)) from exc
     except CaptureFileError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except StoreUnavailable:
+        raise  # central handler: 503 + Retry-After
     except StoreError:
         # str(exc) can quote SQL and storage paths: log it, answer generic.
         log.exception("capture persistence failure")

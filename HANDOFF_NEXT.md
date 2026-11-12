@@ -8,7 +8,7 @@ that turn, point `SPECTRA_DATA_DIR` at a temp dir for ad-hoc work.
 ## 1. State of `main`
 
 * Phases 0-11 and Phase B / Gate B evidence are done, as far as an agent can do them. CI on `main` was green on the Dockerfile fix
-  (zlib1g upgrade). 887 backend tests at the time of writing (check `docs/testing.md`).
+  (zlib1g upgrade). 895 backend tests at the time of writing (check `docs/testing.md`).
 * Product verdict (honest): a solid, metadata-only platform; **the detector is weak** (docs/evaluation-report.md §14) and, on the one real
   C2 family we have, **real RITA beats Spectra's beacon score: AUC 0.99 vs 0.85, recall 0.9 vs 0.0 at a 1 % pair-FPR budget** (§17).
   Closing that gap is the first engineering goal.

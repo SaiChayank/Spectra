@@ -12,6 +12,7 @@ from __future__ import annotations
 import logging
 import os
 import socket
+import sqlite3
 import struct
 import time
 from typing import TypedDict
@@ -172,10 +173,49 @@ class SystemService:
 
     # -- health ----------------------------------------------------------------
 
+    def _writability(self) -> dict:
+        """Cheap write probe (polled): a tiny temp file in the data dir and a
+        rolled-back ``BEGIN IMMEDIATE`` on a short-lived connection. A held
+        lock is ``busy`` (not unhealthy); anything else failing is ``failed``.
+        Fixed strings only - no paths, no exception text."""
+        out = {"data_dir": "ok", "database": "ok"}
+        probe = os.path.join(self.config.data_dir, f".health-{os.getpid()}")
+        try:
+            fd = os.open(probe, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            try:
+                os.write(fd, b"0")
+            finally:
+                os.close(fd)
+                os.unlink(probe)
+        except OSError as exc:
+            out["data_dir"] = "failed"
+            log.warning("health: data dir not writable (errno %s)", exc.errno)
+        if self.store is None:
+            out["database"] = "disabled"
+            return out
+        try:
+            con = sqlite3.connect(self.config.db_path, timeout=0.25,
+                                  isolation_level=None)
+            try:
+                con.execute("BEGIN IMMEDIATE")
+                con.execute("ROLLBACK")
+            finally:
+                con.close()
+        except sqlite3.Error as exc:
+            if "locked" in str(exc).lower() or "busy" in str(exc).lower():
+                out["database"] = "busy"
+            else:
+                out["database"] = "failed"
+                log.warning("health: database not writable (%s)",
+                            type(exc).__name__)
+        return out
+
     def health(self) -> dict:
         store = self.store
+        writable = self._writability()
         return {
-            "ok": True,
+            "ok": "failed" not in writable.values(),
+            "writable": writable,
             "service": "spectra",
             "version": __version__,
             "database": "enabled" if store else "disabled",

@@ -13,7 +13,7 @@ import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
-from ...store import StoreError
+from ...store import StoreError, StoreUnavailable
 from ..runtime import engine
 from ..security import require
 
@@ -49,6 +49,8 @@ def history_flows(
             until=until, sni=sni, proto=proto, src=src, dst=dst,
             min_score=min_score, max_score=max_score, capture_id=capture_id,
         )
+    except StoreUnavailable:
+        raise  # central handler: 503 + Retry-After
     except StoreError:
         # The underlying error can quote SQL/paths: log it, answer generic.
         log.exception("flow history query failed")
@@ -75,6 +77,8 @@ def history_detections(
             until=until, proto=proto, src=src, dst=dst,
             min_score=min_score, max_score=max_score,
         )
+    except StoreUnavailable:
+        raise  # central handler: 503 + Retry-After
     except StoreError:
         # The underlying error can quote SQL/paths: log it, answer generic.
         log.exception("detections history query failed")
@@ -125,6 +129,8 @@ def history_events(
             limit=limit, offset=offset, type=event_type,
             since=since, until=until,
         )
+    except StoreUnavailable:
+        raise  # central handler: 503 + Retry-After
     except StoreError:
         # The underlying error can quote SQL/paths: log it, answer generic.
         log.exception("events history query failed")

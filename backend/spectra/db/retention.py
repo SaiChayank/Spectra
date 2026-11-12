@@ -18,7 +18,7 @@ than ``stale_session_hours`` is a capture a crashed process never finalised; it
 is closed with an explanatory ``error`` (and ``status = 'FAILED'``) so history
 stops showing it as running. Rows still ``UPLOADED`` are exempt: an import
 waiting to be processed is a resource, not an open session, and only the
-delete API (or ``capture_retention_days`` for finished rows) removes it. The
+delete API or ``capture_retention_days`` (which covers UPLOADED rows too) removes it. The
 sweep runs when a Store opens (before any capture of this process exists) and
 after each capture finishes.
 """
@@ -101,11 +101,13 @@ def apply_retention(db: Database, policy: RetentionPolicy,
                 (now, _STALE_ERROR, stale_cutoff),
             ).rowcount
         if capture_cutoff is not None:
-            # Only finished sessions: an open one is live (or just swept);
-            # unprocessed uploads are managed by the delete API.
+            # Finished sessions, plus uploads never processed (UPLOADED): they
+            # hold the verbatim file, so they age out like any other capture.
+            # An open live/PROCESSING session is never touched.
             counts["captures"] = db.execute(
                 """DELETE FROM captures
-                   WHERE started_at < ? AND stopped_at IS NOT NULL""",
+                   WHERE started_at < ?
+                     AND (stopped_at IS NOT NULL OR status = 'UPLOADED')""",
                 (capture_cutoff,),
             ).rowcount
         if detection_cutoff is not None:

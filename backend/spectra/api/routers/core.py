@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from fastapi.responses import PlainTextResponse, Response
+from fastapi.responses import JSONResponse, PlainTextResponse, Response
 from pydantic import BaseModel, Field
 
 from ...capabilities import module_capabilities
@@ -30,8 +30,11 @@ class CaptureRequest(BaseModel):
 
 
 @router.get("/api/health")
-def health() -> dict:
-    return engine.system.health()
+def health() -> JSONResponse:
+    """Liveness plus a cheap write probe: 503 when the data dir or database
+    cannot be written (a merely busy database stays 200)."""
+    body = engine.system.health()
+    return JSONResponse(body, status_code=200 if body["ok"] else 503)
 
 
 @router.get("/api/health/system",

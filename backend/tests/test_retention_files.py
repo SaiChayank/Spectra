@@ -73,3 +73,23 @@ def test_retention_never_removes_a_file_an_import_is_still_writing(tmp_path):
     e.store.retention = RetentionPolicy(capture_retention_days=0.0, stale_session_hours=0.0)
     e.capture_resources._after_retention({"captures": 1})
     assert os.path.exists(young)
+
+
+def test_stale_unprocessed_upload_expires_with_its_file(tmp_path):
+    """An UPLOADED capture nobody processed ages out under capture retention."""
+    e = _engine(tmp_path)
+    old, fresh = _import(e, tmp_path, 3), _import(e, tmp_path, 4)
+    old_path, fresh_path = _stored_file(e, old["capture_id"]), _stored_file(e, fresh["capture_id"])
+    now = time.time()
+    assert e.store.get_capture(old["capture_id"])["status"] == "UPLOADED"
+    e.store._conn.execute("UPDATE captures SET started_at = ? WHERE id = ?",
+                          (now - 100 * DAY, old["capture_id"]))
+    e.store._conn.commit()
+    os.utime(old_path, (now - 100 * DAY, now - 100 * DAY))
+
+    e.store.retention = RetentionPolicy(capture_retention_days=30.0, stale_session_hours=0.0)
+    assert e.store.run_retention()["captures"] == 1
+    assert e.store.get_capture(old["capture_id"]) is None
+    assert not os.path.exists(old_path)
+    assert os.path.isfile(fresh_path)                     # young upload kept
+    assert e.store.get_capture(fresh["capture_id"]) is not None

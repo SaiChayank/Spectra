@@ -45,6 +45,7 @@ from .db import (
     RetentionPolicy,
     SessionRepository,
     StoreError,
+    StoreUnavailable,
     TotpRepository,
     UserRepository,
     WriteBuffer,
@@ -55,7 +56,7 @@ from .db import (
 
 log = logging.getLogger("spectra.store")
 
-__all__ = ["Store", "StoreError"]
+__all__ = ["Store", "StoreError", "StoreUnavailable"]
 
 
 def _public_user(row: dict) -> dict:
