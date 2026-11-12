@@ -116,3 +116,9 @@ detector can do and say nothing about any specific C2 framework. Real-framework 
 * **Gate (unchanged wording):** pairs with >= 20 flows; positives at jitter <= 50 % gated (36 pairs), 75 % (12 pairs) a curve only; negatives = B1-B3 pairs; a pair
   without a verdict scores 0. **Known consequences:** the 1800 s beacon gives about 20 check-ins in 10 h (at the edge of the >= 20 flow rule); the 3600 s update check
   about 10 (not scored). Pcap SHA-256 hashes are added by a later data-only amendment when the run finishes.
+
+### Amendment 4 (2026-11-12; clarification made while the set B capture was still running and unread; no design, scorer, threshold or weight change)
+Stricter reading: a slow beacon that cannot reach 20 flows in 10 h is a miss, not an exclusion. All 36 gated beacons (jitter <= 50 %) and all 12 at 75 % always
+count; a labelled beacon pair with fewer than 20 flows, or absent from the pcap, is included with score 0 for both Spectra and RITA and flagged `below_min_flows` /
+`absent` in the per-pair table (the manifest must list exactly 36 gated beacons). B1-B3 negatives and the periodic-benign class keep the >= 20 flows rule; their
+below-20 counts are reported. Machine-readable copy in `ci/prereg/e21.json`.

@@ -30,7 +30,8 @@ What it does (spec: amendment 3 and the task for this script):
 * SHA-256 of every pcap and the manifest go into the output (for the data-only prereg amendment).
 * Spectra: flow metadata of each host pcap (no payload kept), one BeaconTracker per host capture, threshold -1 (final score visible),
   beaconing_internal_nets = ["203.0.113.128/25"], allow-list EMPTY, flows fed in start-time order; a pair's score is its last verdict.
-  A pair with no verdict scores 0.  Pairs need >= 20 flows; labelled pairs below that are counted per class and left out.
+  A pair with no verdict scores 0.  Negatives (B1-B3) and the periodic class need >= 20 flows (below-20 counts reported);
+  beacons ALWAYS count (amendment 4): fewer than 20 flows or absent = score 0 for both tools, flagged below_min_flows / absent.
 * Labels from the manifest by (host, SNI or server IP): beacons by (interval, jitter), gate negatives B1-B3, periodic benign B4-B6,
   anything else "other" (reported, e.g. multicast, excluded from every class).
 * RITA: same labelled pairs.  Join as in set A: RITA scores SNI beacons with a blank dst and the addresses in server_ips; those rows are expanded
@@ -237,8 +238,10 @@ def per_tool(rows, key, fixed_levels):
 def class_counts(rows):
     out: dict = {}
     for r in rows:
-        c = out.setdefault(r["cls"], {"labelled_pairs": 0, "below_20_flows": 0, "eligible": 0, "no_verdict": 0})
+        c = out.setdefault(r["cls"], {"labelled_pairs": 0, "below_20_flows": 0, "absent": 0, "eligible": 0, "no_verdict": 0})
         c["labelled_pairs"] += 1
+        c["absent"] += r["flag"] == "absent"
+        c["below_20_flows"] += r["flag"] == "below_min_flows"
         if r["eligible"]:
             c["eligible"] += 1
             c["no_verdict"] += 0 if r["verdict"] else 1
@@ -300,6 +303,17 @@ def main() -> int:
             r.update({"host": name, "cls": lab["cls"], "interval": lab["interval"], "jitter": lab["jitter"], "joined_by": how,
                       "eligible": r["flows"] >= MIN_FLOWS, "rita": None})
             r["group"] = group_of(lab)
+            r["flag"] = None
+            if r["cls"] == "beacon":     # amendment 4: a beacon always counts; below 20 flows it is a miss (score 0), not an exclusion
+                r["eligible"] = True
+                if r["flows"] < MIN_FLOWS:
+                    r.update(flag="below_min_flows", score=0.0, components=None, verdict=False)
+        for p in h["profiles"]:          # manifest beacon absent from the pcap: a miss with score 0
+            if p["class"] == "beacon" and not any(r["cls"] == "beacon" and p["sni"] in (r["pair"][1], *r["dst_ips"]) for r in prs):
+                prs.append({"host_ip": h["ip"], "pair": [h["ip"], p["sni"]], "flows": 0, "dst_ips": [], "score": 0.0, "components": None,
+                            "span_h": None, "verdict": False, "host": name, "cls": "beacon", "interval": p["interval"],
+                            "jitter": p["jitter"], "joined_by": "manifest", "eligible": True, "rita": None, "flag": "absent",
+                            "group": group_of({"cls": "beacon", "jitter": p["jitter"]})})
         rows += prs
     comp["checks"]["pcap_flows_span_planned_duration"] = all(c["flow_span_s"] >= dur - 300 for c in caps.values())
     comp["pcap_flow_span_s"] = {k: v["flow_span_s"] for k, v in caps.items()}
@@ -321,6 +335,8 @@ def main() -> int:
             for r in rows:
                 if r["host"] == name and r["host_ip"] == ip_:
                     r["rita"] = max([rs.get((ip_, i), 0.0) for i in r["dst_ips"]] or [0.0])
+                    if r["flag"]:
+                        r["rita"] = 0.0      # amendment 4: below_min_flows / absent beacons score 0 for RITA too
     rita_all = (not a.skip_rita and sorted(wanted) == sorted(caps) and all(i["analysed"] for i in rita_info.values()))
 
     lab_rows = [r for r in rows if r["group"] != "other"]

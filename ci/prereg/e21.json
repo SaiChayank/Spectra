@@ -200,6 +200,15 @@
         ],
         "hashes": "Pcap SHA-256 hashes are added by a later data-only amendment when the run finishes."
       }
+    },
+    {
+      "date": "2026-11-12",
+      "id": "amendment-4",
+      "note": "Clarification made while the set B capture was still running and unread; stricter reading: a slow beacon that cannot reach 20 flows in 10 h is a miss, not an exclusion. No design, scorer, threshold or weight change.",
+      "set_B": {
+        "beacons": "All 36 gated beacons (jitter <= 50 %) and all 12 at 75 % always count. A labelled beacon pair with fewer than 20 flows, or absent from the pcap, is included with score 0 for both Spectra and RITA and flagged below_min_flows / absent in the per-pair table. The manifest must list exactly 36 gated beacons.",
+        "negatives_and_periodic": "B1-B3 negatives and the periodic-benign class keep the >= 20 flows rule as preregistered; their below-20 counts are reported."
+      }
     }
   ]
 }
