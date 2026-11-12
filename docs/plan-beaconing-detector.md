@@ -93,3 +93,26 @@ were inbound (external source). Three structural changes, which supersede the ma
   scores 0. RITA: beacon_score from the same captures' Zeek logs; its default alert level is `base` 50 (0.5).
 * **Known limits, up front:** 2011 botnets vs 2017 benign traffic (pcap-era mismatch); captures of about 3-6 h, so slow beacons cannot be scored;
   few positive pairs (the public CTU-13 pcaps hold botnet-host traffic only).
+
+### Amendment 3 (2026-11-12; set B redefined; written BEFORE any simulator traffic is generated; scorer and gate wording unchanged; machine-readable copy in `ci/prereg/e21.json`)
+Reason: the agent could not fetch C2 frameworks; the owner approved (2026-11-12) a harmless simulator instead (plain Python clients and servers, ordinary
+HTTPS, isolated Docker network). Set B is **simulated**: idealised beacons with real TCP/TLS 1.3 on a real network stack. Results bound what the
+detector can do and say nothing about any specific C2 framework. Real-framework captures remain an optional owner-run addition.
+* **Network:** one Docker network, `internal: true`, subnet 203.0.113.0/24 (TEST-NET-3), no published ports. Clients: static addresses in
+  203.0.113.128/25; servers in 203.0.113.0/25. Scoring set B: `beaconing_internal_nets` = ["203.0.113.128/25"]; RITA's internal subnet the same. Allow-list empty.
+* **Duration:** 10 h wall clock, real time. 12 client hosts, each capturing its own traffic to its own pcap.
+* **Beacons (positives):** 16 cells = interval {10, 60, 300, 1800 s} x jitter {0, 25, 50, 75 %}; next delay = interval * (1 + U(-j, +j)). Each cell runs on 3
+  different hosts (48 pairs); each host runs 4 beacons, one per interval, jitters by a fixed seeded rotation so every cell appears 3 times. One server per cell
+  (own IP, SNI `c-<interval>-<jitter>.lab.example`). Every check-in is a NEW TCP + TLS 1.3 connection: POST 300 B +-5 %, response 200 B +-5 %, with
+  probability 0.05 a "tasking" response of 2-20 kB. Start at a random offset in the first interval, run the whole 10 h.
+* **Gate negatives (every host):** B1 browsing: Poisson sessions (mean 20 min apart), 5-40 requests per session, lognormal gaps (median 2 s, sigma 1.0), 6 shared
+  SNIs, request 200-2,000 B, response 1-200 kB heavy-tailed. B2 chat long-poll: active (60-120 min) / idle (30-90 min) periods; while active reconnect after
+  U(30, 90) s, 100-5,000 B. B3 app polling: two active windows of about 2 h at seeded random times; while active a request every 15 s +-10 %, request 150-400 B,
+  response 0.2-50 kB.
+* **Periodic benign, reported as its own class OUTSIDE the gate (stated now: the detector is not expected to separate these from beacons; their alert count is the
+  number of allow-list entries a site would need):** B4 telemetry every 300 s +-10 %, 0.5-20 kB; B5 time-sync-like every 64 s fixed, about 100 B each way; B6 update
+  check every 3600 s +-300 s, about 1 kB.
+* Benign destinations are shared by all hosts (own server IP and SNI each). All randomness: seed 1337 plus host index; exact schedule parameters go to a manifest.
+* **Gate (unchanged wording):** pairs with >= 20 flows; positives at jitter <= 50 % gated (36 pairs), 75 % (12 pairs) a curve only; negatives = B1-B3 pairs; a pair
+  without a verdict scores 0. **Known consequences:** the 1800 s beacon gives about 20 check-ins in 10 h (at the edge of the >= 20 flow rule); the 3600 s update check
+  about 10 (not scored). Pcap SHA-256 hashes are added by a later data-only amendment when the run finishes.
