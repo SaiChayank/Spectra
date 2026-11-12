@@ -64,10 +64,12 @@ def test_enospc_oserror_returns_503(client):
         raise OSError(errno.ENOSPC, "No space left on device", "/secret/path")
 
     app.add_api_route("/api/_t_enospc", enospc)
+    # first, ahead of the web UI's catch-all route (present when the frontend is built)
+    app.router.routes.insert(0, app.router.routes.pop())
     try:
         res = client.get("/api/_t_enospc")
     finally:
-        app.router.routes.pop()
+        app.router.routes.pop(0)
     _assert_plain_503(res)
     assert "secret" not in res.text
 
