@@ -10,7 +10,7 @@ x-server: &server
   cap_drop: [ALL]
   security_opt: ["no-new-privileges:true"]
   sysctls: {net.ipv4.ip_unprivileged_port_start: "0"}
-  mem_limit: 32m
+  mem_limit: 40m
   pids_limit: 64
 x-client: &client
   image: spectra-setb-sim:latest
