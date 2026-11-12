@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import logging
 import os
+import socket
+import struct
 import time
 from typing import TypedDict
 
@@ -101,6 +103,25 @@ class _HealthInputs(TypedDict):
 #: bio response names by level (modules.bio.danger.RESPONSES), repeated here so the
 #: metrics text stays stable even if that tuple is ever extended
 _BIO_RESPONSES = ("ignore", "monitor", "alert", "isolate")
+
+
+def _iface_ipv4(dev: str) -> str:
+    """IPv4 address of ``dev`` via SIOCGIFADDR (Linux/BSD); "" when unknown or unsupported."""
+    try:
+        import fcntl
+        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+            packed = fcntl.ioctl(s.fileno(), 0x8915, struct.pack("256s", dev.encode()[:15]))
+        return socket.inet_ntoa(packed[20:24])
+    except Exception:  # noqa: BLE001 - no address / no fcntl (Windows)
+        return ""
+
+
+def _iface_mac(dev: str) -> str:
+    try:
+        with open(f"/sys/class/net/{dev}/address") as fh:
+            return fh.read().strip()
+    except OSError:
+        return ""
 
 
 def _label(value) -> str:
@@ -620,16 +641,9 @@ class SystemService:
         Npcap/libpcap is installed. Adapters carrying a real (non-APIPA) IP sort
         first so the default pick in the dashboard is the active NIC."""
         try:
-            from scapy.all import conf, get_if_list
-
             rows: list[tuple[int, str, dict]] = []
-            for dev in get_if_list():
-                try:
-                    iface = conf.ifaces.get(dev)
-                except Exception:  # noqa: BLE001 - keep the raw device id usable
-                    iface = None
-                name = (getattr(iface, "name", None) or dev) if iface else dev
-                ip = (getattr(iface, "ip", "") or "") if iface else ""
+            for _idx, dev in socket.if_nameindex():
+                ip = _iface_ipv4(dev)
                 if not ip or ip.startswith("127."):
                     rank = 3
                 elif ip.startswith("169.254"):
@@ -637,12 +651,7 @@ class SystemService:
                 else:
                     rank = 0
                 rows.append((rank, dev, {
-                    "id": dev,
-                    "name": name,
-                    "description": (getattr(iface, "description", "") or "")
-                    if iface else "",
-                    "ip": ip,
-                    "mac": (getattr(iface, "mac", "") or "") if iface else "",
+                    "id": dev, "name": dev, "description": "", "ip": ip, "mac": _iface_mac(dev),
                 }))
             rows.sort(key=lambda r: r[0])
             return {

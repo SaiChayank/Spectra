@@ -1,0 +1,1 @@
+{"file": "ctu_normal--2017-05-02_kali-normal.pcap", "cap_packets": 2000000, "packets_in_tree": 442488, "packets_scapy": 442488, "flows_in_tree": 11455, "flows_scapy": 11455, "in_tree_error": null, "scapy_error": null, "mismatches": [], "flow_records_differing": 0, "feature_matrix_shape": [11455, 39], "feature_matrix_exactly_equal": true, "ok": true}

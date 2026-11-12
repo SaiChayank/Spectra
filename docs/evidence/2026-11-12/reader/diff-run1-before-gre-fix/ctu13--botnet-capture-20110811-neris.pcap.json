@@ -1,0 +1,1 @@
+{"file": "ctu13--botnet-capture-20110811-neris.pcap", "cap_packets": 2000000, "packets_in_tree": 176064, "packets_scapy": 176064, "flows_in_tree": 22175, "flows_scapy": 22175, "in_tree_error": null, "scapy_error": null, "mismatches": [], "flow_records_differing": 0, "feature_matrix_shape": [22175, 39], "feature_matrix_exactly_equal": true, "ok": true}

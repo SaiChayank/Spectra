@@ -3,9 +3,8 @@
 import time
 
 from fastapi.testclient import TestClient
-from scapy.utils import PcapWriter
 
-from spectra.demo import tls_flow_packets
+from spectra.demo import tls_flow_packets, write_pcap
 from spectra.modules.corr import NODE_DOMAIN, NODE_HOST, NODE_IP, NODE_SECTOR, cascade
 from spectra.modules.corr.graph import CorrelationGraph, cadence_stats
 from spectra.pipeline import SpectraEngine
@@ -112,10 +111,7 @@ def test_graph_survives_capture_start(tmp_path):
                         score=None, anomaly=False)
 
     pcap = str(tmp_path / "fresh.pcap")
-    w = PcapWriter(pcap, sync=True)
-    for p in tls_flow_packets(sport=40700, sni="fresh.example"):
-        w.write(p)
-    w.close()
+    write_pcap(pcap, tls_flow_packets(sport=40700, sni="fresh.example"))
 
     engine = SpectraEngine(model_path=str(tmp_path / "m.joblib"), store=store)
     engine.start("pcap", path=pcap)
@@ -134,12 +130,7 @@ def test_graph_survives_capture_start(tmp_path):
 
 def test_engine_graph_and_api(tmp_path):
     def write(path, flows):
-        w = PcapWriter(str(path), sync=True)
-        for pkts in flows:
-            for p in pkts:
-                w.write(p)
-        w.close()
-        return str(path)
+        return write_pcap(str(path), [p for pkts in flows for p in pkts])
 
     baseline = write(tmp_path / "b.pcap", [
         tls_flow_packets(sport=40500 + i, sni=f"site{i}.example",

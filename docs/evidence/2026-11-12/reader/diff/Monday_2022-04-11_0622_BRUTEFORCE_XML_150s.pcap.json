@@ -1,0 +1,1 @@
+{"file": "Monday_2022-04-11_0622_BRUTEFORCE_XML_150s.pcap", "cap_packets": 2000000, "packets_in_tree": 216832, "packets_scapy": 216832, "flows_in_tree": 20350, "flows_scapy": 20350, "in_tree_error": null, "scapy_error": null, "mismatches": [], "flow_records_differing": 0, "feature_matrix_shape": [20350, 39], "feature_matrix_exactly_equal": true, "ok": true}

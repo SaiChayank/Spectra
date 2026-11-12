@@ -1,107 +1,178 @@
-"""Offline PCAP/PCAPNG file source."""
+"""Offline PCAP/PCAPNG file source (in-tree reader, ADR-011: no scapy).
+
+Reads classic pcap (both byte orders, micro- and nanosecond), pcapng (SHB/IDB/EPB/SPB/PB; other blocks skipped) and gzip of
+either.  Hostile-input rules:
+
+* every length read from the file is checked against what is left of the file *before* any allocation, so a header that
+  claims a 4 GiB record is a truncation error, not a 4 GiB allocation; a gzip stream has no knowable size, so a record or
+  block there is capped at ``_MAX_GZIP_RECORD``;
+* a file that ends inside a header or record, a block whose lengths disagree, or a bad magic raises :class:`CaptureError`
+  after the packets before the defect were yielded - a cut-off capture is never analysed as if complete;
+* each loop iteration consumes at least 8 bytes, so no input can make the reader spin.
+"""
 
 from __future__ import annotations
 
 import gzip
 import os
+import struct
 from typing import IO, Iterator
-
-from scapy.packet import Packet
-
-# Register IP/TCP decoders with conf.l2types *before* any PCAP is read;
-# otherwise linktype 228 (raw IP) packets decode as opaque Raw payloads.
-import scapy.layers.inet  # noqa: F401
-import scapy.layers.inet6  # noqa: F401
 
 from ..filters import compile_filter
 from .base import CaptureError, CaptureSource
+from .packet import Packet, dissect
 
-#: One read from a *compressed* capture is capped here instead of by the file
-#: size: the decompressed length is not knowable without inflating the whole
-#: stream, and no single packet record or PCAPNG block legitimately approaches
-#: this (snaplen is a few tens of kilobytes in practice).
+#: One record/block read from a *compressed* capture is capped here instead of by the file size: the decompressed length is
+#: not knowable without inflating the whole stream, and no single packet record or block legitimately approaches this.
 _MAX_GZIP_RECORD = 16 * 1024 * 1024
 
+_PCAP_MAGICS = {                      # magic -> (byte order, nanosecond timestamps)
+    b"\xd4\xc3\xb2\xa1": ("<", False), b"\xa1\xb2\xc3\xd4": (">", False),
+    b"\x4d\x3c\xb2\xa1": ("<", True), b"\xa1\xb2\x3c\x4d": (">", True),
+}
+_NG_SHB, _NG_IDB, _NG_PB, _NG_SPB, _NG_EPB = 0x0A0D0D0A, 1, 2, 3, 6
 
-class _SizeBoundedFile:
-    """File proxy that caps how many bytes one ``read()`` may ask for.
 
-    scapy's readers take the record length straight from the bytes on disk -
-    ``RawPcapReader._read_packet`` does ``self.f.read(caplen)`` with ``caplen``
-    taken from the 16-byte record header, and ``RawPcapNgReader._read_block``
-    does ``self.f.read(blocklen - 12)`` - allocating *before* it knows whether
-    the record is really there.  A capture consisting of nothing but a 40-byte
-    header whose record claims a 4 GiB packet therefore makes the interpreter
-    try to allocate 4 GiB (measured: a 512 MiB claim on a 40-byte file peaks at
-    ~512 MiB of traced memory).
+class _Truncated(Exception):
+    """The file ends (or lies about a length) inside a header or record."""
 
-    No record can be longer than the file it lives in, so clamping the request
-    to that size turns a crafted length into the short read a truncated record
-    really is.  Well-formed captures never ask for more bytes than they
-    contain, so their behaviour is unchanged.
-    """
 
-    #: Largest read scapy makes where an *empty* result can still be a clean end of
-    #: file: a classic-pcap global header is 24 bytes, a record header 16 and a
-    #: PCAPNG block prefix 4+4.  An empty result to any bigger request is a record
-    #: body that is missing.
-    _HEADER_READ_MAX = 24
+class _Stream:
+    """File wrapper with an exact-read primitive that refuses lengths beyond what the file can hold."""
 
-    def __init__(self, fh: IO[bytes], bound: int) -> None:
-        # Stored in __dict__ (not attributes) so __getattr__ - which delegates
-        # everything else to the wrapped file - can never recurse mid-init.
-        self.__dict__["_fh"] = fh
-        self.__dict__["_bound"] = int(bound)
-        self.__dict__["truncated"] = False
+    def __init__(self, fh: IO[bytes], limit: int | None, max_record: int) -> None:
+        self.fh, self.limit, self.max_record = fh, limit, max_record   # limit: file size, None for gzip
 
-    def read(self, n: int = -1) -> bytes:
-        if n is None or n < 0:
-            return self._fh.read()            # read to EOF: bounded by itself
-        data = self._fh.read(min(int(n), self._bound))
-        # Truncation detector.  scapy >= 2.8 turns a short read into EOFError, which
-        # its iterator treats as a normal end of file, so a cut-off capture would be
-        # analysed as if complete.  A regular or gzip file returns exactly what was
-        # asked for unless it ends, so a partial result means the file ended inside a
-        # header or record; an empty result is a clean end only for a header-sized
-        # request (see _HEADER_READ_MAX).  Residual hole: a file cut right after a
-        # block prefix whose body is <= 24 bytes looks like a clean end.
-        if len(data) < int(n) and (data or int(n) > self._HEADER_READ_MAX):
-            self.__dict__["truncated"] = True
+    def left(self) -> int:
+        return self.max_record if self.limit is None else self.limit - self.fh.tell()
+
+    def read(self, n: int, what: str) -> bytes:
+        if n > self.max_record or n > self.left():
+            raise _Truncated(f"the file ends inside {what} (truncated capture): it claims {n} bytes the file does not hold")
+        data = self.fh.read(n)
+        if len(data) != n:
+            raise _Truncated(f"the file ends inside {what} (truncated capture)")
         return data
 
-    def read1(self, n: int = -1) -> bytes:
-        return self.read(n)
+    def read_or_eof(self, n: int, what: str) -> bytes | None:
+        """Like read, but zero bytes available is a clean end of file (None)."""
+        data = self.fh.read(n)
+        if not data:
+            return None
+        if len(data) != n:
+            raise _Truncated(f"the file ends inside {what} (truncated capture)")
+        return data
 
-    def __getattr__(self, name: str):
-        # seek / tell / close / fileno / name / ... pass straight through.
-        fh = self.__dict__.get("_fh")
-        if fh is None:                        # __init__ has not run yet
-            raise AttributeError(name)
-        return getattr(fh, name)
 
-
-def _open_capture(path: str) -> tuple[_SizeBoundedFile, IO[bytes]]:
-    """Open ``path`` as a scapy input stream clamped to its own size.
-
-    Returns ``(stream, raw_file)``: the caller closes both (closing twice is
-    harmless).  Gzip is sniffed here because the reader only auto-detects it
-    when it is handed a *path*, and the path form leaves the first, unclamped
-    reads - including PCAPNG's block-length read during construction - to
-    scapy.
-    """
+def _open_capture(path: str) -> tuple[_Stream, IO[bytes]]:
+    """Open ``path``; gzip is sniffed from its magic.  Returns (stream, raw file) - the caller closes the raw file."""
     raw = open(path, "rb")                    # caller checked isfile first
     try:
         head = raw.read(2)
         raw.seek(0)
-        if head == b"\x1f\x8b":               # gzip - no file size to clamp to
-            stream: _SizeBoundedFile = _SizeBoundedFile(
-                gzip.GzipFile(fileobj=raw), _MAX_GZIP_RECORD)
-        else:
-            stream = _SizeBoundedFile(raw, os.path.getsize(path))
-        return stream, raw
+        if head == b"\x1f\x8b":
+            return _Stream(gzip.GzipFile(fileobj=raw), None, _MAX_GZIP_RECORD), raw
+        size = os.path.getsize(path)
+        return _Stream(raw, size, max(size, 1)), raw
     except Exception:
         raw.close()
         raise
+
+
+def _read_pcap(st: _Stream, magic: bytes) -> Iterator[Packet]:
+    endian, nano = _PCAP_MAGICS[magic]
+    hdr = st.read(20, "the pcap global header")
+    _vmaj, _vmin, _tz, _sig, _snaplen, linktype = struct.unpack(endian + "HHIIII", hdr)
+    rec = struct.Struct(endian + "IIII")
+    div = 1_000_000_000 if nano else 1_000_000
+    while True:
+        h = st.read_or_eof(16, "a record header")
+        if h is None:
+            return
+        sec, frac, caplen, wirelen = rec.unpack(h)
+        data = st.read(caplen, "a packet record")
+        yield dissect(data, linktype, (sec * div + frac) / div, wirelen)
+
+
+def _ng_options(buf: bytes, endian: str) -> dict[int, bytes]:
+    opts: dict[int, bytes] = {}
+    off = 0
+    while len(buf) - off >= 4:
+        code, length = struct.unpack_from(endian + "HH", buf, off)
+        if code == 0:
+            break
+        off += 4
+        if off + length > len(buf):
+            break
+        opts.setdefault(code, buf[off:off + length])
+        off += length + (-length % 4)
+    return opts
+
+
+def _read_pcapng(st: _Stream) -> Iterator[Packet]:
+    endian = ">"
+    ifaces: list[tuple[int, int, int]] = []     # (linktype, snaplen, ticks per second)
+    first = True
+    while True:
+        h = st.read_or_eof(8, "a block header") if not first else st.read(8, "the section header")
+        if h is None:
+            return
+        btype = struct.unpack(endian + "I", h[:4])[0] if not first else 0x0A0D0D0A
+        if first or btype == _NG_SHB:
+            # The byte order is announced inside the SHB; the type field is palindromic so it reads the same either way.
+            if h[:4] != b"\x0a\x0d\x0d\x0a":
+                raise _Truncated("bad section header block")
+            bom = st.read(4, "the section header")
+            if bom == b"\x1a\x2b\x3c\x4d":
+                endian = ">"
+            elif bom == b"\x4d\x3c\x2b\x1a":
+                endian = "<"
+            else:
+                raise _Truncated("bad byte-order magic in the section header block")
+            blen = struct.unpack(endian + "I", h[4:])[0]
+            if blen < 28 or blen % 4:
+                raise _Truncated(f"invalid section header block length {blen}")
+            st.read(blen - 16, "the section header")
+            if struct.unpack(endian + "I", st.read(4, "the section header"))[0] != blen:
+                raise _Truncated("section header block lengths disagree")
+            ifaces = []                          # interfaces are per section
+            first = False
+            continue
+        blen = struct.unpack(endian + "I", h[4:])[0]
+        if blen < 12 or blen % 4:
+            raise _Truncated(f"invalid pcapng block length {blen}")
+        body = st.read(blen - 12, "a pcapng block")
+        if struct.unpack(endian + "I", st.read(4, "a pcapng block"))[0] != blen:
+            raise _Truncated("pcapng block lengths disagree")
+        if btype == _NG_IDB:
+            if len(body) < 8:
+                raise _Truncated("interface description block too short")
+            lt, snaplen = struct.unpack(endian + "HxxI", body[:8])
+            tsr = _ng_options(body[8:], endian).get(9)
+            ticks = 1_000_000
+            if tsr is not None and len(tsr) == 1:
+                ticks = (2 if tsr[0] & 128 else 10) ** (tsr[0] & 127)
+            ifaces.append((lt, snaplen, ticks))
+        elif btype == _NG_EPB or btype == _NG_PB:
+            if len(body) < 20:
+                raise _Truncated("packet block too short")
+            if btype == _NG_EPB:
+                iid, thi, tlo, caplen, wirelen = struct.unpack(endian + "5I", body[:20])
+            else:
+                iid, _drops, thi, tlo, caplen, wirelen = struct.unpack(endian + "HH4I", body[:20])
+            if caplen > len(body) - 20:
+                raise _Truncated("packet block claims more bytes than it holds")
+            if iid < len(ifaces):                # a block for an undeclared interface is skipped
+                lt, _snap, ticks = ifaces[iid]
+                yield dissect(body[20:20 + caplen], lt, ((thi << 32) + tlo) / ticks, wirelen)
+        elif btype == _NG_SPB:
+            if len(body) < 4:
+                raise _Truncated("simple packet block too short")
+            if ifaces:
+                lt, snap, _ticks = ifaces[0]
+                wirelen = struct.unpack(endian + "I", body[:4])[0]
+                caplen = min(wirelen, len(body) - 4, snap or wirelen)
+                yield dissect(body[4:4 + caplen], lt, 0.0, wirelen)
 
 
 class PcapFileSource(CaptureSource):
@@ -120,49 +191,34 @@ class PcapFileSource(CaptureSource):
             raise CaptureError(f"invalid filter {bpf_filter!r}: {exc}") from exc
 
     def packets(self) -> Iterator[Packet]:
-        from scapy.utils import PcapReader
-
-        def failure(exc: Exception) -> CaptureError:
+        def failure(exc: BaseException) -> CaptureError:
             # Basename only - the message is returned to API clients.
-            return CaptureError(
-                f"cannot read PCAP {os.path.basename(self.path)}: {exc}")
+            return CaptureError(f"cannot read PCAP {os.path.basename(self.path)}: {exc}")
 
         try:
-            stream, raw = _open_capture(self.path)
+            st, raw = _open_capture(self.path)
         except OSError as exc:
             raise failure(exc) from exc
-
-        reader = None
         try:
             try:
-                # Hand scapy the clamped stream rather than the path. The
-                # reader's own open() only runs for a str, so every read -
-                # magic, header, record and the PCAP<->PCAPNG fallback - goes
-                # through the clamp. Passing a file object behaves identically
-                # (verified for PCAP, PCAPNG and gzip) and keeps scapy's
-                # `alternative` fallback pointing at the same stream.
-                reader = PcapReader(stream)
-            except Exception as exc:  # noqa: BLE001 - scapy raises many types
-                raise failure(exc) from exc
-            # Malformed files also fail mid-iteration (truncated records,
-            # broken block lengths): keep the same 400-mapped CaptureError
-            # instead of letting a raw scapy/OSError escape as a 500.
-            try:
-                for pkt in reader:
-                    if self._predicate is None or self._predicate(pkt):
+                magic = st.read(4, "the file magic")
+                if magic in _PCAP_MAGICS:
+                    it = _read_pcap(st, magic)
+                elif magic == b"\x0a\x0d\x0d\x0a":
+                    st.fh.seek(0)
+                    it = _read_pcapng(st)
+                else:
+                    raise _Truncated(f"not a pcap or pcapng capture (bad magic {magic!r})")
+                pred = self._predicate
+                for pkt in it:
+                    if pred is None or pred(pkt):
                         yield pkt
-            except CaptureError:
-                raise
-            except Exception as exc:  # noqa: BLE001
+            except _Truncated as exc:
                 raise failure(exc) from exc
-            if stream.truncated:
-                raise failure(EOFError(
-                    "the file ends inside a record (truncated capture); "
-                    "packets before the cut were read, the rest is missing"))
+            except (OSError, EOFError, struct.error, ValueError, OverflowError) as exc:   # incl. zlib.error, bad gzip
+                raise failure(exc) from exc
         finally:
-            if reader is not None:
-                reader.close()
-            stream.close()
+            st.fh.close()
             raw.close()          # a gzip reader does not own its file object
 
     def __repr__(self) -> str:

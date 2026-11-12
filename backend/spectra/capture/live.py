@@ -2,6 +2,10 @@
 
 Requires libpcap/Npcap on Windows (https://nmap.org/npcap/). Without it,
 scapy cannot sniff and we raise a CaptureError with install guidance.
+
+scapy is GPL-2.0 and ships only as the optional ``live`` extra
+(``pip install spectra[live]``, ADR-011); it is imported here, lazily, and
+every sniffed frame is converted to the in-tree :class:`Packet` at the door.
 """
 
 from __future__ import annotations
@@ -10,11 +14,14 @@ import queue
 import threading
 from typing import Iterator
 
-from scapy.packet import Packet
-
 from ..filters import compile_filter
 from .base import CaptureError, CaptureSource
+from .packet import LINKTYPE_ETHERNET, LINKTYPE_RAW, Packet, dissect
 
+_EXTRA_HINT = (
+    "Live capture needs the optional 'live' extra (scapy, GPL-2.0, not installed by default): "
+    "pip install 'spectra[live]'. Offline PCAP analysis does not need it."
+)
 _NPCAP_HINT = (
     "Live capture requires Npcap (Windows) or libpcap. "
     "Install Npcap from https://nmap.org/npcap/ with 'WinPcap API-compatible mode' "
@@ -45,7 +52,10 @@ class LiveSource(CaptureSource):
             raise CaptureError(f"invalid filter {bpf_filter!r}: {exc}") from exc
 
     def packets(self) -> Iterator[Packet]:
-        from scapy.all import conf, sniff
+        try:
+            from scapy.all import conf, sniff
+        except ImportError as exc:
+            raise CaptureError(_EXTRA_HINT) from exc
 
         if self._stop.is_set():
             return   # stopped before it ever started: do not open the sniffer
@@ -111,10 +121,13 @@ class LiveSource(CaptureSource):
         except queue.Full:  # pragma: no cover - fully contended
             pass
 
-    def _on_packet(self, pkt: Packet) -> None:
+    def _on_packet(self, frame) -> None:
         self._packets_received += 1
         if self._stop.is_set():
             return
+        pkt = frame
+        if hasattr(frame, "haslayer"):           # a scapy frame from the sniffer: convert at the door
+            pkt = dissect(bytes(frame), LINKTYPE_ETHERNET if frame.haslayer("Ether") else LINKTYPE_RAW, float(frame.time))
         if self._predicate is not None and not self._predicate(pkt):
             return  # filtered out by policy: received but never queued
         try:

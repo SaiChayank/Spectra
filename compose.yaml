@@ -18,6 +18,8 @@ services:
   # Opt-in. Only this service gets NET_RAW; it sees the host's interfaces, so run it on the sensor host.
   capture:
     <<: *spectra
+    image: spectra-live:1.0.0           # a separate image: only this one contains scapy (GPL-2.0-only, the `live` extra)
+    build: {context: ., args: {EXTRAS: "[live]"}}
     profiles: [capture]
     network_mode: host
     cap_add: [NET_RAW, DAC_OVERRIDE]   # DAC_OVERRIDE: root must write the volume that the image owns as uid 10001

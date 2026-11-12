@@ -11,7 +11,9 @@ dependencies must pass; dev-only ones are reported, not enforced).
 Exit 1 = a package has a licence that is neither allowed nor covered by an
 exception.  An exception with ``status: pending`` is an OPEN owner decision:
 it is printed loudly and listed, but does not fail the run - only the owner
-can turn it into ``approved`` (or remove the dependency).
+can turn it into ``approved`` (or remove the dependency).  ``status: optional-extra`` marks a
+copyleft package that is only reachable through an optional extra (never a core requirement, never in the image); it is
+listed, does not fail, and is not an approval.
 """
 from __future__ import annotations
 
@@ -100,7 +102,7 @@ def locked_python_packages(lock: str = LOCK) -> list[str]:
 
 
 def judge(name: str, lic: str, policy: dict) -> tuple[str, str]:
-    """-> (status, note) with status in ok | approved | pending | FAIL."""
+    """-> (status, note) with status in ok | approved | optional-extra | pending | FAIL."""
     allowed = set(policy["allowed"])
     if allowed_expression(lic, allowed):
         return "ok", ""
@@ -108,6 +110,8 @@ def judge(name: str, lic: str, policy: dict) -> tuple[str, str]:
         if ex["package"].lower() == name.lower():
             if ex.get("status") == "approved":
                 return "approved", f"owner={ex.get('owner')} expires={ex.get('expires')}"
+            if ex.get("status") == "optional-extra":     # not in the core install, wheel or image (ADR-011)
+                return "optional-extra", ex.get("reason", "")
             return "pending", ex.get("reason", "")
     return "FAIL", "licence is not on the allowlist and has no exception"
 

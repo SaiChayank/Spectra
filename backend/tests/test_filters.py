@@ -111,4 +111,4 @@ def test_filter_applied_by_capture_source(tmp_path):
     source = PcapFileSource(path, bpf_filter="host 10.0.0.5")
     got = list(source.packets())
     assert len(got) == 1
-    assert got[0][IP].src == "10.0.0.5"
+    assert got[0].src == "10.0.0.5"

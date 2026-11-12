@@ -145,7 +145,10 @@ ran inside an enclave.
 4. **Text/JSON search predicates are not index-covered** (`LIKE` over stored
    JSON); cost is bounded by anchors, page limits and row caps rather than by
    an index.
-5. **Live capture needs Npcap on Windows.** Without the driver those
+5. **Live capture needs the `live` extra (scapy) everywhere, and Npcap on Windows.**
+   Interface listing (`GET /api/capture/interfaces`) comes from the OS (`socket.if_nameindex()`, IPv4 via ioctl and MAC via sysfs, Linux
+   only): on Windows and macOS it returns interface names only, without Npcap's friendly names, descriptions, IPs or MACs.
+   The Windows live-capture claim in the README predates the in-tree reader and was validated with scapy; it is not re-validated. Without the driver those
    acceptance checks are skipped, not passed; live capture is unavailable.
 6. **Single process, no HA.** Killing the process stops capture (bounded drain
    via `shutdown_timeout`); SQLite is one writer; there is no failover,

@@ -6,6 +6,9 @@ All notable changes to Spectra are documented here. The format follows
 
 ## [Unreleased]
 
+### Changed
+- scapy (GPL-2.0-only) is no longer a core dependency (ADR-011): pcap, pcapng and gzip are read by an in-tree `struct` reader and packets are decoded by an in-tree dissector (`spectra.capture.packet`). scapy remains only as the optional `live` extra (live NIC capture) and a dev/test dependency. Interface listing uses `socket.if_nameindex()` and returns names only (no Windows friendly names). The compose `capture` service builds its own image with the `live` extra.
+
 ### Added
 - Operations (Phase 11): validated Prometheus exposition with latency histograms and an optional metrics-only token (**breaking:** counters renamed to `*_total`); a wheel that serves the dashboard same-origin and keeps data in a per-user directory; `spectra backup create|verify|restore` with an executed restore drill (demo scale); `docs/runbook.md`; digest-pinned non-root Docker image, `compose.yaml`, trivy in CI.
 - Time-windowed correlation edges: graph edges carry first/last contact

@@ -1,0 +1,1 @@
+{"file": "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.14", "cap_packets": 2000000, "packets_in_tree": 289396, "packets_scapy": 289396, "flows_in_tree": 19315, "flows_scapy": 19315, "in_tree_error": null, "scapy_error": null, "mismatches": [], "flow_records_differing": 0, "feature_matrix_shape": [19315, 39], "feature_matrix_exactly_equal": true, "ok": true}

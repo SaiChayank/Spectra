@@ -1,8 +1,7 @@
 """Pure-Python packet filtering with a tcpdump/BPF-style syntax.
 
-scapy's native `filter=` argument needs libpcap, which is missing on many
-Windows boxes. This module implements the useful subset in Python so filtering
-works everywhere:
+libpcap's native filter engine is missing on many Windows boxes. This module
+implements the useful subset in Python so filtering works everywhere:
 
     host 10.0.0.5                 # either direction
     src host 10.0.0.5             # source only
@@ -20,7 +19,7 @@ from __future__ import annotations
 import ipaddress
 from typing import Callable
 
-from scapy.packet import Packet
+from .capture.packet import Packet, as_packet
 
 
 class FilterError(ValueError):
@@ -48,26 +47,14 @@ _KEYWORDS = {"host", "net", "port", "portrange", "tcp", "udp", "icmp",
 
 def _ip_layer(pkt: Packet) -> tuple[str, str, int] | None:
     """Return (src_ip, dst_ip, proto) for IPv4/IPv6, else None."""
-    from scapy.layers.inet import IP
-    from scapy.layers.inet6 import IPv6
-
-    if pkt.haslayer(IP):
-        ip = pkt[IP]
-        return str(ip.src), str(ip.dst), int(ip.proto)
-    if pkt.haslayer(IPv6):
-        ip6 = pkt[IPv6]
-        nh = int(ip6.nh)
-        return str(ip6.src), str(ip6.dst), nh
-    return None
+    if pkt.src is None:
+        return None
+    return pkt.src, pkt.dst, pkt.ip_proto
 
 
 def _ports(pkt: Packet) -> tuple[int | None, int | None]:
-    from scapy.layers.inet import TCP, UDP
-
-    if pkt.haslayer(TCP):
-        return int(pkt[TCP].sport), int(pkt[TCP].dport)
-    if pkt.haslayer(UDP):
-        return int(pkt[UDP].sport), int(pkt[UDP].dport)
+    if pkt.l4:
+        return pkt.sport, pkt.dport
     return None, None
 
 
@@ -265,9 +252,7 @@ def _proto_pred(proto: str, direction: str | None = None) -> Predicate:
     (protocol direction is meaningless), so `src tcp` behaves like `tcp`."""
     if proto == "icmp":
         def icmp_pred(pkt: Packet) -> bool:
-            from scapy.layers.inet import ICMP
-
-            if pkt.haslayer(ICMP):
+            if pkt.icmp:
                 return True
             info = _ip_layer(pkt)
             return info is not None and info[2] == 58  # ICMPv6
@@ -360,7 +345,8 @@ def compile_filter(expr: str) -> Predicate:
         return lambda pkt: True
     # `src 10.0.0.1` / `dst 192.168.0.0/24` shorthands
     tokens = _normalize(tokens)
-    return _Parser(tokens).parse()
+    pred = _Parser(tokens).parse()
+    return lambda pkt: pred(as_packet(pkt))
 
 
 def _normalize(tokens: list[_Token]) -> list[_Token]:

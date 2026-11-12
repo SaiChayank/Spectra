@@ -1,0 +1,1 @@
+{"file": "ctu_normal--2017-04-19_win-normal.pcap", "cap_packets": 2000000, "packets_in_tree": 265376, "packets_scapy": 265376, "flows_in_tree": 7823, "flows_scapy": 7823, "in_tree_error": null, "scapy_error": null, "mismatches": [], "flow_records_differing": 0, "feature_matrix_shape": [7823, 39], "feature_matrix_exactly_equal": true, "ok": true}

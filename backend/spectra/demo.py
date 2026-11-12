@@ -7,11 +7,10 @@ traffic plus deliberately odd flows for detection checks.
 from __future__ import annotations
 
 import random
+import socket
 import struct
 
-from scapy.all import IP, TCP, UDP, Raw
-from scapy.utils import PcapWriter
-
+from .capture.packet import Packet, as_packet, dissect
 from .parse.quic import seal_initial
 
 BASE = 1_700_000_000.0
@@ -133,14 +132,22 @@ def make_server_hello(
     return b"\x16\x03\x03" + _u16(len(handshake)) + handshake
 
 
+_ETH = bytes.fromhex("020000000002020000000001") + b"\x08\x00"
+_TCP_FLAGS = {"F": 1, "S": 2, "R": 4, "P": 8, "A": 16, "U": 32}
+
+
+def _ipv4_frame(proto: int, l4: bytes, src: str, dst: str, t: float) -> Packet:
+    """Ethernet + IPv4 frame around ``l4`` (header checksums left 0: nothing in Spectra, or this demo, verifies them)."""
+    ip = struct.pack(">BBHHHBBH4s4s", 0x45, 0, 20 + len(l4), 0, 0, 64, proto, 0,
+                     socket.inet_aton(src), socket.inet_aton(dst))
+    return dissect(_ETH + ip + l4, 1, t)
+
+
 def _pkt(src: str, dst: str, sport: int, dport: int, flags: str, seq: int,
-         ack: int, payload: bytes = b"", t: float = BASE) -> object:
-    pkt = IP(src=src, dst=dst) / TCP(sport=sport, dport=dport, flags=flags,
-                                     seq=seq, ack=ack)
-    if payload:
-        pkt = pkt / Raw(load=payload)
-    pkt.time = t
-    return pkt
+         ack: int, payload: bytes = b"", t: float = BASE) -> Packet:
+    tcp = struct.pack(">HHIIBBHHH", sport, dport, seq & 0xFFFFFFFF, ack & 0xFFFFFFFF, 5 << 4,
+                      sum(_TCP_FLAGS[c] for c in flags), 8192, 0, 0)
+    return _ipv4_frame(6, tcp + payload, src, dst, t)
 
 
 def tls_flow_packets(
@@ -279,9 +286,7 @@ def quic_flow_packets(
     )
 
     def udp(a: str, b: str, sp: int, dp: int, payload: bytes, ts: float):
-        p = IP(src=a, dst=b) / UDP(sport=sp, dport=dp) / Raw(load=payload)
-        p.time = ts
-        return p
+        return _ipv4_frame(17, struct.pack(">HHHH", sp, dp, 8 + len(payload), 0) + payload, a, b, ts)
 
     pkts: list = []
     t = start
@@ -339,22 +344,14 @@ def beacon_flow_packets(
 
 
 def write_pcap(path: str, packets: list) -> str:
-    """Write an Ethernet-framed PCAP (linktype 1) readable by every tool.
-
-    Packets that already carry an Ether layer are written as-is.
-    """
-    from scapy.layers.l2 import Ether
-
-    writer = PcapWriter(path, sync=True)
-    try:
+    """Write an Ethernet-framed classic PCAP (linktype 1) readable by every tool; packets are :class:`Packet` objects."""
+    with open(path, "wb") as fh:
+        fh.write(struct.pack("<IHHiIII", 0xA1B2C3D4, 2, 4, 0, 0, 65535, 1))
         for pkt in packets:
-            ts = float(pkt.time)
-            frame = pkt if pkt.haslayer(Ether) else (
-                Ether(src="02:00:00:00:00:01", dst="02:00:00:00:00:02") / pkt)
-            frame.time = ts
-            writer.write(frame)
-    finally:
-        writer.close()
+            pkt = as_packet(pkt)                  # also accepts scapy-built frames (tests)
+            data = pkt.data if pkt.linktype == 1 else _ETH + pkt.data    # bare IP packets get an Ethernet header
+            usec = round(pkt.time * 1_000_000)
+            fh.write(struct.pack("<IIII", usec // 1_000_000, usec % 1_000_000, len(data), len(data)) + data)
     return path
 
 

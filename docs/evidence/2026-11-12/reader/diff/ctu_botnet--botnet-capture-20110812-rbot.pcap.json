@@ -1,0 +1,1 @@
+{"file": "ctu_botnet--botnet-capture-20110812-rbot.pcap", "cap_packets": 2000000, "packets_in_tree": 495056, "packets_scapy": 495056, "flows_in_tree": 34907, "flows_scapy": 34907, "in_tree_error": null, "scapy_error": null, "mismatches": [], "flow_records_differing": 0, "feature_matrix_shape": [34907, 39], "feature_matrix_exactly_equal": true, "ok": true}

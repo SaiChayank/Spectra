@@ -160,6 +160,9 @@ python -m spectra.cli scan   /path/to/capture.pcap           # find deviations
 
 ### Live capture (Windows)
 
+Live capture needs the optional `live` extra (`pip install "spectra[live]"`, which installs scapy, GPL-2.0-only). Offline
+PCAP/PCAPNG analysis uses Spectra's own reader and needs no extra. Without the extra the interface list shows OS interface names only.
+
 Live sniffing needs Npcap: install from <https://nmap.org/npcap/> with
 **"WinPcap API-compatible mode"** enabled, then restart the API and start a
 `live` capture from the dashboard (run the backend **as Administrator** if your
@@ -282,7 +285,7 @@ numbers in [`docs/testing.md`](./docs/testing.md §3).
 ```
 backend/
   spectra/
-    capture/        # pluggable sources: PCAP file, live NIC (scapy)
+    capture/        # pluggable sources: PCAP/PCAPNG file (in-tree reader), live NIC (optional scapy extra)
     parse/          # flow tracker + streaming TLS & QUIC metadata parser
     features/       # 39-feature vector per flow
     ml/             # IsolationForest detector: train / score / explain / persist

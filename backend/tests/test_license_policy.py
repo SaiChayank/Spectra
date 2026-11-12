@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+import re
 
 import pytest
 
@@ -35,11 +36,22 @@ def test_copyleft_without_an_exception_fails():
     assert status == "FAIL"
 
 
-def test_scapy_is_a_visible_pending_decision_not_silently_allowed():
+def test_scapy_is_an_optional_extra_only_and_tooling_does_not_approve_it():
     status, note = cl.judge("scapy", "GPL-2.0-only", POLICY)
-    assert status == "pending" and "Apache-2.0" in note
+    assert status == "optional-extra" and "live" in note          # visible, not silently allowed
     ex = next(e for e in POLICY["exceptions"] if e["package"] == "scapy")
-    assert ex["status"] == "pending" and ex["owner"] == ""      # tooling never approves
+    assert ex["status"] == "optional-extra" and ex["owner"] == ""   # tooling never approves
+
+
+def test_no_copyleft_exception_package_is_a_core_dependency():
+    import tomllib
+
+    with open(os.path.join(os.path.dirname(HERE), "pyproject.toml"), "rb") as fh:
+        proj = tomllib.load(fh)["project"]
+    core = {re.split(r"[<>=!\[; ]", d, maxsplit=1)[0].lower() for d in proj["dependencies"]}
+    excepted = {e["package"].lower() for e in POLICY["exceptions"]}
+    assert not core & excepted, core & excepted
+    assert any(d.startswith("scapy") for d in proj["optional-dependencies"]["live"])
 
 
 def test_only_an_owner_approved_exception_turns_green():
@@ -48,6 +60,12 @@ def test_only_an_owner_approved_exception_turns_green():
         status="approved", owner="the owner", expires="2027-01-01")
     status, note = cl.judge("scapy", "GPL-2.0-only", policy)
     assert status == "approved" and "the owner" in note
+
+
+def test_a_pending_exception_is_still_an_open_decision():
+    policy = json.loads(json.dumps(POLICY))
+    next(e for e in policy["exceptions"] if e["package"] == "scapy").update(status="pending")
+    assert cl.judge("scapy", "GPL-2.0-only", policy)[0] == "pending"
 
 
 def test_platform_marker_dependencies_are_skipped_when_they_do_not_apply():
