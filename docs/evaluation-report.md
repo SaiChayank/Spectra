@@ -250,3 +250,52 @@ Positives are **synthetic** beacons (30 flows, 200 per cell, intervals 30 s / 30
 * 3 non-C2 pairs also score above 0.5 in RITA (false alerts), so RITA is not a free win: at a strict budget its recall is 0.9, not 1.0.
 * **Limits:** 53 pairs and 10 positives from a single C2 family (Ares), one network, one day, high connection counts (15k per pair; RITA is known to do less well on slow low-count beacons, which this data does not test). The Spectra jitter sweep of §15 and this result are not comparable (synthetic vs real positives). Not shown: RITA on the jitter sweep, which needs synthetic pcaps, i.e. the lab corpus.
 * A bug caught while writing this script, kept as a lesson: RITA reports SNI beacons with the destination IP blank (the addresses are in `server_ips`); keyed on the IP column alone, the first version showed RITA at AUC 0.13 ("RITA misses the C2"). That was wrong; the numbers above come from the corrected join.
+
+## 18. Beacon scorer v2: preregistered gate, held-out set A (2026-11-12): NOT MET
+
+Protocol and amendments: `ci/prereg/e21.json`, `docs/plan-beaconing-detector.md` (v2). Scorer: per internal->external pair (keyed by SNI when present), equal-weight mean of gap regularity on unique seconds (G), forward-size regularity (S), hourly persistence (D) and hourly flatness (H); a verdict needs G and D, i.e. >= 12 distinct seconds and a 3 h span. Weights and the 0.8 threshold were fixed before any run and never changed.
+
+**Dev history on seen data (CIC-2018 Bot day, not evidence).** First smoke (`docs/evidence/2026-11-11/bench/beacon-v2-cic.json`): 51 of 172 non-C2 pairs scored >= 0.8 (50 of them inbound, external source) and the C2 pairs had no timing score because of a "median gap >= 1 s" rule. Amendment 1 (unique-second gaps as in RITA's public method, internal->external only, G required) was the single correction round on this data. Rerun (`2026-11-12/bench/beacon-v2a1-cic.json`): the 10 C2 pairs score 0.59-0.78, the 13 other outbound pairs at most 0.39; nothing reaches 0.8. The threshold was deliberately not moved.
+
+**Held-out set A** (`backend/scripts/bench_beacon_v2_ctu.py` -> `docs/evidence/2026-11-12/bench/beacon-v2a1-ctu.json`). Positives: the 8 pairs (>= 20 flows) that the CTU-13 label files mark as command-and-control, all from one infected host (neris, two captures); rbot and fast-flux yielded no scorable C2 pair. Negatives: 149 pairs from the CTU-Normal captures. A pair without a verdict counts as score 0.
+
+| | Spectra v2a1 | RITA v5.1.2 |
+|---|---|---|
+| ROC-AUC [95 % CI] | 0.985 [0.962, 1.0] | 0.916 [0.750, 1.0] |
+| Recall at zero false pairs (gate) [95 % CI] | **0.375 [0.125, 1.0]** | 0.5 [0.25, 1.0] |
+| Recall at <= 1 % false pairs | 0.75 | 0.875 |
+| At the tool's alert level | 0.8: recall 0.125, 0 false pairs | 0.5: recall 0.875, 10 false pairs |
+| Botnet host's non-C2 pairs alerting (outside the gate) | 31 of 165 | 26 of 165 |
+
+**Gate: FAIL on all three checks** (recall 0.375 < 0.8; lower bound 0.125 < 0.6; 0.125 below RITA, allowed 0.05). Per the preregistration the beacon scorer is **a ranking aid, not a detector**; `beaconing_enabled` stays off by default; no retuning was done after this run.
+
+What the run does and does not show:
+* Spectra ranks C2 pairs above benign pairs slightly better than RITA here (AUC 0.985 vs 0.916, intervals overlap), but its scores bunch at 0.73-0.82, so one benign pair at 0.784 (10.0.2.15 -> 208.91.112.53, 9,049 flows) costs five of eight positives at the zero-false-pair point. The fixed 0.8 threshold catches one C2 pair. The same pattern appeared on CIC-2018: the scale is compressed just under the threshold by H and D.
+* **The set is too weak to pass or to conclude much from**: 8 positives from one host, wide intervals; 131 of 149 negatives got no Spectra verdict because five of six benign captures are shorter than 3 h, so "0 false pairs at 0.8" is mostly absence of evidence; RITA produced no scores at all for the five benign captures with 1970-based timestamps (cause not investigated), so its false pairs come from one capture; 2011 botnets against 2017 benign traffic.
+* 31 non-C2 pairs of the infected host score >= 0.8 (e.g. to Google and Yahoo addresses). They are not labelled C2 (spam and click-fraud traffic of the bot), so they are neither hits nor false alarms under this protocol; on a clean host such periodic pairs would be false alarms. Periodic benign traffic remains the unmeasured risk.
+
+Consequences: the 3 h / 12-second evidence rules make short captures nearly unusable as benchmarks; a credible verdict needs long captures with known beacons and real benign periodic services, i.e. set B (lab corpus) and the owner's own-network capture. Any redesign (for example how H and D enter the score) requires a new preregistration and must be judged on data not used here; CIC-2018 and set A are both spent for that purpose.
+
+## 19. Beacon scorer v2: held-out set B, harmless simulator (2026-11-13): NOT MET
+
+Data: `setb-20261112T1217Z`, 10 h of real TLS 1.3 traffic from 12 simulated client hosts to our own servers on an internal-only Docker network (`backend/scripts/lab/beacon_sim/`, design fixed in `ci/prereg/e21.json` amendment 3 before any traffic; capture hashes in amendment 5). Simulated: idealised beacons on a real network stack; says nothing about any real C2 framework. An earlier run was voided after the host shut down 2 h into it and was never scored. Completeness checks all passed (full 10 h, no suspend, 0 client errors). Scored with the frozen scorer and real RITA v5.1.2 (`backend/scripts/bench_beacon_v2_setb.py` -> `docs/evidence/2026-11-13/bench/beacon-v2a1-setb.json`). 36 gated beacons (jitter <= 50 %), 12 at 75 % (curve only), 96 gate-negative pairs (B1 browsing 72, B2 chat long-poll 12, B3 app polling 12).
+
+| | Spectra v2a1 | RITA v5.1.2 |
+|---|---|---|
+| ROC-AUC [95 % CI] | 0.858 [0.762, 0.927] | 0.897 [0.807, 0.964] |
+| Recall at zero false pairs (gate) | **0.028** | 0.194 |
+| At 0.8: recall / false pairs (of 96) | 0.92 / 15 | 0.92 / 15 |
+| Recall at 0.8 by jitter 0 / 25 / 50 / 75 % | 1.00 / 0.92 / 0.83 / 0.83 | 1.00 / 0.92 / 0.83 / 0.92 |
+| Recall at 0.8 by interval 10 s / 60 s / 300 s / 1800 s | 1.0 / 1.0 / 1.0 / 0.67 | 1.0 / 1.0 / 1.0 / 0.67 |
+| Periodic benign scoring >= 0.8 (outside the gate) | telemetry 12/12, time-sync 12/12 | 12/12, 12/12 |
+
+**Gate: FAIL** on all three checks; the default-on condition fails too (15 false pairs at 0.8). Together with set A (§18) the E21 beacon gate is not met; `beaconing_enabled` stays off and the scorer is a ranking aid.
+
+What it shows:
+* At its fixed threshold Spectra now catches the beacons it can see: 33 of 36 at 0.8, the same as RITA. The three misses are 30-minute beacons, two of which never reached 20 check-ins in 10 h (counted as misses by amendment 4). Jitter up to 75 % costs little at 0.8 in this idealised setting.
+* **The false alarms are periodic services, and my preregistered class design is part of the cause.** All 15 false pairs at 0.8 are B3 app polling (12 of 12) and B2 chat long-poll (3). B3 was defined as "a request every 15 s +-10 % during two 2 h windows" and listed as a gate negative, yet it is periodic by construction, so no timing-based scorer can separate it; RITA flags 10 of 12 too. This flaw is mine and is recorded in amendment 5; the class was not moved after the fact.
+* Post hoc, NOT gate evidence: without B3, the zero-false-pair recall is 0.89 for Spectra and 0.86 for RITA, and at 0.8 Spectra has 3 false pairs (B2) against RITA's 5. This only says that the remaining gap is periodic benign traffic.
+* Periodic benign services (telemetry, time sync) alert in both tools as predicted: 24 alerting pairs here, i.e. a site would need allow-list entries for each such service. B6 (hourly update check) never reached 20 flows.
+* A counting bug was found and fixed after the first scoring pass (one stray IP-keyed connection counted as a 37th beacon); both outputs are kept and the verdict is unchanged.
+
+Consequences: timing, size, persistence and flatness cannot separate a beacon from a periodic service on their own; on these data both Spectra and RITA reach the same ceiling. Beyond that ceiling the evidence has to come from elsewhere: destination rarity across hosts, first-seen destinations, and per-site learning of known periodic services (docs/35 E2.2 and E6). That is the next design step, and it needs a new preregistration and data not used here. The owner's own-network capture is the precision measurement nothing in this section replaces.

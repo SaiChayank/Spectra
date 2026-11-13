@@ -102,6 +102,7 @@ class Flow:
             "duration": round(self.duration, 6),
             "packets": self.packets_fwd + self.packets_bwd,
             "bytes": self.bytes_fwd + self.bytes_bwd,
+            "bytes_fwd": self.bytes_fwd,
             "tls_version": tls.version_name if tls else None,
             "sni": tls.sni if tls else None,
             "alpn": tls.alpn if tls else None,

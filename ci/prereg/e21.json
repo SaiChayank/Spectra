@@ -1,0 +1,240 @@
+{
+  "name": "E21 beaconing scorer v2 (preregistration)",
+  "frozen": "2026-11-11",
+  "note": "Design and gate fixed before any v2 scoring code is run on data. Nothing is fitted to data. Any change after a held-out run needs a committed amendment with its reason. Dataset hashes for held-out sets A and B are added by amendment when they exist.",
+  "design_source": "RITA published method + docs/evaluation-report.md section 15",
+  "scorer": {
+    "pair_key": "(source host, SNI if the flow has one else destination IP); verdict carries the SNI and the set of destination IPs seen",
+    "state_per_pair": "newest 512 flows as (start_ts, forward bytes, duration_s); first_seen; hourly flow counts; PAIR_CAP kept; all state bounded",
+    "now": "largest flow END time (start + duration) the tracker has observed (capture clock, never wall clock) (amendment 1)",
+    "long_flows": "a flow longer than 1 h counts in every hour bin it spans",
+    "components": {
+      "G": "mean of (1 - |bowley(gaps)|) and (1 - min(1, MAD(gaps)/median(gaps))); bowley = (Q3 + Q1 - 2*Q2)/(Q3 - Q1), 0 when Q3 == Q1; gaps between consecutive start times",
+      "S": "same two formulas on forward bytes; 0 if median is 0",
+      "D": "active hour bins / total hour bins between first_seen and now inclusive, capped at the 24 newest bins",
+      "H": "1 - min(1, MAD(counts)/median(counts)) over the same hour bins including empty ones; 0 if median count is 0"
+    },
+    "minimum_evidence": {
+      "G": ">= 12 unique whole-second start times",
+      "S": ">= 12 flows",
+      "D_and_H": "span (now - first_seen) >= 3 h",
+      "verdict_exists": "G and D both available (amendment 1)"
+    },
+    "score": "unweighted mean of the available components",
+    "alert_threshold": 0.8,
+    "allow_list": "semantics unchanged; EMPTY for every gate run",
+    "known_consequences": [
+      "nothing can alert in the first 3 h of a pair",
+      "a 1 h beacon needs about 12 h",
+      "captures shorter than 3 h give no verdict"
+    ],
+    "direction": "only internal-source to external-destination pairs (amendment 1)"
+  },
+  "evaluation": {
+    "dev_smoke_only": "CIC-2018 Bot day has already been seen: reported in its own row, never in the gate",
+    "set_A": "CTU-13 botnet C2 pairs vs CTU-Normal 2017 benign pairs (held out)",
+    "set_B": "lab C2 corpus generated after this file is committed (held out); dataset hashes added by amendment when they exist",
+    "pairs": ">= 20 flows",
+    "gate": {
+      "needs": "both A and B",
+      "recall": ">= 0.8 at <= 1 false pair per 1000 benign pairs (zero false pairs when fewer than 1000)",
+      "bootstrap_95_lower_bound": ">= 0.6",
+      "vs_rita": "recall not more than 0.05 below real RITA v5.1.2 on the same pairs",
+      "set_B_jitter": "gated at jitter <= 50 %; 75 % reported as a curve only"
+    },
+    "on_failure": "report 'ranking aid, not a detector'; flag stays off; numbers published; no retuning in the same session",
+    "bootstrap": {
+      "resamples": 1000,
+      "seed": 1337
+    }
+  },
+  "amendments": [
+    {
+      "date": "2026-11-12",
+      "note": "Amendment 1, decided from the CIC-2018 dev smoke (seen data); no held-out run (set A or B) has happened. Weights (equal) and the 0.8 threshold are unchanged. This is the only amendment round on CIC.",
+      "changes": [
+        {
+          "id": 1,
+          "change": "G is computed on gaps between the sorted UNIQUE floor(start_ts) whole-second timestamps (RITA's public method); the 'median gap >= 1 s' rule is removed; G needs >= 12 unique timestamps. S still uses every flow's forward bytes and needs >= 12 flows.",
+          "reason": "The median-gap rule excluded the fastest real beacons entirely: all ten CIC C2 pairs had no G or S."
+        },
+        {
+          "id": 2,
+          "change": "Direction: only pairs whose source is inside the monitored network and whose destination IP is outside it are tracked and scored. Inside = config beaconing_internal_nets, default RFC1918 + fc00::/7. For set A (CTU-13) the inside network is 147.32.0.0/16 (the capture network documented by the dataset); this was fixed before set A was scored. Internal-to-internal pairs are out of scope for this detector.",
+          "reason": "A beacon is an internal host calling out; inbound scanners are not beacons (50 of the 51 CIC negatives scoring >= 0.8 had an external source)."
+        },
+        {
+          "id": 3,
+          "change": "G is required: a verdict exists only when G and D are both available; S and H join the mean when available. 'Now' is the largest flow END time (start + duration), so long flows are not clipped.",
+          "reason": "Persistence with no timing evidence is not a beacon verdict; long-lived single sessions are a separate later signal (docs/35 E1) and must not alert here."
+        }
+      ]
+    },
+    {
+      "date": "2026-11-12",
+      "id": "amendment-2",
+      "note": "Clarification and data only, no design change. Written AFTER the CIC smoke (where the C2 pairs scored 0.75-0.78, just under 0.8) and BEFORE set A was scored. Scorer, weights, threshold and evidence rules are frozen as of commit bfdaeaa.",
+      "gate_metric": "Ranking-based, as originally worded: recall at the best operating point with <= 1 false pair per 1,000 benign pairs (zero false pairs when fewer than 1,000), via spectra.eval.metrics.recall_at_fpr(pos, neg, 0.001), with the bootstrap 95 % lower bound >= 0.6 (1000 resamples, seed 1337) and the RITA comparison (RITA scored with the same rule on the same pairs) as already stated. In addition, recall and false pairs AT THE FIXED 0.8 THRESHOLD are reported for every set; they are not part of the gate, but the detector may not be switched on by default unless fixed-threshold recall is also >= 0.8 with zero false pairs on both held-out sets.",
+      "set_A": {
+        "definition": "Positives = pairs (infected host -> destination) with >= 20 flows that the dataset's own labels mark as command-and-control; negatives = every scored pair (>= 20 flows) from the CTU-Normal 2017 captures. Botnet non-C2 pairs are reported separately and are outside the gate. A pair with no verdict scores 0 (a miss, not excluded).",
+        "botnet_captures": {
+          "ctu13--botnet-capture-20110810-neris.pcap": {
+            "sha256": "b89cd5931f62d87ceff266568c97c6e36e56dd0330813cacadbc14a6c5576a36"
+          },
+          "ctu13--botnet-capture-20110811-neris.pcap": {
+            "sha256": "189b38247b614ae51feee0e75b360552eecdee0b68843b88c7d9ed88d7be7631"
+          },
+          "ctu_botnet--botnet-capture-20110812-rbot.pcap": {
+            "sha256": "41880c3a3acfa5ef794abc7b9142b4b41670419c74900e1e953b4a0e75fe55ee"
+          },
+          "ctu_botnet--botnet-capture-20110815-fast-flux.pcap": {
+            "sha256": "716f7c43df5df7dff5b14b0cbe4767ca85a656769864fa66b6eda59764316efc"
+          }
+        },
+        "excluded_botnet_captures": {
+          "ctu_botnet--2014-12-20_capture-win5.pcap": "not CTU-13; file is cut short",
+          "ctu_botnet--capture.botnet2.infected.1.pcap": "not CTU-13 (Botnet-91), different capture network, not part of the approved CTU-13 set A"
+        },
+        "normal_captures": {
+          "ctu_normal--2017-04-18_win-normal.pcap": {
+            "sha256": "50ccaa483200a73c87be73ce3cae95c16afe0941021ff6d5e8e1cacf5a90807b"
+          },
+          "ctu_normal--2017-04-19_win-normal.pcap": {
+            "sha256": "31a9a2a88b0d24283288058f7c2dbad057e3d7d7bb2ad2427302dc954c7e1471"
+          },
+          "ctu_normal--2017-04-28_normal.pcap": {
+            "sha256": "b66103fd89c8f0fc53b76e718f53320f3af27edd302c58695fc1870ede3663c5"
+          },
+          "ctu_normal--2017-04-30_win-normal.pcap": {
+            "sha256": "c78a00728f115ab8fc495fd395894c43fd90cb61054eb9ef4f2d024658d5ffc5"
+          },
+          "ctu_normal--2017-05-01_normal.pcap": {
+            "sha256": "a2f3e60fa0eb2a924a3795644ac09a0f1ea48c45c30ebcc663af9641580b9a5c"
+          },
+          "ctu_normal--2017-05-02_kali-normal.pcap": {
+            "sha256": "53acb10b26ca6446b5bba2efd9d957a9faa15209029d58c10a8c1d1bd299c42b"
+          }
+        },
+        "labels": [
+          {
+            "url": "https://mcfp.felk.cvut.cz/publicDatasets/CTU-Malware-Capture-Botnet-42/capture20110810.binetflow.2format",
+            "size": 696057501,
+            "sha256": "e9d2d3c5adc6ea61e9149fdb12ad49a3aa84d296da9bacd0da07e95a05d43912",
+            "capture": "ctu13--botnet-capture-20110810-neris.pcap",
+            "scenario": "CTU-13 scenario 1",
+            "cc_labelled_rows": 341,
+            "c2_infected_host": "147.32.84.165",
+            "note": "Stratosphere bidirectional NetFlow label file (.binetflow.2format); treated as untrusted text, parsed with csv only; positive pair = a flow whose Label contains 'CC' -> (its endpoint inside 147.32.0.0/16, the other endpoint), direction of the record not used (scenario 3 records point server to bot)"
+          },
+          {
+            "url": "https://mcfp.felk.cvut.cz/publicDatasets/CTU-Malware-Capture-Botnet-43/capture20110811.binetflow.2format",
+            "size": 444103095,
+            "sha256": "1236bb60d922c72e0b002792ce92ab3156dbbdab0765080a16ce86484fd27a8c",
+            "capture": "ctu13--botnet-capture-20110811-neris.pcap",
+            "scenario": "CTU-13 scenario 2",
+            "cc_labelled_rows": 673,
+            "c2_infected_host": "147.32.84.165",
+            "note": "Stratosphere bidirectional NetFlow label file (.binetflow.2format); treated as untrusted text, parsed with csv only; positive pair = a flow whose Label contains 'CC' -> (its endpoint inside 147.32.0.0/16, the other endpoint), direction of the record not used (scenario 3 records point server to bot)"
+          },
+          {
+            "url": "https://mcfp.felk.cvut.cz/publicDatasets/CTU-Malware-Capture-Botnet-44/capture20110812.binetflow.2format",
+            "size": 1158617731,
+            "sha256": "3b97733f26890631bbf36a0fb8f92395d6fbb21e7aa5e3e42a97ff5540e389d7",
+            "capture": "ctu_botnet--botnet-capture-20110812-rbot.pcap",
+            "scenario": "CTU-13 scenario 3",
+            "cc_labelled_rows": 63,
+            "c2_infected_host": "147.32.84.165",
+            "note": "Stratosphere bidirectional NetFlow label file (.binetflow.2format); treated as untrusted text, parsed with csv only; positive pair = a flow whose Label contains 'CC' -> (its endpoint inside 147.32.0.0/16, the other endpoint), direction of the record not used (scenario 3 records point server to bot)"
+          },
+          {
+            "url": "https://mcfp.felk.cvut.cz/publicDatasets/CTU-Malware-Capture-Botnet-46/capture20110815-2.binetflow.2format",
+            "size": 32079494,
+            "sha256": "f6fd1d0fd8e13cbd54a2e8e5235dc6dce0d2beee58b78ce2c176646cf00c3807",
+            "capture": "ctu_botnet--botnet-capture-20110815-fast-flux.pcap",
+            "scenario": "CTU-13 scenario 5",
+            "cc_labelled_rows": 24,
+            "c2_infected_host": "147.32.84.165",
+            "note": "Stratosphere bidirectional NetFlow label file (.binetflow.2format); treated as untrusted text, parsed with csv only; positive pair = a flow whose Label contains 'CC' -> (its endpoint inside 147.32.0.0/16, the other endpoint), direction of the record not used (scenario 3 records point server to bot)"
+          }
+        ],
+        "label_dir": "~/Projects/Spectra_bench_data/datasets/labels/",
+        "internal_networks": {
+          "botnet": "147.32.0.0/16 plus the defaults (recorded in amendment 1)",
+          "normal": "CTU-Normal captures are NATed VirtualBox VMs: the capturing host is 10.0.2.15 (win/normal captures) or 192.168.1.191 (kali capture), both inside the default RFC1918 set; determined from the Zeek conn.log address counts before any scoring. No addition needed. RITA's config.hjson already lists 10.0.0.0/8, 192.168.0.0/16 and 147.32.0.0/16, so RITA needs no config change."
+        },
+        "rita": "real RITA v5.1.2 on the Zeek logs of the same captures; score = beacon_score; SNI-based rows (blank dst, addresses in server_ips) expanded to every address; own default alert level = scoring.beacon.score_thresholds.base (50, i.e. beacon_score >= 0.5), 'low' (0.7) also reported. CTU-Normal Zeek logs carry timestamps counted from 0 (1970); whether RITA analysed them is checked and reported.",
+        "join": "Evaluated pairs are Spectra's pairs (internal host, SNI-or-destination-IP) with >= 20 flows. A Spectra SNI pair maps to the destination IPs it saw; its RITA score is the maximum RITA score over (host, ip) for those IPs; its label is positive when any of them is a labelled C2 address of that host."
+      },
+      "known_limits": [
+        "pcap-era mismatch: 2011 botnets versus 2017 benign traffic",
+        "captures of about 3-6 h, so slow beacons cannot be scored",
+        "the published CTU-13 pcaps hold botnet-host traffic only, so positives are few (labelled C2 pairs of 4 captures)"
+      ]
+    },
+    {
+      "date": "2026-11-12",
+      "id": "amendment-3",
+      "note": "Set B redefined as harmless-simulator traffic. Written BEFORE any simulator traffic is generated; scorer, weights, threshold, evidence rules and the gate wording are unchanged (scorer frozen).",
+      "set_B": {
+        "reason": "The agent could not fetch C2 frameworks; the owner approved (2026-11-12) replacing the real-framework plan with a harmless simulator. Real-framework captures remain an optional owner-run addition.",
+        "nature": "SIMULATED: idealised beacons with real TCP/TLS 1.3 on a real network stack. Results bound what the detector can do and say nothing about any specific C2 framework.",
+        "network": "One Docker network, internal: true, subnet 203.0.113.0/24 (TEST-NET-3), no published ports. Client hosts: static addresses in 203.0.113.128/25; servers in 203.0.113.0/25. For scoring set B, beaconing_internal_nets = [\"203.0.113.128/25\"] and RITA's internal subnet is the same. Allow-list empty.",
+        "duration": "10 h wall clock, real time (no time compression). 12 client hosts, each capturing its own traffic to its own pcap.",
+        "beacons_positive": "16 cells = interval {10, 60, 300, 1800 s} x jitter {0, 25, 50, 75 %}; next check-in delay = interval * (1 + U(-j, +j)). Each cell runs on 3 different hosts (48 beacon pairs; each host runs 4 beacons, one per interval, jitters assigned by a fixed seeded rotation so every cell appears 3 times). Each cell has its own server (own IP, own SNI c-<interval>-<jitter>.lab.example). Every check-in is a NEW TCP+TLS 1.3 connection: POST of 300 B +-5 %, response 200 B +-5 %, and with probability 0.05 a larger 'tasking' response of 2-20 kB. Beacons start at a random offset in the first interval and run the whole 10 h.",
+        "gate_negatives": {
+          "B1_browsing": "sessions arrive as a Poisson process (mean 20 min apart); each session makes 5-40 requests with lognormal gaps (median 2 s, sigma 1.0) spread over 6 shared SNIs, request 200-2,000 B, response 1-200 kB heavy-tailed.",
+          "B2_chat_longpoll": "alternating active (60-120 min) and idle (30-90 min) periods; while active, reconnect after U(30, 90) s, sizes 100-5,000 B.",
+          "B3_app_polling": "active windows of about 2 h, two per run at seeded random times; while active a request every 15 s +-10 %, request 150-400 B, response 0.2-50 kB."
+        },
+        "periodic_benign_outside_gate": {
+          "statement": "Reported as their own class, OUTSIDE the gate, stated now: the detector is not expected to separate these from beacons; their alert count is the number of allow-list entries a site would need.",
+          "B4_telemetry": "every 300 s +-10 %, variable size 0.5-20 kB",
+          "B5_time_sync_like": "every 64 s fixed, about 100 B each way",
+          "B6_update_check": "every 3600 s +-300 s, about 1 kB"
+        },
+        "destinations_and_randomness": "Benign destinations are shared by all hosts (each its own server IP and SNI). All randomness comes from one seed (1337) plus host index; the exact schedule parameters are written to a manifest (manifest.json, with ground-truth labels, in the run output directory).",
+        "gate": "Unchanged wording: pairs with >= 20 flows; positives at jitter <= 50 % are gated (36 pairs), 75 % (12 pairs) is a curve only; negatives = B1-B3 pairs; a pair without a verdict counts as score 0.",
+        "known_consequences": [
+          "the 1800 s beacon yields about 20 check-ins in 10 h, so it sits at the >= 20 flow edge",
+          "the 3600 s update check (B6) yields about 10 flows (fewer than 20), so it is not scored"
+        ],
+        "hashes": "Pcap SHA-256 hashes are added by a later data-only amendment when the run finishes."
+      }
+    },
+    {
+      "date": "2026-11-12",
+      "id": "amendment-4",
+      "note": "Clarification made while the set B capture was still running and unread; stricter reading: a slow beacon that cannot reach 20 flows in 10 h is a miss, not an exclusion. No design, scorer, threshold or weight change.",
+      "set_B": {
+        "beacons": "All 36 gated beacons (jitter <= 50 %) and all 12 at 75 % always count. A labelled beacon pair with fewer than 20 flows, or absent from the pcap, is included with score 0 for both Spectra and RITA and flagged below_min_flows / absent in the per-pair table. The manifest must list exactly 36 gated beacons.",
+        "negatives_and_periodic": "B1-B3 negatives and the periodic-benign class keep the >= 20 flows rule as preregistered; their below-20 counts are reported."
+      }
+    },
+    {
+      "id": 5,
+      "date": "2026-11-13",
+      "kind": "data record + counting fix (no design change)",
+      "set_b_run": "setb-20261112T1217Z",
+      "set_b_sha256": {
+        "manifest.json": "1cb608e9f45207e1535e6474d103130c7122dc4fa1e3439e4bcc92aba6eedb79",
+        "host-00.pcap": "2ac3bc5a07aeb8a9b3eac07c64771948caa8fbf0f6231d2452eeb75303ae0f9b",
+        "host-01.pcap": "3aec3a3166ff97600c4ab3224776c39c2ea507d68b1ccf20dfa3424ed86f6462",
+        "host-02.pcap": "4446242dd28eadff4324a3371e327772f0b56fcc4e097108ce9a50bf70a6c5c2",
+        "host-03.pcap": "f95ed8efea832c5d19012d68a910d2342dac01cafac51b26f4586f75c54f54ba",
+        "host-04.pcap": "a63248119168c903342335dced4bfc90768f4d06e9efa210928ddfb4ce65f241",
+        "host-05.pcap": "3892df8717e77a222df193426ccc8512a6cd4acfe028f01e633a08e058f961f2",
+        "host-06.pcap": "793a991fccfc8fa77175178c1b4c8780a3cbbafe85f4c16b51eb9e2138a69bd6",
+        "host-07.pcap": "bc8e3194669c75a9eac168346b3a0986a44215ba1eb155eb635a63bd9f7a01b5",
+        "host-08.pcap": "458832d2111445c9838d3f6a757fef27f425a8daf99cc260ecc73b81630afb59",
+        "host-09.pcap": "11f04829dd1d9214b679805388f00418cf1f5a46cba25cc196a1b7ec598aa7dc",
+        "host-10.pcap": "476cf78605df93ec2c5c475e6333ab15317548ed309e04c0417219a6f6d156cd",
+        "host-11.pcap": "987c62cc42a15e3dc35ad21303bad6ee81ad4f554b68ff32c51ccf21cb4928fb"
+      },
+      "void_runs": {
+        "setb-20261112T0647Z": "host shut down after 1 h 57 min; void, never scored"
+      },
+      "counting_fix": "First scoring pass counted 37 gated beacons against the manifest's 36: one stray 1-flow connection to a beacon server without a parsed SNI was keyed by IP and counted as a second beacon scoring 0. Fixed so each manifest beacon is one row (the pair with the most flows); the fragment is recorded as excluded_fragment. Found from the n_pos_as_expected check after the first pass; the first output is kept as beacon-v2a1-setb-run1-duplicate-beacon.json. The gate result is fail before and after the fix.",
+      "design_flaw_found": "Class B3 (app polling, a request every 15 s +-10 % during two 2 h windows) was preregistered as a gate negative but is periodic by construction; all 12 B3 pairs score >= 0.8 in Spectra and 10 of 12 in RITA. Left as preregistered; any view without B3 is post hoc and reported as such."
+    }
+  ]
+}
