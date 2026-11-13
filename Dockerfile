@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends --only-upgrade 
  && rm -rf /var/lib/apt/lists/*
 RUN useradd --system --create-home --home-dir /home/spectra --uid 10001 spectra \
  && mkdir -p /data/models && chown -R spectra:spectra /data
+COPY LICENSE THIRD_PARTY_NOTICES.md /usr/share/doc/spectra/
 COPY ${WHEEL} backend/requirements.lock /tmp/
 # Constrain to the audited lockfile versions (hash lines stripped: the lock also lists dev tools we do not install).
 # setuptools/wheel/pip are not needed at runtime; their vendored copies of msgpack/urllib3 carried HIGH CVEs (trivy, 2026-11-07).

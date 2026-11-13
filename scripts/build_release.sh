@@ -15,6 +15,7 @@ echo "== dashboard"
 echo "== stage"
 rm -rf "$ROOT/backend/spectra/webui" "$ROOT/backend/build" "$ROOT/backend/dist" "$ROOT"/backend/*.egg-info
 cp -r "$ROOT/frontend/dist" "$ROOT/backend/spectra/webui"
+cp "$ROOT/THIRD_PARTY_NOTICES.md" "$ROOT/backend/THIRD_PARTY_NOTICES.md"
 
 echo "== wheel"
 cd "$ROOT/backend"

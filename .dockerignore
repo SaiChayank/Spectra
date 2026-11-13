@@ -1,3 +1,5 @@
 *
 !backend/dist/*.whl
 !backend/requirements.lock
+!LICENSE
+!THIRD_PARTY_NOTICES.md
