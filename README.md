@@ -301,7 +301,7 @@ backend/
     pipeline.py     # engine wiring capture → detection → annotation → events
     cli.py          # 17 CLI commands
     demo.py         # synthetic PCAP generators (tests + demos)
-  tests/            # 895 unit/integration tests
+  tests/            # 923 unit/integration tests
   demo_pcaps/       # committed fixture captures
 frontend/           # React + TypeScript dashboard (Vite)
 docs/               # as-built documentation + evidence reports
@@ -318,7 +318,7 @@ start.ps1           # optional convenience launcher (backend + frontend)
 ## Version
 
 `1.0.0` — PCAP + **live NIC capture** (Npcap 1.88, validated 2026-09-29),
-92-route API + WebSocket, CLI, React console, model registry with integrity
+101-route API + WebSocket, CLI, React console, model registry with integrity
 checks: **923 tests**, **156/156 acceptance checks**, performance at or better
 than the recorded baseline. Evidence:
 [`docs/acceptance-report.md`](./docs/acceptance-report.md),

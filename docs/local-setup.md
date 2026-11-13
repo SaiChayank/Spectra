@@ -1,7 +1,7 @@
 # Spectra — Local setup
 
-Run everything on one machine. There is no Docker, no cloud service, and no
-external database: the backend is a single Python process, the frontend is a
+Run everything on one machine. This page covers a source checkout without Docker (a container setup is in
+`docs/runbook.md` "Container"); there is no cloud service and no external database: the backend is a single Python process, the frontend is a
 Vite dev server, and state lives in `backend/data/`.
 
 ---
@@ -122,8 +122,9 @@ On first start with an empty user table, the backend bootstraps one `ADMIN`:
 3. Later starts never re-bootstrap, never reset, and never overwrite the
    account.
 
-Then: sign in on the dashboard → change the password (this revokes every
-session for the user) → delete `admin_bootstrap.txt`.
+Then: sign in → change the password with `PATCH /api/users/{id}` (the dashboard has no
+password screen yet; see `docs/guide/first-run.md`; this revokes every session for the user) →
+delete `admin_bootstrap.txt`.
 
 ### 4.2 Seed data (optional)
 
