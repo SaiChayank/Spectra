@@ -1,6 +1,7 @@
 """Phase tests: federated privacy, metrics format, queue telemetry,
 capability metadata, and optional-module failure isolation."""
 
+import pytest
 import time
 
 from fastapi.testclient import TestClient
@@ -215,3 +216,30 @@ def test_bio_failure_is_isolated_in_flow_path(tmp_path, monkeypatch):
     assert engine.status["flows"] >= 12
     if engine.bio.available:
         assert engine.status["failures"].get("bio", 0) >= 1
+
+
+def test_live_capture_on_linux_does_not_demand_npcap(monkeypatch):
+    """Regression: the Npcap check ran on every platform, so live capture always failed on Linux (scapy's native sockets
+    leave conf.use_pcap False there).  Found by the first real run of scripts/bench_perf.sh, 2026-11-13."""
+    pytest.importorskip("scapy")
+    import scapy.all as sa
+
+    from spectra.capture import live
+
+    seen = []
+
+    def fake_sniff(**kw):
+        seen.append(kw["iface"])
+        kw["prn"](object())
+
+    monkeypatch.setattr(sa.conf, "use_pcap", False)
+    monkeypatch.setattr(sa, "sniff", fake_sniff)
+    monkeypatch.setattr(live.sys, "platform", "linux")
+    src = live.LiveSource(iface="veth-test")
+    list(src.packets())                   # the fake sniffer delivers one frame and returns
+    assert seen == ["veth-test"] and src.stats()["packets_received"] == 1
+
+    monkeypatch.setattr(live.sys, "platform", "win32")
+    monkeypatch.setattr(live, "_npcap_installed", lambda: False)
+    with pytest.raises(live.CaptureError, match="Npcap"):
+        list(live.LiveSource(iface="x").packets())

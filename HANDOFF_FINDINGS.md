@@ -72,3 +72,14 @@ docs/33 §9G asks for "public commitments per share". Feldman VSS (commit g^coef
 7. **A corrupt/missing active model makes captures complete silently with 0 detections** (no error, no alert in the capture record). The only signals are `spectra_model_trained` = 0 and `/api/model`. The earlier runbook text claimed a fallback to the previous model; the code deliberately does not do that. Runbook corrected. Open design question: should processing refuse (or mark the capture) when the model is untrained?
 8. **DB lock and disk-full both surface as bare HTTP 500**, and `/api/health` stays 200 when the data volume is full. Recovery needs no restart. Candidate fix: map SQLite "locked/full" to 503 + Retry-After and add a writability probe to health. Not changed here.
 9. **Not exercised:** a real version upgrade with a schema migration (drill reinstalls the same wheel), live NIC capture in the container.
+
+## 2026-11-13: live capture never worked on Linux (found by the first real bench_perf.sh run)
+
+`LiveSource.packets()` raised "Live capture requires Npcap (Windows) or libpcap" whenever scapy's `conf.use_pcap` was False and a
+Windows DLL path did not exist. On Linux scapy sniffs with native AF_PACKET sockets and `use_pcap` is normally False, so every live
+capture on Linux failed at start (the API returned 200, the session ended immediately with that error). Present since the first
+commit (df88e7b). Earlier "live capture" claims rested on tests with a fake sniffer and on the container check that a raw socket
+can be opened, never on Spectra capturing packets. Fix: the Npcap check runs only on Windows; regression test
+`tests/test_integrity.py::test_live_capture_on_linux_does_not_demand_npcap` (fails on the old code, checked). Not yet verified
+end to end: the sizing rig must be re-run by the owner with sudo. `scripts/bench_perf.sh` was also changed to stop with the status
+and server log when the capture is not running or receives nothing (its first run printed a table of zeros).

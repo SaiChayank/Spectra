@@ -10,6 +10,8 @@ every sniffed frame is converted to the in-tree :class:`Packet` at the door.
 
 from __future__ import annotations
 
+import sys
+
 import queue
 import threading
 from typing import Iterator
@@ -59,7 +61,8 @@ class LiveSource(CaptureSource):
 
         if self._stop.is_set():
             return   # stopped before it ever started: do not open the sniffer
-        if conf.use_pcap is False and not _npcap_installed():
+        # Only Windows needs Npcap: on Linux/macOS scapy sniffs with native raw sockets and use_pcap is normally False.
+        if sys.platform == "win32" and conf.use_pcap is False and not _npcap_installed():
             raise CaptureError(_NPCAP_HINT)
 
         def _sniff() -> None:
