@@ -16,7 +16,7 @@ PORT="${PORT:-8899}"
 DATA="$(mktemp -d)"; export SPECTRA_DATA_DIR="$DATA" SPECTRA_MODEL_PATH="$DATA/model.joblib"
 A=veth-sp0; B=veth-sp1
 cleanup() { [[ -n "${SRV:-}" ]] && kill "$SRV" 2>/dev/null || true; ip link del "$A" 2>/dev/null || true
-  if [[ "${OK:-0}" == 1 ]]; then rm -rf "$DATA"; else echo "run did not complete cleanly; server log kept: $DATA/server.log" >&2; fi; }
+  echo "data directory kept for inspection: $DATA (delete it with sudo rm -rf when done)" >&2; }
 trap cleanup EXIT
 ip link add "$A" type veth peer name "$B"; ip link set "$A" up; ip link set "$B" up
 "$SPECTRA" serve --port "$PORT" >"$DATA/server.log" 2>&1 & SRV=$!
@@ -46,6 +46,7 @@ for r in "${RATES[@]}"; do
   if [[ "$(metric spectra_queue_packets_received)" == 0 ]]; then
     echo "0 packets received on $A at rate $r; status: $(curl -sf -b "$JAR" "http://127.0.0.1:$PORT/api/status")" >&2
     tail -20 "$DATA/server.log" >&2; exit 1; fi
+  echo "  capture status after rate $r: $(curl -sf -b "$JAR" "http://127.0.0.1:$PORT/api/status" | jq -c '{running, packets, flows, error, failures}')"
   curl -sf -b "$JAR" -X POST "http://127.0.0.1:$PORT/api/capture/stop" >/dev/null
 done
-OK=1
+echo "server log kept: $DATA/server.log"
