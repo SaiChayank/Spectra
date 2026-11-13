@@ -16,10 +16,10 @@ only (Spectra is metadata-only), so cap the snapshot length: nothing here needs 
 
 ```bash
 sudo mkdir -p /var/spectra-baseline && cd /var/spectra-baseline
-sudo tcpdump -i eth0 -s 600 -n -G 3600 -w 'base-%Y%m%d-%H%M.pcap' 'not port 22'
+sudo tcpdump -i eth0 -s 1600 -n -G 3600 -w 'base-%Y%m%d-%H%M.pcap' 'not port 22'
 ```
 
-`-s 600` keeps headers plus enough of the TLS ClientHello/ServerHello; `-G 3600` starts a new file every hour; the last file ends
+`-s 1600` keeps a whole Ethernet frame: modern TLS ClientHellos are about 1.7 KB and span two packets, so a smaller snapshot can cut off the server name. The cost is that full packets (encrypted content included) are on disk: keep the directory private and delete it after analysis; `-G 3600` starts a new file every hour; the last file ends
 mid-record when you stop it (the script below handles that). Budget a few GB per day on a busy small office; check with `df -h`.
 Run it 24-72 hours (at least 3 days is better: the first day trains, the rest tests). Keep the directory off any shared disk.
 
