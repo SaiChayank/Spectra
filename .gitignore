@@ -39,6 +39,7 @@ backend/.schemathesis/
 
 # Compiled dashboard copied into the package by scripts/build_release.sh
 backend/spectra/webui/
+backend/THIRD_PARTY_NOTICES.md
 backend/build/
 backend/dist/
 *.whl

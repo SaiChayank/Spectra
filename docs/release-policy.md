@@ -47,3 +47,21 @@ distinct distribution name. Availability on PyPI checked the same day (404 = not
 * Deploy only on networks you own or are authorised to monitor; capture and works-council rules differ by jurisdiction.
 * Spectra is metadata-only by design: it does not decrypt, log or persist payload bytes, makes no outbound network calls and sends no telemetry.
   Known exception, pending the owner's decision 5: uploaded pcaps are stored verbatim (`docs/security.md` §4.9).
+
+## Third-party notices
+
+`THIRD_PARTY_NOTICES.md` (repo root) lists what Spectra ships, with name, exact version, SPDX licence, upstream URL and the verbatim licence/NOTICE
+texts: (1) the Python core closure of a plain `pip install spectra` (not the `dev` extra), (2) the npm production closure of the dashboard,
+(3) the optional `live` extra (scapy, GPL-2.0-only) in its own section, (4) the container image (pinned base; its Debian packages carry their
+own licences under `/usr/share/doc`). It is generated, never hand-edited: `python scripts/gen_third_party_notices.py` (needs an environment with
+the wheel plus `spectra[live]` installed at the `requirements.lock` versions, `packaging`, and `frontend/node_modules` from `npm ci`; no network
+access). `--check` exits 1 when the committed file is stale and 2 when the environment does not match the lockfiles. Packages without a licence
+file are listed under "Needs attention" in the file.
+
+* The closure is walked from `backend/pyproject.toml` through installed `Requires-Dist` metadata, markers evaluated for CPython 3.13 / Linux (the
+  image), so the output does not depend on the interpreter that runs it.
+* Wiring: `scripts/build_release.sh` stages the file into `backend/` (git-ignored) so the wheel carries it as
+  `*.dist-info/licenses/THIRD_PARTY_NOTICES.md` (`scripts/check_wheel.py` enforces this); the `Dockerfile` also copies it to
+  `/usr/share/doc/spectra/`; the CI `package` job runs `--check` against the built wheel (clean 3.13 venv, lock constraints) and
+  `backend/tests/test_third_party_notices.py` runs it locally when `frontend/node_modules` exists. After changing any dependency, regenerate and commit.
+* Not a legal review: the texts are what the packages ship; the owner decides on the licence mix (see the scapy note above).

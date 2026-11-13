@@ -43,6 +43,8 @@ def main(path: str) -> int:
                 break
     if not any(n.endswith(".dist-info/licenses/LICENSE") for n in names):
         problems.append("the Apache-2.0 LICENSE text is not in the wheel")
+    if not any(n.endswith(".dist-info/licenses/THIRD_PARTY_NOTICES.md") for n in names):
+        problems.append("THIRD_PARTY_NOTICES.md is not in the wheel")
     if "spectra = spectra.cli:main" not in entry_text:
         problems.append("console script `spectra` is not declared")
     ver = re.search(r"^Version: (.+)$", text, re.M)

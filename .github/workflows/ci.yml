@@ -95,6 +95,14 @@ jobs:
       - run: python3 scripts/smoke_install.py backend/dist/spectra-*.whl --python 3.11
       # disaster-recovery drill: backup a running instance, destroy it, restore, verify (docs/runbook.md)
       - run: python3 scripts/restore_drill.py backend/dist/spectra-*.whl --python 3.13
+      # THIRD_PARTY_NOTICES.md must match the lockfiles: resolve the core closure + live extra from the
+      # built wheel at the locked versions (like the Dockerfile), texts from node_modules (npm ci above)
+      - run: |
+          uv venv --python 3.13 .notices-venv
+          grep -E '^[A-Za-z0-9_.-]+==' backend/requirements.lock | sed 's/ *\\$//' > .notices-constraints.txt
+          W=$(ls "$PWD"/backend/dist/spectra-*.whl)
+          uv pip install --python .notices-venv/bin/python -c .notices-constraints.txt "spectra[live] @ file://$W" packaging
+          .notices-venv/bin/python scripts/gen_third_party_notices.py --check
       # SBOMs: the runtime Python environment (wheel + its dependencies only) and the
       # frontend production tree
       - run: |
