@@ -65,3 +65,7 @@ file are listed under "Needs attention" in the file.
   `/usr/share/doc/spectra/`; the CI `package` job runs `--check` against the built wheel (clean 3.13 venv, lock constraints) and
   `backend/tests/test_third_party_notices.py` runs it locally when `frontend/node_modules` exists. After changing any dependency, regenerate and commit.
 * Not a legal review: the texts are what the packages ship; the owner decides on the licence mix (see the scapy note above).
+
+## Security policy
+
+`SECURITY.md` (repo root) states the supported-versions rule and the private reporting channel (GitHub private vulnerability reporting). Its response timelines are proposed targets until the owner confirms them.
