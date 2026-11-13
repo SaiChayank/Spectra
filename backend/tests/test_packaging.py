@@ -49,6 +49,7 @@ def _wheel(tmp_path, extra=(), drop=()):
         f"spectra-{spectra.__version__}.dist-info/entry_points.txt":
             "[console_scripts]\nspectra = spectra.cli:main\n",
         f"spectra-{spectra.__version__}.dist-info/licenses/LICENSE": "Apache License",
+        f"spectra-{spectra.__version__}.dist-info/licenses/THIRD_PARTY_NOTICES.md": "notices",
     }
     for name in drop:
         files.pop(name)
@@ -71,3 +72,4 @@ def test_wheel_checker_accepts_a_good_wheel_and_rejects_bad_ones(tmp_path, capsy
     assert "forbidden file in wheel" in capsys.readouterr().out
     assert chk.main(_wheel(tmp_path, drop=["spectra/webui/index.html"])) == 1      # dashboard missing
     assert chk.main(_wheel(tmp_path, drop=[f"spectra-{spectra.__version__}.dist-info/licenses/LICENSE"])) == 1
+    assert chk.main(_wheel(tmp_path, drop=[f"spectra-{spectra.__version__}.dist-info/licenses/THIRD_PARTY_NOTICES.md"])) == 1
