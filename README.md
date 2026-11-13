@@ -31,6 +31,7 @@ Three target verticals: **Fintech · Healthcare · Smart City Infrastructure**.
 | [`docs/intel.md`](./docs/intel.md) | local threat intel: file-based JA3/JA4/SNI lists, evidence-signal semantics, FP caution |
 | [`docs/security.md`](./docs/security.md) | auth, RBAC, managed captures, artifact integrity, audit chain, local-only assumptions |
 | [`docs/testing.md`](./docs/testing.md) | 923 tests · 156 acceptance checks · performance · live-capture validation |
+| [`SECURITY.md`](./SECURITY.md) | supported versions and how to report a vulnerability privately (proposed timelines, scope, safe harbour) |
 | [`docs/limitations.md`](./docs/limitations.md) | detection, classification, TEE/twin/edge, metadata-only analysis, operational caveats |
 | [`docs/readiness-report.md`](./docs/readiness-report.md) | final readiness report (completed / partial / future / known limitations) |
 | [`docs/monitoring.md`](./docs/monitoring.md) | Prometheus metrics, the optional scrape token, example alert rules |

@@ -67,6 +67,9 @@ task 12, then `bench_own_network.py`); the live-capture sizing run (`sudo script
 testers; the docs domain; a SIEM webhook (only if authorised); licence sign-off for every new dataset. No credentials, tokens or key files
 go into the repo or into chat.
 
+Enabling GitHub private vulnerability reporting in the repository settings, filling in the contact placeholder in `SECURITY.md` (if a contact is
+wanted) and confirming its proposed timelines and supported-versions rule are owner tasks; an agent must not change GitHub settings.
+
 ## 6. Known pitfalls
 
 * Memory/tmpfs pressure on the dev machine (11 GB RAM, other containers) can cause a spurious SQLite "disk I/O error" in a full run; free
