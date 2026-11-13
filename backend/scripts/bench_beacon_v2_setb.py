@@ -308,6 +308,17 @@ def main() -> int:
                 r["eligible"] = True
                 if r["flows"] < MIN_FLOWS:
                     r.update(flag="below_min_flows", score=0.0, components=None, verdict=False)
+        # One row per manifest beacon: a stray flow to the same server without a parsed SNI (e.g. cut at capture end) is keyed by IP
+        # and would otherwise count as a second beacon scoring 0.  Keep the pair with the most flows; the rest are recorded, not scored.
+        best: dict = {}
+        for r in prs:
+            if r["cls"] == "beacon":
+                k = (r["interval"], r["jitter"])
+                if k not in best or r["flows"] > best[k]["flows"]:
+                    best[k] = r
+        for r in prs:
+            if r["cls"] == "beacon" and best[(r["interval"], r["jitter"])] is not r:
+                r.update(cls="beacon_fragment", group="excluded_fragment", eligible=False, flag="fragment_of_scored_beacon")
         for p in h["profiles"]:          # manifest beacon absent from the pcap: a miss with score 0
             if p["class"] == "beacon" and not any(r["cls"] == "beacon" and p["sni"] in (r["pair"][1], *r["dst_ips"]) for r in prs):
                 prs.append({"host_ip": h["ip"], "pair": [h["ip"], p["sni"]], "flows": 0, "dst_ips": [], "score": 0.0, "components": None,

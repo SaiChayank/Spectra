@@ -209,6 +209,32 @@
         "beacons": "All 36 gated beacons (jitter <= 50 %) and all 12 at 75 % always count. A labelled beacon pair with fewer than 20 flows, or absent from the pcap, is included with score 0 for both Spectra and RITA and flagged below_min_flows / absent in the per-pair table. The manifest must list exactly 36 gated beacons.",
         "negatives_and_periodic": "B1-B3 negatives and the periodic-benign class keep the >= 20 flows rule as preregistered; their below-20 counts are reported."
       }
+    },
+    {
+      "id": 5,
+      "date": "2026-11-13",
+      "kind": "data record + counting fix (no design change)",
+      "set_b_run": "setb-20261112T1217Z",
+      "set_b_sha256": {
+        "manifest.json": "1cb608e9f45207e1535e6474d103130c7122dc4fa1e3439e4bcc92aba6eedb79",
+        "host-00.pcap": "2ac3bc5a07aeb8a9b3eac07c64771948caa8fbf0f6231d2452eeb75303ae0f9b",
+        "host-01.pcap": "3aec3a3166ff97600c4ab3224776c39c2ea507d68b1ccf20dfa3424ed86f6462",
+        "host-02.pcap": "4446242dd28eadff4324a3371e327772f0b56fcc4e097108ce9a50bf70a6c5c2",
+        "host-03.pcap": "f95ed8efea832c5d19012d68a910d2342dac01cafac51b26f4586f75c54f54ba",
+        "host-04.pcap": "a63248119168c903342335dced4bfc90768f4d06e9efa210928ddfb4ce65f241",
+        "host-05.pcap": "3892df8717e77a222df193426ccc8512a6cd4acfe028f01e633a08e058f961f2",
+        "host-06.pcap": "793a991fccfc8fa77175178c1b4c8780a3cbbafe85f4c16b51eb9e2138a69bd6",
+        "host-07.pcap": "bc8e3194669c75a9eac168346b3a0986a44215ba1eb155eb635a63bd9f7a01b5",
+        "host-08.pcap": "458832d2111445c9838d3f6a757fef27f425a8daf99cc260ecc73b81630afb59",
+        "host-09.pcap": "11f04829dd1d9214b679805388f00418cf1f5a46cba25cc196a1b7ec598aa7dc",
+        "host-10.pcap": "476cf78605df93ec2c5c475e6333ab15317548ed309e04c0417219a6f6d156cd",
+        "host-11.pcap": "987c62cc42a15e3dc35ad21303bad6ee81ad4f554b68ff32c51ccf21cb4928fb"
+      },
+      "void_runs": {
+        "setb-20261112T0647Z": "host shut down after 1 h 57 min; void, never scored"
+      },
+      "counting_fix": "First scoring pass counted 37 gated beacons against the manifest's 36: one stray 1-flow connection to a beacon server without a parsed SNI was keyed by IP and counted as a second beacon scoring 0. Fixed so each manifest beacon is one row (the pair with the most flows); the fragment is recorded as excluded_fragment. Found from the n_pos_as_expected check after the first pass; the first output is kept as beacon-v2a1-setb-run1-duplicate-beacon.json. The gate result is fail before and after the fix.",
+      "design_flaw_found": "Class B3 (app polling, a request every 15 s +-10 % during two 2 h windows) was preregistered as a gate negative but is periodic by construction; all 12 B3 pairs score >= 0.8 in Spectra and 10 of 12 in RITA. Left as preregistered; any view without B3 is post hoc and reported as such."
     }
   ]
 }

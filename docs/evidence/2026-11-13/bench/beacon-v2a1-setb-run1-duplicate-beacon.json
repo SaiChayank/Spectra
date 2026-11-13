@@ -1,0 +1,6274 @@
+{
+ "benchmark": "Held-out set B (harmless simulator, 12 hosts): Spectra beacon v2a1 vs RITA v5.1.2",
+ "git_commit": "e4d8451e2c492b7080b17655d23496c464bca3ab",
+ "run_id": "setb-20261112T1217Z",
+ "min_flows": 20,
+ "bootstrap": 1000,
+ "seed": 1337,
+ "spectra_threshold": 0.8,
+ "beaconing_internal_nets": [
+  "203.0.113.128/25"
+ ],
+ "allow_list": [],
+ "rita_alert_levels": [
+  0.5,
+  0.7,
+  0.8
+ ],
+ "completeness": {
+  "planned_duration_s": 36000.0,
+  "gap_threshold_s": 5.0,
+  "checks": {
+   "pcaps_present_nonempty": true,
+   "heartbeat_logs_present": true,
+   "heartbeats_cover_planned_duration": true,
+   "no_suspend_gaps": true,
+   "pcap_flows_span_planned_duration": true
+  },
+  "hosts": {
+   "host-00": {
+    "pcap_bytes": 76680601,
+    "heartbeat_present": true,
+    "heartbeats": 601,
+    "last_heartbeat_s": 36000.7,
+    "end_record": true,
+    "wall_span_s": 36005.0,
+    "ok": 6972,
+    "err": 0,
+    "suspend_gaps": [],
+    "heartbeat_holes": [],
+    "covers_duration": true
+   },
+   "host-01": {
+    "pcap_bytes": 74084158,
+    "heartbeat_present": true,
+    "heartbeats": 601,
+    "last_heartbeat_s": 36000.6,
+    "end_record": true,
+    "wall_span_s": 36005.0,
+    "ok": 6896,
+    "err": 0,
+    "suspend_gaps": [],
+    "heartbeat_holes": [],
+    "covers_duration": true
+   },
+   "host-02": {
+    "pcap_bytes": 77551058,
+    "heartbeat_present": true,
+    "heartbeats": 601,
+    "last_heartbeat_s": 36000.9,
+    "end_record": true,
+    "wall_span_s": 36005.0,
+    "ok": 7178,
+    "err": 0,
+    "suspend_gaps": [],
+    "heartbeat_holes": [],
+    "covers_duration": true
+   },
+   "host-03": {
+    "pcap_bytes": 76202758,
+    "heartbeat_present": true,
+    "heartbeats": 601,
+    "last_heartbeat_s": 36000.6,
+    "end_record": true,
+    "wall_span_s": 36005.0,
+    "ok": 6997,
+    "err": 0,
+    "suspend_gaps": [],
+    "heartbeat_holes": [],
+    "covers_duration": true
+   },
+   "host-04": {
+    "pcap_bytes": 74630101,
+    "heartbeat_present": true,
+    "heartbeats": 601,
+    "last_heartbeat_s": 36000.7,
+    "end_record": true,
+    "wall_span_s": 36005.0,
+    "ok": 6922,
+    "err": 0,
+    "suspend_gaps": [],
+    "heartbeat_holes": [],
+    "covers_duration": true
+   },
+   "host-05": {
+    "pcap_bytes": 76741682,
+    "heartbeat_present": true,
+    "heartbeats": 601,
+    "last_heartbeat_s": 36000.7,
+    "end_record": true,
+    "wall_span_s": 36005.0,
+    "ok": 7021,
+    "err": 0,
+    "suspend_gaps": [],
+    "heartbeat_holes": [],
+    "covers_duration": true
+   },
+   "host-06": {
+    "pcap_bytes": 74426950,
+    "heartbeat_present": true,
+    "heartbeats": 601,
+    "last_heartbeat_s": 36000.8,
+    "end_record": true,
+    "wall_span_s": 36005.0,
+    "ok": 6969,
+    "err": 0,
+    "suspend_gaps": [],
+    "heartbeat_holes": [],
+    "covers_duration": true
+   },
+   "host-07": {
+    "pcap_bytes": 76002077,
+    "heartbeat_present": true,
+    "heartbeats": 601,
+    "last_heartbeat_s": 36000.6,
+    "end_record": true,
+    "wall_span_s": 36005.0,
+    "ok": 6912,
+    "err": 0,
+    "suspend_gaps": [],
+    "heartbeat_holes": [],
+    "covers_duration": true
+   },
+   "host-08": {
+    "pcap_bytes": 76786285,
+    "heartbeat_present": true,
+    "heartbeats": 601,
+    "last_heartbeat_s": 36000.6,
+    "end_record": true,
+    "wall_span_s": 36005.0,
+    "ok": 7083,
+    "err": 0,
+    "suspend_gaps": [],
+    "heartbeat_holes": [],
+    "covers_duration": true
+   },
+   "host-09": {
+    "pcap_bytes": 76765570,
+    "heartbeat_present": true,
+    "heartbeats": 601,
+    "last_heartbeat_s": 36000.9,
+    "end_record": true,
+    "wall_span_s": 36005.0,
+    "ok": 7038,
+    "err": 0,
+    "suspend_gaps": [],
+    "heartbeat_holes": [],
+    "covers_duration": true
+   },
+   "host-10": {
+    "pcap_bytes": 78032707,
+    "heartbeat_present": true,
+    "heartbeats": 601,
+    "last_heartbeat_s": 36000.6,
+    "end_record": true,
+    "wall_span_s": 36005.0,
+    "ok": 7195,
+    "err": 0,
+    "suspend_gaps": [],
+    "heartbeat_holes": [],
+    "covers_duration": true
+   },
+   "host-11": {
+    "pcap_bytes": 77189741,
+    "heartbeat_present": true,
+    "heartbeats": 601,
+    "last_heartbeat_s": 36000.6,
+    "end_record": true,
+    "wall_span_s": 36005.0,
+    "ok": 7144,
+    "err": 0,
+    "suspend_gaps": [],
+    "heartbeat_holes": [],
+    "covers_duration": true
+   }
+  },
+  "client_errors_total": 0,
+  "client_ok_total": 84327,
+  "dry_run_ok_flag": false,
+  "allow_gaps_flag": false,
+  "pcap_flow_span_s": {
+   "host-00": 35995.2,
+   "host-01": 35993.3,
+   "host-02": 35998.8,
+   "host-03": 36000.5,
+   "host-04": 36002.1,
+   "host-05": 35998.4,
+   "host-06": 35999.1,
+   "host-07": 35999.0,
+   "host-08": 35996.7,
+   "host-09": 35999.6,
+   "host-10": 35999.1,
+   "host-11": 35999.4
+  }
+ },
+ "sha256": {
+  "manifest.json": "1cb608e9f45207e1535e6474d103130c7122dc4fa1e3439e4bcc92aba6eedb79",
+  "host-00.pcap": "2ac3bc5a07aeb8a9b3eac07c64771948caa8fbf0f6231d2452eeb75303ae0f9b",
+  "host-01.pcap": "3aec3a3166ff97600c4ab3224776c39c2ea507d68b1ccf20dfa3424ed86f6462",
+  "host-02.pcap": "4446242dd28eadff4324a3371e327772f0b56fcc4e097108ce9a50bf70a6c5c2",
+  "host-03.pcap": "f95ed8efea832c5d19012d68a910d2342dac01cafac51b26f4586f75c54f54ba",
+  "host-04.pcap": "a63248119168c903342335dced4bfc90768f4d06e9efa210928ddfb4ce65f241",
+  "host-05.pcap": "3892df8717e77a222df193426ccc8512a6cd4acfe028f01e633a08e058f961f2",
+  "host-06.pcap": "793a991fccfc8fa77175178c1b4c8780a3cbbafe85f4c16b51eb9e2138a69bd6",
+  "host-07.pcap": "bc8e3194669c75a9eac168346b3a0986a44215ba1eb155eb635a63bd9f7a01b5",
+  "host-08.pcap": "458832d2111445c9838d3f6a757fef27f425a8daf99cc260ecc73b81630afb59",
+  "host-09.pcap": "11f04829dd1d9214b679805388f00418cf1f5a46cba25cc196a1b7ec598aa7dc",
+  "host-10.pcap": "476cf78605df93ec2c5c475e6333ab15317548ed309e04c0417219a6f6d156cd",
+  "host-11.pcap": "987c62cc42a15e3dc35ad21303bad6ee81ad4f554b68ff32c51ccf21cb4928fb"
+ },
+ "captures": {
+  "host-00": {
+   "flow_records": 6972,
+   "tracked_pairs": 15,
+   "flow_span_s": 35995.2
+  },
+  "host-01": {
+   "flow_records": 6896,
+   "tracked_pairs": 15,
+   "flow_span_s": 35993.3
+  },
+  "host-02": {
+   "flow_records": 7179,
+   "tracked_pairs": 15,
+   "flow_span_s": 35998.8
+  },
+  "host-03": {
+   "flow_records": 6997,
+   "tracked_pairs": 15,
+   "flow_span_s": 36000.5
+  },
+  "host-04": {
+   "flow_records": 6922,
+   "tracked_pairs": 15,
+   "flow_span_s": 36002.1
+  },
+  "host-05": {
+   "flow_records": 7021,
+   "tracked_pairs": 15,
+   "flow_span_s": 35998.4
+  },
+  "host-06": {
+   "flow_records": 6970,
+   "tracked_pairs": 15,
+   "flow_span_s": 35999.1
+  },
+  "host-07": {
+   "flow_records": 6913,
+   "tracked_pairs": 15,
+   "flow_span_s": 35999.0
+  },
+  "host-08": {
+   "flow_records": 7083,
+   "tracked_pairs": 16,
+   "flow_span_s": 35996.7
+  },
+  "host-09": {
+   "flow_records": 7039,
+   "tracked_pairs": 15,
+   "flow_span_s": 35999.6
+  },
+  "host-10": {
+   "flow_records": 7192,
+   "tracked_pairs": 15,
+   "flow_span_s": 35999.1
+  },
+  "host-11": {
+   "flow_records": 7143,
+   "tracked_pairs": 15,
+   "flow_span_s": 35999.4
+  }
+ },
+ "label_join_check_destination_seen_in_pcap": {
+  "host-00": {
+   "beacon:c-10-0.lab.example": true,
+   "beacon:c-60-50.lab.example": true,
+   "beacon:c-300-75.lab.example": true,
+   "beacon:c-1800-25.lab.example": true,
+   "B1:b1-0.lab.example": true,
+   "B1:b1-1.lab.example": true,
+   "B1:b1-2.lab.example": true,
+   "B1:b1-3.lab.example": true,
+   "B1:b1-4.lab.example": true,
+   "B1:b1-5.lab.example": true,
+   "B2:b2.lab.example": true,
+   "B3:b3.lab.example": true,
+   "B4:b4.lab.example": true,
+   "B5:b5.lab.example": true,
+   "B6:b6.lab.example": true
+  },
+  "host-01": {
+   "beacon:c-10-25.lab.example": true,
+   "beacon:c-60-75.lab.example": true,
+   "beacon:c-300-0.lab.example": true,
+   "beacon:c-1800-50.lab.example": true,
+   "B1:b1-0.lab.example": true,
+   "B1:b1-1.lab.example": true,
+   "B1:b1-2.lab.example": true,
+   "B1:b1-3.lab.example": true,
+   "B1:b1-4.lab.example": true,
+   "B1:b1-5.lab.example": true,
+   "B2:b2.lab.example": true,
+   "B3:b3.lab.example": true,
+   "B4:b4.lab.example": true,
+   "B5:b5.lab.example": true,
+   "B6:b6.lab.example": true
+  },
+  "host-02": {
+   "beacon:c-10-50.lab.example": true,
+   "beacon:c-60-0.lab.example": true,
+   "beacon:c-300-25.lab.example": true,
+   "beacon:c-1800-75.lab.example": true,
+   "B1:b1-0.lab.example": true,
+   "B1:b1-1.lab.example": true,
+   "B1:b1-2.lab.example": true,
+   "B1:b1-3.lab.example": true,
+   "B1:b1-4.lab.example": true,
+   "B1:b1-5.lab.example": true,
+   "B2:b2.lab.example": true,
+   "B3:b3.lab.example": true,
+   "B4:b4.lab.example": true,
+   "B5:b5.lab.example": true,
+   "B6:b6.lab.example": true
+  },
+  "host-03": {
+   "beacon:c-10-75.lab.example": true,
+   "beacon:c-60-25.lab.example": true,
+   "beacon:c-300-50.lab.example": true,
+   "beacon:c-1800-0.lab.example": true,
+   "B1:b1-0.lab.example": true,
+   "B1:b1-1.lab.example": true,
+   "B1:b1-2.lab.example": true,
+   "B1:b1-3.lab.example": true,
+   "B1:b1-4.lab.example": true,
+   "B1:b1-5.lab.example": true,
+   "B2:b2.lab.example": true,
+   "B3:b3.lab.example": true,
+   "B4:b4.lab.example": true,
+   "B5:b5.lab.example": true,
+   "B6:b6.lab.example": true
+  },
+  "host-04": {
+   "beacon:c-10-0.lab.example": true,
+   "beacon:c-60-50.lab.example": true,
+   "beacon:c-300-75.lab.example": true,
+   "beacon:c-1800-25.lab.example": true,
+   "B1:b1-0.lab.example": true,
+   "B1:b1-1.lab.example": true,
+   "B1:b1-2.lab.example": true,
+   "B1:b1-3.lab.example": true,
+   "B1:b1-4.lab.example": true,
+   "B1:b1-5.lab.example": true,
+   "B2:b2.lab.example": true,
+   "B3:b3.lab.example": true,
+   "B4:b4.lab.example": true,
+   "B5:b5.lab.example": true,
+   "B6:b6.lab.example": true
+  },
+  "host-05": {
+   "beacon:c-10-25.lab.example": true,
+   "beacon:c-60-75.lab.example": true,
+   "beacon:c-300-0.lab.example": true,
+   "beacon:c-1800-50.lab.example": true,
+   "B1:b1-0.lab.example": true,
+   "B1:b1-1.lab.example": true,
+   "B1:b1-2.lab.example": true,
+   "B1:b1-3.lab.example": true,
+   "B1:b1-4.lab.example": true,
+   "B1:b1-5.lab.example": true,
+   "B2:b2.lab.example": true,
+   "B3:b3.lab.example": true,
+   "B4:b4.lab.example": true,
+   "B5:b5.lab.example": true,
+   "B6:b6.lab.example": true
+  },
+  "host-06": {
+   "beacon:c-10-50.lab.example": true,
+   "beacon:c-60-0.lab.example": true,
+   "beacon:c-300-25.lab.example": true,
+   "beacon:c-1800-75.lab.example": true,
+   "B1:b1-0.lab.example": true,
+   "B1:b1-1.lab.example": true,
+   "B1:b1-2.lab.example": true,
+   "B1:b1-3.lab.example": true,
+   "B1:b1-4.lab.example": true,
+   "B1:b1-5.lab.example": true,
+   "B2:b2.lab.example": true,
+   "B3:b3.lab.example": true,
+   "B4:b4.lab.example": true,
+   "B5:b5.lab.example": true,
+   "B6:b6.lab.example": true
+  },
+  "host-07": {
+   "beacon:c-10-75.lab.example": true,
+   "beacon:c-60-25.lab.example": true,
+   "beacon:c-300-50.lab.example": true,
+   "beacon:c-1800-0.lab.example": true,
+   "B1:b1-0.lab.example": true,
+   "B1:b1-1.lab.example": true,
+   "B1:b1-2.lab.example": true,
+   "B1:b1-3.lab.example": true,
+   "B1:b1-4.lab.example": true,
+   "B1:b1-5.lab.example": true,
+   "B2:b2.lab.example": true,
+   "B3:b3.lab.example": true,
+   "B4:b4.lab.example": true,
+   "B5:b5.lab.example": true,
+   "B6:b6.lab.example": true
+  },
+  "host-08": {
+   "beacon:c-10-0.lab.example": true,
+   "beacon:c-60-50.lab.example": true,
+   "beacon:c-300-75.lab.example": true,
+   "beacon:c-1800-25.lab.example": true,
+   "B1:b1-0.lab.example": true,
+   "B1:b1-1.lab.example": true,
+   "B1:b1-2.lab.example": true,
+   "B1:b1-3.lab.example": true,
+   "B1:b1-4.lab.example": true,
+   "B1:b1-5.lab.example": true,
+   "B2:b2.lab.example": true,
+   "B3:b3.lab.example": true,
+   "B4:b4.lab.example": true,
+   "B5:b5.lab.example": true,
+   "B6:b6.lab.example": true
+  },
+  "host-09": {
+   "beacon:c-10-25.lab.example": true,
+   "beacon:c-60-75.lab.example": true,
+   "beacon:c-300-0.lab.example": true,
+   "beacon:c-1800-50.lab.example": true,
+   "B1:b1-0.lab.example": true,
+   "B1:b1-1.lab.example": true,
+   "B1:b1-2.lab.example": true,
+   "B1:b1-3.lab.example": true,
+   "B1:b1-4.lab.example": true,
+   "B1:b1-5.lab.example": true,
+   "B2:b2.lab.example": true,
+   "B3:b3.lab.example": true,
+   "B4:b4.lab.example": true,
+   "B5:b5.lab.example": true,
+   "B6:b6.lab.example": true
+  },
+  "host-10": {
+   "beacon:c-10-50.lab.example": true,
+   "beacon:c-60-0.lab.example": true,
+   "beacon:c-300-25.lab.example": true,
+   "beacon:c-1800-75.lab.example": true,
+   "B1:b1-0.lab.example": true,
+   "B1:b1-1.lab.example": true,
+   "B1:b1-2.lab.example": true,
+   "B1:b1-3.lab.example": true,
+   "B1:b1-4.lab.example": true,
+   "B1:b1-5.lab.example": true,
+   "B2:b2.lab.example": true,
+   "B3:b3.lab.example": true,
+   "B4:b4.lab.example": true,
+   "B5:b5.lab.example": true,
+   "B6:b6.lab.example": true
+  },
+  "host-11": {
+   "beacon:c-10-75.lab.example": true,
+   "beacon:c-60-25.lab.example": true,
+   "beacon:c-300-50.lab.example": true,
+   "beacon:c-1800-0.lab.example": true,
+   "B1:b1-0.lab.example": true,
+   "B1:b1-1.lab.example": true,
+   "B1:b1-2.lab.example": true,
+   "B1:b1-3.lab.example": true,
+   "B1:b1-4.lab.example": true,
+   "B1:b1-5.lab.example": true,
+   "B2:b2.lab.example": true,
+   "B3:b3.lab.example": true,
+   "B4:b4.lab.example": true,
+   "B5:b5.lab.example": true,
+   "B6:b6.lab.example": true
+  }
+ },
+ "class_counts": {
+  "beacon": {
+   "labelled_pairs": 49,
+   "below_20_flows": 4,
+   "absent": 0,
+   "eligible": 49,
+   "no_verdict": 4
+  },
+  "B5": {
+   "labelled_pairs": 12,
+   "below_20_flows": 0,
+   "absent": 0,
+   "eligible": 12,
+   "no_verdict": 0
+  },
+  "B4": {
+   "labelled_pairs": 12,
+   "below_20_flows": 0,
+   "absent": 0,
+   "eligible": 12,
+   "no_verdict": 0
+  },
+  "B1": {
+   "labelled_pairs": 72,
+   "below_20_flows": 0,
+   "absent": 0,
+   "eligible": 72,
+   "no_verdict": 0
+  },
+  "B6": {
+   "labelled_pairs": 12,
+   "below_20_flows": 12,
+   "absent": 0,
+   "eligible": 0,
+   "no_verdict": 0
+  },
+  "B2": {
+   "labelled_pairs": 12,
+   "below_20_flows": 0,
+   "absent": 0,
+   "eligible": 12,
+   "no_verdict": 0
+  },
+  "B3": {
+   "labelled_pairs": 12,
+   "below_20_flows": 0,
+   "absent": 0,
+   "eligible": 12,
+   "no_verdict": 0
+  }
+ },
+ "other_pairs": {
+  "n": 0,
+  "pairs": []
+ },
+ "rita": {
+  "host-00": {
+   "conn_rows": 6972,
+   "threat_mixtape_rows": 15,
+   "rows_with_beacon_score_gt_0": 15,
+   "scored_pairs": 15,
+   "analysed": true,
+   "database": "setb_setb_20261112t1217z_host_00"
+  },
+  "host-01": {
+   "conn_rows": 6896,
+   "threat_mixtape_rows": 15,
+   "rows_with_beacon_score_gt_0": 15,
+   "scored_pairs": 15,
+   "analysed": true,
+   "database": "setb_setb_20261112t1217z_host_01"
+  },
+  "host-02": {
+   "conn_rows": 7178,
+   "threat_mixtape_rows": 15,
+   "rows_with_beacon_score_gt_0": 15,
+   "scored_pairs": 15,
+   "analysed": true,
+   "database": "setb_setb_20261112t1217z_host_02"
+  },
+  "host-03": {
+   "conn_rows": 6997,
+   "threat_mixtape_rows": 15,
+   "rows_with_beacon_score_gt_0": 15,
+   "scored_pairs": 15,
+   "analysed": true,
+   "database": "setb_setb_20261112t1217z_host_03"
+  },
+  "host-04": {
+   "conn_rows": 6922,
+   "threat_mixtape_rows": 15,
+   "rows_with_beacon_score_gt_0": 15,
+   "scored_pairs": 15,
+   "analysed": true,
+   "database": "setb_setb_20261112t1217z_host_04"
+  },
+  "host-05": {
+   "conn_rows": 7021,
+   "threat_mixtape_rows": 15,
+   "rows_with_beacon_score_gt_0": 15,
+   "scored_pairs": 15,
+   "analysed": true,
+   "database": "setb_setb_20261112t1217z_host_05"
+  },
+  "host-06": {
+   "conn_rows": 6969,
+   "threat_mixtape_rows": 15,
+   "rows_with_beacon_score_gt_0": 15,
+   "scored_pairs": 15,
+   "analysed": true,
+   "database": "setb_setb_20261112t1217z_host_06"
+  },
+  "host-07": {
+   "conn_rows": 6912,
+   "threat_mixtape_rows": 15,
+   "rows_with_beacon_score_gt_0": 15,
+   "scored_pairs": 15,
+   "analysed": true,
+   "database": "setb_setb_20261112t1217z_host_07"
+  },
+  "host-08": {
+   "conn_rows": 7083,
+   "threat_mixtape_rows": 15,
+   "rows_with_beacon_score_gt_0": 15,
+   "scored_pairs": 15,
+   "analysed": true,
+   "database": "setb_setb_20261112t1217z_host_08"
+  },
+  "host-09": {
+   "conn_rows": 7038,
+   "threat_mixtape_rows": 15,
+   "rows_with_beacon_score_gt_0": 15,
+   "scored_pairs": 15,
+   "analysed": true,
+   "database": "setb_setb_20261112t1217z_host_09"
+  },
+  "host-10": {
+   "conn_rows": 7195,
+   "threat_mixtape_rows": 15,
+   "rows_with_beacon_score_gt_0": 15,
+   "scored_pairs": 15,
+   "analysed": true,
+   "database": "setb_setb_20261112t1217z_host_10"
+  },
+  "host-11": {
+   "conn_rows": 7144,
+   "threat_mixtape_rows": 15,
+   "rows_with_beacon_score_gt_0": 15,
+   "scored_pairs": 15,
+   "analysed": true,
+   "database": "setb_setb_20261112t1217z_host_11"
+  }
+ },
+ "rita_all_hosts_analysed": true,
+ "results": {
+  "spectra_v2a1": {
+   "n_pos": 37,
+   "n_neg": 96,
+   "metrics": {
+    "n_pos": 37,
+    "n_neg": 96,
+    "bootstrap": 1000,
+    "seed": 1337,
+    "roc_auc": 0.8344594594594594,
+    "roc_auc_ci95": [
+     0.7308558558558559,
+     0.9239864864864865
+    ],
+    "pr_auc": 0.6190843794916938,
+    "pr_auc_ci95": [
+     0.4995961223896309,
+     0.77949045206022
+    ],
+    "recall_at_fpr_1pct": 0.02702702702702703,
+    "recall_at_fpr_1pct_fpr_reached": 0.0,
+    "recall_at_fpr_1pct_ci95": [
+     0.0,
+     0.13513513513513514
+    ],
+    "recall_at_fpr_0_1pct": 0.02702702702702703,
+    "recall_at_fpr_0_1pct_fpr_reached": 0.0,
+    "recall_at_fpr_0_1pct_ci95": [
+     0.0,
+     0.13513513513513514
+    ]
+   },
+   "gate_operating_point": {
+    "recall": 0.02702702702702703,
+    "fpr": 0.0,
+    "threshold": 0.9923
+   },
+   "fixed": [
+    {
+     "threshold": 0.8,
+     "recall": 0.8918918918918919,
+     "false_pairs": 15,
+     "of_negatives": 96
+    }
+   ],
+   "per_cell": {
+    "10s_0pct": {
+     "n": 4,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.8": 0.75
+    },
+    "10s_25pct": {
+     "n": 3,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.8": 1.0
+    },
+    "10s_50pct": {
+     "n": 3,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.8": 1.0
+    },
+    "10s_75pct": {
+     "n": 3,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.8": 1.0
+    },
+    "60s_0pct": {
+     "n": 3,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.8": 1.0
+    },
+    "60s_25pct": {
+     "n": 3,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.8": 1.0
+    },
+    "60s_50pct": {
+     "n": 3,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.8": 1.0
+    },
+    "60s_75pct": {
+     "n": 3,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.8": 1.0
+    },
+    "300s_0pct": {
+     "n": 3,
+     "recall_at_gate_threshold": 0.3333333333333333,
+     "recall_at_0.8": 1.0
+    },
+    "300s_25pct": {
+     "n": 3,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.8": 1.0
+    },
+    "300s_50pct": {
+     "n": 3,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.8": 1.0
+    },
+    "300s_75pct": {
+     "n": 3,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.8": 1.0
+    },
+    "1800s_0pct": {
+     "n": 3,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.8": 1.0
+    },
+    "1800s_25pct": {
+     "n": 3,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.8": 0.6666666666666666
+    },
+    "1800s_50pct": {
+     "n": 3,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.8": 0.3333333333333333
+    },
+    "1800s_75pct": {
+     "n": 3,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.8": 0.3333333333333333
+    }
+   },
+   "per_jitter_curve": {
+    "0pct": {
+     "n": 13,
+     "recall_at_gate_threshold": 0.07692307692307693,
+     "recall_at_0.8": 0.9230769230769231
+    },
+    "25pct": {
+     "n": 12,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.8": 0.9166666666666666
+    },
+    "50pct": {
+     "n": 12,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.8": 0.8333333333333334
+    },
+    "75pct": {
+     "n": 12,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.8": 0.8333333333333334
+    }
+   },
+   "per_interval": {
+    "10s": {
+     "n": 10,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.8": 0.9
+    },
+    "60s": {
+     "n": 9,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.8": 1.0
+    },
+    "300s": {
+     "n": 9,
+     "recall_at_gate_threshold": 0.1111111111111111,
+     "recall_at_0.8": 1.0
+    },
+    "1800s": {
+     "n": 9,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.8": 0.6666666666666666
+    }
+   },
+   "periodic_benign_outside_gate": {
+    "B4": {
+     "pairs": 12,
+     "scoring_ge_0.8": 12
+    },
+    "B5": {
+     "pairs": 12,
+     "scoring_ge_0.8": 12
+    },
+    "B6": {
+     "pairs": 0,
+     "scoring_ge_0.8": 0
+    }
+   }
+  },
+  "rita_v5.1.2": {
+   "n_pos": 37,
+   "n_neg": 96,
+   "metrics": {
+    "n_pos": 37,
+    "n_neg": 96,
+    "bootstrap": 1000,
+    "seed": 1337,
+    "roc_auc": 0.8723254504504504,
+    "roc_auc_ci95": [
+     0.7687218468468469,
+     0.957911036036036
+    ],
+    "pr_auc": 0.7790236435707513,
+    "pr_auc_ci95": [
+     0.6614379789972369,
+     0.8976690012062505
+    ],
+    "recall_at_fpr_1pct": 0.1891891891891892,
+    "recall_at_fpr_1pct_fpr_reached": 0.0,
+    "recall_at_fpr_1pct_ci95": [
+     0.08108108108108109,
+     0.35135135135135137
+    ],
+    "recall_at_fpr_0_1pct": 0.1891891891891892,
+    "recall_at_fpr_0_1pct_fpr_reached": 0.0,
+    "recall_at_fpr_0_1pct_ci95": [
+     0.08108108108108109,
+     0.35135135135135137
+    ]
+   },
+   "gate_operating_point": {
+    "recall": 0.1891891891891892,
+    "fpr": 0.0,
+    "threshold": 0.945
+   },
+   "fixed": [
+    {
+     "threshold": 0.5,
+     "recall": 0.918918918918919,
+     "false_pairs": 96,
+     "of_negatives": 96
+    },
+    {
+     "threshold": 0.7,
+     "recall": 0.918918918918919,
+     "false_pairs": 26,
+     "of_negatives": 96
+    },
+    {
+     "threshold": 0.8,
+     "recall": 0.8918918918918919,
+     "false_pairs": 15,
+     "of_negatives": 96
+    }
+   ],
+   "per_cell": {
+    "10s_0pct": {
+     "n": 4,
+     "recall_at_gate_threshold": 0.25,
+     "recall_at_0.5": 0.75,
+     "recall_at_0.7": 0.75,
+     "recall_at_0.8": 0.75
+    },
+    "10s_25pct": {
+     "n": 3,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.5": 1.0,
+     "recall_at_0.7": 1.0,
+     "recall_at_0.8": 1.0
+    },
+    "10s_50pct": {
+     "n": 3,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.5": 1.0,
+     "recall_at_0.7": 1.0,
+     "recall_at_0.8": 1.0
+    },
+    "10s_75pct": {
+     "n": 3,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.5": 1.0,
+     "recall_at_0.7": 1.0,
+     "recall_at_0.8": 1.0
+    },
+    "60s_0pct": {
+     "n": 3,
+     "recall_at_gate_threshold": 1.0,
+     "recall_at_0.5": 1.0,
+     "recall_at_0.7": 1.0,
+     "recall_at_0.8": 1.0
+    },
+    "60s_25pct": {
+     "n": 3,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.5": 1.0,
+     "recall_at_0.7": 1.0,
+     "recall_at_0.8": 1.0
+    },
+    "60s_50pct": {
+     "n": 3,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.5": 1.0,
+     "recall_at_0.7": 1.0,
+     "recall_at_0.8": 1.0
+    },
+    "60s_75pct": {
+     "n": 3,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.5": 1.0,
+     "recall_at_0.7": 1.0,
+     "recall_at_0.8": 1.0
+    },
+    "300s_0pct": {
+     "n": 3,
+     "recall_at_gate_threshold": 0.6666666666666666,
+     "recall_at_0.5": 1.0,
+     "recall_at_0.7": 1.0,
+     "recall_at_0.8": 1.0
+    },
+    "300s_25pct": {
+     "n": 3,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.5": 1.0,
+     "recall_at_0.7": 1.0,
+     "recall_at_0.8": 1.0
+    },
+    "300s_50pct": {
+     "n": 3,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.5": 1.0,
+     "recall_at_0.7": 1.0,
+     "recall_at_0.8": 1.0
+    },
+    "300s_75pct": {
+     "n": 3,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.5": 1.0,
+     "recall_at_0.7": 1.0,
+     "recall_at_0.8": 1.0
+    },
+    "1800s_0pct": {
+     "n": 3,
+     "recall_at_gate_threshold": 0.3333333333333333,
+     "recall_at_0.5": 1.0,
+     "recall_at_0.7": 1.0,
+     "recall_at_0.8": 1.0
+    },
+    "1800s_25pct": {
+     "n": 3,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.5": 0.6666666666666666,
+     "recall_at_0.7": 0.6666666666666666,
+     "recall_at_0.8": 0.6666666666666666
+    },
+    "1800s_50pct": {
+     "n": 3,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.5": 0.6666666666666666,
+     "recall_at_0.7": 0.6666666666666666,
+     "recall_at_0.8": 0.3333333333333333
+    },
+    "1800s_75pct": {
+     "n": 3,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.5": 0.6666666666666666,
+     "recall_at_0.7": 0.6666666666666666,
+     "recall_at_0.8": 0.6666666666666666
+    }
+   },
+   "per_jitter_curve": {
+    "0pct": {
+     "n": 13,
+     "recall_at_gate_threshold": 0.5384615384615384,
+     "recall_at_0.5": 0.9230769230769231,
+     "recall_at_0.7": 0.9230769230769231,
+     "recall_at_0.8": 0.9230769230769231
+    },
+    "25pct": {
+     "n": 12,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.5": 0.9166666666666666,
+     "recall_at_0.7": 0.9166666666666666,
+     "recall_at_0.8": 0.9166666666666666
+    },
+    "50pct": {
+     "n": 12,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.5": 0.9166666666666666,
+     "recall_at_0.7": 0.9166666666666666,
+     "recall_at_0.8": 0.8333333333333334
+    },
+    "75pct": {
+     "n": 12,
+     "recall_at_gate_threshold": 0.0,
+     "recall_at_0.5": 0.9166666666666666,
+     "recall_at_0.7": 0.9166666666666666,
+     "recall_at_0.8": 0.9166666666666666
+    }
+   },
+   "per_interval": {
+    "10s": {
+     "n": 10,
+     "recall_at_gate_threshold": 0.1,
+     "recall_at_0.5": 0.9,
+     "recall_at_0.7": 0.9,
+     "recall_at_0.8": 0.9
+    },
+    "60s": {
+     "n": 9,
+     "recall_at_gate_threshold": 0.3333333333333333,
+     "recall_at_0.5": 1.0,
+     "recall_at_0.7": 1.0,
+     "recall_at_0.8": 1.0
+    },
+    "300s": {
+     "n": 9,
+     "recall_at_gate_threshold": 0.2222222222222222,
+     "recall_at_0.5": 1.0,
+     "recall_at_0.7": 1.0,
+     "recall_at_0.8": 1.0
+    },
+    "1800s": {
+     "n": 9,
+     "recall_at_gate_threshold": 0.1111111111111111,
+     "recall_at_0.5": 0.7777777777777778,
+     "recall_at_0.7": 0.7777777777777778,
+     "recall_at_0.8": 0.6666666666666666
+    }
+   },
+   "periodic_benign_outside_gate": {
+    "B4": {
+     "pairs": 12,
+     "scoring_ge_0.5": 12,
+     "scoring_ge_0.7": 12,
+     "scoring_ge_0.8": 12
+    },
+    "B5": {
+     "pairs": 12,
+     "scoring_ge_0.5": 12,
+     "scoring_ge_0.7": 12,
+     "scoring_ge_0.8": 12
+    },
+    "B6": {
+     "pairs": 0,
+     "scoring_ge_0.5": 0,
+     "scoring_ge_0.7": 0,
+     "scoring_ge_0.8": 0
+    }
+   }
+  }
+ },
+ "gate_set_b": {
+  "n_pos": 37,
+  "n_pos_expected": 36,
+  "n_pos_as_expected": false,
+  "n_neg": 96,
+  "n_neg_lt_1000_so_zero_false_pairs_required": true,
+  "recall_at_gate_operating_point": 0.02702702702702703,
+  "bootstrap_lower_bound": 0.0,
+  "rita_recall_same_rule": 0.1891891891891892,
+  "rita_comparison_evaluable": true,
+  "checks": {
+   "recall_ge_0.8": false,
+   "lower_bound_ge_0.6": false,
+   "not_more_than_0.05_below_rita": false
+  },
+  "pass": false,
+  "fixed_threshold_default_on_condition": {
+   "recall_at_0.8": 0.8918918918918919,
+   "false_pairs_at_0.8": 15,
+   "met": false
+  },
+  "overall_e21_gate": "The overall E21 gate needs both A and B and already FAILED on set A regardless of this block; this block is the set B part only."
+ },
+ "pairs": [
+  {
+   "host_ip": "203.0.113.129",
+   "pair": [
+    "203.0.113.129",
+    "b1-0.lab.example"
+   ],
+   "flows": 109,
+   "dst_ips": [
+    "203.0.113.26"
+   ],
+   "score": 0.5851,
+   "components": {
+    "G": 0.4375,
+    "S": 0.8448,
+    "D": 0.9,
+    "H": 0.1579
+   },
+   "span_h": 8.8,
+   "verdict": true,
+   "host": "host-00",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.644,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.129",
+   "pair": [
+    "203.0.113.129",
+    "b1-1.lab.example"
+   ],
+   "flows": 108,
+   "dst_ips": [
+    "203.0.113.27"
+   ],
+   "score": 0.6542,
+   "components": {
+    "G": 0.3853,
+    "S": 0.878,
+    "D": 0.9091,
+    "H": 0.4444
+   },
+   "span_h": 9.59,
+   "verdict": true,
+   "host": "host-00",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.632,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.129",
+   "pair": [
+    "203.0.113.129",
+    "b1-2.lab.example"
+   ],
+   "flows": 108,
+   "dst_ips": [
+    "203.0.113.28"
+   ],
+   "score": 0.721,
+   "components": {
+    "G": 0.4243,
+    "S": 0.8841,
+    "D": 0.9091,
+    "H": 0.6667
+   },
+   "span_h": 9.58,
+   "verdict": true,
+   "host": "host-00",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.76,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.129",
+   "pair": [
+    "203.0.113.129",
+    "b1-3.lab.example"
+   ],
+   "flows": 100,
+   "dst_ips": [
+    "203.0.113.29"
+   ],
+   "score": 0.6326,
+   "components": {
+    "G": 0.4485,
+    "S": 0.8393,
+    "D": 0.9091,
+    "H": 0.3333
+   },
+   "span_h": 9.58,
+   "verdict": true,
+   "host": "host-00",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.686,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.129",
+   "pair": [
+    "203.0.113.129",
+    "b1-4.lab.example"
+   ],
+   "flows": 97,
+   "dst_ips": [
+    "203.0.113.30"
+   ],
+   "score": 0.6146,
+   "components": {
+    "G": 0.3506,
+    "S": 0.9131,
+    "D": 0.9091,
+    "H": 0.2857
+   },
+   "span_h": 9.58,
+   "verdict": true,
+   "host": "host-00",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.663,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.129",
+   "pair": [
+    "203.0.113.129",
+    "b1-5.lab.example"
+   ],
+   "flows": 105,
+   "dst_ips": [
+    "203.0.113.31"
+   ],
+   "score": 0.6492,
+   "components": {
+    "G": 0.3879,
+    "S": 0.8713,
+    "D": 0.9091,
+    "H": 0.4286
+   },
+   "span_h": 9.57,
+   "verdict": true,
+   "host": "host-00",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.699,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.129",
+   "pair": [
+    "203.0.113.129",
+    "b2.lab.example"
+   ],
+   "flows": 352,
+   "dst_ips": [
+    "203.0.113.32"
+   ],
+   "score": 0.8332,
+   "components": {
+    "G": 0.8355,
+    "S": 0.8473,
+    "D": 1.0,
+    "H": 0.65
+   },
+   "span_h": 8.37,
+   "verdict": true,
+   "host": "host-00",
+   "cls": "B2",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.787,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.129",
+   "pair": [
+    "203.0.113.129",
+    "b3.lab.example"
+   ],
+   "flows": 962,
+   "dst_ips": [
+    "203.0.113.33"
+   ],
+   "score": 0.9452,
+   "components": {
+    "G": 0.9667,
+    "S": 0.9775,
+    "D": 1.0,
+    "H": 0.8365
+   },
+   "span_h": 4.34,
+   "verdict": true,
+   "host": "host-00",
+   "cls": "B3",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.935,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.129",
+   "pair": [
+    "203.0.113.129",
+    "b4.lab.example"
+   ],
+   "flows": 119,
+   "dst_ips": [
+    "203.0.113.34"
+   ],
+   "score": 0.9112,
+   "components": {
+    "G": 0.8666,
+    "S": 0.7781,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.88,
+   "verdict": true,
+   "host": "host-00",
+   "cls": "B4",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.903,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.129",
+   "pair": [
+    "203.0.113.129",
+    "b5.lab.example"
+   ],
+   "flows": 562,
+   "dst_ips": [
+    "203.0.113.35"
+   ],
+   "score": 0.875,
+   "components": {
+    "G": 1.0,
+    "S": 0.5,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.97,
+   "verdict": true,
+   "host": "host-00",
+   "cls": "B5",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 1.0,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.129",
+   "pair": [
+    "203.0.113.129",
+    "b6.lab.example"
+   ],
+   "flows": 10,
+   "dst_ips": [
+    "203.0.113.36"
+   ],
+   "score": 0.0,
+   "components": null,
+   "span_h": null,
+   "verdict": false,
+   "host": "host-00",
+   "cls": "B6",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": false,
+   "rita": 0.639,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.129",
+   "pair": [
+    "203.0.113.129",
+    "c-10-0.lab.example"
+   ],
+   "flows": 3600,
+   "dst_ips": [
+    "203.0.113.10"
+   ],
+   "score": 0.9339,
+   "components": {
+    "G": 1.0,
+    "S": 0.7354,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 10.0,
+   "verdict": true,
+   "host": "host-00",
+   "cls": "beacon",
+   "interval": 10,
+   "jitter": 0,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.941,
+   "group": "beacon_gated",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.129",
+   "pair": [
+    "203.0.113.129",
+    "c-1800-25.lab.example"
+   ],
+   "flows": 19,
+   "dst_ips": [
+    "203.0.113.23"
+   ],
+   "score": 0.0,
+   "components": null,
+   "span_h": 9.12,
+   "verdict": false,
+   "host": "host-00",
+   "cls": "beacon",
+   "interval": 1800,
+   "jitter": 25,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.0,
+   "group": "beacon_gated",
+   "flag": "below_min_flows"
+  },
+  {
+   "host_ip": "203.0.113.129",
+   "pair": [
+    "203.0.113.129",
+    "c-300-75.lab.example"
+   ],
+   "flows": 119,
+   "dst_ips": [
+    "203.0.113.21"
+   ],
+   "score": 0.8674,
+   "components": {
+    "G": 0.8103,
+    "S": 0.7426,
+    "D": 1.0,
+    "H": 0.9167
+   },
+   "span_h": 9.88,
+   "verdict": true,
+   "host": "host-00",
+   "cls": "beacon",
+   "interval": 300,
+   "jitter": 75,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.826,
+   "group": "beacon_curve",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.129",
+   "pair": [
+    "203.0.113.129",
+    "c-60-50.lab.example"
+   ],
+   "flows": 601,
+   "dst_ips": [
+    "203.0.113.16"
+   ],
+   "score": 0.8861,
+   "components": {
+    "G": 0.8137,
+    "S": 0.7642,
+    "D": 1.0,
+    "H": 0.9667
+   },
+   "span_h": 9.99,
+   "verdict": true,
+   "host": "host-00",
+   "cls": "beacon",
+   "interval": 60,
+   "jitter": 50,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.882,
+   "group": "beacon_gated",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.130",
+   "pair": [
+    "203.0.113.130",
+    "b1-0.lab.example"
+   ],
+   "flows": 83,
+   "dst_ips": [
+    "203.0.113.26"
+   ],
+   "score": 0.6267,
+   "components": {
+    "G": 0.1148,
+    "S": 0.9215,
+    "D": 1.0,
+    "H": 0.4706
+   },
+   "span_h": 8.83,
+   "verdict": true,
+   "host": "host-01",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.619,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.130",
+   "pair": [
+    "203.0.113.130",
+    "b1-1.lab.example"
+   ],
+   "flows": 108,
+   "dst_ips": [
+    "203.0.113.27"
+   ],
+   "score": 0.721,
+   "components": {
+    "G": 0.3541,
+    "S": 0.8761,
+    "D": 1.0,
+    "H": 0.6538
+   },
+   "span_h": 9.07,
+   "verdict": true,
+   "host": "host-01",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.609,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.130",
+   "pair": [
+    "203.0.113.130",
+    "b1-2.lab.example"
+   ],
+   "flows": 101,
+   "dst_ips": [
+    "203.0.113.28"
+   ],
+   "score": 0.6122,
+   "components": {
+    "G": 0.2811,
+    "S": 0.8468,
+    "D": 0.9,
+    "H": 0.4211
+   },
+   "span_h": 9.07,
+   "verdict": true,
+   "host": "host-01",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.617,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.130",
+   "pair": [
+    "203.0.113.130",
+    "b1-3.lab.example"
+   ],
+   "flows": 106,
+   "dst_ips": [
+    "203.0.113.29"
+   ],
+   "score": 0.6969,
+   "components": {
+    "G": 0.3654,
+    "S": 0.8961,
+    "D": 1.0,
+    "H": 0.5263
+   },
+   "span_h": 8.82,
+   "verdict": true,
+   "host": "host-01",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.635,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.130",
+   "pair": [
+    "203.0.113.130",
+    "b1-4.lab.example"
+   ],
+   "flows": 102,
+   "dst_ips": [
+    "203.0.113.30"
+   ],
+   "score": 0.6506,
+   "components": {
+    "G": 0.29,
+    "S": 0.783,
+    "D": 1.0,
+    "H": 0.5294
+   },
+   "span_h": 8.83,
+   "verdict": true,
+   "host": "host-01",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.596,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.130",
+   "pair": [
+    "203.0.113.130",
+    "b1-5.lab.example"
+   ],
+   "flows": 106,
+   "dst_ips": [
+    "203.0.113.31"
+   ],
+   "score": 0.6675,
+   "components": {
+    "G": 0.3722,
+    "S": 0.8811,
+    "D": 1.0,
+    "H": 0.4167
+   },
+   "span_h": 8.84,
+   "verdict": true,
+   "host": "host-01",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.659,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.130",
+   "pair": [
+    "203.0.113.130",
+    "b2.lab.example"
+   ],
+   "flows": 316,
+   "dst_ips": [
+    "203.0.113.32"
+   ],
+   "score": 0.7164,
+   "components": {
+    "G": 0.8668,
+    "S": 0.8262,
+    "D": 0.9,
+    "H": 0.2727
+   },
+   "span_h": 8.52,
+   "verdict": true,
+   "host": "host-01",
+   "cls": "B2",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.76,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.130",
+   "pair": [
+    "203.0.113.130",
+    "b3.lab.example"
+   ],
+   "flows": 961,
+   "dst_ips": [
+    "203.0.113.33"
+   ],
+   "score": 0.9115,
+   "components": {
+    "G": 0.9667,
+    "S": 0.9817,
+    "D": 0.8571,
+    "H": 0.8406
+   },
+   "span_h": 5.16,
+   "verdict": true,
+   "host": "host-01",
+   "cls": "B3",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.841,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.130",
+   "pair": [
+    "203.0.113.130",
+    "b4.lab.example"
+   ],
+   "flows": 121,
+   "dst_ips": [
+    "203.0.113.34"
+   ],
+   "score": 0.8968,
+   "components": {
+    "G": 0.8512,
+    "S": 0.7361,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.94,
+   "verdict": true,
+   "host": "host-01",
+   "cls": "B4",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.886,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.130",
+   "pair": [
+    "203.0.113.130",
+    "b5.lab.example"
+   ],
+   "flows": 562,
+   "dst_ips": [
+    "203.0.113.35"
+   ],
+   "score": 0.875,
+   "components": {
+    "G": 1.0,
+    "S": 0.5,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.97,
+   "verdict": true,
+   "host": "host-01",
+   "cls": "B5",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 1.0,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.130",
+   "pair": [
+    "203.0.113.130",
+    "b6.lab.example"
+   ],
+   "flows": 10,
+   "dst_ips": [
+    "203.0.113.36"
+   ],
+   "score": 0.0,
+   "components": null,
+   "span_h": null,
+   "verdict": false,
+   "host": "host-01",
+   "cls": "B6",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": false,
+   "rita": 0.678,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.130",
+   "pair": [
+    "203.0.113.130",
+    "c-10-25.lab.example"
+   ],
+   "flows": 3605,
+   "dst_ips": [
+    "203.0.113.11"
+   ],
+   "score": 0.9161,
+   "components": {
+    "G": 0.95,
+    "S": 0.7198,
+    "D": 1.0,
+    "H": 0.9944
+   },
+   "span_h": 10.0,
+   "verdict": true,
+   "host": "host-01",
+   "cls": "beacon",
+   "interval": 10,
+   "jitter": 25,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.929,
+   "group": "beacon_gated",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.130",
+   "pair": [
+    "203.0.113.130",
+    "c-1800-50.lab.example"
+   ],
+   "flows": 21,
+   "dst_ips": [
+    "203.0.113.24"
+   ],
+   "score": 0.8018,
+   "components": {
+    "G": 0.8256,
+    "S": 0.6315,
+    "D": 1.0,
+    "H": 0.75
+   },
+   "span_h": 9.5,
+   "verdict": true,
+   "host": "host-01",
+   "cls": "beacon",
+   "interval": 1800,
+   "jitter": 50,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.855,
+   "group": "beacon_gated",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.130",
+   "pair": [
+    "203.0.113.130",
+    "c-300-0.lab.example"
+   ],
+   "flows": 120,
+   "dst_ips": [
+    "203.0.113.18"
+   ],
+   "score": 0.9479,
+   "components": {
+    "G": 1.0,
+    "S": 0.7915,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.92,
+   "verdict": true,
+   "host": "host-01",
+   "cls": "beacon",
+   "interval": 300,
+   "jitter": 0,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.948,
+   "group": "beacon_gated",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.130",
+   "pair": [
+    "203.0.113.130",
+    "c-60-75.lab.example"
+   ],
+   "flows": 573,
+   "dst_ips": [
+    "203.0.113.17"
+   ],
+   "score": 0.8781,
+   "components": {
+    "G": 0.7957,
+    "S": 0.7695,
+    "D": 1.0,
+    "H": 0.9474
+   },
+   "span_h": 9.98,
+   "verdict": true,
+   "host": "host-01",
+   "cls": "beacon",
+   "interval": 60,
+   "jitter": 75,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.865,
+   "group": "beacon_curve",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.131",
+   "pair": [
+    "203.0.113.131",
+    "b1-0.lab.example"
+   ],
+   "flows": 141,
+   "dst_ips": [
+    "203.0.113.26"
+   ],
+   "score": 0.6364,
+   "components": {
+    "G": 0.3378,
+    "S": 0.9161,
+    "D": 1.0,
+    "H": 0.2917
+   },
+   "span_h": 8.93,
+   "verdict": true,
+   "host": "host-02",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.632,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.131",
+   "pair": [
+    "203.0.113.131",
+    "b1-1.lab.example"
+   ],
+   "flows": 154,
+   "dst_ips": [
+    "203.0.113.27"
+   ],
+   "score": 0.5869,
+   "components": {
+    "G": 0.3251,
+    "S": 0.8366,
+    "D": 0.9,
+    "H": 0.2857
+   },
+   "span_h": 8.93,
+   "verdict": true,
+   "host": "host-02",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.588,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.131",
+   "pair": [
+    "203.0.113.131",
+    "b1-2.lab.example"
+   ],
+   "flows": 139,
+   "dst_ips": [
+    "203.0.113.28"
+   ],
+   "score": 0.6617,
+   "components": {
+    "G": 0.3777,
+    "S": 0.9159,
+    "D": 1.0,
+    "H": 0.3529
+   },
+   "span_h": 8.7,
+   "verdict": true,
+   "host": "host-02",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.624,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.131",
+   "pair": [
+    "203.0.113.131",
+    "b1-3.lab.example"
+   ],
+   "flows": 157,
+   "dst_ips": [
+    "203.0.113.29"
+   ],
+   "score": 0.5792,
+   "components": {
+    "G": 0.334,
+    "S": 0.8828,
+    "D": 1.0,
+    "H": 0.1
+   },
+   "span_h": 8.92,
+   "verdict": true,
+   "host": "host-02",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.597,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.131",
+   "pair": [
+    "203.0.113.131",
+    "b1-4.lab.example"
+   ],
+   "flows": 142,
+   "dst_ips": [
+    "203.0.113.30"
+   ],
+   "score": 0.6485,
+   "components": {
+    "G": 0.3308,
+    "S": 0.9153,
+    "D": 1.0,
+    "H": 0.3478
+   },
+   "span_h": 8.92,
+   "verdict": true,
+   "host": "host-02",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.643,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.131",
+   "pair": [
+    "203.0.113.131",
+    "b1-5.lab.example"
+   ],
+   "flows": 135,
+   "dst_ips": [
+    "203.0.113.31"
+   ],
+   "score": 0.6321,
+   "components": {
+    "G": 0.2696,
+    "S": 0.8882,
+    "D": 1.0,
+    "H": 0.3704
+   },
+   "span_h": 8.93,
+   "verdict": true,
+   "host": "host-02",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.616,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.131",
+   "pair": [
+    "203.0.113.131",
+    "b2.lab.example"
+   ],
+   "flows": 307,
+   "dst_ips": [
+    "203.0.113.32"
+   ],
+   "score": 0.7871,
+   "components": {
+    "G": 0.8437,
+    "S": 0.8047,
+    "D": 1.0,
+    "H": 0.5
+   },
+   "span_h": 7.95,
+   "verdict": true,
+   "host": "host-02",
+   "cls": "B2",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.728,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.131",
+   "pair": [
+    "203.0.113.131",
+    "b3.lab.example"
+   ],
+   "flows": 960,
+   "dst_ips": [
+    "203.0.113.33"
+   ],
+   "score": 0.9182,
+   "components": {
+    "G": 0.9667,
+    "S": 0.9694,
+    "D": 1.0,
+    "H": 0.7368
+   },
+   "span_h": 4.21,
+   "verdict": true,
+   "host": "host-02",
+   "cls": "B3",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.913,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.131",
+   "pair": [
+    "203.0.113.131",
+    "b4.lab.example"
+   ],
+   "flows": 120,
+   "dst_ips": [
+    "203.0.113.34"
+   ],
+   "score": 0.9411,
+   "components": {
+    "G": 0.9556,
+    "S": 0.8088,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.89,
+   "verdict": true,
+   "host": "host-02",
+   "cls": "B4",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.941,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.131",
+   "pair": [
+    "203.0.113.131",
+    "b5.lab.example"
+   ],
+   "flows": 562,
+   "dst_ips": [
+    "203.0.113.35"
+   ],
+   "score": 0.875,
+   "components": {
+    "G": 1.0,
+    "S": 0.5,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.97,
+   "verdict": true,
+   "host": "host-02",
+   "cls": "B5",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 1.0,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.131",
+   "pair": [
+    "203.0.113.131",
+    "b6.lab.example"
+   ],
+   "flows": 10,
+   "dst_ips": [
+    "203.0.113.36"
+   ],
+   "score": 0.0,
+   "components": null,
+   "span_h": null,
+   "verdict": false,
+   "host": "host-02",
+   "cls": "B6",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": false,
+   "rita": 0.64,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.131",
+   "pair": [
+    "203.0.113.131",
+    "c-10-50.lab.example"
+   ],
+   "flows": 3601,
+   "dst_ips": [
+    "203.0.113.12"
+   ],
+   "score": 0.8646,
+   "components": {
+    "G": 0.75,
+    "S": 0.7249,
+    "D": 1.0,
+    "H": 0.9833
+   },
+   "span_h": 10.0,
+   "verdict": true,
+   "host": "host-02",
+   "cls": "beacon",
+   "interval": 10,
+   "jitter": 50,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.907,
+   "group": "beacon_gated",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.131",
+   "pair": [
+    "203.0.113.131",
+    "c-1800-75.lab.example"
+   ],
+   "flows": 27,
+   "dst_ips": [
+    "203.0.113.25"
+   ],
+   "score": 0.843,
+   "components": {
+    "G": 0.6414,
+    "S": 0.8974,
+    "D": 1.0,
+    "H": 0.8333
+   },
+   "span_h": 9.48,
+   "verdict": true,
+   "host": "host-02",
+   "cls": "beacon",
+   "interval": 1800,
+   "jitter": 75,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.86,
+   "group": "beacon_curve",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.131",
+   "pair": [
+    "203.0.113.131",
+    "c-300-25.lab.example"
+   ],
+   "flows": 123,
+   "dst_ips": [
+    "203.0.113.19"
+   ],
+   "score": 0.8948,
+   "components": {
+    "G": 0.9214,
+    "S": 0.741,
+    "D": 1.0,
+    "H": 0.9167
+   },
+   "span_h": 9.94,
+   "verdict": true,
+   "host": "host-02",
+   "cls": "beacon",
+   "interval": 300,
+   "jitter": 25,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.917,
+   "group": "beacon_gated",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.131",
+   "pair": [
+    "203.0.113.131",
+    "c-60-0.lab.example"
+   ],
+   "flows": 600,
+   "dst_ips": [
+    "203.0.113.14"
+   ],
+   "score": 0.9472,
+   "components": {
+    "G": 1.0,
+    "S": 0.7889,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.98,
+   "verdict": true,
+   "host": "host-02",
+   "cls": "beacon",
+   "interval": 60,
+   "jitter": 0,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.952,
+   "group": "beacon_gated",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.132",
+   "pair": [
+    "203.0.113.132",
+    "b1-0.lab.example"
+   ],
+   "flows": 104,
+   "dst_ips": [
+    "203.0.113.26"
+   ],
+   "score": 0.7243,
+   "components": {
+    "G": 0.2599,
+    "S": 0.9232,
+    "D": 1.0,
+    "H": 0.7143
+   },
+   "span_h": 8.02,
+   "verdict": true,
+   "host": "host-03",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.575,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.132",
+   "pair": [
+    "203.0.113.132",
+    "b1-1.lab.example"
+   ],
+   "flows": 130,
+   "dst_ips": [
+    "203.0.113.27"
+   ],
+   "score": 0.6674,
+   "components": {
+    "G": 0.3991,
+    "S": 0.8575,
+    "D": 0.8,
+    "H": 0.6129
+   },
+   "span_h": 9.03,
+   "verdict": true,
+   "host": "host-03",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.64,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.132",
+   "pair": [
+    "203.0.113.132",
+    "b1-2.lab.example"
+   ],
+   "flows": 114,
+   "dst_ips": [
+    "203.0.113.28"
+   ],
+   "score": 0.7077,
+   "components": {
+    "G": 0.3549,
+    "S": 0.8428,
+    "D": 1.0,
+    "H": 0.6333
+   },
+   "span_h": 8.95,
+   "verdict": true,
+   "host": "host-03",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.632,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.132",
+   "pair": [
+    "203.0.113.132",
+    "b1-3.lab.example"
+   ],
+   "flows": 110,
+   "dst_ips": [
+    "203.0.113.29"
+   ],
+   "score": 0.63,
+   "components": {
+    "G": 0.2388,
+    "S": 0.8813,
+    "D": 0.9,
+    "H": 0.5
+   },
+   "span_h": 9.02,
+   "verdict": true,
+   "host": "host-03",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.582,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.132",
+   "pair": [
+    "203.0.113.132",
+    "b1-4.lab.example"
+   ],
+   "flows": 105,
+   "dst_ips": [
+    "203.0.113.30"
+   ],
+   "score": 0.5875,
+   "components": {
+    "G": 0.1627,
+    "S": 0.8074,
+    "D": 0.9,
+    "H": 0.48
+   },
+   "span_h": 9.03,
+   "verdict": true,
+   "host": "host-03",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.548,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.132",
+   "pair": [
+    "203.0.113.132",
+    "b1-5.lab.example"
+   ],
+   "flows": 98,
+   "dst_ips": [
+    "203.0.113.31"
+   ],
+   "score": 0.6033,
+   "components": {
+    "G": 0.1947,
+    "S": 0.8853,
+    "D": 1.0,
+    "H": 0.3333
+   },
+   "span_h": 9.03,
+   "verdict": true,
+   "host": "host-03",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.596,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.132",
+   "pair": [
+    "203.0.113.132",
+    "b2.lab.example"
+   ],
+   "flows": 329,
+   "dst_ips": [
+    "203.0.113.32"
+   ],
+   "score": 0.7278,
+   "components": {
+    "G": 0.8245,
+    "S": 0.8535,
+    "D": 0.9,
+    "H": 0.3333
+   },
+   "span_h": 9.21,
+   "verdict": true,
+   "host": "host-03",
+   "cls": "B2",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.768,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.132",
+   "pair": [
+    "203.0.113.132",
+    "b3.lab.example"
+   ],
+   "flows": 959,
+   "dst_ips": [
+    "203.0.113.33"
+   ],
+   "score": 0.9327,
+   "components": {
+    "G": 0.9667,
+    "S": 0.964,
+    "D": 1.0,
+    "H": 0.8
+   },
+   "span_h": 5.24,
+   "verdict": true,
+   "host": "host-03",
+   "cls": "B3",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.797,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.132",
+   "pair": [
+    "203.0.113.132",
+    "b4.lab.example"
+   ],
+   "flows": 120,
+   "dst_ips": [
+    "203.0.113.34"
+   ],
+   "score": 0.9195,
+   "components": {
+    "G": 0.923,
+    "S": 0.7549,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.88,
+   "verdict": true,
+   "host": "host-03",
+   "cls": "B4",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.891,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.132",
+   "pair": [
+    "203.0.113.132",
+    "b5.lab.example"
+   ],
+   "flows": 563,
+   "dst_ips": [
+    "203.0.113.35"
+   ],
+   "score": 0.875,
+   "components": {
+    "G": 1.0,
+    "S": 0.5,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.99,
+   "verdict": true,
+   "host": "host-03",
+   "cls": "B5",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 1.0,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.132",
+   "pair": [
+    "203.0.113.132",
+    "b6.lab.example"
+   ],
+   "flows": 10,
+   "dst_ips": [
+    "203.0.113.36"
+   ],
+   "score": 0.0,
+   "components": null,
+   "span_h": null,
+   "verdict": false,
+   "host": "host-03",
+   "cls": "B6",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": false,
+   "rita": 0.657,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.132",
+   "pair": [
+    "203.0.113.132",
+    "c-10-75.lab.example"
+   ],
+   "flows": 3614,
+   "dst_ips": [
+    "203.0.113.13"
+   ],
+   "score": 0.8741,
+   "components": {
+    "G": 0.8,
+    "S": 0.7104,
+    "D": 1.0,
+    "H": 0.9861
+   },
+   "span_h": 10.0,
+   "verdict": true,
+   "host": "host-03",
+   "cls": "beacon",
+   "interval": 10,
+   "jitter": 75,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.881,
+   "group": "beacon_curve",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.132",
+   "pair": [
+    "203.0.113.132",
+    "c-1800-0.lab.example"
+   ],
+   "flows": 20,
+   "dst_ips": [
+    "203.0.113.22"
+   ],
+   "score": 0.9392,
+   "components": {
+    "G": 1.0,
+    "S": 0.757,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.5,
+   "verdict": true,
+   "host": "host-03",
+   "cls": "beacon",
+   "interval": 1800,
+   "jitter": 0,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.933,
+   "group": "beacon_gated",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.132",
+   "pair": [
+    "203.0.113.132",
+    "c-300-50.lab.example"
+   ],
+   "flows": 121,
+   "dst_ips": [
+    "203.0.113.20"
+   ],
+   "score": 0.8732,
+   "components": {
+    "G": 0.7848,
+    "S": 0.7912,
+    "D": 1.0,
+    "H": 0.9167
+   },
+   "span_h": 9.9,
+   "verdict": true,
+   "host": "host-03",
+   "cls": "beacon",
+   "interval": 300,
+   "jitter": 50,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.866,
+   "group": "beacon_gated",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.132",
+   "pair": [
+    "203.0.113.132",
+    "c-60-25.lab.example"
+   ],
+   "flows": 599,
+   "dst_ips": [
+    "203.0.113.15"
+   ],
+   "score": 0.9188,
+   "components": {
+    "G": 0.9011,
+    "S": 0.7911,
+    "D": 1.0,
+    "H": 0.9831
+   },
+   "span_h": 9.99,
+   "verdict": true,
+   "host": "host-03",
+   "cls": "beacon",
+   "interval": 60,
+   "jitter": 25,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.914,
+   "group": "beacon_gated",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.133",
+   "pair": [
+    "203.0.113.133",
+    "b1-0.lab.example"
+   ],
+   "flows": 100,
+   "dst_ips": [
+    "203.0.113.26"
+   ],
+   "score": 0.6987,
+   "components": {
+    "G": 0.3119,
+    "S": 0.8161,
+    "D": 1.0,
+    "H": 0.6667
+   },
+   "span_h": 9.6,
+   "verdict": true,
+   "host": "host-04",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.599,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.133",
+   "pair": [
+    "203.0.113.133",
+    "b1-1.lab.example"
+   ],
+   "flows": 78,
+   "dst_ips": [
+    "203.0.113.27"
+   ],
+   "score": 0.6321,
+   "components": {
+    "G": 0.2785,
+    "S": 0.841,
+    "D": 0.9091,
+    "H": 0.5
+   },
+   "span_h": 9.6,
+   "verdict": true,
+   "host": "host-04",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.617,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.133",
+   "pair": [
+    "203.0.113.133",
+    "b1-2.lab.example"
+   ],
+   "flows": 87,
+   "dst_ips": [
+    "203.0.113.28"
+   ],
+   "score": 0.6051,
+   "components": {
+    "G": 0.2,
+    "S": 0.8872,
+    "D": 1.0,
+    "H": 0.3333
+   },
+   "span_h": 9.6,
+   "verdict": true,
+   "host": "host-04",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.582,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.133",
+   "pair": [
+    "203.0.113.133",
+    "b1-3.lab.example"
+   ],
+   "flows": 107,
+   "dst_ips": [
+    "203.0.113.29"
+   ],
+   "score": 0.7101,
+   "components": {
+    "G": 0.3329,
+    "S": 0.8407,
+    "D": 1.0,
+    "H": 0.6667
+   },
+   "span_h": 9.6,
+   "verdict": true,
+   "host": "host-04",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.621,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.133",
+   "pair": [
+    "203.0.113.133",
+    "b1-4.lab.example"
+   ],
+   "flows": 86,
+   "dst_ips": [
+    "203.0.113.30"
+   ],
+   "score": 0.6203,
+   "components": {
+    "G": 0.1814,
+    "S": 0.7996,
+    "D": 1.0,
+    "H": 0.5
+   },
+   "span_h": 9.6,
+   "verdict": true,
+   "host": "host-04",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.581,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.133",
+   "pair": [
+    "203.0.113.133",
+    "b1-5.lab.example"
+   ],
+   "flows": 88,
+   "dst_ips": [
+    "203.0.113.31"
+   ],
+   "score": 0.754,
+   "components": {
+    "G": 0.2362,
+    "S": 0.9047,
+    "D": 1.0,
+    "H": 0.875
+   },
+   "span_h": 9.61,
+   "verdict": true,
+   "host": "host-04",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.626,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.133",
+   "pair": [
+    "203.0.113.133",
+    "b2.lab.example"
+   ],
+   "flows": 393,
+   "dst_ips": [
+    "203.0.113.32"
+   ],
+   "score": 0.7777,
+   "components": {
+    "G": 0.8332,
+    "S": 0.8302,
+    "D": 0.9091,
+    "H": 0.5385
+   },
+   "span_h": 9.77,
+   "verdict": true,
+   "host": "host-04",
+   "cls": "B2",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.8,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.133",
+   "pair": [
+    "203.0.113.133",
+    "b3.lab.example"
+   ],
+   "flows": 962,
+   "dst_ips": [
+    "203.0.113.33"
+   ],
+   "score": 0.9623,
+   "components": {
+    "G": 0.9667,
+    "S": 0.9444,
+    "D": 1.0,
+    "H": 0.9383
+   },
+   "span_h": 4.06,
+   "verdict": true,
+   "host": "host-04",
+   "cls": "B3",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.942,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.133",
+   "pair": [
+    "203.0.113.133",
+    "b4.lab.example"
+   ],
+   "flows": 120,
+   "dst_ips": [
+    "203.0.113.34"
+   ],
+   "score": 0.9413,
+   "components": {
+    "G": 0.9418,
+    "S": 0.8235,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.87,
+   "verdict": true,
+   "host": "host-04",
+   "cls": "B4",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.941,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.133",
+   "pair": [
+    "203.0.113.133",
+    "b5.lab.example"
+   ],
+   "flows": 563,
+   "dst_ips": [
+    "203.0.113.35"
+   ],
+   "score": 0.875,
+   "components": {
+    "G": 1.0,
+    "S": 0.5,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.99,
+   "verdict": true,
+   "host": "host-04",
+   "cls": "B5",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 1.0,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.133",
+   "pair": [
+    "203.0.113.133",
+    "b6.lab.example"
+   ],
+   "flows": 10,
+   "dst_ips": [
+    "203.0.113.36"
+   ],
+   "score": 0.0,
+   "components": null,
+   "span_h": null,
+   "verdict": false,
+   "host": "host-04",
+   "cls": "B6",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": false,
+   "rita": 0.631,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.133",
+   "pair": [
+    "203.0.113.133",
+    "c-10-0.lab.example"
+   ],
+   "flows": 3599,
+   "dst_ips": [
+    "203.0.113.10"
+   ],
+   "score": 0.9342,
+   "components": {
+    "G": 1.0,
+    "S": 0.7366,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 10.0,
+   "verdict": true,
+   "host": "host-04",
+   "cls": "beacon",
+   "interval": 10,
+   "jitter": 0,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.94,
+   "group": "beacon_gated",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.133",
+   "pair": [
+    "203.0.113.133",
+    "c-1800-25.lab.example"
+   ],
+   "flows": 20,
+   "dst_ips": [
+    "203.0.113.23"
+   ],
+   "score": 0.8895,
+   "components": {
+    "G": 0.9068,
+    "S": 0.6511,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.37,
+   "verdict": true,
+   "host": "host-04",
+   "cls": "beacon",
+   "interval": 1800,
+   "jitter": 25,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.872,
+   "group": "beacon_gated",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.133",
+   "pair": [
+    "203.0.113.133",
+    "c-300-75.lab.example"
+   ],
+   "flows": 114,
+   "dst_ips": [
+    "203.0.113.21"
+   ],
+   "score": 0.8529,
+   "components": {
+    "G": 0.7073,
+    "S": 0.7953,
+    "D": 1.0,
+    "H": 0.9091
+   },
+   "span_h": 9.9,
+   "verdict": true,
+   "host": "host-04",
+   "cls": "beacon",
+   "interval": 300,
+   "jitter": 75,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.828,
+   "group": "beacon_curve",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.133",
+   "pair": [
+    "203.0.113.133",
+    "c-60-50.lab.example"
+   ],
+   "flows": 594,
+   "dst_ips": [
+    "203.0.113.16"
+   ],
+   "score": 0.9088,
+   "components": {
+    "G": 0.877,
+    "S": 0.775,
+    "D": 1.0,
+    "H": 0.9831
+   },
+   "span_h": 9.99,
+   "verdict": true,
+   "host": "host-04",
+   "cls": "beacon",
+   "interval": 60,
+   "jitter": 50,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.897,
+   "group": "beacon_gated",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.134",
+   "pair": [
+    "203.0.113.134",
+    "b1-0.lab.example"
+   ],
+   "flows": 119,
+   "dst_ips": [
+    "203.0.113.26"
+   ],
+   "score": 0.5763,
+   "components": {
+    "G": 0.3817,
+    "S": 0.9128,
+    "D": 0.8,
+    "H": 0.2105
+   },
+   "span_h": 9.22,
+   "verdict": true,
+   "host": "host-05",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.648,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.134",
+   "pair": [
+    "203.0.113.134",
+    "b1-1.lab.example"
+   ],
+   "flows": 117,
+   "dst_ips": [
+    "203.0.113.27"
+   ],
+   "score": 0.5848,
+   "components": {
+    "G": 0.2963,
+    "S": 0.8429,
+    "D": 0.9,
+    "H": 0.3
+   },
+   "span_h": 9.52,
+   "verdict": true,
+   "host": "host-05",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.638,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.134",
+   "pair": [
+    "203.0.113.134",
+    "b1-2.lab.example"
+   ],
+   "flows": 118,
+   "dst_ips": [
+    "203.0.113.28"
+   ],
+   "score": 0.5964,
+   "components": {
+    "G": 0.2299,
+    "S": 0.9225,
+    "D": 0.9,
+    "H": 0.3333
+   },
+   "span_h": 9.52,
+   "verdict": true,
+   "host": "host-05",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.608,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.134",
+   "pair": [
+    "203.0.113.134",
+    "b1-3.lab.example"
+   ],
+   "flows": 104,
+   "dst_ips": [
+    "203.0.113.29"
+   ],
+   "score": 0.6498,
+   "components": {
+    "G": 0.2865,
+    "S": 0.9125,
+    "D": 0.9,
+    "H": 0.5
+   },
+   "span_h": 9.53,
+   "verdict": true,
+   "host": "host-05",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.67,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.134",
+   "pair": [
+    "203.0.113.134",
+    "b1-4.lab.example"
+   ],
+   "flows": 102,
+   "dst_ips": [
+    "203.0.113.30"
+   ],
+   "score": 0.5541,
+   "components": {
+    "G": 0.2569,
+    "S": 0.9344,
+    "D": 0.9,
+    "H": 0.125
+   },
+   "span_h": 9.52,
+   "verdict": true,
+   "host": "host-05",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.648,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.134",
+   "pair": [
+    "203.0.113.134",
+    "b1-5.lab.example"
+   ],
+   "flows": 109,
+   "dst_ips": [
+    "203.0.113.31"
+   ],
+   "score": 0.595,
+   "components": {
+    "G": 0.2113,
+    "S": 0.84,
+    "D": 0.9,
+    "H": 0.4286
+   },
+   "span_h": 9.52,
+   "verdict": true,
+   "host": "host-05",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.667,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.134",
+   "pair": [
+    "203.0.113.134",
+    "b2.lab.example"
+   ],
+   "flows": 345,
+   "dst_ips": [
+    "203.0.113.32"
+   ],
+   "score": 0.7652,
+   "components": {
+    "G": 0.8514,
+    "S": 0.8094,
+    "D": 1.0,
+    "H": 0.4
+   },
+   "span_h": 8.03,
+   "verdict": true,
+   "host": "host-05",
+   "cls": "B2",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.766,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.134",
+   "pair": [
+    "203.0.113.134",
+    "b3.lab.example"
+   ],
+   "flows": 961,
+   "dst_ips": [
+    "203.0.113.33"
+   ],
+   "score": 0.9486,
+   "components": {
+    "G": 0.9667,
+    "S": 0.9572,
+    "D": 1.0,
+    "H": 0.8706
+   },
+   "span_h": 4.23,
+   "verdict": true,
+   "host": "host-05",
+   "cls": "B3",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.94,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.134",
+   "pair": [
+    "203.0.113.134",
+    "b4.lab.example"
+   ],
+   "flows": 119,
+   "dst_ips": [
+    "203.0.113.34"
+   ],
+   "score": 0.9096,
+   "components": {
+    "G": 0.8234,
+    "S": 0.8151,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.93,
+   "verdict": true,
+   "host": "host-05",
+   "cls": "B4",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.907,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.134",
+   "pair": [
+    "203.0.113.134",
+    "b5.lab.example"
+   ],
+   "flows": 563,
+   "dst_ips": [
+    "203.0.113.35"
+   ],
+   "score": 0.875,
+   "components": {
+    "G": 1.0,
+    "S": 0.5,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.99,
+   "verdict": true,
+   "host": "host-05",
+   "cls": "B5",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 1.0,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.134",
+   "pair": [
+    "203.0.113.134",
+    "b6.lab.example"
+   ],
+   "flows": 11,
+   "dst_ips": [
+    "203.0.113.36"
+   ],
+   "score": 0.0,
+   "components": null,
+   "span_h": null,
+   "verdict": false,
+   "host": "host-05",
+   "cls": "B6",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": false,
+   "rita": 0.867,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.134",
+   "pair": [
+    "203.0.113.134",
+    "c-10-25.lab.example"
+   ],
+   "flows": 3599,
+   "dst_ips": [
+    "203.0.113.11"
+   ],
+   "score": 0.918,
+   "components": {
+    "G": 0.95,
+    "S": 0.7305,
+    "D": 1.0,
+    "H": 0.9916
+   },
+   "span_h": 10.0,
+   "verdict": true,
+   "host": "host-05",
+   "cls": "beacon",
+   "interval": 10,
+   "jitter": 25,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.929,
+   "group": "beacon_gated",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.134",
+   "pair": [
+    "203.0.113.134",
+    "c-1800-50.lab.example"
+   ],
+   "flows": 17,
+   "dst_ips": [
+    "203.0.113.24"
+   ],
+   "score": 0.0,
+   "components": null,
+   "span_h": 9.53,
+   "verdict": false,
+   "host": "host-05",
+   "cls": "beacon",
+   "interval": 1800,
+   "jitter": 50,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.0,
+   "group": "beacon_gated",
+   "flag": "below_min_flows"
+  },
+  {
+   "host_ip": "203.0.113.134",
+   "pair": [
+    "203.0.113.134",
+    "c-300-0.lab.example"
+   ],
+   "flows": 120,
+   "dst_ips": [
+    "203.0.113.18"
+   ],
+   "score": 0.94,
+   "components": {
+    "G": 1.0,
+    "S": 0.7598,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.92,
+   "verdict": true,
+   "host": "host-05",
+   "cls": "beacon",
+   "interval": 300,
+   "jitter": 0,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.94,
+   "group": "beacon_gated",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.134",
+   "pair": [
+    "203.0.113.134",
+    "c-60-75.lab.example"
+   ],
+   "flows": 616,
+   "dst_ips": [
+    "203.0.113.17"
+   ],
+   "score": 0.8862,
+   "components": {
+    "G": 0.7906,
+    "S": 0.7873,
+    "D": 1.0,
+    "H": 0.9667
+   },
+   "span_h": 9.97,
+   "verdict": true,
+   "host": "host-05",
+   "cls": "beacon",
+   "interval": 60,
+   "jitter": 75,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.879,
+   "group": "beacon_curve",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.135",
+   "pair": [
+    "203.0.113.135",
+    "b1-0.lab.example"
+   ],
+   "flows": 111,
+   "dst_ips": [
+    "203.0.113.26"
+   ],
+   "score": 0.4668,
+   "components": {
+    "G": 0.3025,
+    "S": 0.8372,
+    "D": 0.7273,
+    "H": 0.0
+   },
+   "span_h": 9.79,
+   "verdict": true,
+   "host": "host-06",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.636,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.135",
+   "pair": [
+    "203.0.113.135",
+    "b1-1.lab.example"
+   ],
+   "flows": 118,
+   "dst_ips": [
+    "203.0.113.27"
+   ],
+   "score": 0.496,
+   "components": {
+    "G": 0.3726,
+    "S": 0.8841,
+    "D": 0.7273,
+    "H": 0.0
+   },
+   "span_h": 9.8,
+   "verdict": true,
+   "host": "host-06",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.666,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.135",
+   "pair": [
+    "203.0.113.135",
+    "b1-2.lab.example"
+   ],
+   "flows": 94,
+   "dst_ips": [
+    "203.0.113.28"
+   ],
+   "score": 0.4602,
+   "components": {
+    "G": 0.235,
+    "S": 0.9058,
+    "D": 0.7,
+    "H": 0.0
+   },
+   "span_h": 9.14,
+   "verdict": true,
+   "host": "host-06",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.664,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.135",
+   "pair": [
+    "203.0.113.135",
+    "b1-3.lab.example"
+   ],
+   "flows": 101,
+   "dst_ips": [
+    "203.0.113.29"
+   ],
+   "score": 0.6207,
+   "components": {
+    "G": 0.4061,
+    "S": 0.8494,
+    "D": 0.7273,
+    "H": 0.5
+   },
+   "span_h": 9.8,
+   "verdict": true,
+   "host": "host-06",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.655,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.135",
+   "pair": [
+    "203.0.113.135",
+    "b1-4.lab.example"
+   ],
+   "flows": 110,
+   "dst_ips": [
+    "203.0.113.30"
+   ],
+   "score": 0.5657,
+   "components": {
+    "G": 0.2404,
+    "S": 0.8785,
+    "D": 0.7273,
+    "H": 0.4167
+   },
+   "span_h": 9.8,
+   "verdict": true,
+   "host": "host-06",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.615,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.135",
+   "pair": [
+    "203.0.113.135",
+    "b1-5.lab.example"
+   ],
+   "flows": 115,
+   "dst_ips": [
+    "203.0.113.31"
+   ],
+   "score": 0.4857,
+   "components": {
+    "G": 0.3609,
+    "S": 0.8545,
+    "D": 0.7273,
+    "H": 0.0
+   },
+   "span_h": 9.8,
+   "verdict": true,
+   "host": "host-06",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.697,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.135",
+   "pair": [
+    "203.0.113.135",
+    "b2.lab.example"
+   ],
+   "flows": 325,
+   "dst_ips": [
+    "203.0.113.32"
+   ],
+   "score": 0.7878,
+   "components": {
+    "G": 0.8437,
+    "S": 0.8489,
+    "D": 0.8,
+    "H": 0.6585
+   },
+   "span_h": 8.73,
+   "verdict": true,
+   "host": "host-06",
+   "cls": "B2",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.807,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.135",
+   "pair": [
+    "203.0.113.135",
+    "b3.lab.example"
+   ],
+   "flows": 961,
+   "dst_ips": [
+    "203.0.113.33"
+   ],
+   "score": 0.9805,
+   "components": {
+    "G": 0.9667,
+    "S": 0.968,
+    "D": 1.0,
+    "H": 0.9874
+   },
+   "span_h": 4.01,
+   "verdict": true,
+   "host": "host-06",
+   "cls": "B3",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.695,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.135",
+   "pair": [
+    "203.0.113.135",
+    "b4.lab.example"
+   ],
+   "flows": 120,
+   "dst_ips": [
+    "203.0.113.34"
+   ],
+   "score": 0.9016,
+   "components": {
+    "G": 0.9022,
+    "S": 0.7041,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.92,
+   "verdict": true,
+   "host": "host-06",
+   "cls": "B4",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.873,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.135",
+   "pair": [
+    "203.0.113.135",
+    "b5.lab.example"
+   ],
+   "flows": 563,
+   "dst_ips": [
+    "203.0.113.35"
+   ],
+   "score": 0.875,
+   "components": {
+    "G": 1.0,
+    "S": 0.5,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.99,
+   "verdict": true,
+   "host": "host-06",
+   "cls": "B5",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 1.0,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.135",
+   "pair": [
+    "203.0.113.135",
+    "b6.lab.example"
+   ],
+   "flows": 10,
+   "dst_ips": [
+    "203.0.113.36"
+   ],
+   "score": 0.0,
+   "components": null,
+   "span_h": null,
+   "verdict": false,
+   "host": "host-06",
+   "cls": "B6",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": false,
+   "rita": 0.613,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.135",
+   "pair": [
+    "203.0.113.135",
+    "c-10-50.lab.example"
+   ],
+   "flows": 3601,
+   "dst_ips": [
+    "203.0.113.12"
+   ],
+   "score": 0.8851,
+   "components": {
+    "G": 0.8,
+    "S": 0.7569,
+    "D": 1.0,
+    "H": 0.9834
+   },
+   "span_h": 10.0,
+   "verdict": true,
+   "host": "host-06",
+   "cls": "beacon",
+   "interval": 10,
+   "jitter": 50,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.908,
+   "group": "beacon_gated",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.135",
+   "pair": [
+    "203.0.113.135",
+    "c-1800-75.lab.example"
+   ],
+   "flows": 20,
+   "dst_ips": [
+    "203.0.113.25"
+   ],
+   "score": 0.7368,
+   "components": {
+    "G": 0.723,
+    "S": 0.7243,
+    "D": 1.0,
+    "H": 0.5
+   },
+   "span_h": 9.5,
+   "verdict": true,
+   "host": "host-06",
+   "cls": "beacon",
+   "interval": 1800,
+   "jitter": 75,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.832,
+   "group": "beacon_curve",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.135",
+   "pair": [
+    "203.0.113.135",
+    "c-300-25.lab.example"
+   ],
+   "flows": 120,
+   "dst_ips": [
+    "203.0.113.19"
+   ],
+   "score": 0.9042,
+   "components": {
+    "G": 0.8522,
+    "S": 0.7644,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.92,
+   "verdict": true,
+   "host": "host-06",
+   "cls": "beacon",
+   "interval": 300,
+   "jitter": 25,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.886,
+   "group": "beacon_gated",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.135",
+   "pair": [
+    "203.0.113.135",
+    "c-60-0.lab.example"
+   ],
+   "flows": 600,
+   "dst_ips": [
+    "203.0.113.14"
+   ],
+   "score": 0.9431,
+   "components": {
+    "G": 1.0,
+    "S": 0.7726,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.98,
+   "verdict": true,
+   "host": "host-06",
+   "cls": "beacon",
+   "interval": 60,
+   "jitter": 0,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.946,
+   "group": "beacon_gated",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.136",
+   "pair": [
+    "203.0.113.136",
+    "b1-0.lab.example"
+   ],
+   "flows": 104,
+   "dst_ips": [
+    "203.0.113.26"
+   ],
+   "score": 0.5711,
+   "components": {
+    "G": 0.3318,
+    "S": 0.8844,
+    "D": 0.8182,
+    "H": 0.25
+   },
+   "span_h": 9.2,
+   "verdict": true,
+   "host": "host-07",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.645,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.136",
+   "pair": [
+    "203.0.113.136",
+    "b1-1.lab.example"
+   ],
+   "flows": 93,
+   "dst_ips": [
+    "203.0.113.27"
+   ],
+   "score": 0.4963,
+   "components": {
+    "G": 0.3538,
+    "S": 0.8133,
+    "D": 0.8182,
+    "H": 0.0
+   },
+   "span_h": 9.2,
+   "verdict": true,
+   "host": "host-07",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.609,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.136",
+   "pair": [
+    "203.0.113.136",
+    "b1-2.lab.example"
+   ],
+   "flows": 95,
+   "dst_ips": [
+    "203.0.113.28"
+   ],
+   "score": 0.6212,
+   "components": {
+    "G": 0.3688,
+    "S": 0.9228,
+    "D": 0.8182,
+    "H": 0.375
+   },
+   "span_h": 9.2,
+   "verdict": true,
+   "host": "host-07",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.666,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.136",
+   "pair": [
+    "203.0.113.136",
+    "b1-3.lab.example"
+   ],
+   "flows": 94,
+   "dst_ips": [
+    "203.0.113.29"
+   ],
+   "score": 0.5235,
+   "components": {
+    "G": 0.4487,
+    "S": 0.8272,
+    "D": 0.8182,
+    "H": 0.0
+   },
+   "span_h": 9.2,
+   "verdict": true,
+   "host": "host-07",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.653,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.136",
+   "pair": [
+    "203.0.113.136",
+    "b1-4.lab.example"
+   ],
+   "flows": 83,
+   "dst_ips": [
+    "203.0.113.30"
+   ],
+   "score": 0.5434,
+   "components": {
+    "G": 0.4161,
+    "S": 0.8143,
+    "D": 0.8182,
+    "H": 0.125
+   },
+   "span_h": 9.2,
+   "verdict": true,
+   "host": "host-07",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.626,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.136",
+   "pair": [
+    "203.0.113.136",
+    "b1-5.lab.example"
+   ],
+   "flows": 92,
+   "dst_ips": [
+    "203.0.113.31"
+   ],
+   "score": 0.6364,
+   "components": {
+    "G": 0.3641,
+    "S": 0.9346,
+    "D": 0.8182,
+    "H": 0.4286
+   },
+   "span_h": 9.2,
+   "verdict": true,
+   "host": "host-07",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.623,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.136",
+   "pair": [
+    "203.0.113.136",
+    "b2.lab.example"
+   ],
+   "flows": 384,
+   "dst_ips": [
+    "203.0.113.32"
+   ],
+   "score": 0.7954,
+   "components": {
+    "G": 0.8276,
+    "S": 0.8595,
+    "D": 0.9091,
+    "H": 0.5854
+   },
+   "span_h": 9.88,
+   "verdict": true,
+   "host": "host-07",
+   "cls": "B2",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.83,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.136",
+   "pair": [
+    "203.0.113.136",
+    "b3.lab.example"
+   ],
+   "flows": 962,
+   "dst_ips": [
+    "203.0.113.33"
+   ],
+   "score": 0.8848,
+   "components": {
+    "G": 0.9667,
+    "S": 0.9495,
+    "D": 1.0,
+    "H": 0.6229
+   },
+   "span_h": 4.76,
+   "verdict": true,
+   "host": "host-07",
+   "cls": "B3",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.816,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.136",
+   "pair": [
+    "203.0.113.136",
+    "b4.lab.example"
+   ],
+   "flows": 120,
+   "dst_ips": [
+    "203.0.113.34"
+   ],
+   "score": 0.9095,
+   "components": {
+    "G": 0.8656,
+    "S": 0.7726,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.93,
+   "verdict": true,
+   "host": "host-07",
+   "cls": "B4",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.907,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.136",
+   "pair": [
+    "203.0.113.136",
+    "b5.lab.example"
+   ],
+   "flows": 563,
+   "dst_ips": [
+    "203.0.113.35"
+   ],
+   "score": 0.875,
+   "components": {
+    "G": 1.0,
+    "S": 0.5,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.99,
+   "verdict": true,
+   "host": "host-07",
+   "cls": "B5",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 1.0,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.136",
+   "pair": [
+    "203.0.113.136",
+    "b6.lab.example"
+   ],
+   "flows": 10,
+   "dst_ips": [
+    "203.0.113.36"
+   ],
+   "score": 0.0,
+   "components": null,
+   "span_h": null,
+   "verdict": false,
+   "host": "host-07",
+   "cls": "B6",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": false,
+   "rita": 0.633,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.136",
+   "pair": [
+    "203.0.113.136",
+    "c-10-75.lab.example"
+   ],
+   "flows": 3565,
+   "dst_ips": [
+    "203.0.113.13"
+   ],
+   "score": 0.8629,
+   "components": {
+    "G": 0.7468,
+    "S": 0.7217,
+    "D": 1.0,
+    "H": 0.9832
+   },
+   "span_h": 10.0,
+   "verdict": true,
+   "host": "host-07",
+   "cls": "beacon",
+   "interval": 10,
+   "jitter": 75,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.888,
+   "group": "beacon_curve",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.136",
+   "pair": [
+    "203.0.113.136",
+    "c-1800-0.lab.example"
+   ],
+   "flows": 20,
+   "dst_ips": [
+    "203.0.113.22"
+   ],
+   "score": 0.9152,
+   "components": {
+    "G": 1.0,
+    "S": 0.661,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.5,
+   "verdict": true,
+   "host": "host-07",
+   "cls": "beacon",
+   "interval": 1800,
+   "jitter": 0,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.903,
+   "group": "beacon_gated",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.136",
+   "pair": [
+    "203.0.113.136",
+    "c-300-50.lab.example"
+   ],
+   "flows": 122,
+   "dst_ips": [
+    "203.0.113.20"
+   ],
+   "score": 0.8557,
+   "components": {
+    "G": 0.8028,
+    "S": 0.7035,
+    "D": 1.0,
+    "H": 0.9167
+   },
+   "span_h": 9.95,
+   "verdict": true,
+   "host": "host-07",
+   "cls": "beacon",
+   "interval": 300,
+   "jitter": 50,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.826,
+   "group": "beacon_gated",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.136",
+   "pair": [
+    "203.0.113.136",
+    "c-60-25.lab.example"
+   ],
+   "flows": 605,
+   "dst_ips": [
+    "203.0.113.15"
+   ],
+   "score": 0.92,
+   "components": {
+    "G": 0.9322,
+    "S": 0.7643,
+    "D": 1.0,
+    "H": 0.9833
+   },
+   "span_h": 9.99,
+   "verdict": true,
+   "host": "host-07",
+   "cls": "beacon",
+   "interval": 60,
+   "jitter": 25,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.922,
+   "group": "beacon_gated",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.137",
+   "pair": [
+    "203.0.113.137",
+    "b1-0.lab.example"
+   ],
+   "flows": 119,
+   "dst_ips": [
+    "203.0.113.26"
+   ],
+   "score": 0.7155,
+   "components": {
+    "G": 0.2838,
+    "S": 0.8965,
+    "D": 1.0,
+    "H": 0.6818
+   },
+   "span_h": 9.26,
+   "verdict": true,
+   "host": "host-08",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.64,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.137",
+   "pair": [
+    "203.0.113.137",
+    "b1-1.lab.example"
+   ],
+   "flows": 116,
+   "dst_ips": [
+    "203.0.113.27"
+   ],
+   "score": 0.6786,
+   "components": {
+    "G": 0.2677,
+    "S": 0.8752,
+    "D": 1.0,
+    "H": 0.5714
+   },
+   "span_h": 8.44,
+   "verdict": true,
+   "host": "host-08",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.603,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.137",
+   "pair": [
+    "203.0.113.137",
+    "b1-2.lab.example"
+   ],
+   "flows": 96,
+   "dst_ips": [
+    "203.0.113.28"
+   ],
+   "score": 0.6143,
+   "components": {
+    "G": 0.1874,
+    "S": 0.8808,
+    "D": 0.8889,
+    "H": 0.5
+   },
+   "span_h": 8.46,
+   "verdict": true,
+   "host": "host-08",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.594,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.137",
+   "pair": [
+    "203.0.113.137",
+    "b1-3.lab.example"
+   ],
+   "flows": 123,
+   "dst_ips": [
+    "203.0.113.29"
+   ],
+   "score": 0.5664,
+   "components": {
+    "G": 0.2378,
+    "S": 0.8777,
+    "D": 1.0,
+    "H": 0.15
+   },
+   "span_h": 9.25,
+   "verdict": true,
+   "host": "host-08",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.577,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.137",
+   "pair": [
+    "203.0.113.137",
+    "b1-4.lab.example"
+   ],
+   "flows": 130,
+   "dst_ips": [
+    "203.0.113.30"
+   ],
+   "score": 0.6974,
+   "components": {
+    "G": 0.4125,
+    "S": 0.877,
+    "D": 1.0,
+    "H": 0.5
+   },
+   "span_h": 9.26,
+   "verdict": true,
+   "host": "host-08",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.62,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.137",
+   "pair": [
+    "203.0.113.137",
+    "b1-5.lab.example"
+   ],
+   "flows": 127,
+   "dst_ips": [
+    "203.0.113.31"
+   ],
+   "score": 0.705,
+   "components": {
+    "G": 0.325,
+    "S": 0.8522,
+    "D": 1.0,
+    "H": 0.6429
+   },
+   "span_h": 8.46,
+   "verdict": true,
+   "host": "host-08",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.601,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.137",
+   "pair": [
+    "203.0.113.137",
+    "b2.lab.example"
+   ],
+   "flows": 369,
+   "dst_ips": [
+    "203.0.113.32"
+   ],
+   "score": 0.8391,
+   "components": {
+    "G": 0.8709,
+    "S": 0.8586,
+    "D": 1.0,
+    "H": 0.6269
+   },
+   "span_h": 9.11,
+   "verdict": true,
+   "host": "host-08",
+   "cls": "B2",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.84,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.137",
+   "pair": [
+    "203.0.113.137",
+    "b3.lab.example"
+   ],
+   "flows": 960,
+   "dst_ips": [
+    "203.0.113.33"
+   ],
+   "score": 0.9469,
+   "components": {
+    "G": 0.9667,
+    "S": 0.9265,
+    "D": 1.0,
+    "H": 0.8945
+   },
+   "span_h": 4.47,
+   "verdict": true,
+   "host": "host-08",
+   "cls": "B3",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.934,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.137",
+   "pair": [
+    "203.0.113.137",
+    "b4.lab.example"
+   ],
+   "flows": 120,
+   "dst_ips": [
+    "203.0.113.34"
+   ],
+   "score": 0.9142,
+   "components": {
+    "G": 0.9581,
+    "S": 0.6987,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.91,
+   "verdict": true,
+   "host": "host-08",
+   "cls": "B4",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.904,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.137",
+   "pair": [
+    "203.0.113.137",
+    "b5.lab.example"
+   ],
+   "flows": 563,
+   "dst_ips": [
+    "203.0.113.35"
+   ],
+   "score": 0.875,
+   "components": {
+    "G": 1.0,
+    "S": 0.5,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.99,
+   "verdict": true,
+   "host": "host-08",
+   "cls": "B5",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 1.0,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.137",
+   "pair": [
+    "203.0.113.137",
+    "b6.lab.example"
+   ],
+   "flows": 10,
+   "dst_ips": [
+    "203.0.113.36"
+   ],
+   "score": 0.0,
+   "components": null,
+   "span_h": null,
+   "verdict": false,
+   "host": "host-08",
+   "cls": "B6",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": false,
+   "rita": 0.642,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.137",
+   "pair": [
+    "203.0.113.137",
+    "203.0.113.10"
+   ],
+   "flows": 1,
+   "dst_ips": [
+    "203.0.113.10"
+   ],
+   "score": 0.0,
+   "components": null,
+   "span_h": null,
+   "verdict": false,
+   "host": "host-08",
+   "cls": "beacon",
+   "interval": 10,
+   "jitter": 0,
+   "joined_by": "ip",
+   "eligible": true,
+   "rita": 0.0,
+   "group": "beacon_gated",
+   "flag": "below_min_flows"
+  },
+  {
+   "host_ip": "203.0.113.137",
+   "pair": [
+    "203.0.113.137",
+    "c-10-0.lab.example"
+   ],
+   "flows": 3598,
+   "dst_ips": [
+    "203.0.113.10"
+   ],
+   "score": 0.9329,
+   "components": {
+    "G": 1.0,
+    "S": 0.7314,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 10.0,
+   "verdict": true,
+   "host": "host-08",
+   "cls": "beacon",
+   "interval": 10,
+   "jitter": 0,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.945,
+   "group": "beacon_gated",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.137",
+   "pair": [
+    "203.0.113.137",
+    "c-1800-25.lab.example"
+   ],
+   "flows": 20,
+   "dst_ips": [
+    "203.0.113.23"
+   ],
+   "score": 0.8631,
+   "components": {
+    "G": 0.8232,
+    "S": 0.6292,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.05,
+   "verdict": true,
+   "host": "host-08",
+   "cls": "beacon",
+   "interval": 1800,
+   "jitter": 25,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.84,
+   "group": "beacon_gated",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.137",
+   "pair": [
+    "203.0.113.137",
+    "c-300-75.lab.example"
+   ],
+   "flows": 119,
+   "dst_ips": [
+    "203.0.113.21"
+   ],
+   "score": 0.8662,
+   "components": {
+    "G": 0.8005,
+    "S": 0.7478,
+    "D": 1.0,
+    "H": 0.9167
+   },
+   "span_h": 9.91,
+   "verdict": true,
+   "host": "host-08",
+   "cls": "beacon",
+   "interval": 300,
+   "jitter": 75,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.835,
+   "group": "beacon_curve",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.137",
+   "pair": [
+    "203.0.113.137",
+    "c-60-50.lab.example"
+   ],
+   "flows": 611,
+   "dst_ips": [
+    "203.0.113.16"
+   ],
+   "score": 0.8935,
+   "components": {
+    "G": 0.8224,
+    "S": 0.7849,
+    "D": 1.0,
+    "H": 0.9667
+   },
+   "span_h": 9.99,
+   "verdict": true,
+   "host": "host-08",
+   "cls": "beacon",
+   "interval": 60,
+   "jitter": 50,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.882,
+   "group": "beacon_gated",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.138",
+   "pair": [
+    "203.0.113.138",
+    "b1-0.lab.example"
+   ],
+   "flows": 124,
+   "dst_ips": [
+    "203.0.113.26"
+   ],
+   "score": 0.6899,
+   "components": {
+    "G": 0.2703,
+    "S": 0.9225,
+    "D": 0.9,
+    "H": 0.6667
+   },
+   "span_h": 9.34,
+   "verdict": true,
+   "host": "host-09",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.69,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.138",
+   "pair": [
+    "203.0.113.138",
+    "b1-1.lab.example"
+   ],
+   "flows": 99,
+   "dst_ips": [
+    "203.0.113.27"
+   ],
+   "score": 0.6911,
+   "components": {
+    "G": 0.2575,
+    "S": 0.8702,
+    "D": 0.9,
+    "H": 0.7368
+   },
+   "span_h": 9.34,
+   "verdict": true,
+   "host": "host-09",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.581,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.138",
+   "pair": [
+    "203.0.113.138",
+    "b1-2.lab.example"
+   ],
+   "flows": 118,
+   "dst_ips": [
+    "203.0.113.28"
+   ],
+   "score": 0.7645,
+   "components": {
+    "G": 0.4341,
+    "S": 0.884,
+    "D": 0.9,
+    "H": 0.84
+   },
+   "span_h": 9.35,
+   "verdict": true,
+   "host": "host-09",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.634,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.138",
+   "pair": [
+    "203.0.113.138",
+    "b1-3.lab.example"
+   ],
+   "flows": 101,
+   "dst_ips": [
+    "203.0.113.29"
+   ],
+   "score": 0.6769,
+   "components": {
+    "G": 0.1721,
+    "S": 0.8174,
+    "D": 0.9,
+    "H": 0.8182
+   },
+   "span_h": 9.36,
+   "verdict": true,
+   "host": "host-09",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.547,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.138",
+   "pair": [
+    "203.0.113.138",
+    "b1-4.lab.example"
+   ],
+   "flows": 121,
+   "dst_ips": [
+    "203.0.113.30"
+   ],
+   "score": 0.6812,
+   "components": {
+    "G": 0.4011,
+    "S": 0.9238,
+    "D": 0.9,
+    "H": 0.5
+   },
+   "span_h": 9.36,
+   "verdict": true,
+   "host": "host-09",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.701,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.138",
+   "pair": [
+    "203.0.113.138",
+    "b1-5.lab.example"
+   ],
+   "flows": 109,
+   "dst_ips": [
+    "203.0.113.31"
+   ],
+   "score": 0.5858,
+   "components": {
+    "G": 0.2319,
+    "S": 0.878,
+    "D": 0.9,
+    "H": 0.3333
+   },
+   "span_h": 9.36,
+   "verdict": true,
+   "host": "host-09",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.622,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.138",
+   "pair": [
+    "203.0.113.138",
+    "b2.lab.example"
+   ],
+   "flows": 362,
+   "dst_ips": [
+    "203.0.113.32"
+   ],
+   "score": 0.7074,
+   "components": {
+    "G": 0.8469,
+    "S": 0.8477,
+    "D": 0.9091,
+    "H": 0.2258
+   },
+   "span_h": 9.35,
+   "verdict": true,
+   "host": "host-09",
+   "cls": "B2",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.797,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.138",
+   "pair": [
+    "203.0.113.138",
+    "b3.lab.example"
+   ],
+   "flows": 961,
+   "dst_ips": [
+    "203.0.113.33"
+   ],
+   "score": 0.9396,
+   "components": {
+    "G": 0.9667,
+    "S": 0.9797,
+    "D": 1.0,
+    "H": 0.8119
+   },
+   "span_h": 4.19,
+   "verdict": true,
+   "host": "host-09",
+   "cls": "B3",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.939,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.138",
+   "pair": [
+    "203.0.113.138",
+    "b4.lab.example"
+   ],
+   "flows": 120,
+   "dst_ips": [
+    "203.0.113.34"
+   ],
+   "score": 0.9283,
+   "components": {
+    "G": 0.941,
+    "S": 0.7723,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.92,
+   "verdict": true,
+   "host": "host-09",
+   "cls": "B4",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.917,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.138",
+   "pair": [
+    "203.0.113.138",
+    "b5.lab.example"
+   ],
+   "flows": 563,
+   "dst_ips": [
+    "203.0.113.35"
+   ],
+   "score": 0.875,
+   "components": {
+    "G": 1.0,
+    "S": 0.5,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.99,
+   "verdict": true,
+   "host": "host-09",
+   "cls": "B5",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 1.0,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.138",
+   "pair": [
+    "203.0.113.138",
+    "b6.lab.example"
+   ],
+   "flows": 10,
+   "dst_ips": [
+    "203.0.113.36"
+   ],
+   "score": 0.0,
+   "components": null,
+   "span_h": null,
+   "verdict": false,
+   "host": "host-09",
+   "cls": "B6",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": false,
+   "rita": 0.627,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.138",
+   "pair": [
+    "203.0.113.138",
+    "c-10-25.lab.example"
+   ],
+   "flows": 3604,
+   "dst_ips": [
+    "203.0.113.11"
+   ],
+   "score": 0.9223,
+   "components": {
+    "G": 0.95,
+    "S": 0.7474,
+    "D": 1.0,
+    "H": 0.9917
+   },
+   "span_h": 10.0,
+   "verdict": true,
+   "host": "host-09",
+   "cls": "beacon",
+   "interval": 10,
+   "jitter": 25,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.927,
+   "group": "beacon_gated",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.138",
+   "pair": [
+    "203.0.113.138",
+    "c-1800-50.lab.example"
+   ],
+   "flows": 20,
+   "dst_ips": [
+    "203.0.113.24"
+   ],
+   "score": 0.7963,
+   "components": {
+    "G": 0.5015,
+    "S": 0.6836,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.71,
+   "verdict": true,
+   "host": "host-09",
+   "cls": "beacon",
+   "interval": 1800,
+   "jitter": 50,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.788,
+   "group": "beacon_gated",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.138",
+   "pair": [
+    "203.0.113.138",
+    "c-300-0.lab.example"
+   ],
+   "flows": 120,
+   "dst_ips": [
+    "203.0.113.18"
+   ],
+   "score": 0.9923,
+   "components": {
+    "G": 1.0,
+    "S": 0.969,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.92,
+   "verdict": true,
+   "host": "host-09",
+   "cls": "beacon",
+   "interval": 300,
+   "jitter": 0,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.993,
+   "group": "beacon_gated",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.138",
+   "pair": [
+    "203.0.113.138",
+    "c-60-75.lab.example"
+   ],
+   "flows": 606,
+   "dst_ips": [
+    "203.0.113.17"
+   ],
+   "score": 0.8895,
+   "components": {
+    "G": 0.8068,
+    "S": 0.7675,
+    "D": 1.0,
+    "H": 0.9836
+   },
+   "span_h": 9.99,
+   "verdict": true,
+   "host": "host-09",
+   "cls": "beacon",
+   "interval": 60,
+   "jitter": 75,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.869,
+   "group": "beacon_curve",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.139",
+   "pair": [
+    "203.0.113.139",
+    "b1-0.lab.example"
+   ],
+   "flows": 127,
+   "dst_ips": [
+    "203.0.113.26"
+   ],
+   "score": 0.6492,
+   "components": {
+    "G": 0.2274,
+    "S": 0.831,
+    "D": 1.0,
+    "H": 0.5385
+   },
+   "span_h": 8.51,
+   "verdict": true,
+   "host": "host-10",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.546,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.139",
+   "pair": [
+    "203.0.113.139",
+    "b1-1.lab.example"
+   ],
+   "flows": 150,
+   "dst_ips": [
+    "203.0.113.27"
+   ],
+   "score": 0.7113,
+   "components": {
+    "G": 0.3628,
+    "S": 0.9036,
+    "D": 1.0,
+    "H": 0.5789
+   },
+   "span_h": 8.51,
+   "verdict": true,
+   "host": "host-10",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.632,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.139",
+   "pair": [
+    "203.0.113.139",
+    "b1-2.lab.example"
+   ],
+   "flows": 156,
+   "dst_ips": [
+    "203.0.113.28"
+   ],
+   "score": 0.7341,
+   "components": {
+    "G": 0.4902,
+    "S": 0.9225,
+    "D": 1.0,
+    "H": 0.5238
+   },
+   "span_h": 8.51,
+   "verdict": true,
+   "host": "host-10",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.684,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.139",
+   "pair": [
+    "203.0.113.139",
+    "b1-3.lab.example"
+   ],
+   "flows": 141,
+   "dst_ips": [
+    "203.0.113.29"
+   ],
+   "score": 0.7367,
+   "components": {
+    "G": 0.3545,
+    "S": 0.8863,
+    "D": 1.0,
+    "H": 0.7059
+   },
+   "span_h": 8.52,
+   "verdict": true,
+   "host": "host-10",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.607,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.139",
+   "pair": [
+    "203.0.113.139",
+    "b1-4.lab.example"
+   ],
+   "flows": 135,
+   "dst_ips": [
+    "203.0.113.30"
+   ],
+   "score": 0.7665,
+   "components": {
+    "G": 0.3331,
+    "S": 0.8507,
+    "D": 1.0,
+    "H": 0.8824
+   },
+   "span_h": 8.51,
+   "verdict": true,
+   "host": "host-10",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.611,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.139",
+   "pair": [
+    "203.0.113.139",
+    "b1-5.lab.example"
+   ],
+   "flows": 138,
+   "dst_ips": [
+    "203.0.113.31"
+   ],
+   "score": 0.7171,
+   "components": {
+    "G": 0.3091,
+    "S": 0.8668,
+    "D": 1.0,
+    "H": 0.6923
+   },
+   "span_h": 8.51,
+   "verdict": true,
+   "host": "host-10",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.591,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.139",
+   "pair": [
+    "203.0.113.139",
+    "b2.lab.example"
+   ],
+   "flows": 385,
+   "dst_ips": [
+    "203.0.113.32"
+   ],
+   "score": 0.8001,
+   "components": {
+    "G": 0.8276,
+    "S": 0.8537,
+    "D": 0.9,
+    "H": 0.619
+   },
+   "span_h": 9.23,
+   "verdict": true,
+   "host": "host-10",
+   "cls": "B2",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.801,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.139",
+   "pair": [
+    "203.0.113.139",
+    "b3.lab.example"
+   ],
+   "flows": 962,
+   "dst_ips": [
+    "203.0.113.33"
+   ],
+   "score": 0.9429,
+   "components": {
+    "G": 0.9667,
+    "S": 0.9726,
+    "D": 1.0,
+    "H": 0.8321
+   },
+   "span_h": 5.25,
+   "verdict": true,
+   "host": "host-10",
+   "cls": "B3",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.842,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.139",
+   "pair": [
+    "203.0.113.139",
+    "b4.lab.example"
+   ],
+   "flows": 121,
+   "dst_ips": [
+    "203.0.113.34"
+   ],
+   "score": 0.9118,
+   "components": {
+    "G": 0.9085,
+    "S": 0.7389,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.93,
+   "verdict": true,
+   "host": "host-10",
+   "cls": "B4",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.915,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.139",
+   "pair": [
+    "203.0.113.139",
+    "b5.lab.example"
+   ],
+   "flows": 563,
+   "dst_ips": [
+    "203.0.113.35"
+   ],
+   "score": 0.875,
+   "components": {
+    "G": 1.0,
+    "S": 0.5,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.99,
+   "verdict": true,
+   "host": "host-10",
+   "cls": "B5",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 1.0,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.139",
+   "pair": [
+    "203.0.113.139",
+    "b6.lab.example"
+   ],
+   "flows": 10,
+   "dst_ips": [
+    "203.0.113.36"
+   ],
+   "score": 0.0,
+   "components": null,
+   "span_h": null,
+   "verdict": false,
+   "host": "host-10",
+   "cls": "B6",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": false,
+   "rita": 0.597,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.139",
+   "pair": [
+    "203.0.113.139",
+    "c-10-50.lab.example"
+   ],
+   "flows": 3563,
+   "dst_ips": [
+    "203.0.113.12"
+   ],
+   "score": 0.8738,
+   "components": {
+    "G": 0.8,
+    "S": 0.715,
+    "D": 1.0,
+    "H": 0.9802
+   },
+   "span_h": 10.0,
+   "verdict": true,
+   "host": "host-10",
+   "cls": "beacon",
+   "interval": 10,
+   "jitter": 50,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.902,
+   "group": "beacon_gated",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.139",
+   "pair": [
+    "203.0.113.139",
+    "c-1800-75.lab.example"
+   ],
+   "flows": 19,
+   "dst_ips": [
+    "203.0.113.25"
+   ],
+   "score": 0.0,
+   "components": null,
+   "span_h": 9.77,
+   "verdict": false,
+   "host": "host-10",
+   "cls": "beacon",
+   "interval": 1800,
+   "jitter": 75,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.0,
+   "group": "beacon_curve",
+   "flag": "below_min_flows"
+  },
+  {
+   "host_ip": "203.0.113.139",
+   "pair": [
+    "203.0.113.139",
+    "c-300-25.lab.example"
+   ],
+   "flows": 121,
+   "dst_ips": [
+    "203.0.113.19"
+   ],
+   "score": 0.8924,
+   "components": {
+    "G": 0.8387,
+    "S": 0.731,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.98,
+   "verdict": true,
+   "host": "host-10",
+   "cls": "beacon",
+   "interval": 300,
+   "jitter": 25,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.871,
+   "group": "beacon_gated",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.139",
+   "pair": [
+    "203.0.113.139",
+    "c-60-0.lab.example"
+   ],
+   "flows": 600,
+   "dst_ips": [
+    "203.0.113.14"
+   ],
+   "score": 0.9492,
+   "components": {
+    "G": 1.0,
+    "S": 0.7967,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.98,
+   "verdict": true,
+   "host": "host-10",
+   "cls": "beacon",
+   "interval": 60,
+   "jitter": 0,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.948,
+   "group": "beacon_gated",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.140",
+   "pair": [
+    "203.0.113.140",
+    "b1-0.lab.example"
+   ],
+   "flows": 124,
+   "dst_ips": [
+    "203.0.113.26"
+   ],
+   "score": 0.6965,
+   "components": {
+    "G": 0.2888,
+    "S": 0.9372,
+    "D": 1.0,
+    "H": 0.56
+   },
+   "span_h": 8.58,
+   "verdict": true,
+   "host": "host-11",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.641,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.140",
+   "pair": [
+    "203.0.113.140",
+    "b1-1.lab.example"
+   ],
+   "flows": 128,
+   "dst_ips": [
+    "203.0.113.27"
+   ],
+   "score": 0.7163,
+   "components": {
+    "G": 0.2453,
+    "S": 0.8891,
+    "D": 1.0,
+    "H": 0.7308
+   },
+   "span_h": 8.81,
+   "verdict": true,
+   "host": "host-11",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.604,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.140",
+   "pair": [
+    "203.0.113.140",
+    "b1-2.lab.example"
+   ],
+   "flows": 138,
+   "dst_ips": [
+    "203.0.113.28"
+   ],
+   "score": 0.7638,
+   "components": {
+    "G": 0.5333,
+    "S": 0.8921,
+    "D": 1.0,
+    "H": 0.6296
+   },
+   "span_h": 8.82,
+   "verdict": true,
+   "host": "host-11",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.703,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.140",
+   "pair": [
+    "203.0.113.140",
+    "b1-3.lab.example"
+   ],
+   "flows": 144,
+   "dst_ips": [
+    "203.0.113.29"
+   ],
+   "score": 0.715,
+   "components": {
+    "G": 0.3418,
+    "S": 0.8285,
+    "D": 1.0,
+    "H": 0.6897
+   },
+   "span_h": 8.79,
+   "verdict": true,
+   "host": "host-11",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.659,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.140",
+   "pair": [
+    "203.0.113.140",
+    "b1-4.lab.example"
+   ],
+   "flows": 138,
+   "dst_ips": [
+    "203.0.113.30"
+   ],
+   "score": 0.7431,
+   "components": {
+    "G": 0.3472,
+    "S": 0.8945,
+    "D": 1.0,
+    "H": 0.7308
+   },
+   "span_h": 8.8,
+   "verdict": true,
+   "host": "host-11",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.616,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.140",
+   "pair": [
+    "203.0.113.140",
+    "b1-5.lab.example"
+   ],
+   "flows": 118,
+   "dst_ips": [
+    "203.0.113.31"
+   ],
+   "score": 0.7653,
+   "components": {
+    "G": 0.3611,
+    "S": 0.9085,
+    "D": 1.0,
+    "H": 0.7917
+   },
+   "span_h": 8.81,
+   "verdict": true,
+   "host": "host-11",
+   "cls": "B1",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.676,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.140",
+   "pair": [
+    "203.0.113.140",
+    "b2.lab.example"
+   ],
+   "flows": 341,
+   "dst_ips": [
+    "203.0.113.32"
+   ],
+   "score": 0.7765,
+   "components": {
+    "G": 0.8333,
+    "S": 0.8031,
+    "D": 0.9,
+    "H": 0.5694
+   },
+   "span_h": 9.64,
+   "verdict": true,
+   "host": "host-11",
+   "cls": "B2",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.774,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.140",
+   "pair": [
+    "203.0.113.140",
+    "b3.lab.example"
+   ],
+   "flows": 957,
+   "dst_ips": [
+    "203.0.113.33"
+   ],
+   "score": 0.9244,
+   "components": {
+    "G": 0.9667,
+    "S": 0.9756,
+    "D": 1.0,
+    "H": 0.7554
+   },
+   "span_h": 4.42,
+   "verdict": true,
+   "host": "host-11",
+   "cls": "B3",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.89,
+   "group": "gate_negative",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.140",
+   "pair": [
+    "203.0.113.140",
+    "b4.lab.example"
+   ],
+   "flows": 122,
+   "dst_ips": [
+    "203.0.113.34"
+   ],
+   "score": 0.9131,
+   "components": {
+    "G": 0.9278,
+    "S": 0.7248,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.95,
+   "verdict": true,
+   "host": "host-11",
+   "cls": "B4",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.903,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.140",
+   "pair": [
+    "203.0.113.140",
+    "b5.lab.example"
+   ],
+   "flows": 562,
+   "dst_ips": [
+    "203.0.113.35"
+   ],
+   "score": 0.875,
+   "components": {
+    "G": 1.0,
+    "S": 0.5,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.97,
+   "verdict": true,
+   "host": "host-11",
+   "cls": "B5",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 1.0,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.140",
+   "pair": [
+    "203.0.113.140",
+    "b6.lab.example"
+   ],
+   "flows": 10,
+   "dst_ips": [
+    "203.0.113.36"
+   ],
+   "score": 0.0,
+   "components": null,
+   "span_h": null,
+   "verdict": false,
+   "host": "host-11",
+   "cls": "B6",
+   "interval": null,
+   "jitter": null,
+   "joined_by": "sni",
+   "eligible": false,
+   "rita": 0.671,
+   "group": "periodic_benign",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.140",
+   "pair": [
+    "203.0.113.140",
+    "c-10-75.lab.example"
+   ],
+   "flows": 3620,
+   "dst_ips": [
+    "203.0.113.13"
+   ],
+   "score": 0.8336,
+   "components": {
+    "G": 0.6528,
+    "S": 0.7178,
+    "D": 1.0,
+    "H": 0.9638
+   },
+   "span_h": 10.0,
+   "verdict": true,
+   "host": "host-11",
+   "cls": "beacon",
+   "interval": 10,
+   "jitter": 75,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.887,
+   "group": "beacon_curve",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.140",
+   "pair": [
+    "203.0.113.140",
+    "c-1800-0.lab.example"
+   ],
+   "flows": 20,
+   "dst_ips": [
+    "203.0.113.22"
+   ],
+   "score": 0.9602,
+   "components": {
+    "G": 1.0,
+    "S": 0.8409,
+    "D": 1.0,
+    "H": 1.0
+   },
+   "span_h": 9.5,
+   "verdict": true,
+   "host": "host-11",
+   "cls": "beacon",
+   "interval": 1800,
+   "jitter": 0,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.946,
+   "group": "beacon_gated",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.140",
+   "pair": [
+    "203.0.113.140",
+    "c-300-50.lab.example"
+   ],
+   "flows": 122,
+   "dst_ips": [
+    "203.0.113.20"
+   ],
+   "score": 0.9308,
+   "components": {
+    "G": 0.8216,
+    "S": 0.9851,
+    "D": 1.0,
+    "H": 0.9167
+   },
+   "span_h": 9.96,
+   "verdict": true,
+   "host": "host-11",
+   "cls": "beacon",
+   "interval": 300,
+   "jitter": 50,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.919,
+   "group": "beacon_gated",
+   "flag": null
+  },
+  {
+   "host_ip": "203.0.113.140",
+   "pair": [
+    "203.0.113.140",
+    "c-60-25.lab.example"
+   ],
+   "flows": 598,
+   "dst_ips": [
+    "203.0.113.15"
+   ],
+   "score": 0.9189,
+   "components": {
+    "G": 0.9093,
+    "S": 0.783,
+    "D": 1.0,
+    "H": 0.9833
+   },
+   "span_h": 9.97,
+   "verdict": true,
+   "host": "host-11",
+   "cls": "beacon",
+   "interval": 60,
+   "jitter": 25,
+   "joined_by": "sni",
+   "eligible": true,
+   "rita": 0.924,
+   "group": "beacon_gated",
+   "flag": null
+  }
+ ]
+}
