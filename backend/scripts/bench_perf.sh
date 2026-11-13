@@ -15,7 +15,8 @@ SPECTRA="${SPECTRA_BIN:-spectra}"
 PORT="${PORT:-8899}"
 DATA="$(mktemp -d)"; export SPECTRA_DATA_DIR="$DATA" SPECTRA_MODEL_PATH="$DATA/model.joblib"
 A=veth-sp0; B=veth-sp1
-cleanup() { [[ -n "${SRV:-}" ]] && kill "$SRV" 2>/dev/null || true; ip link del "$A" 2>/dev/null || true; rm -rf "$DATA"; }
+cleanup() { [[ -n "${SRV:-}" ]] && kill "$SRV" 2>/dev/null || true; ip link del "$A" 2>/dev/null || true
+  if [[ "${OK:-0}" == 1 ]]; then rm -rf "$DATA"; else echo "run did not complete cleanly; server log kept: $DATA/server.log" >&2; fi; }
 trap cleanup EXIT
 ip link add "$A" type veth peer name "$B"; ip link set "$A" up; ip link set "$B" up
 "$SPECTRA" serve --port "$PORT" >"$DATA/server.log" 2>&1 & SRV=$!
@@ -30,6 +31,9 @@ for r in "${RATES[@]}"; do
   curl -sf -b "$JAR" -X POST -H 'content-type: application/json' -d "{\"mode\":\"live\",\"iface\":\"$A\"}" \
     "http://127.0.0.1:$PORT/api/capture/start" >/dev/null
   sleep 2
+  st=$(curl -sf -b "$JAR" "http://127.0.0.1:$PORT/api/status" || true)
+  if [[ "$(jq -r '.running // .capture.running // empty' <<<"$st")" != "true" ]]; then
+    echo "capture is not running after start on $A; status: $st" >&2; tail -20 "$DATA/server.log" >&2; exit 1; fi
   cpu0=$(awk '{print $14+$15}' /proc/$SRV/stat)
   if [[ "$r" == topspeed ]]; then tcpreplay --topspeed -i "$B" "$PCAP" >"$DATA/replay.txt" 2>&1
   else tcpreplay --pps="$r" -i "$B" "$PCAP" >"$DATA/replay.txt" 2>&1; fi
@@ -39,5 +43,9 @@ for r in "${RATES[@]}"; do
   rss=$(awk '/VmHWM/ {print int($2/1024)}' /proc/$SRV/status)
   printf '%-10s %12s %12s %12s %12s %9s %9s\n' "$r" "${offered:-?}" "$(metric spectra_queue_packets_received)" \
     "$(metric spectra_queue_packets_dropped)" "$(metric spectra_flows_total)" "$(( (cpu1-cpu0) / $(getconf CLK_TCK) ))" "$rss"
+  if [[ "$(metric spectra_queue_packets_received)" == 0 ]]; then
+    echo "0 packets received on $A at rate $r; status: $(curl -sf -b "$JAR" "http://127.0.0.1:$PORT/api/status")" >&2
+    tail -20 "$DATA/server.log" >&2; exit 1; fi
   curl -sf -b "$JAR" -X POST "http://127.0.0.1:$PORT/api/capture/stop" >/dev/null
 done
+OK=1
