@@ -22,6 +22,7 @@ Three target verticals: **Fintech · Healthcare · Smart City Infrastructure**.
 
 | Document | Contents |
 |---|---|
+| [`docs/frontend-plan.md`](./docs/frontend-plan.md) | frontend work plan: contract-first, mock mode, priorities, integration checkpoints |
 | [`docs/guide/`](./docs/guide/README.md) | **user guide** for a first-time installer: install, first run, reading alerts, calibrating on your own network, operating, FAQ |
 | [`docs/architecture.md`](./docs/architecture.md) | capture → flows → parsing → features → inference → classification → alerts → incidents → persistence → audit → API/WS → frontend |
 | [`docs/local-setup.md`](./docs/local-setup.md) | toolchain, dependencies, environment variables, backend/frontend startup, first admin, Npcap |
