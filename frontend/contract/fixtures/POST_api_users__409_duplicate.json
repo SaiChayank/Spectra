@@ -1,0 +1,19 @@
+{
+  "body": {
+    "detail": "username already exists"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": {
+      "password": "<redacted>",
+      "role": "VIEWER",
+      "username": "contract-viewer"
+    },
+    "method": "POST",
+    "path": "/api/users",
+    "query": {}
+  },
+  "status": 409
+}

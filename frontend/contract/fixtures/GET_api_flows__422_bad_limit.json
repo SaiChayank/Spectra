@@ -1,0 +1,26 @@
+{
+  "body": {
+    "detail": [
+      {
+        "loc": [
+          "query",
+          "limit"
+        ],
+        "msg": "Input should be a valid integer, unable to parse string as an integer",
+        "type": "int_parsing"
+      }
+    ]
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/flows",
+    "query": {
+      "limit": "abc"
+    }
+  },
+  "status": 422
+}

@@ -1,0 +1,19 @@
+{
+  "body": {
+    "issuer": "Spectra",
+    "otpauth_uri": "<redacted>",
+    "secret": "<redacted>"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": {
+      "password": "<redacted>"
+    },
+    "method": "POST",
+    "path": "/api/auth/totp/setup",
+    "query": {}
+  },
+  "status": 200
+}

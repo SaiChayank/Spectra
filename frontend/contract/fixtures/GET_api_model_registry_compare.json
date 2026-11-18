@@ -1,0 +1,148 @@
+{
+  "body": {
+    "a": {
+      "activated_count": 1,
+      "artifact": "mdl_1d13ba251e45.joblib",
+      "artifact_sha256": "16890ae2c2b55572f3366f9da616ab8fa7b1a2075f02139cd9c2a3558d418568",
+      "contamination": 0.02,
+      "created_at": 1800000000.0,
+      "error": null,
+      "feature_schema": "88af9890d6fa4e88d74b6649dfd048137723018c4e39e23461d6a7c061e91f47",
+      "id": 1,
+      "last_activated_at": 1800000000.0,
+      "metrics": {
+        "checks": [
+          {
+            "detail": "mdl_1d13ba251e45.joblib",
+            "name": "artifact_contained",
+            "ok": true
+          },
+          {
+            "detail": "mdl_1d13ba251e45.joblib",
+            "name": "artifact_exists",
+            "ok": true
+          },
+          {
+            "detail": "file 33cf86e5e6d8...",
+            "name": "artifact_sha256",
+            "ok": true
+          },
+          {
+            "detail": "model version 1",
+            "name": "artifact_loads",
+            "ok": true
+          },
+          {
+            "detail": "n_train=42",
+            "name": "trained",
+            "ok": true
+          },
+          {
+            "detail": "0.194095",
+            "name": "threshold_set",
+            "ok": true
+          },
+          {
+            "detail": "n_train=42 (need >= 10)",
+            "name": "min_training_rows",
+            "ok": true
+          },
+          {
+            "detail": "digest matches the current feature schema",
+            "name": "feature_schema",
+            "ok": true
+          }
+        ],
+        "failed": [],
+        "passed": true,
+        "validated_at": 1800000000.0
+      },
+      "model_id": "mdl_1d13ba251e45",
+      "model_version": "1",
+      "n_features": 39,
+      "n_train": 42,
+      "retired_at": null,
+      "source": "<DATA_DIR>/captures/cap_9de57ae832fd9ef7ae7bb285f561cc0d.pcap",
+      "status": "ACTIVE",
+      "threshold": 0.194095,
+      "trained_at": 1800000000.0
+    },
+    "b": {
+      "activated_count": 0,
+      "artifact": "mdl_fdb71cbd5b6c.joblib",
+      "artifact_sha256": "b000c68a3eb3d378fe32b7e75d30f295f351025d07cd5a715976c18a23429ac5",
+      "contamination": 0.05,
+      "created_at": 1800000000.0,
+      "error": null,
+      "feature_schema": "88af9890d6fa4e88d74b6649dfd048137723018c4e39e23461d6a7c061e91f47",
+      "id": 2,
+      "last_activated_at": null,
+      "metrics": {
+        "augmented": 0,
+        "contamination": 0.05,
+        "n_train": 42,
+        "threshold": 0.057092,
+        "train_score_mean": -0.025937,
+        "train_score_p99": 0.198806
+      },
+      "model_id": "mdl_fdb71cbd5b6c",
+      "model_version": "1",
+      "n_features": 39,
+      "n_train": 42,
+      "retired_at": null,
+      "source": "<DATA_DIR>/captures/cap_9de57ae832fd9ef7ae7bb285f561cc0d.pcap",
+      "status": "CANDIDATE",
+      "threshold": 0.057092,
+      "trained_at": 1800000000.0
+    },
+    "diff": {
+      "activated_count": {
+        "a": 1,
+        "b": 0,
+        "delta": -1
+      },
+      "contamination": {
+        "a": 0.02,
+        "b": 0.05,
+        "delta": 0.03
+      },
+      "model_version": {
+        "a": "1",
+        "b": "1"
+      },
+      "n_train": {
+        "a": 42,
+        "b": 42,
+        "delta": 0
+      },
+      "same_artifact": false,
+      "same_feature_schema": true,
+      "status": {
+        "a": "ACTIVE",
+        "b": "CANDIDATE"
+      },
+      "threshold": {
+        "a": 0.194095,
+        "b": 0.057092,
+        "delta": -0.137003
+      },
+      "trained_at": {
+        "a": 1800000000.0,
+        "b": 1800000000.0
+      }
+    }
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/model/registry/compare",
+    "query": {
+      "a": "mdl_1d13ba251e45",
+      "b": "mdl_fdb71cbd5b6c"
+    }
+  },
+  "status": 200
+}

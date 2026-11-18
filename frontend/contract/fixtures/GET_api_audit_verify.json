@@ -1,0 +1,33 @@
+{
+  "body": {
+    "entries": 32,
+    "epoch": 1,
+    "epochs": [
+      {
+        "created_at": 1800000000.0,
+        "epoch": 1,
+        "pubkey": "0287138ddf316967ccf301bc8ec4d0661c3f4e16875c8b7ca3964eba3feef74657",
+        "start_seq": 0
+      }
+    ],
+    "errors": [],
+    "head": {
+      "entry_hash": "3702b7d50e0ab42893aff3acd70da047497dab55b5e1fad26efe7d5b662abfec",
+      "kind": "alert.resolve",
+      "seq": 32,
+      "ts": 1800000000.0
+    },
+    "ok": true,
+    "signing_key": "0287138ddf316967ccf301bc8ec4d0661c3f4e16875c8b7ca3964eba3feef74657"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/audit/verify",
+    "query": {}
+  },
+  "status": 200
+}

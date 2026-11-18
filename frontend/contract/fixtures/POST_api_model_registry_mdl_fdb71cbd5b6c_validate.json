@@ -1,0 +1,79 @@
+{
+  "body": {
+    "activated_count": 0,
+    "artifact": "mdl_fdb71cbd5b6c.joblib",
+    "artifact_sha256": "b000c68a3eb3d378fe32b7e75d30f295f351025d07cd5a715976c18a23429ac5",
+    "contamination": 0.05,
+    "created_at": 1800000000.0,
+    "error": null,
+    "feature_schema": "88af9890d6fa4e88d74b6649dfd048137723018c4e39e23461d6a7c061e91f47",
+    "id": 2,
+    "last_activated_at": null,
+    "metrics": {
+      "checks": [
+        {
+          "detail": "mdl_fdb71cbd5b6c.joblib",
+          "name": "artifact_contained",
+          "ok": true
+        },
+        {
+          "detail": "mdl_fdb71cbd5b6c.joblib",
+          "name": "artifact_exists",
+          "ok": true
+        },
+        {
+          "detail": "file 89a8d7142472...",
+          "name": "artifact_sha256",
+          "ok": true
+        },
+        {
+          "detail": "model version 1",
+          "name": "artifact_loads",
+          "ok": true
+        },
+        {
+          "detail": "n_train=42",
+          "name": "trained",
+          "ok": true
+        },
+        {
+          "detail": "0.057092",
+          "name": "threshold_set",
+          "ok": true
+        },
+        {
+          "detail": "n_train=42 (need >= 10)",
+          "name": "min_training_rows",
+          "ok": true
+        },
+        {
+          "detail": "digest matches the current feature schema",
+          "name": "feature_schema",
+          "ok": true
+        }
+      ],
+      "failed": [],
+      "passed": true,
+      "validated_at": 1800000000.0
+    },
+    "model_id": "mdl_fdb71cbd5b6c",
+    "model_version": "1",
+    "n_features": 39,
+    "n_train": 42,
+    "retired_at": null,
+    "source": "<DATA_DIR>/captures/cap_9de57ae832fd9ef7ae7bb285f561cc0d.pcap",
+    "status": "VALIDATED",
+    "threshold": 0.057092,
+    "trained_at": 1800000000.0
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "POST",
+    "path": "/api/model/registry/mdl_fdb71cbd5b6c/validate",
+    "query": {}
+  },
+  "status": 200
+}

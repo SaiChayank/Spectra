@@ -1,0 +1,15 @@
+{
+  "body": {
+    "detail": "no checkpoint has been created yet"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/audit/checkpoint/verify",
+    "query": {}
+  },
+  "status": 409
+}

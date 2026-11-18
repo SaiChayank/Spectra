@@ -1,0 +1,21 @@
+{
+  "body": {
+    "author": "admin",
+    "body": "Checked the destination: unknown.",
+    "created_at": 1800000000.0,
+    "id": 1,
+    "incident_id": 1
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": {
+      "body": "Checked the destination: unknown."
+    },
+    "method": "POST",
+    "path": "/api/incidents/1/notes",
+    "query": {}
+  },
+  "status": 200
+}

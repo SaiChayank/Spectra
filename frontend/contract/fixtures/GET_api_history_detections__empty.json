@@ -1,0 +1,17 @@
+{
+  "body": {
+    "count": 0,
+    "items": [],
+    "offset": 0
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/history/detections",
+    "query": {}
+  },
+  "status": 200
+}

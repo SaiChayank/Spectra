@@ -1,0 +1,17 @@
+{
+  "body": {
+    "available": false,
+    "n": 13,
+    "reason": "need >= 40 scores"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/model/evasion",
+    "query": {}
+  },
+  "status": 200
+}

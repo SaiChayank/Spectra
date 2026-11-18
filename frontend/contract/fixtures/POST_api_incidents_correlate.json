@@ -1,0 +1,20 @@
+{
+  "body": {
+    "clusters": 0,
+    "considered": 1,
+    "created": [],
+    "ungrouped": [
+      "alrt_2eedb30fc188"
+    ]
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "POST",
+    "path": "/api/incidents/correlate",
+    "query": {}
+  },
+  "status": 200
+}

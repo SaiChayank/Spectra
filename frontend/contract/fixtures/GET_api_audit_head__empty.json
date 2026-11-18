@@ -1,0 +1,18 @@
+{
+  "body": {
+    "entry_hash": "f4d6cb1720c4a15b449d092bdb05a77d0a8a843dd5d0731ad3508715fd82b9ed",
+    "kind": "auth.login",
+    "seq": 1,
+    "ts": 1800000000.0
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/audit/head",
+    "query": {}
+  },
+  "status": 200
+}

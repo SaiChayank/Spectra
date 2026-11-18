@@ -1,0 +1,16 @@
+{
+  "body": {
+    "available": false,
+    "reason": "model not trained"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/model/drift",
+    "query": {}
+  },
+  "status": 200
+}

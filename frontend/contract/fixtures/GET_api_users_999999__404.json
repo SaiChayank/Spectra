@@ -1,0 +1,15 @@
+{
+  "body": {
+    "detail": "user not found"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/users/999999",
+    "query": {}
+  },
+  "status": 404
+}

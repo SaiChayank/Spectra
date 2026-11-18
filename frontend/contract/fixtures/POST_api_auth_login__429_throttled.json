@@ -1,0 +1,19 @@
+{
+  "body": {
+    "detail": "too many failed login attempts"
+  },
+  "headers": {
+    "content-type": "application/json",
+    "retry-after": "<seconds>"
+  },
+  "request": {
+    "body": {
+      "password": "<redacted>",
+      "username": "contract-throttle"
+    },
+    "method": "POST",
+    "path": "/api/auth/login",
+    "query": {}
+  },
+  "status": 429
+}

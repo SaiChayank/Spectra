@@ -1,0 +1,54 @@
+{
+  "body": {
+    "acknowledged_at": null,
+    "acknowledged_by": null,
+    "affected_entities": [
+      "10.0.0.7",
+      "93.184.216.34",
+      "quic.example"
+    ],
+    "alert_count": 1,
+    "confidence": 0.45,
+    "created_at": 1800000000.0,
+    "created_by": "admin",
+    "detection_id": null,
+    "evidence_summary": "1 linked alert(s); UNKNOWN_ANOMALY: The detector flagged this flow, but behavioural evidence did not reach any specific threat category. Closest sub-threshold candidate: c2 beaconing.",
+    "first_seen": 1700001100.548779,
+    "id": 1,
+    "last_seen": 1700001100.548779,
+    "model_versions": [
+      "spectra_model.joblib@1"
+    ],
+    "note_count": 0,
+    "primary_threat_class": "UNKNOWN_ANOMALY",
+    "related_graph_nodes": [
+      "domain:quic.example",
+      "host:10.0.0.7",
+      "ip:93.184.216.34"
+    ],
+    "resolved_at": null,
+    "resolved_by": null,
+    "severity": "MEDIUM",
+    "status": "OPEN",
+    "summary": "Two periodic flows from the suspicious demo capture",
+    "title": "Demo beacon investigation",
+    "updated_at": null,
+    "updated_by": null
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": {
+      "alert_ids": [
+        "alrt_3b1c93af0403"
+      ],
+      "summary": "Two periodic flows from the suspicious demo capture",
+      "title": "Demo beacon investigation"
+    },
+    "method": "POST",
+    "path": "/api/incidents",
+    "query": {}
+  },
+  "status": 200
+}

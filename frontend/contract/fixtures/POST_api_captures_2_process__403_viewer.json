@@ -1,0 +1,15 @@
+{
+  "body": {
+    "detail": "role VIEWER lacks the 'capture:manage' permission"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "POST",
+    "path": "/api/captures/2/process",
+    "query": {}
+  },
+  "status": 403
+}

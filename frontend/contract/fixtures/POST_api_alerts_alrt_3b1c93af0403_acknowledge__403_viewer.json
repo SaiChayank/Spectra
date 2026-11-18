@@ -1,0 +1,15 @@
+{
+  "body": {
+    "detail": "role VIEWER lacks the 'incidents:manage' permission"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "POST",
+    "path": "/api/alerts/alrt_3b1c93af0403/acknowledge",
+    "query": {}
+  },
+  "status": 403
+}

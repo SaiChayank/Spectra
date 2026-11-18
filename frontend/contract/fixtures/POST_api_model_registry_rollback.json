@@ -1,0 +1,80 @@
+{
+  "body": {
+    "activated_count": 2,
+    "applied": true,
+    "artifact": "mdl_1d13ba251e45.joblib",
+    "artifact_sha256": "16890ae2c2b55572f3366f9da616ab8fa7b1a2075f02139cd9c2a3558d418568",
+    "contamination": 0.02,
+    "created_at": 1800000000.0,
+    "error": null,
+    "feature_schema": "88af9890d6fa4e88d74b6649dfd048137723018c4e39e23461d6a7c061e91f47",
+    "id": 1,
+    "last_activated_at": 1800000000.0,
+    "metrics": {
+      "checks": [
+        {
+          "detail": "mdl_1d13ba251e45.joblib",
+          "name": "artifact_contained",
+          "ok": true
+        },
+        {
+          "detail": "mdl_1d13ba251e45.joblib",
+          "name": "artifact_exists",
+          "ok": true
+        },
+        {
+          "detail": "file 33cf86e5e6d8...",
+          "name": "artifact_sha256",
+          "ok": true
+        },
+        {
+          "detail": "model version 1",
+          "name": "artifact_loads",
+          "ok": true
+        },
+        {
+          "detail": "n_train=42",
+          "name": "trained",
+          "ok": true
+        },
+        {
+          "detail": "0.194095",
+          "name": "threshold_set",
+          "ok": true
+        },
+        {
+          "detail": "n_train=42 (need >= 10)",
+          "name": "min_training_rows",
+          "ok": true
+        },
+        {
+          "detail": "digest matches the current feature schema",
+          "name": "feature_schema",
+          "ok": true
+        }
+      ],
+      "failed": [],
+      "passed": true,
+      "validated_at": 1800000000.0
+    },
+    "model_id": "mdl_1d13ba251e45",
+    "model_version": "1",
+    "n_features": 39,
+    "n_train": 42,
+    "retired_at": null,
+    "source": "<DATA_DIR>/captures/cap_9de57ae832fd9ef7ae7bb285f561cc0d.pcap",
+    "status": "ACTIVE",
+    "threshold": 0.194095,
+    "trained_at": 1800000000.0
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "POST",
+    "path": "/api/model/registry/rollback",
+    "query": {}
+  },
+  "status": 200
+}

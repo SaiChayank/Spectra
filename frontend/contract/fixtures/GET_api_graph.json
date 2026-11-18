@@ -1,0 +1,301 @@
+{
+  "body": {
+    "edges": [
+      {
+        "first_ts": 1700002000.0,
+        "flow_ids": [
+          39,
+          38,
+          37,
+          36,
+          26,
+          25,
+          24,
+          23,
+          13,
+          12,
+          11,
+          10
+        ],
+        "last_ts": 1700002102.526001,
+        "regularity": 0.0,
+        "source": "host:10.0.0.66",
+        "target": "ip:198.51.100.7",
+        "type": "talks_to",
+        "weight": 19072.0
+      },
+      {
+        "first_ts": 1700001100.0,
+        "flow_ids": [
+          35,
+          22,
+          9
+        ],
+        "last_ts": 1700001100.548779,
+        "regularity": null,
+        "source": "host:10.0.0.7",
+        "target": "ip:93.184.216.34",
+        "type": "talks_to",
+        "weight": 26307.0
+      },
+      {
+        "first_ts": 1700001100.0,
+        "flow_ids": [
+          35,
+          22,
+          9
+        ],
+        "last_ts": 1700001100.548779,
+        "regularity": null,
+        "source": "domain:quic.example",
+        "target": "ip:93.184.216.34",
+        "type": "served_by",
+        "weight": 4.0
+      },
+      {
+        "first_ts": 1700001100.0,
+        "flow_ids": [
+          35,
+          22,
+          9
+        ],
+        "last_ts": 1700001100.548779,
+        "regularity": null,
+        "source": "domain:quic.example",
+        "target": "sector:general",
+        "type": "in_sector",
+        "weight": 4.0
+      },
+      {
+        "first_ts": 1700001000.0,
+        "flow_ids": [
+          34,
+          33,
+          32,
+          31,
+          30,
+          29,
+          28,
+          27,
+          21,
+          20,
+          19,
+          18,
+          17,
+          16,
+          15,
+          14,
+          8,
+          7,
+          6,
+          5
+        ],
+        "last_ts": 1700001021.97162,
+        "regularity": 0.0,
+        "source": "host:10.0.0.5",
+        "target": "ip:93.184.216.34",
+        "type": "talks_to",
+        "weight": 214208.0
+      },
+      {
+        "first_ts": 1700001000.0,
+        "flow_ids": [
+          34,
+          33,
+          32,
+          31,
+          30,
+          29,
+          28,
+          27,
+          21,
+          20,
+          19,
+          18,
+          17,
+          16,
+          15,
+          14,
+          8,
+          7,
+          6,
+          5
+        ],
+        "last_ts": 1700001021.97162,
+        "regularity": null,
+        "source": "domain:example.com",
+        "target": "ip:93.184.216.34",
+        "type": "served_by",
+        "weight": 32.0
+      },
+      {
+        "first_ts": 1700001000.0,
+        "flow_ids": [
+          34,
+          33,
+          32,
+          31,
+          30,
+          29,
+          28,
+          27,
+          21,
+          20,
+          19,
+          18,
+          17,
+          16,
+          15,
+          14,
+          8,
+          7,
+          6,
+          5
+        ],
+        "last_ts": 1700001021.97162,
+        "regularity": null,
+        "source": "domain:example.com",
+        "target": "sector:general",
+        "type": "in_sector",
+        "weight": 32.0
+      }
+    ],
+    "freshness": {
+      "flow_lag": 0.0,
+      "hydrated_at": 1800000000.0,
+      "stale": false
+    },
+    "nodes": [
+      {
+        "bytes": 240515,
+        "detections": 4,
+        "domains": [
+          "domain:example.com",
+          "domain:quic.example"
+        ],
+        "first_ts": 1700001000.776883,
+        "flows": 36,
+        "id": "ip:93.184.216.34",
+        "label": "93.184.216.34",
+        "last_ts": 1700001100.548779,
+        "sector": "general",
+        "type": "ip"
+      },
+      {
+        "bytes": 240515,
+        "detections": 4,
+        "domains": [],
+        "first_ts": 1700001000.776883,
+        "flows": 36,
+        "id": "sector:general",
+        "label": "general",
+        "last_ts": 1700001100.548779,
+        "sector": "general",
+        "type": "sector"
+      },
+      {
+        "bytes": 26307,
+        "detections": 4,
+        "domains": [
+          "domain:quic.example"
+        ],
+        "first_ts": 1700001100.52612,
+        "flows": 4,
+        "id": "host:10.0.0.7",
+        "label": "10.0.0.7",
+        "last_ts": 1700001100.548779,
+        "sector": null,
+        "type": "host"
+      },
+      {
+        "bytes": 26307,
+        "detections": 4,
+        "domains": [],
+        "first_ts": 1700001100.52612,
+        "flows": 4,
+        "id": "domain:quic.example",
+        "label": "quic.example",
+        "last_ts": 1700001100.548779,
+        "sector": "general",
+        "type": "domain"
+      },
+      {
+        "bytes": 214208,
+        "detections": 0,
+        "domains": [
+          "domain:example.com"
+        ],
+        "first_ts": 1700001000.776883,
+        "flows": 32,
+        "id": "host:10.0.0.5",
+        "label": "10.0.0.5",
+        "last_ts": 1700001021.97162,
+        "sector": null,
+        "type": "host"
+      },
+      {
+        "bytes": 214208,
+        "detections": 0,
+        "domains": [],
+        "first_ts": 1700001000.776883,
+        "flows": 32,
+        "id": "domain:example.com",
+        "label": "example.com",
+        "last_ts": 1700001021.97162,
+        "sector": "general",
+        "type": "domain"
+      },
+      {
+        "bytes": 19072,
+        "detections": 0,
+        "domains": [],
+        "first_ts": 1700002012.526001,
+        "flows": 16,
+        "id": "host:10.0.0.66",
+        "label": "10.0.0.66",
+        "last_ts": 1700002102.526001,
+        "sector": "general",
+        "type": "host"
+      },
+      {
+        "bytes": 19072,
+        "detections": 0,
+        "domains": [],
+        "first_ts": 1700002012.526001,
+        "flows": 16,
+        "id": "ip:198.51.100.7",
+        "label": "198.51.100.7",
+        "last_ts": 1700002102.526001,
+        "sector": null,
+        "type": "ip"
+      }
+    ],
+    "summary": {
+      "by_sector": {
+        "general": 36
+      },
+      "by_type": {
+        "domain": 2,
+        "host": 3,
+        "ip": 2,
+        "sector": 1
+      },
+      "edges": 7,
+      "nodes": 8,
+      "shared_infrastructure": 1,
+      "shared_ip_nodes": [
+        "ip:93.184.216.34"
+      ]
+    }
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/graph",
+    "query": {}
+  },
+  "status": 200
+}

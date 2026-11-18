@@ -1,0 +1,94 @@
+{
+  "body": {
+    "count": 4,
+    "items": [
+      {
+        "capture_id": 4,
+        "detections": 1,
+        "error": null,
+        "flows": 13,
+        "imported_at": 1800000000.0,
+        "mode": "pcap",
+        "original_name": "suspicious3.pcap",
+        "packets": 284,
+        "running": false,
+        "size_bytes": 78237,
+        "source_type": "upload",
+        "started_at": 1800000000.0,
+        "status": "COMPLETED",
+        "stopped_at": 1800000000.0,
+        "stored_name": "cap_db534794c43aeaed3e6f52293d2c5532.pcap",
+        "unscored_flows": 0,
+        "warnings": []
+      },
+      {
+        "capture_id": 3,
+        "detections": 1,
+        "error": null,
+        "flows": 13,
+        "imported_at": 1800000000.0,
+        "mode": "pcap",
+        "original_name": "suspicious2.pcap",
+        "packets": 254,
+        "running": false,
+        "size_bytes": 60786,
+        "source_type": "upload",
+        "started_at": 1800000000.0,
+        "status": "COMPLETED",
+        "stopped_at": 1800000000.0,
+        "stored_name": "cap_342559062c5caa2055adf3fa7dd1ea42.pcap",
+        "unscored_flows": 0,
+        "warnings": []
+      },
+      {
+        "capture_id": 2,
+        "detections": 1,
+        "error": null,
+        "flows": 13,
+        "imported_at": 1800000000.0,
+        "mode": "pcap",
+        "original_name": "suspicious.pcap",
+        "packets": 288,
+        "running": false,
+        "size_bytes": 77680,
+        "source_type": "upload",
+        "started_at": 1800000000.0,
+        "status": "COMPLETED",
+        "stopped_at": 1800000000.0,
+        "stored_name": "cap_337d2fdc600b4133c8cb991c7f223379.pcap",
+        "unscored_flows": 0,
+        "warnings": []
+      },
+      {
+        "capture_id": 1,
+        "detections": 0,
+        "error": null,
+        "flows": 0,
+        "imported_at": 1800000000.0,
+        "mode": "pcap",
+        "original_name": "baseline.pcap",
+        "packets": 0,
+        "running": false,
+        "size_bytes": 324108,
+        "source_type": "upload",
+        "started_at": 1800000000.0,
+        "status": "UPLOADED",
+        "stopped_at": null,
+        "stored_name": "cap_9de57ae832fd9ef7ae7bb285f561cc0d.pcap",
+        "unscored_flows": 0,
+        "warnings": []
+      }
+    ],
+    "offset": 0
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/captures",
+    "query": {}
+  },
+  "status": 200
+}

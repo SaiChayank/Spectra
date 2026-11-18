@@ -1,0 +1,17 @@
+{
+  "body": {
+    "detail": "role VIEWER lacks the 'model:manage' permission"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": {
+      "capture_id": 1
+    },
+    "method": "POST",
+    "path": "/api/model/train",
+    "query": {}
+  },
+  "status": 403
+}

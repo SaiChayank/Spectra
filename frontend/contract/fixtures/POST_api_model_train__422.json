@@ -1,0 +1,30 @@
+{
+  "body": {
+    "detail": [
+      {
+        "ctx": {
+          "lt": 1.0
+        },
+        "loc": [
+          "body",
+          "contamination"
+        ],
+        "msg": "Input should be less than 1",
+        "type": "less_than"
+      }
+    ]
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": {
+      "capture_id": 1,
+      "contamination": 5
+    },
+    "method": "POST",
+    "path": "/api/model/train",
+    "query": {}
+  },
+  "status": 422
+}

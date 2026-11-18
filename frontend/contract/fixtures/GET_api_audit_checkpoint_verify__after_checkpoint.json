@@ -1,0 +1,49 @@
+{
+  "body": {
+    "checks": [
+      {
+        "detail": "36 entries in [1, 36], declared 36",
+        "name": "range_complete",
+        "ok": true
+      },
+      {
+        "detail": "recomputed covered-root",
+        "name": "merkle_root",
+        "ok": true
+      },
+      {
+        "detail": "prev_hash links across covered range",
+        "name": "chain_links",
+        "ok": true
+      },
+      {
+        "detail": "every covered entry still hashes to its stored entry_hash",
+        "name": "entry_integrity",
+        "ok": true
+      },
+      {
+        "detail": "signing-key epoch 1",
+        "name": "epoch_known",
+        "ok": true
+      },
+      {
+        "detail": "covered range ends at 36; epoch 1 signs [0, now)",
+        "name": "epoch_window",
+        "ok": true
+      }
+    ],
+    "ok": true,
+    "root": "ab66752a600e271a7d26a1fed43aeda529413f1db80b865922b45e6c02147025",
+    "seq": 37
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/audit/checkpoint/verify",
+    "query": {}
+  },
+  "status": 200
+}

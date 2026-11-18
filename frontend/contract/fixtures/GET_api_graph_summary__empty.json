@@ -1,0 +1,20 @@
+{
+  "body": {
+    "by_sector": {},
+    "by_type": {},
+    "edges": 0,
+    "nodes": 0,
+    "shared_infrastructure": 0,
+    "shared_ip_nodes": []
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/graph/summary",
+    "query": {}
+  },
+  "status": 200
+}

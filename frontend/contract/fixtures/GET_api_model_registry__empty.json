@@ -1,0 +1,19 @@
+{
+  "body": {
+    "active": null,
+    "count": 0,
+    "enabled": true,
+    "items": [],
+    "offset": 0
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/model/registry",
+    "query": {}
+  },
+  "status": 200
+}

@@ -1,0 +1,15 @@
+{
+  "body": {
+    "detail": "alert not found"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/alerts/alrt_doesnotexist",
+    "query": {}
+  },
+  "status": 404
+}

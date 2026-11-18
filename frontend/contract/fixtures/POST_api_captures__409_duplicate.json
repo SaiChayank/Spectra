@@ -1,0 +1,27 @@
+{
+  "body": {
+    "detail": {
+      "capture_id": 1,
+      "error": "duplicate capture",
+      "message": "identical capture already imported as capture 1"
+    }
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": {
+      "multipart": {
+        "file": {
+          "bytes": "<omitted>",
+          "content_type": "application/octet-stream",
+          "filename": "baseline.pcap"
+        }
+      }
+    },
+    "method": "POST",
+    "path": "/api/captures",
+    "query": {}
+  },
+  "status": 409
+}

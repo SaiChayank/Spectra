@@ -1,0 +1,63 @@
+{
+  "body": {
+    "contamination": 0.02,
+    "feature_names": [
+      "duration_s",
+      "packets_total",
+      "packets_fwd",
+      "packets_bwd",
+      "bytes_total",
+      "bytes_fwd",
+      "bytes_bwd",
+      "bytes_mean",
+      "bytes_std",
+      "bytes_min",
+      "bytes_max",
+      "fwd_bwd_pkt_ratio",
+      "fwd_bwd_byte_ratio",
+      "iat_mean_s",
+      "iat_std_s",
+      "iat_min_s",
+      "iat_max_s",
+      "iat_fwd_mean_s",
+      "iat_fwd_std_s",
+      "iat_fwd_mad_s",
+      "packets_per_s",
+      "bytes_per_s",
+      "syn_count",
+      "fin_count",
+      "rst_count",
+      "psh_count",
+      "payload_ratio",
+      "size_entropy",
+      "is_tcp",
+      "dst_port_norm",
+      "tls_present",
+      "tls_version_norm",
+      "tls_cipher_count",
+      "tls_extension_count",
+      "sni_present",
+      "sni_length",
+      "alpn_count",
+      "handshake_ms",
+      "server_hello_ms"
+    ],
+    "n_estimators": 300,
+    "n_features": 39,
+    "n_train": 0,
+    "threshold": null,
+    "trained": false,
+    "trained_at": null,
+    "version": 1
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/model",
+    "query": {}
+  },
+  "status": 200
+}

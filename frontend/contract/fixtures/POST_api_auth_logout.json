@@ -1,0 +1,18 @@
+{
+  "body": {
+    "ok": true
+  },
+  "headers": {
+    "content-type": "application/json",
+    "set-cookie-names": [
+      "spectra_session"
+    ]
+  },
+  "request": {
+    "body": null,
+    "method": "POST",
+    "path": "/api/auth/logout",
+    "query": {}
+  },
+  "status": 200
+}

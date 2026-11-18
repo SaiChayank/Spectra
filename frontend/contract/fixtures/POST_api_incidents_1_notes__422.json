@@ -1,0 +1,29 @@
+{
+  "body": {
+    "detail": [
+      {
+        "ctx": {
+          "min_length": 1
+        },
+        "loc": [
+          "body",
+          "body"
+        ],
+        "msg": "String should have at least 1 character",
+        "type": "string_too_short"
+      }
+    ]
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": {
+      "body": ""
+    },
+    "method": "POST",
+    "path": "/api/incidents/1/notes",
+    "query": {}
+  },
+  "status": 422
+}

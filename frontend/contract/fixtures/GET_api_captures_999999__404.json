@@ -1,0 +1,15 @@
+{
+  "body": {
+    "detail": "capture 999999 not found"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/captures/999999",
+    "query": {}
+  },
+  "status": 404
+}

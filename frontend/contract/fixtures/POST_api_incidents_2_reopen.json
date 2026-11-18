@@ -1,0 +1,37 @@
+{
+  "body": {
+    "acknowledged_at": 1800000000.0,
+    "acknowledged_by": "admin",
+    "affected_entities": [],
+    "alert_count": 0,
+    "confidence": null,
+    "created_at": 1800000000.0,
+    "created_by": "admin",
+    "detection_id": null,
+    "evidence_summary": null,
+    "first_seen": null,
+    "id": 2,
+    "last_seen": null,
+    "model_versions": [],
+    "primary_threat_class": null,
+    "related_graph_nodes": [],
+    "resolved_at": 1800000000.0,
+    "resolved_by": "admin",
+    "severity": null,
+    "status": "INVESTIGATING",
+    "summary": null,
+    "title": "Resolve me",
+    "updated_at": 1800000000.0,
+    "updated_by": "admin"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "POST",
+    "path": "/api/incidents/2/reopen",
+    "query": {}
+  },
+  "status": 200
+}

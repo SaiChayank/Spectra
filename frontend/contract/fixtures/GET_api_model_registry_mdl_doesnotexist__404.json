@@ -1,0 +1,15 @@
+{
+  "body": {
+    "detail": "unknown model: mdl_doesnotexist"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/model/registry/mdl_doesnotexist",
+    "query": {}
+  },
+  "status": 404
+}

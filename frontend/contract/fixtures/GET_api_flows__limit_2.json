@@ -1,0 +1,101 @@
+{
+  "body": {
+    "count": 52,
+    "items": [
+      {
+        "alpn": null,
+        "anomaly": false,
+        "bytes": 1192,
+        "bytes_fwd": 648,
+        "cipher_count": 0,
+        "dst": "198.51.100.7:8443",
+        "duration": 12.526001,
+        "extension_count": 0,
+        "immune": {
+          "affinity": 0.5035,
+          "danger_total": 0.65,
+          "level": 3,
+          "memory_hit": true,
+          "response": "isolate",
+          "slice_policy": "mmtc:unchanged"
+        },
+        "ja3": null,
+        "ja4": null,
+        "last_ts": 1700002102.526001,
+        "packets": 28,
+        "pqc": {
+          "actions": [],
+          "applicable": false,
+          "reasons": [
+            "no TLS/QUIC handshake observed (plaintext, unopened Initial or mid-stream join)"
+          ],
+          "risk": "unknown",
+          "score": null
+        },
+        "proto": "TCP",
+        "quic_version": null,
+        "score": 97.56,
+        "slice": "mmtc",
+        "sni": null,
+        "snn_score": 100.0,
+        "src": "10.0.0.66:43003",
+        "start_ts": 1700002090.0,
+        "swarm_flag": true,
+        "tls_version": null
+      },
+      {
+        "alpn": null,
+        "anomaly": false,
+        "bytes": 1192,
+        "bytes_fwd": 648,
+        "cipher_count": 0,
+        "dst": "198.51.100.7:8443",
+        "duration": 12.526001,
+        "extension_count": 0,
+        "immune": {
+          "affinity": 0.5035,
+          "danger_total": 0.65,
+          "level": 3,
+          "memory_hit": true,
+          "response": "isolate",
+          "slice_policy": "mmtc:unchanged"
+        },
+        "ja3": null,
+        "ja4": null,
+        "last_ts": 1700002072.526001,
+        "packets": 28,
+        "pqc": {
+          "actions": [],
+          "applicable": false,
+          "reasons": [
+            "no TLS/QUIC handshake observed (plaintext, unopened Initial or mid-stream join)"
+          ],
+          "risk": "unknown",
+          "score": null
+        },
+        "proto": "TCP",
+        "quic_version": null,
+        "score": 97.56,
+        "slice": "mmtc",
+        "sni": null,
+        "snn_score": 100.0,
+        "src": "10.0.0.66:43002",
+        "start_ts": 1700002060.0,
+        "swarm_flag": true,
+        "tls_version": null
+      }
+    ]
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/flows",
+    "query": {
+      "limit": 2
+    }
+  },
+  "status": 200
+}

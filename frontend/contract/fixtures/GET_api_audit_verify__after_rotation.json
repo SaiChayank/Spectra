@@ -1,0 +1,39 @@
+{
+  "body": {
+    "entries": 49,
+    "epoch": 2,
+    "epochs": [
+      {
+        "created_at": 1800000000.0,
+        "epoch": 1,
+        "pubkey": "0287138ddf316967ccf301bc8ec4d0661c3f4e16875c8b7ca3964eba3feef74657",
+        "start_seq": 0
+      },
+      {
+        "created_at": 1800000000.0,
+        "epoch": 2,
+        "pubkey": "02b7ca3bc5699285c28518c19e3a05e6d1f6ac38fe1a2fd1977eaa3a88ca59964b",
+        "start_seq": 49
+      }
+    ],
+    "errors": [],
+    "head": {
+      "entry_hash": "55242a105a4d71152340c4e45b31d0031f25b891a3fd6f6904db2fb171ad5b4b",
+      "kind": "audit.key_rotated",
+      "seq": 49,
+      "ts": 1800000000.0
+    },
+    "ok": true,
+    "signing_key": "02b7ca3bc5699285c28518c19e3a05e6d1f6ac38fe1a2fd1977eaa3a88ca59964b"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/audit/verify",
+    "query": {}
+  },
+  "status": 200
+}

@@ -1,0 +1,17 @@
+{
+  "body": {
+    "detail": "invalid code"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": {
+      "code": "<redacted>"
+    },
+    "method": "POST",
+    "path": "/api/auth/totp/enable",
+    "query": {}
+  },
+  "status": 401
+}

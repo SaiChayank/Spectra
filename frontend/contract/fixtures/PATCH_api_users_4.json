@@ -1,0 +1,22 @@
+{
+  "body": {
+    "created_at": 1800000000.0,
+    "id": 4,
+    "last_login_at": 1800000000.0,
+    "role": "ANALYST",
+    "updated_at": 1800000000.0,
+    "username": "contract-pwchange"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": {
+      "password": "<redacted>"
+    },
+    "method": "PATCH",
+    "path": "/api/users/4",
+    "query": {}
+  },
+  "status": 200
+}

@@ -1,0 +1,18 @@
+{
+  "body": {
+    "entry_hash": "3702b7d50e0ab42893aff3acd70da047497dab55b5e1fad26efe7d5b662abfec",
+    "kind": "alert.resolve",
+    "seq": 32,
+    "ts": 1800000000.0
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/audit/head",
+    "query": {}
+  },
+  "status": 200
+}

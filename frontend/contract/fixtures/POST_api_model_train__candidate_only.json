@@ -1,0 +1,51 @@
+{
+  "body": {
+    "augmented": 0,
+    "bio": {
+      "n_train": 42,
+      "self_trained": true,
+      "snn_threshold": 26.313318,
+      "snn_trained": true
+    },
+    "contamination": 0.05,
+    "edge": {
+      "latency_ms": {
+        "available": true,
+        "budget_ms": 10.0,
+        "n": 126,
+        "p50_ms": 0.0334,
+        "p95_ms": 0.0397,
+        "within_budget": true
+      },
+      "link": "terrestrial",
+      "n_features": 12,
+      "n_train": 42,
+      "threshold": 0.230375
+    },
+    "model_path": "<DATA_DIR>/spectra_model.joblib",
+    "n_train": 42,
+    "pcap": "<DATA_DIR>/captures/cap_9de57ae832fd9ef7ae7bb285f561cc0d.pcap",
+    "registry": {
+      "activated": false,
+      "model_id": "mdl_fdb71cbd5b6c",
+      "status": "CANDIDATE"
+    },
+    "threshold": 0.057092,
+    "train_score_mean": -0.025937,
+    "train_score_p99": 0.198806
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": {
+      "activate": false,
+      "capture_id": 1,
+      "contamination": 0.05
+    },
+    "method": "POST",
+    "path": "/api/model/train",
+    "query": {}
+  },
+  "status": 200
+}

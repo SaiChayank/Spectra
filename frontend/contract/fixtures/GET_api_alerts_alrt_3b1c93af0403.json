@@ -1,0 +1,130 @@
+{
+  "body": {
+    "alert_id": "alrt_3b1c93af0403",
+    "anomaly_score": 100.0,
+    "capture_id": 2,
+    "confidence": 0.45,
+    "destination": "93.184.216.34:443",
+    "evidence": {
+      "contradicting": [],
+      "summary": "The detector flagged this flow, but behavioural evidence did not reach any specific threat category. Closest sub-threshold candidate: c2 beaconing.",
+      "supporting": [
+        {
+          "detail": "forward IAT mad/mean 0.06 over 0.13s spacing (steady cadence)",
+          "key": "periodicity",
+          "label": "Periodicity",
+          "unit": "s",
+          "value": 0.1252
+        },
+        {
+          "detail": "forward IAT mad 0.007s (near-constant interval)",
+          "key": "timing_mad",
+          "label": "Timing MAD",
+          "unit": "s",
+          "value": 0.0074
+        }
+      ]
+    },
+    "first_seen": 1700001100.548779,
+    "flow_id": null,
+    "last_seen": 1700001100.548779,
+    "metadata": {
+      "alpn": [
+        "h3",
+        "http/1.1"
+      ],
+      "asset_criticality": null,
+      "bytes": 6580,
+      "dst_port": "443",
+      "duration": 0.548779,
+      "ja3": "be3538e59c61fb4413c62864b2ce924c",
+      "ja4": "q13d1007h3_6f559355f741_babb055429ee",
+      "packets": 10,
+      "quic_version": "QUIC v1",
+      "sector": "general",
+      "slice": "default",
+      "sni": "quic.example",
+      "src_port": "44444",
+      "tls_version": "TLS 1.3"
+    },
+    "model_id": "spectra_model.joblib",
+    "model_version": "1",
+    "module_annotations": {
+      "immune": {
+        "affinity": 0.2867,
+        "danger_total": 0.8,
+        "level": 2,
+        "memory_hit": false,
+        "response": "alert",
+        "slice_policy": "default:unchanged"
+      },
+      "pqc": {
+        "actions": [
+          "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+          "plan certificate migration to ML-DSA (FIPS 204)"
+        ],
+        "applicable": true,
+        "auth": {
+          "classical_signatures_offered": 5,
+          "pq_signatures_offered": []
+        },
+        "cipher": {
+          "aead": true,
+          "auth": "tls13",
+          "code": "<redacted>",
+          "deprecated": false,
+          "name": "TLS_AES_128_GCM_SHA256",
+          "scheme": "tls13",
+          "source": "negotiated"
+        },
+        "kx": {
+          "code": "<redacted>",
+          "kx_class": "classical",
+          "name": "x25519",
+          "offered": [
+            "x25519"
+          ],
+          "quantum": "vulnerable",
+          "source": "negotiated"
+        },
+        "kx_scheme": "classical_ephemeral",
+        "quantum_vulnerable": true,
+        "reasons": [
+          "key exchange uses classical group x25519 (harvestable)",
+          "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+        ],
+        "risk": "moderate",
+        "score": 45,
+        "version": "TLS 1.3",
+        "version_code": 772
+      },
+      "snn_score": 92.68,
+      "swarm_flag": false
+    },
+    "occurrences": 3,
+    "protocol": "UDP",
+    "severity": "MEDIUM",
+    "severity_factors": [
+      "threat category UNKNOWN_ANOMALY -> base LOW",
+      "confidence 0.45 < 0.50 -> lowered one level (thin evidence)",
+      "anomaly intensity 100.0 >= 99 -> raised one level",
+      "no asset context available -> no change",
+      "same behaviour seen 3 times (correlated) -> raised one level"
+    ],
+    "source": "10.0.0.7:44444",
+    "status": "OPEN",
+    "threat_type": "UNKNOWN_ANOMALY",
+    "timestamp": 1800000000.0,
+    "updated_at": 1800000000.0
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/alerts/alrt_3b1c93af0403",
+    "query": {}
+  },
+  "status": 200
+}

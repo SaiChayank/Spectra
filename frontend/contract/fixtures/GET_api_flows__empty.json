@@ -1,0 +1,16 @@
+{
+  "body": {
+    "count": 0,
+    "items": []
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/flows",
+    "query": {}
+  },
+  "status": 200
+}

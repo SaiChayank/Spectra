@@ -1,0 +1,24 @@
+{
+  "body": {
+    "database": "enabled",
+    "ok": true,
+    "schema_version": 13,
+    "service": "spectra",
+    "uptime_s": 0.0,
+    "version": "1.0.0",
+    "writable": {
+      "data_dir": "ok",
+      "database": "ok"
+    }
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/health",
+    "query": {}
+  },
+  "status": 200
+}

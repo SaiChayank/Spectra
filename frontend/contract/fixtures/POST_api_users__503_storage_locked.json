@@ -1,0 +1,20 @@
+{
+  "body": {
+    "detail": "storage temporarily unavailable"
+  },
+  "headers": {
+    "content-type": "application/json",
+    "retry-after": "<seconds>"
+  },
+  "request": {
+    "body": {
+      "password": "<redacted>",
+      "role": "VIEWER",
+      "username": "contract-locked"
+    },
+    "method": "POST",
+    "path": "/api/users",
+    "query": {}
+  },
+  "status": 503
+}

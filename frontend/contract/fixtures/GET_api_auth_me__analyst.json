@@ -1,0 +1,26 @@
+{
+  "body": {
+    "expires_at": 1800043200.0,
+    "user": {
+      "id": 3,
+      "permissions": [
+        "read",
+        "investigate",
+        "incidents:manage"
+      ],
+      "role": "ANALYST",
+      "totp_enabled": false,
+      "username": "contract-analyst"
+    }
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/auth/me",
+    "query": {}
+  },
+  "status": 200
+}

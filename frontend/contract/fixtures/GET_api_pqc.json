@@ -1,0 +1,226 @@
+{
+  "body": {
+    "endpoints": [
+      {
+        "actions": [
+          "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+          "plan certificate migration to ML-DSA (FIPS 204)"
+        ],
+        "algorithms": [
+          "TLS_AES_128_GCM_SHA256",
+          "x25519 (classical)"
+        ],
+        "bytes": 57939,
+        "endpoint": "example.com",
+        "first_ts": 1700001000.0,
+        "flows": 8,
+        "kind": "sni",
+        "last_ts": 1700001021.96532,
+        "max_score": 45,
+        "min_score": 45,
+        "pq_ready_flows": 0,
+        "risk_distribution": {
+          "moderate": 8
+        },
+        "sector": "general",
+        "versions": [
+          "TLS 1.3"
+        ],
+        "vulnerable_flows": 8
+      },
+      {
+        "actions": [
+          "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+          "plan certificate migration to ML-DSA (FIPS 204)"
+        ],
+        "algorithms": [
+          "TLS_AES_128_GCM_SHA256",
+          "x25519 (classical)"
+        ],
+        "bytes": 6666,
+        "endpoint": "quic.example",
+        "first_ts": 1700001100.0,
+        "flows": 1,
+        "kind": "sni",
+        "last_ts": 1700001100.536348,
+        "max_score": 45,
+        "min_score": 45,
+        "pq_ready_flows": 0,
+        "risk_distribution": {
+          "moderate": 1
+        },
+        "sector": "general",
+        "versions": [
+          "TLS 1.3"
+        ],
+        "vulnerable_flows": 1
+      }
+    ],
+    "hndl": [],
+    "model": {
+      "contamination": 0.02,
+      "feature_names": [
+        "duration_s",
+        "packets_total",
+        "packets_fwd",
+        "packets_bwd",
+        "bytes_total",
+        "bytes_fwd",
+        "bytes_bwd",
+        "bytes_mean",
+        "bytes_std",
+        "bytes_min",
+        "bytes_max",
+        "fwd_bwd_pkt_ratio",
+        "fwd_bwd_byte_ratio",
+        "iat_mean_s",
+        "iat_std_s",
+        "iat_min_s",
+        "iat_max_s",
+        "iat_fwd_mean_s",
+        "iat_fwd_std_s",
+        "iat_fwd_mad_s",
+        "packets_per_s",
+        "bytes_per_s",
+        "syn_count",
+        "fin_count",
+        "rst_count",
+        "psh_count",
+        "payload_ratio",
+        "size_entropy",
+        "is_tcp",
+        "dst_port_norm",
+        "tls_present",
+        "tls_version_norm",
+        "tls_cipher_count",
+        "tls_extension_count",
+        "sni_present",
+        "sni_length",
+        "alpn_count",
+        "handshake_ms",
+        "server_hello_ms"
+      ],
+      "n_estimators": 300,
+      "n_features": 39,
+      "n_train": 42,
+      "threshold": 0.194095,
+      "trained": true,
+      "trained_at": "2026-11-18T17:01:36+00:00",
+      "version": 1
+    },
+    "roadmap": {
+      "generated_from": {
+        "endpoints": 2,
+        "hndl_findings": 0,
+        "quantum_ready_endpoints": 0,
+        "vulnerable_endpoints": 2
+      },
+      "phases": [
+        {
+          "items": [
+            {
+              "actions": [],
+              "affected": 0,
+              "effort": "S",
+              "id": "baseline-ok",
+              "priority": "P2",
+              "rationale": "Current captures show no RSA-transport or legacy-TLS endpoints; keep monitoring.",
+              "reference": null,
+              "title": "No immediate quantum exposure found"
+            }
+          ],
+          "phase": 1,
+          "window": "0-6 months"
+        },
+        {
+          "items": [
+            {
+              "actions": [
+                "OpenSSL: SSL_CTX_set1_groups_list(ctx, \"X25519MLKEM768:X25519:P-256\")",
+                "enable hybrid group on example.com",
+                "enable hybrid group on quic.example"
+              ],
+              "affected": 2,
+              "effort": "M",
+              "id": "roll-out-hybrid-kx",
+              "priority": "P1",
+              "rationale": "Browsers, OpenSSL 3.5, BoringSSL and major CDNs negotiate X25519MLKEM768 by default; enabling it server-side is the single highest-leverage step against HNDL.",
+              "reference": "RFC 10024 (X25519MLKEM768, IANA 0x11EC)",
+              "title": "Roll out X25519MLKEM768 hybrid key exchange"
+            },
+            {
+              "actions": [
+                "stand up an internal PKI issuing mldsa65 certificates",
+                "test with draft-ietf-tls-mldsa capable clients"
+              ],
+              "affected": 1,
+              "effort": "M",
+              "id": "pq-auth-pilot",
+              "priority": "P1",
+              "rationale": "Signature schemes (RSA/ECDSA/EdDSA) are the second quantum casualty; ML-DSA (FIPS 204) is standardised with TLS codepoints 0x0904-0x0906.",
+              "reference": "FIPS 204 / draft-ietf-tls-mldsa-06",
+              "title": "Pilot ML-DSA certificate authentication"
+            }
+          ],
+          "phase": 2,
+          "window": "6-18 months"
+        },
+        {
+          "items": [
+            {
+              "actions": [
+                "export Spectra /api/pqc/inventory into the CMDB on a schedule",
+                "alert when any endpoint's readiness drops below 55/100",
+                "quarterly HNDL review for sectors: general"
+              ],
+              "affected": 2,
+              "effort": "L",
+              "id": "crypto-agility-governance",
+              "priority": "P2",
+              "rationale": "Keep a continuously verified inventory: algorithm posture must be a monitored metric, not an annual audit artefact.",
+              "reference": "Product doc: Crypto-Agility Monitor + Migration Roadmap Generator",
+              "title": "Institutionalise crypto-agility monitoring"
+            },
+            {
+              "actions": [
+                "spectra pqc scan --pcap quarterly-baseline.pcap"
+              ],
+              "affected": 0,
+              "effort": "S",
+              "id": "verify-continuously",
+              "priority": "P2",
+              "rationale": "Run Spectra captures against production baselines each quarter and diff the roadmap.",
+              "reference": null,
+              "title": "Continuous verification against live traffic"
+            }
+          ],
+          "phase": 3,
+          "window": "18-36 months"
+        }
+      ],
+      "sector": "all"
+    },
+    "summary": {
+      "by_sector": {
+        "general": 2
+      },
+      "endpoints": 2,
+      "flows": 9,
+      "quantum_ready_endpoints": 0,
+      "risk_distribution": {
+        "moderate": 9
+      },
+      "vulnerable_endpoints": 2
+    }
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/pqc",
+    "query": {}
+  },
+  "status": 200
+}

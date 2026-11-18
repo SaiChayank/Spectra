@@ -1,0 +1,17 @@
+{
+  "body": {
+    "detail": "capture 9999 not found"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": {
+      "capture_id": 9999
+    },
+    "method": "POST",
+    "path": "/api/model/train",
+    "query": {}
+  },
+  "status": 404
+}
