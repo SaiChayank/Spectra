@@ -74,8 +74,10 @@ Each item lists the real endpoints. **P0** is needed for a first usable release,
 ### P0-1 Session, account and users
 * Login (`POST /api/auth/login`), logout (`/api/auth/logout`), current user (`GET /api/auth/me`), TOTP setup/enable/disable
   (`/api/auth/totp/*`): already partly there; finish the TOTP flow (QR/secret shown once, code entry, recovery message).
-* **Change own password**: missing today and the user guide had to send people to the API. `PATCH /api/users/{id}` with the new
-  password; on success the session is revoked, so return to login with a clear message.
+* **Change own password**: missing today. `PATCH /api/users/{id}` works only with `users:manage` (ADMIN); a VIEWER or ANALYST gets 403
+  (fixture `PATCH_api_users_{user_id}__viewer_self_403.json` or similar in `frontend/contract/fixtures/`), so non-admins cannot change
+  their own password at all. This needs a new backend endpoint (proposed: `POST /api/auth/password` with the current and new password,
+  §6); build the screen against that proposal. On success the session is revoked: return to login with a clear message.
 * Users admin (ADMIN): list/create/edit/delete (`/api/users`, `/api/users/{id}`), reset someone's TOTP (`DELETE /api/users/{id}/totp`).
 * Global handling: 401 → back to login keeping the deep link; 403 → "you do not have permission" (not a crash); 429 → show the wait from
   `Retry-After`; never log or display passwords or TOTP secrets after the first display.
@@ -130,6 +132,7 @@ Known proposals to start with (shapes are yours to draft; nothing here exists ye
 
 | Need | Proposed endpoint | Notes |
 |---|---|---|
+| Change own password | `POST /api/auth/password` | current + new password; any signed-in user; revokes the session; audited |
 | Host triage list | `GET /api/hosts?sort=risk` | rank, host, confidence, top evidence, last seen |
 | Host evidence | `GET /api/hosts/{host}/evidence` | detector, technique, time, destination, strength, flow ids |
 | Analyst verdict | `POST /api/hosts/{host}/verdict` | `true` / `expected` / `false`, optional note; audited |
