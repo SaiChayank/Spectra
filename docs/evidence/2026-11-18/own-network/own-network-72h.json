@@ -1,0 +1,277 @@
+{
+  "files": 72,
+  "files_cut_off": 0,
+  "flows_total": 39301,
+  "train_hours": 24.0,
+  "train_flows": 13714,
+  "test_flows": 25587,
+  "model_fit": {
+    "n_train": 13714,
+    "threshold": 0.076379,
+    "train_score_mean": -0.097135,
+    "train_score_p99": 0.106603,
+    "contamination": 0.02
+  },
+  "overall_flag_rate_on_test": 0.0109,
+  "expected_if_baseline_matched": 0.02,
+  "by_hour": [
+    {
+      "hour_since_start": 24,
+      "flows": 648,
+      "flag_rate": 0.017
+    },
+    {
+      "hour_since_start": 25,
+      "flows": 570,
+      "flag_rate": 0.0158
+    },
+    {
+      "hour_since_start": 26,
+      "flows": 551,
+      "flag_rate": 0.0091
+    },
+    {
+      "hour_since_start": 27,
+      "flows": 516,
+      "flag_rate": 0.0078
+    },
+    {
+      "hour_since_start": 28,
+      "flows": 537,
+      "flag_rate": 0.0037
+    },
+    {
+      "hour_since_start": 29,
+      "flows": 571,
+      "flag_rate": 0.007
+    },
+    {
+      "hour_since_start": 30,
+      "flows": 554,
+      "flag_rate": 0.009
+    },
+    {
+      "hour_since_start": 31,
+      "flows": 544,
+      "flag_rate": 0.0074
+    },
+    {
+      "hour_since_start": 32,
+      "flows": 539,
+      "flag_rate": 0.0056
+    },
+    {
+      "hour_since_start": 33,
+      "flows": 522,
+      "flag_rate": 0.0057
+    },
+    {
+      "hour_since_start": 34,
+      "flows": 820,
+      "flag_rate": 0.0171
+    },
+    {
+      "hour_since_start": 35,
+      "flows": 773,
+      "flag_rate": 0.0298
+    },
+    {
+      "hour_since_start": 36,
+      "flows": 703,
+      "flag_rate": 0.0242
+    },
+    {
+      "hour_since_start": 37,
+      "flows": 601,
+      "flag_rate": 0.025
+    },
+    {
+      "hour_since_start": 38,
+      "flows": 392,
+      "flag_rate": 0.0153
+    },
+    {
+      "hour_since_start": 39,
+      "flows": 393,
+      "flag_rate": 0.0076
+    },
+    {
+      "hour_since_start": 40,
+      "flows": 389,
+      "flag_rate": 0.0051
+    },
+    {
+      "hour_since_start": 41,
+      "flows": 390,
+      "flag_rate": 0.0051
+    },
+    {
+      "hour_since_start": 42,
+      "flows": 457,
+      "flag_rate": 0.0066
+    },
+    {
+      "hour_since_start": 43,
+      "flows": 604,
+      "flag_rate": 0.0149
+    },
+    {
+      "hour_since_start": 44,
+      "flows": 505,
+      "flag_rate": 0.0099
+    },
+    {
+      "hour_since_start": 45,
+      "flows": 662,
+      "flag_rate": 0.006
+    },
+    {
+      "hour_since_start": 46,
+      "flows": 388,
+      "flag_rate": 0.0077
+    },
+    {
+      "hour_since_start": 47,
+      "flows": 383,
+      "flag_rate": 0.0026
+    },
+    {
+      "hour_since_start": 48,
+      "flows": 397,
+      "flag_rate": 0.0076
+    },
+    {
+      "hour_since_start": 49,
+      "flows": 491,
+      "flag_rate": 0.0081
+    },
+    {
+      "hour_since_start": 50,
+      "flows": 587,
+      "flag_rate": 0.0068
+    },
+    {
+      "hour_since_start": 51,
+      "flows": 557,
+      "flag_rate": 0.0054
+    },
+    {
+      "hour_since_start": 52,
+      "flows": 581,
+      "flag_rate": 0.0034
+    },
+    {
+      "hour_since_start": 53,
+      "flows": 620,
+      "flag_rate": 0.0097
+    },
+    {
+      "hour_since_start": 54,
+      "flows": 595,
+      "flag_rate": 0.0151
+    },
+    {
+      "hour_since_start": 55,
+      "flows": 544,
+      "flag_rate": 0.0055
+    },
+    {
+      "hour_since_start": 56,
+      "flows": 589,
+      "flag_rate": 0.0119
+    },
+    {
+      "hour_since_start": 57,
+      "flows": 538,
+      "flag_rate": 0.0167
+    },
+    {
+      "hour_since_start": 58,
+      "flows": 567,
+      "flag_rate": 0.0141
+    },
+    {
+      "hour_since_start": 59,
+      "flows": 644,
+      "flag_rate": 0.014
+    },
+    {
+      "hour_since_start": 60,
+      "flows": 626,
+      "flag_rate": 0.016
+    },
+    {
+      "hour_since_start": 61,
+      "flows": 453,
+      "flag_rate": 0.0088
+    },
+    {
+      "hour_since_start": 62,
+      "flows": 430,
+      "flag_rate": 0.014
+    },
+    {
+      "hour_since_start": 63,
+      "flows": 409,
+      "flag_rate": 0.0049
+    },
+    {
+      "hour_since_start": 64,
+      "flows": 399,
+      "flag_rate": 0.005
+    },
+    {
+      "hour_since_start": 65,
+      "flows": 432,
+      "flag_rate": 0.0046
+    },
+    {
+      "hour_since_start": 66,
+      "flows": 463,
+      "flag_rate": 0.0108
+    },
+    {
+      "hour_since_start": 67,
+      "flows": 502,
+      "flag_rate": 0.006
+    },
+    {
+      "hour_since_start": 68,
+      "flows": 456,
+      "flag_rate": 0.0044
+    },
+    {
+      "hour_since_start": 69,
+      "flows": 467,
+      "flag_rate": 0.0107
+    },
+    {
+      "hour_since_start": 70,
+      "flows": 523,
+      "flag_rate": 0.0076
+    },
+    {
+      "hour_since_start": 71,
+      "flows": 704,
+      "flag_rate": 0.0142
+    },
+    {
+      "hour_since_start": 72,
+      "flows": 1,
+      "flag_rate": 0.0
+    }
+  ],
+  "drift_by_day": {
+    "day_1": {
+      "flows": 13012,
+      "psi": 0.0416,
+      "level": "stable"
+    },
+    "day_2": {
+      "flows": 12574,
+      "psi": 0.0756,
+      "level": "stable"
+    }
+  },
+  "reading": "All traffic is assumed benign (your own network). A flag rate well above the expected value means the training slice does not cover your network's normal behaviour."
+}

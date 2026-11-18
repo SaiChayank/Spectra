@@ -1,0 +1,43 @@
+{
+ "benchmark": "beacon v2a1 (frozen) on own benign capture: false pairs per day",
+ "threshold": 0.8,
+ "min_flows": 20,
+ "internal_nets": [
+  "10.0.0.0/8",
+  "172.16.0.0/12",
+  "192.168.0.0/16",
+  "fc00::/7"
+ ],
+ "days": [
+  {
+   "day": 1,
+   "files": 24,
+   "flow_records": 13714,
+   "pairs_tracked": 267,
+   "pairs_ge_20_flows": 49,
+   "pairs_with_verdict": 42,
+   "false_pairs_ge_0_8": 16
+  },
+  {
+   "day": 2,
+   "files": 24,
+   "flow_records": 13013,
+   "pairs_tracked": 210,
+   "pairs_ge_20_flows": 45,
+   "pairs_with_verdict": 38,
+   "false_pairs_ge_0_8": 13
+  },
+  {
+   "day": 3,
+   "files": 24,
+   "flow_records": 12574,
+   "pairs_tracked": 124,
+   "pairs_ge_20_flows": 39,
+   "pairs_with_verdict": 35,
+   "false_pairs_ge_0_8": 14
+  }
+ ],
+ "alerting_on_every_day": 8,
+ "git_commit": "af8313994d86bd28e29e5e1ee5447e392740cb4e",
+ "note": "counts only; destinations are in the private detail file"
+}
