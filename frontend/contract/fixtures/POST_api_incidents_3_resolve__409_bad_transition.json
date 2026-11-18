@@ -1,0 +1,15 @@
+{
+  "body": {
+    "detail": "incident is FALSE_POSITIVE; reopen it before resolving"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "POST",
+    "path": "/api/incidents/3/resolve",
+    "query": {}
+  },
+  "status": 409
+}

@@ -1,0 +1,80 @@
+{
+  "body": {
+    "activated_count": 1,
+    "applied": true,
+    "artifact": "mdl_337d2fdc600b.joblib",
+    "artifact_sha256": "59e27c0f3729c1eb14c30886afad61cd909ed1342786b76f2def8978e4e4a08d",
+    "contamination": 0.05,
+    "created_at": 1800000000.0,
+    "error": null,
+    "feature_schema": "378f4f30a78a0870599f9d7fda621e2757b9b87f1c681e85b585272bab365216",
+    "id": 2,
+    "last_activated_at": 1800000000.0,
+    "metrics": {
+      "checks": [
+        {
+          "detail": "mdl_337d2fdc600b.joblib",
+          "name": "artifact_contained",
+          "ok": true
+        },
+        {
+          "detail": "mdl_337d2fdc600b.joblib",
+          "name": "artifact_exists",
+          "ok": true
+        },
+        {
+          "detail": "file 07a50310b212...",
+          "name": "artifact_sha256",
+          "ok": true
+        },
+        {
+          "detail": "model version 1",
+          "name": "artifact_loads",
+          "ok": true
+        },
+        {
+          "detail": "n_train=42",
+          "name": "trained",
+          "ok": true
+        },
+        {
+          "detail": "0.057092",
+          "name": "threshold_set",
+          "ok": true
+        },
+        {
+          "detail": "n_train=42 (need >= 10)",
+          "name": "min_training_rows",
+          "ok": true
+        },
+        {
+          "detail": "digest matches the current feature schema",
+          "name": "feature_schema",
+          "ok": true
+        }
+      ],
+      "failed": [],
+      "passed": true,
+      "validated_at": 1800000000.0
+    },
+    "model_id": "mdl_337d2fdc600b",
+    "model_version": "1",
+    "n_features": 39,
+    "n_train": 42,
+    "retired_at": null,
+    "source": "<DATA_DIR>/captures/cap_342559062c5caa2055adf3fa7dd1ea42.pcap",
+    "status": "ACTIVE",
+    "threshold": 0.057092,
+    "trained_at": 1800000000.0
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "POST",
+    "path": "/api/model/registry/mdl_337d2fdc600b/activate",
+    "query": {}
+  },
+  "status": 200
+}

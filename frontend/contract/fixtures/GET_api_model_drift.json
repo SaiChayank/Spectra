@@ -1,0 +1,70 @@
+{
+  "body": {
+    "alert_level": "significant",
+    "available": true,
+    "features": [
+      {
+        "feature": "bytes_mean",
+        "psi": 24.1296
+      },
+      {
+        "feature": "bytes_per_s",
+        "psi": 21.8694
+      },
+      {
+        "feature": "bytes_std",
+        "psi": 20.6957
+      },
+      {
+        "feature": "payload_ratio",
+        "psi": 20.3767
+      },
+      {
+        "feature": "iat_fwd_mad_s",
+        "psi": 19.0205
+      },
+      {
+        "feature": "server_hello_ms",
+        "psi": 18.0464
+      },
+      {
+        "feature": "iat_std_s",
+        "psi": 16.0852
+      },
+      {
+        "feature": "iat_mean_s",
+        "psi": 15.2703
+      },
+      {
+        "feature": "sni_length",
+        "psi": 15.2298
+      },
+      {
+        "feature": "bytes_total",
+        "psi": 14.7976
+      }
+    ],
+    "level": "significant",
+    "n": 13,
+    "psi": 9.072,
+    "psi_vs_recent": {
+      "available": false,
+      "reason": "warming up - not enough older traffic yet"
+    },
+    "psi_vs_train": {
+      "level": "significant",
+      "psi": 9.072
+    },
+    "window": 13
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/model/drift",
+    "query": {}
+  },
+  "status": 200
+}

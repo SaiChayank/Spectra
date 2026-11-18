@@ -1,0 +1,19 @@
+{
+  "body": {
+    "entry_seq": 49,
+    "epoch": 2,
+    "previous_pubkey": "378f4f30a78a0870599f9d7fda621e2757b9b87f1c681e85b585272bab36521637",
+    "pubkey": "59e27c0f3729c1eb14c30886afad61cd909ed1342786b76f2def8978e4e4a08d59",
+    "start_seq": 49
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "POST",
+    "path": "/api/audit/rotate-key",
+    "query": {}
+  },
+  "status": 200
+}

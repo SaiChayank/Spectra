@@ -1,0 +1,24 @@
+{
+  "body": {
+    "expires_at": 1800043200.0,
+    "user": {
+      "id": 2,
+      "permissions": [
+        "read"
+      ],
+      "role": "VIEWER",
+      "totp_enabled": false,
+      "username": "contract-viewer"
+    }
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/auth/me",
+    "query": {}
+  },
+  "status": 200
+}

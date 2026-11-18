@@ -1,0 +1,5404 @@
+{
+  "body": {
+    "alerts": {
+      "count": 2,
+      "items": [
+        {
+          "alert_id": "alrt_9de57ae832fd",
+          "anomaly_score": 100.0,
+          "capture_id": 2,
+          "confidence": 0.45,
+          "destination": "93.184.216.34:443",
+          "evidence": {
+            "contradicting": [],
+            "summary": "The detector flagged this flow, but behavioural evidence did not reach any specific threat category. Closest sub-threshold candidate: c2 beaconing.",
+            "supporting": [
+              {
+                "detail": "forward IAT mad/mean 0.06 over 0.13s spacing (steady cadence)",
+                "key": "periodicity",
+                "label": "Periodicity",
+                "unit": "s",
+                "value": 0.1252
+              },
+              {
+                "detail": "forward IAT mad 0.007s (near-constant interval)",
+                "key": "timing_mad",
+                "label": "Timing MAD",
+                "unit": "s",
+                "value": 0.0074
+              }
+            ]
+          },
+          "first_seen": 1700001100.548779,
+          "flow_id": null,
+          "last_seen": 1700001100.548779,
+          "metadata": {
+            "alpn": [
+              "h3",
+              "http/1.1"
+            ],
+            "asset_criticality": null,
+            "bytes": 6580,
+            "dst_port": "443",
+            "duration": 0.548779,
+            "ja3": "be3538e59c61fb4413c62864b2ce924c",
+            "ja4": "q13d1007h3_6f559355f741_babb055429ee",
+            "packets": 10,
+            "quic_version": "QUIC v1",
+            "sector": "general",
+            "slice": "default",
+            "sni": "quic.example",
+            "src_port": "44444",
+            "tls_version": "TLS 1.3"
+          },
+          "model_id": "spectra_model.joblib",
+          "model_version": "1",
+          "module_annotations": {
+            "immune": {
+              "affinity": 0.2867,
+              "danger_total": 0.0,
+              "level": 0,
+              "memory_hit": false,
+              "response": "ignore",
+              "slice_policy": "default:unchanged"
+            },
+            "pqc": {
+              "actions": [
+                "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+                "plan certificate migration to ML-DSA (FIPS 204)"
+              ],
+              "applicable": true,
+              "auth": {
+                "classical_signatures_offered": 5,
+                "pq_signatures_offered": []
+              },
+              "cipher": {
+                "aead": true,
+                "auth": "tls13",
+                "code": "<redacted>",
+                "deprecated": false,
+                "name": "TLS_AES_128_GCM_SHA256",
+                "scheme": "tls13",
+                "source": "negotiated"
+              },
+              "kx": {
+                "code": "<redacted>",
+                "kx_class": "classical",
+                "name": "x25519",
+                "offered": [
+                  "x25519"
+                ],
+                "quantum": "vulnerable",
+                "source": "negotiated"
+              },
+              "kx_scheme": "classical_ephemeral",
+              "quantum_vulnerable": true,
+              "reasons": [
+                "key exchange uses classical group x25519 (harvestable)",
+                "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+              ],
+              "risk": "moderate",
+              "score": 45,
+              "version": "TLS 1.3",
+              "version_code": 772
+            },
+            "snn_score": 92.68,
+            "swarm_flag": false
+          },
+          "occurrences": 3,
+          "protocol": "UDP",
+          "severity": "MEDIUM",
+          "severity_factors": [
+            "threat category UNKNOWN_ANOMALY -> base LOW",
+            "confidence 0.45 < 0.50 -> lowered one level (thin evidence)",
+            "anomaly intensity 100.0 >= 99 -> raised one level",
+            "no asset context available -> no change",
+            "same behaviour seen 3 times (correlated) -> raised one level"
+          ],
+          "source": "10.0.0.7:44444",
+          "status": "OPEN",
+          "threat_type": "UNKNOWN_ANOMALY",
+          "timestamp": 1800000000.0,
+          "updated_at": 1800000000.0
+        },
+        {
+          "alert_id": "alrt_f4d6cb1720c4",
+          "anomaly_score": 100.0,
+          "capture_id": 4,
+          "confidence": 0.95,
+          "destination": "93.184.216.34:443",
+          "evidence": {
+            "contradicting": [],
+            "summary": "Connections repeated approximately every 0 seconds with unusually stable timing.",
+            "supporting": [
+              {
+                "detail": "forward IAT mad/mean 0.06 over 0.12s spacing (steady cadence)",
+                "key": "periodicity",
+                "label": "Periodicity",
+                "unit": "s",
+                "value": 0.1176
+              },
+              {
+                "detail": "forward IAT mad 0.007s (near-constant interval)",
+                "key": "timing_mad",
+                "label": "Timing MAD",
+                "unit": "s",
+                "value": 0.0068
+              },
+              {
+                "detail": "same src->dst pair seen 3 times before",
+                "key": "repeated_destination",
+                "label": "Repeated destination",
+                "unit": "count",
+                "value": 3.0
+              },
+              {
+                "detail": "within-flow size cv 0.44, cross-session size cv 0.22",
+                "key": "similar_packet_sizes",
+                "label": "Similar packet sizes",
+                "unit": "ratio",
+                "value": 0.4372
+              },
+              {
+                "detail": "3 prior <=10KB sessions to this host",
+                "key": "repeated_small_sessions",
+                "label": "Repeated small sessions",
+                "unit": "count",
+                "value": 3.0
+              }
+            ]
+          },
+          "first_seen": 1700001100.536348,
+          "flow_id": null,
+          "last_seen": 1700001100.536348,
+          "metadata": {
+            "alpn": [
+              "h3",
+              "http/1.1"
+            ],
+            "asset_criticality": null,
+            "bytes": 6666,
+            "dst_port": "443",
+            "duration": 0.536348,
+            "ja3": "be3538e59c61fb4413c62864b2ce924c",
+            "ja4": "q13d1007h3_6f559355f741_babb055429ee",
+            "packets": 10,
+            "quic_version": "QUIC v1",
+            "sector": "general",
+            "slice": "default",
+            "sni": "quic.example",
+            "src_port": "44444",
+            "tls_version": "TLS 1.3"
+          },
+          "model_id": "spectra_model.joblib",
+          "model_version": "1",
+          "module_annotations": {
+            "immune": {
+              "affinity": 0.2698,
+              "danger_total": 0.0,
+              "level": 0,
+              "memory_hit": true,
+              "response": "ignore",
+              "slice_policy": "default:unchanged"
+            },
+            "pqc": {
+              "actions": [
+                "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+                "plan certificate migration to ML-DSA (FIPS 204)"
+              ],
+              "applicable": true,
+              "auth": {
+                "classical_signatures_offered": 5,
+                "pq_signatures_offered": []
+              },
+              "cipher": {
+                "aead": true,
+                "auth": "tls13",
+                "code": "<redacted>",
+                "deprecated": false,
+                "name": "TLS_AES_128_GCM_SHA256",
+                "scheme": "tls13",
+                "source": "negotiated"
+              },
+              "kx": {
+                "code": "<redacted>",
+                "kx_class": "classical",
+                "name": "x25519",
+                "offered": [
+                  "x25519"
+                ],
+                "quantum": "vulnerable",
+                "source": "negotiated"
+              },
+              "kx_scheme": "classical_ephemeral",
+              "quantum_vulnerable": true,
+              "reasons": [
+                "key exchange uses classical group x25519 (harvestable)",
+                "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+              ],
+              "risk": "moderate",
+              "score": 45,
+              "version": "TLS 1.3",
+              "version_code": 772
+            },
+            "snn_score": 92.68,
+            "swarm_flag": false
+          },
+          "occurrences": 1,
+          "protocol": "UDP",
+          "severity": "CRITICAL",
+          "severity_factors": [
+            "threat category C2_BEACONING -> base HIGH",
+            "confidence 0.95 >= 0.85 -> raised one level",
+            "anomaly intensity 100.0 >= 99 -> raised one level",
+            "no asset context available -> no change",
+            "1 sighting(s) of this behaviour -> no change",
+            "clamped to CRITICAL (severity is ordinal: LOW..CRITICAL)"
+          ],
+          "source": "10.0.0.7:44444",
+          "status": "RESOLVED",
+          "threat_type": "C2_BEACONING",
+          "timestamp": 1800000000.0,
+          "updated_at": 1800000000.0
+        }
+      ]
+    },
+    "annotations": {
+      "bio": [
+        {
+          "immune": {
+            "affinity": 0.2698,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": true,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ref": "flow:48",
+          "snn_score": 92.68,
+          "swarm_flag": false
+        },
+        {
+          "immune": {
+            "affinity": 0.055,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ref": "flow:47",
+          "snn_score": 70.73,
+          "swarm_flag": false
+        },
+        {
+          "immune": {
+            "affinity": 0.0618,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ref": "flow:46",
+          "snn_score": 31.71,
+          "swarm_flag": false
+        },
+        {
+          "immune": {
+            "affinity": 0.0644,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ref": "flow:45",
+          "snn_score": 53.66,
+          "swarm_flag": false
+        },
+        {
+          "immune": {
+            "affinity": 0.0433,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ref": "flow:44",
+          "snn_score": 31.71,
+          "swarm_flag": false
+        },
+        {
+          "immune": {
+            "affinity": 0.1118,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ref": "flow:43",
+          "snn_score": 100.0,
+          "swarm_flag": false
+        },
+        {
+          "immune": {
+            "affinity": 0.0438,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ref": "flow:42",
+          "snn_score": 70.73,
+          "swarm_flag": false
+        },
+        {
+          "immune": {
+            "affinity": 0.0491,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ref": "flow:41",
+          "snn_score": 19.51,
+          "swarm_flag": false
+        },
+        {
+          "immune": {
+            "affinity": 0.0515,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ref": "flow:40",
+          "snn_score": 65.85,
+          "swarm_flag": false
+        },
+        {
+          "immune": {
+            "affinity": 0.2819,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": true,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ref": "flow:35",
+          "snn_score": 97.56,
+          "swarm_flag": false
+        },
+        {
+          "immune": {
+            "affinity": 0.0499,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ref": "flow:34",
+          "snn_score": 97.56,
+          "swarm_flag": false
+        },
+        {
+          "immune": {
+            "affinity": 0.1051,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ref": "flow:33",
+          "snn_score": 31.71,
+          "swarm_flag": false
+        },
+        {
+          "immune": {
+            "affinity": 0.0801,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ref": "flow:32",
+          "snn_score": 82.93,
+          "swarm_flag": false
+        },
+        {
+          "immune": {
+            "affinity": 0.0517,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ref": "flow:31",
+          "snn_score": 36.59,
+          "swarm_flag": false
+        },
+        {
+          "immune": {
+            "affinity": 0.1051,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ref": "flow:30",
+          "snn_score": 85.37,
+          "swarm_flag": false
+        },
+        {
+          "immune": {
+            "affinity": 0.0967,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ref": "flow:29",
+          "snn_score": 4.88,
+          "swarm_flag": false
+        },
+        {
+          "immune": {
+            "affinity": 0.068,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ref": "flow:28",
+          "snn_score": 36.59,
+          "swarm_flag": false
+        },
+        {
+          "immune": {
+            "affinity": 0.0386,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ref": "flow:27",
+          "snn_score": 97.56,
+          "swarm_flag": false
+        },
+        {
+          "immune": {
+            "affinity": 0.2867,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": true,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ref": "flow:22",
+          "snn_score": 92.68,
+          "swarm_flag": false
+        },
+        {
+          "immune": {
+            "affinity": 0.0527,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ref": "flow:21",
+          "snn_score": 36.59,
+          "swarm_flag": false
+        }
+      ],
+      "counts": {
+        "bio": 38,
+        "edge": 38,
+        "pqc": 38
+      },
+      "edge": [
+        {
+          "ref": "flow:48",
+          "slice": "default"
+        },
+        {
+          "ref": "flow:47",
+          "slice": "default"
+        },
+        {
+          "ref": "flow:46",
+          "slice": "default"
+        },
+        {
+          "ref": "flow:45",
+          "slice": "default"
+        },
+        {
+          "ref": "flow:44",
+          "slice": "default"
+        },
+        {
+          "ref": "flow:43",
+          "slice": "default"
+        },
+        {
+          "ref": "flow:42",
+          "slice": "default"
+        },
+        {
+          "ref": "flow:41",
+          "slice": "default"
+        },
+        {
+          "ref": "flow:40",
+          "slice": "default"
+        },
+        {
+          "ref": "flow:35",
+          "slice": "default"
+        },
+        {
+          "ref": "flow:34",
+          "slice": "default"
+        },
+        {
+          "ref": "flow:33",
+          "slice": "default"
+        },
+        {
+          "ref": "flow:32",
+          "slice": "default"
+        },
+        {
+          "ref": "flow:31",
+          "slice": "default"
+        },
+        {
+          "ref": "flow:30",
+          "slice": "default"
+        },
+        {
+          "ref": "flow:29",
+          "slice": "default"
+        },
+        {
+          "ref": "flow:28",
+          "slice": "default"
+        },
+        {
+          "ref": "flow:27",
+          "slice": "default"
+        },
+        {
+          "ref": "flow:22",
+          "slice": "default"
+        },
+        {
+          "ref": "flow:21",
+          "slice": "default"
+        }
+      ],
+      "pqc": [
+        {
+          "assessment": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "ref": "flow:48"
+        },
+        {
+          "assessment": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "ref": "flow:47"
+        },
+        {
+          "assessment": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "ref": "flow:46"
+        },
+        {
+          "assessment": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "ref": "flow:45"
+        },
+        {
+          "assessment": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "ref": "flow:44"
+        },
+        {
+          "assessment": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "ref": "flow:43"
+        },
+        {
+          "assessment": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "ref": "flow:42"
+        },
+        {
+          "assessment": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "ref": "flow:41"
+        },
+        {
+          "assessment": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "ref": "flow:40"
+        },
+        {
+          "assessment": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "ref": "flow:35"
+        },
+        {
+          "assessment": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "ref": "flow:34"
+        },
+        {
+          "assessment": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "ref": "flow:33"
+        },
+        {
+          "assessment": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "ref": "flow:32"
+        },
+        {
+          "assessment": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "ref": "flow:31"
+        },
+        {
+          "assessment": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "ref": "flow:30"
+        },
+        {
+          "assessment": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "ref": "flow:29"
+        },
+        {
+          "assessment": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "ref": "flow:28"
+        },
+        {
+          "assessment": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "ref": "flow:27"
+        },
+        {
+          "assessment": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "ref": "flow:22"
+        },
+        {
+          "assessment": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "ref": "flow:21"
+        }
+      ]
+    },
+    "audit": {
+      "count": 5,
+      "items": [
+        {
+          "actor": "admin",
+          "entry_hash": "378f4f30a78a0870599f9d7fda621e2757b9b87f1c681e85b585272bab365216",
+          "kind": "alert.resolve",
+          "payload": {
+            "alert_id": "alrt_f4d6cb1720c4",
+            "severity": "CRITICAL"
+          },
+          "seq": 32,
+          "ts": 1800000000.0
+        },
+        {
+          "actor": "admin",
+          "entry_hash": "07a50310b212a63c19307591bd58c07d7d2c747f77714fca9a2220ec36002ec6",
+          "kind": "alert.acknowledge",
+          "payload": {
+            "alert_id": "alrt_f4d6cb1720c4",
+            "severity": "CRITICAL"
+          },
+          "seq": 31,
+          "ts": 1800000000.0
+        },
+        {
+          "actor": "spectra",
+          "entry_hash": "2902648e3c2a7f2356588448ed411343529197f94e4bfa093c8830065720ed68",
+          "kind": "incident.alert_add",
+          "payload": {
+            "alert_id": "alrt_f4d6cb1720c4",
+            "id": 1,
+            "score": 13.0,
+            "source": "auto"
+          },
+          "seq": 30,
+          "ts": 1800000000.0
+        },
+        {
+          "actor": "admin",
+          "entry_hash": "3ff3b49f5f601b8525958a3fb6a71ebe75ae0a3c4584d2216e67f182fddc111b",
+          "kind": "incident.investigate",
+          "payload": {
+            "from": "OPEN",
+            "id": 1,
+            "to": "INVESTIGATING"
+          },
+          "seq": 22,
+          "ts": 1800000000.0
+        },
+        {
+          "actor": "admin",
+          "entry_hash": "b76253483fa7ad372b35407bbaa61cdaa3811344504d36bce6cf204521ba0350",
+          "kind": "incident.create",
+          "payload": {
+            "alert_count": 1,
+            "detection_id": null,
+            "id": 1,
+            "title": "Demo beacon investigation"
+          },
+          "seq": 20,
+          "ts": 1800000000.0
+        }
+      ]
+    },
+    "domains": [
+      {
+        "detections": 0,
+        "domain": "example.com",
+        "first_ts": 1700001000.776883,
+        "flows": 32,
+        "last_ts": 1700001021.97162
+      },
+      {
+        "detections": 4,
+        "domain": "quic.example",
+        "first_ts": 1700001100.52612,
+        "flows": 4,
+        "last_ts": 1700001100.548779
+      }
+    ],
+    "evidence": {
+      "alerts": [
+        {
+          "alert_id": "alrt_9de57ae832fd",
+          "anomaly_score": 100.0,
+          "confidence": 0.45,
+          "evidence": {
+            "contradicting": [],
+            "summary": "The detector flagged this flow, but behavioural evidence did not reach any specific threat category. Closest sub-threshold candidate: c2 beaconing.",
+            "supporting": [
+              {
+                "detail": "forward IAT mad/mean 0.06 over 0.13s spacing (steady cadence)",
+                "key": "periodicity",
+                "label": "Periodicity",
+                "unit": "s",
+                "value": 0.1252
+              },
+              {
+                "detail": "forward IAT mad 0.007s (near-constant interval)",
+                "key": "timing_mad",
+                "label": "Timing MAD",
+                "unit": "s",
+                "value": 0.0074
+              }
+            ]
+          },
+          "severity": "MEDIUM",
+          "threat_type": "UNKNOWN_ANOMALY"
+        },
+        {
+          "alert_id": "alrt_f4d6cb1720c4",
+          "anomaly_score": 100.0,
+          "confidence": 0.95,
+          "evidence": {
+            "contradicting": [],
+            "summary": "Connections repeated approximately every 0 seconds with unusually stable timing.",
+            "supporting": [
+              {
+                "detail": "forward IAT mad/mean 0.06 over 0.12s spacing (steady cadence)",
+                "key": "periodicity",
+                "label": "Periodicity",
+                "unit": "s",
+                "value": 0.1176
+              },
+              {
+                "detail": "forward IAT mad 0.007s (near-constant interval)",
+                "key": "timing_mad",
+                "label": "Timing MAD",
+                "unit": "s",
+                "value": 0.0068
+              },
+              {
+                "detail": "same src->dst pair seen 3 times before",
+                "key": "repeated_destination",
+                "label": "Repeated destination",
+                "unit": "count",
+                "value": 3.0
+              },
+              {
+                "detail": "within-flow size cv 0.44, cross-session size cv 0.22",
+                "key": "similar_packet_sizes",
+                "label": "Similar packet sizes",
+                "unit": "ratio",
+                "value": 0.4372
+              },
+              {
+                "detail": "3 prior <=10KB sessions to this host",
+                "key": "repeated_small_sessions",
+                "label": "Repeated small sessions",
+                "unit": "count",
+                "value": 3.0
+              }
+            ]
+          },
+          "severity": "CRITICAL",
+          "threat_type": "C2_BEACONING"
+        }
+      ],
+      "flow_reasons": [
+        {
+          "flow_id": 48,
+          "reasons": [
+            {
+              "feature": "syn_count",
+              "value": 0.0,
+              "z_score": -4.47
+            },
+            {
+              "feature": "fin_count",
+              "value": 0.0,
+              "z_score": -4.47
+            },
+            {
+              "feature": "is_tcp",
+              "value": 0.0,
+              "z_score": -4.47
+            }
+          ],
+          "score": 100.0
+        },
+        {
+          "flow_id": 35,
+          "reasons": [
+            {
+              "feature": "syn_count",
+              "value": 0.0,
+              "z_score": -4.47
+            },
+            {
+              "feature": "fin_count",
+              "value": 0.0,
+              "z_score": -4.47
+            },
+            {
+              "feature": "is_tcp",
+              "value": 0.0,
+              "z_score": -4.47
+            }
+          ],
+          "score": 100.0
+        },
+        {
+          "flow_id": 22,
+          "reasons": [
+            {
+              "feature": "iat_min_s",
+              "value": 0.0284,
+              "z_score": 5.19
+            },
+            {
+              "feature": "iat_fwd_std_s",
+              "value": 0.0109,
+              "z_score": -4.67
+            },
+            {
+              "feature": "fin_count",
+              "value": 0.0,
+              "z_score": -4.47
+            }
+          ],
+          "score": 100.0
+        },
+        {
+          "flow_id": 9,
+          "reasons": [
+            {
+              "feature": "iat_min_s",
+              "value": 0.0284,
+              "z_score": 5.19
+            },
+            {
+              "feature": "iat_fwd_std_s",
+              "value": 0.0109,
+              "z_score": -4.67
+            },
+            {
+              "feature": "fin_count",
+              "value": 0.0,
+              "z_score": -4.47
+            }
+          ],
+          "score": 100.0
+        }
+      ],
+      "primary_threat": "C2_BEACONING",
+      "sampled": 36,
+      "severity_factors": [
+        "threat category UNKNOWN_ANOMALY -> base LOW",
+        "confidence 0.45 < 0.50 -> lowered one level (thin evidence)",
+        "anomaly intensity 100.0 >= 99 -> raised one level",
+        "no asset context available -> no change",
+        "same behaviour seen 3 times (correlated) -> raised one level",
+        "threat category C2_BEACONING -> base HIGH",
+        "confidence 0.95 >= 0.85 -> raised one level",
+        "1 sighting(s) of this behaviour -> no change",
+        "clamped to CRITICAL (severity is ordinal: LOW..CRITICAL)"
+      ],
+      "summary": "2 linked alert(s); C2_BEACONING: Connections repeated approximately every 0 seconds with unusually stable timing."
+    },
+    "flows": {
+      "count": 36,
+      "items": [
+        {
+          "alert_id": "alrt_f4d6cb1720c4",
+          "alpn": [
+            "h3",
+            "http/1.1"
+          ],
+          "anomaly": true,
+          "bytes": 6666,
+          "bytes_fwd": 3261,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 0.536348,
+          "extension_count": 7,
+          "id": 48,
+          "immune": {
+            "affinity": 0.2698,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": true,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "q13d1007h3_6f559355f741_babb055429ee",
+          "last_ts": 1700001100.536348,
+          "packets": 10,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "UDP",
+          "quic_version": "QUIC v1",
+          "reasons": [
+            {
+              "feature": "syn_count",
+              "value": 0.0,
+              "z_score": -4.47
+            },
+            {
+              "feature": "fin_count",
+              "value": 0.0,
+              "z_score": -4.47
+            },
+            {
+              "feature": "is_tcp",
+              "value": 0.0,
+              "z_score": -4.47
+            }
+          ],
+          "score": 100.0,
+          "slice": "default",
+          "sni": "quic.example",
+          "snn_score": 92.68,
+          "src": "10.0.0.7:44444",
+          "start_ts": 1700001100.0,
+          "swarm_flag": false,
+          "threat": {
+            "confidence": 0.95,
+            "contradicting": [],
+            "supporting": [
+              {
+                "detail": "forward IAT mad/mean 0.06 over 0.12s spacing (steady cadence)",
+                "signal": "periodic_forward_timing",
+                "unit": "s",
+                "value": 0.1176,
+                "weight": 0.5
+              },
+              {
+                "detail": "forward IAT mad 0.007s (near-constant interval)",
+                "signal": "low_timing_mad",
+                "unit": "s",
+                "value": 0.0068,
+                "weight": 0.3
+              },
+              {
+                "detail": "same src->dst pair seen 3 times before",
+                "signal": "repeated_destination",
+                "unit": "count",
+                "value": 3.0,
+                "weight": 0.4
+              },
+              {
+                "detail": "within-flow size cv 0.44, cross-session size cv 0.22",
+                "signal": "similar_packet_sizes",
+                "unit": "ratio",
+                "value": 0.4372,
+                "weight": 0.3
+              },
+              {
+                "detail": "3 prior <=10KB sessions to this host",
+                "signal": "repeated_small_sessions",
+                "unit": "count",
+                "value": 3.0,
+                "weight": 0.4
+              }
+            ],
+            "threat_type": "C2_BEACONING"
+          },
+          "tls_version": "TLS 1.3",
+          "ts": 1700001100.536348
+        },
+        {
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "anomaly": false,
+          "bytes": 8317,
+          "bytes_fwd": 4356,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 0.96532,
+          "extension_count": 7,
+          "id": 47,
+          "immune": {
+            "affinity": 0.055,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "t13d1007h2_6f559355f741_babb055429ee",
+          "last_ts": 1700001021.96532,
+          "packets": 21,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "TCP",
+          "quic_version": null,
+          "reasons": null,
+          "score": 12.2,
+          "slice": "default",
+          "sni": "example.com",
+          "snn_score": 70.73,
+          "src": "10.0.0.5:42007",
+          "start_ts": 1700001021.0,
+          "swarm_flag": false,
+          "tls_version": "TLS 1.3",
+          "ts": 1700001021.96532
+        },
+        {
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "anomaly": false,
+          "bytes": 4838,
+          "bytes_fwd": 2504,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 0.586378,
+          "extension_count": 7,
+          "id": 46,
+          "immune": {
+            "affinity": 0.0618,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "t13d1007h2_6f559355f741_babb055429ee",
+          "last_ts": 1700001018.586378,
+          "packets": 15,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "TCP",
+          "quic_version": null,
+          "reasons": null,
+          "score": 39.02,
+          "slice": "default",
+          "sni": "example.com",
+          "snn_score": 31.71,
+          "src": "10.0.0.5:42006",
+          "start_ts": 1700001018.0,
+          "swarm_flag": false,
+          "tls_version": "TLS 1.3",
+          "ts": 1700001018.586378
+        },
+        {
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "anomaly": false,
+          "bytes": 8922,
+          "bytes_fwd": 4399,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 1.04013,
+          "extension_count": 7,
+          "id": 45,
+          "immune": {
+            "affinity": 0.0644,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "t13d1007h2_6f559355f741_babb055429ee",
+          "last_ts": 1700001016.04013,
+          "packets": 23,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "TCP",
+          "quic_version": null,
+          "reasons": null,
+          "score": 41.46,
+          "slice": "default",
+          "sni": "example.com",
+          "snn_score": 53.66,
+          "src": "10.0.0.5:42005",
+          "start_ts": 1700001015.0,
+          "swarm_flag": false,
+          "tls_version": "TLS 1.3",
+          "ts": 1700001016.04013
+        },
+        {
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "anomaly": false,
+          "bytes": 5985,
+          "bytes_fwd": 3109,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 0.674935,
+          "extension_count": 7,
+          "id": 44,
+          "immune": {
+            "affinity": 0.0433,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "t13d1007h2_6f559355f741_babb055429ee",
+          "last_ts": 1700001012.674935,
+          "packets": 17,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "TCP",
+          "quic_version": null,
+          "reasons": null,
+          "score": 17.07,
+          "slice": "default",
+          "sni": "example.com",
+          "snn_score": 31.71,
+          "src": "10.0.0.5:42004",
+          "start_ts": 1700001012.0,
+          "swarm_flag": false,
+          "tls_version": "TLS 1.3",
+          "ts": 1700001012.674935
+        },
+        {
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "anomaly": false,
+          "bytes": 9493,
+          "bytes_fwd": 5176,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 0.913106,
+          "extension_count": 7,
+          "id": 43,
+          "immune": {
+            "affinity": 0.1118,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "t13d1007h2_6f559355f741_babb055429ee",
+          "last_ts": 1700001009.913106,
+          "packets": 23,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "TCP",
+          "quic_version": null,
+          "reasons": null,
+          "score": 90.24,
+          "slice": "default",
+          "sni": "example.com",
+          "snn_score": 100.0,
+          "src": "10.0.0.5:42003",
+          "start_ts": 1700001009.0,
+          "swarm_flag": false,
+          "tls_version": "TLS 1.3",
+          "ts": 1700001009.913106
+        },
+        {
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "anomaly": false,
+          "bytes": 7222,
+          "bytes_fwd": 3587,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 0.865157,
+          "extension_count": 7,
+          "id": 42,
+          "immune": {
+            "affinity": 0.0438,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "t13d1007h2_6f559355f741_babb055429ee",
+          "last_ts": 1700001006.865157,
+          "packets": 19,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "TCP",
+          "quic_version": null,
+          "reasons": null,
+          "score": 34.15,
+          "slice": "default",
+          "sni": "example.com",
+          "snn_score": 70.73,
+          "src": "10.0.0.5:42002",
+          "start_ts": 1700001006.0,
+          "swarm_flag": false,
+          "tls_version": "TLS 1.3",
+          "ts": 1700001006.865157
+        },
+        {
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "anomaly": false,
+          "bytes": 6874,
+          "bytes_fwd": 3430,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 0.901804,
+          "extension_count": 7,
+          "id": 41,
+          "immune": {
+            "affinity": 0.0491,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "t13d1007h2_6f559355f741_babb055429ee",
+          "last_ts": 1700001003.901804,
+          "packets": 19,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "TCP",
+          "quic_version": null,
+          "reasons": null,
+          "score": 34.15,
+          "slice": "default",
+          "sni": "example.com",
+          "snn_score": 19.51,
+          "src": "10.0.0.5:42001",
+          "start_ts": 1700001003.0,
+          "swarm_flag": false,
+          "tls_version": "TLS 1.3",
+          "ts": 1700001003.901804
+        },
+        {
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "anomaly": false,
+          "bytes": 6288,
+          "bytes_fwd": 3523,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 0.776883,
+          "extension_count": 7,
+          "id": 40,
+          "immune": {
+            "affinity": 0.0515,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "t13d1007h2_6f559355f741_babb055429ee",
+          "last_ts": 1700001000.776883,
+          "packets": 17,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "TCP",
+          "quic_version": null,
+          "reasons": null,
+          "score": 51.22,
+          "slice": "default",
+          "sni": "example.com",
+          "snn_score": 65.85,
+          "src": "10.0.0.5:42000",
+          "start_ts": 1700001000.0,
+          "swarm_flag": false,
+          "tls_version": "TLS 1.3",
+          "ts": 1700001000.776883
+        },
+        {
+          "alert_id": "alrt_9de57ae832fd",
+          "alpn": [
+            "h3",
+            "http/1.1"
+          ],
+          "anomaly": true,
+          "bytes": 6481,
+          "bytes_fwd": 3270,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 0.52612,
+          "extension_count": 7,
+          "id": 35,
+          "immune": {
+            "affinity": 0.2819,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": true,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "q13d1007h3_6f559355f741_babb055429ee",
+          "last_ts": 1700001100.52612,
+          "packets": 10,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "UDP",
+          "quic_version": "QUIC v1",
+          "reasons": [
+            {
+              "feature": "syn_count",
+              "value": 0.0,
+              "z_score": -4.47
+            },
+            {
+              "feature": "fin_count",
+              "value": 0.0,
+              "z_score": -4.47
+            },
+            {
+              "feature": "is_tcp",
+              "value": 0.0,
+              "z_score": -4.47
+            }
+          ],
+          "score": 100.0,
+          "slice": "default",
+          "sni": "quic.example",
+          "snn_score": 97.56,
+          "src": "10.0.0.7:44444",
+          "start_ts": 1700001100.0,
+          "swarm_flag": false,
+          "threat": {
+            "candidate": "C2_BEACONING",
+            "confidence": 0.45,
+            "contradicting": [],
+            "insufficient_evidence": true,
+            "supporting": [
+              {
+                "detail": "forward IAT mad/mean 0.12 over 0.12s spacing (steady cadence)",
+                "signal": "periodic_forward_timing",
+                "unit": "s",
+                "value": 0.1168,
+                "weight": 0.5
+              },
+              {
+                "detail": "forward IAT mad 0.014s (near-constant interval)",
+                "signal": "low_timing_mad",
+                "unit": "s",
+                "value": 0.0136,
+                "weight": 0.3
+              }
+            ],
+            "threat_type": "UNKNOWN_ANOMALY"
+          },
+          "tls_version": "TLS 1.3",
+          "ts": 1700001100.52612
+        },
+        {
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "anomaly": false,
+          "bytes": 6885,
+          "bytes_fwd": 3543,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 0.788712,
+          "extension_count": 7,
+          "id": 34,
+          "immune": {
+            "affinity": 0.0499,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "t13d1007h2_6f559355f741_babb055429ee",
+          "last_ts": 1700001021.788712,
+          "packets": 19,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "TCP",
+          "quic_version": null,
+          "reasons": null,
+          "score": 43.9,
+          "slice": "default",
+          "sni": "example.com",
+          "snn_score": 97.56,
+          "src": "10.0.0.5:42007",
+          "start_ts": 1700001021.0,
+          "swarm_flag": false,
+          "tls_version": "TLS 1.3",
+          "ts": 1700001021.788712
+        },
+        {
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "anomaly": false,
+          "bytes": 3818,
+          "bytes_fwd": 2074,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 0.461759,
+          "extension_count": 7,
+          "id": 33,
+          "immune": {
+            "affinity": 0.1051,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "t13d1007h2_6f559355f741_babb055429ee",
+          "last_ts": 1700001018.461759,
+          "packets": 13,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "TCP",
+          "quic_version": null,
+          "reasons": null,
+          "score": 78.05,
+          "slice": "default",
+          "sni": "example.com",
+          "snn_score": 31.71,
+          "src": "10.0.0.5:42006",
+          "start_ts": 1700001018.0,
+          "swarm_flag": false,
+          "tls_version": "TLS 1.3",
+          "ts": 1700001018.461759
+        },
+        {
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "anomaly": false,
+          "bytes": 4845,
+          "bytes_fwd": 2726,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 0.646022,
+          "extension_count": 7,
+          "id": 32,
+          "immune": {
+            "affinity": 0.0801,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "t13d1007h2_6f559355f741_babb055429ee",
+          "last_ts": 1700001015.646022,
+          "packets": 15,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "TCP",
+          "quic_version": null,
+          "reasons": null,
+          "score": 65.85,
+          "slice": "default",
+          "sni": "example.com",
+          "snn_score": 82.93,
+          "src": "10.0.0.5:42005",
+          "start_ts": 1700001015.0,
+          "swarm_flag": false,
+          "tls_version": "TLS 1.3",
+          "ts": 1700001015.646022
+        },
+        {
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "anomaly": false,
+          "bytes": 5309,
+          "bytes_fwd": 2570,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 0.613979,
+          "extension_count": 7,
+          "id": 31,
+          "immune": {
+            "affinity": 0.0517,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "t13d1007h2_6f559355f741_babb055429ee",
+          "last_ts": 1700001012.613979,
+          "packets": 15,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "TCP",
+          "quic_version": null,
+          "reasons": null,
+          "score": 17.07,
+          "slice": "default",
+          "sni": "example.com",
+          "snn_score": 36.59,
+          "src": "10.0.0.5:42004",
+          "start_ts": 1700001012.0,
+          "swarm_flag": false,
+          "tls_version": "TLS 1.3",
+          "ts": 1700001012.613979
+        },
+        {
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "anomaly": false,
+          "bytes": 5001,
+          "bytes_fwd": 2700,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 0.503945,
+          "extension_count": 7,
+          "id": 30,
+          "immune": {
+            "affinity": 0.1051,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "t13d1007h2_6f559355f741_babb055429ee",
+          "last_ts": 1700001009.503945,
+          "packets": 15,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "TCP",
+          "quic_version": null,
+          "reasons": null,
+          "score": 87.8,
+          "slice": "default",
+          "sni": "example.com",
+          "snn_score": 85.37,
+          "src": "10.0.0.5:42003",
+          "start_ts": 1700001009.0,
+          "swarm_flag": false,
+          "tls_version": "TLS 1.3",
+          "ts": 1700001009.503945
+        },
+        {
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "anomaly": false,
+          "bytes": 3973,
+          "bytes_fwd": 1987,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 0.45148,
+          "extension_count": 7,
+          "id": 29,
+          "immune": {
+            "affinity": 0.0967,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "t13d1007h2_6f559355f741_babb055429ee",
+          "last_ts": 1700001006.45148,
+          "packets": 13,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "TCP",
+          "quic_version": null,
+          "reasons": null,
+          "score": 60.98,
+          "slice": "default",
+          "sni": "example.com",
+          "snn_score": 4.88,
+          "src": "10.0.0.5:42002",
+          "start_ts": 1700001006.0,
+          "swarm_flag": false,
+          "tls_version": "TLS 1.3",
+          "ts": 1700001006.45148
+        },
+        {
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "anomaly": false,
+          "bytes": 4637,
+          "bytes_fwd": 2363,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 0.583966,
+          "extension_count": 7,
+          "id": 28,
+          "immune": {
+            "affinity": 0.068,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "t13d1007h2_6f559355f741_babb055429ee",
+          "last_ts": 1700001003.583966,
+          "packets": 15,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "TCP",
+          "quic_version": null,
+          "reasons": null,
+          "score": 41.46,
+          "slice": "default",
+          "sni": "example.com",
+          "snn_score": 36.59,
+          "src": "10.0.0.5:42001",
+          "start_ts": 1700001003.0,
+          "swarm_flag": false,
+          "tls_version": "TLS 1.3",
+          "ts": 1700001003.583966
+        },
+        {
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "anomaly": false,
+          "bytes": 7105,
+          "bytes_fwd": 3717,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 0.872059,
+          "extension_count": 7,
+          "id": 27,
+          "immune": {
+            "affinity": 0.0386,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "t13d1007h2_6f559355f741_babb055429ee",
+          "last_ts": 1700001000.872059,
+          "packets": 19,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "TCP",
+          "quic_version": null,
+          "reasons": null,
+          "score": 12.2,
+          "slice": "default",
+          "sni": "example.com",
+          "snn_score": 97.56,
+          "src": "10.0.0.5:42000",
+          "start_ts": 1700001000.0,
+          "swarm_flag": false,
+          "tls_version": "TLS 1.3",
+          "ts": 1700001000.872059
+        },
+        {
+          "alert_id": "alrt_9de57ae832fd",
+          "alpn": [
+            "h3",
+            "http/1.1"
+          ],
+          "anomaly": true,
+          "bytes": 6580,
+          "bytes_fwd": 3573,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 0.548779,
+          "extension_count": 7,
+          "id": 22,
+          "immune": {
+            "affinity": 0.2867,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": true,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "q13d1007h3_6f559355f741_babb055429ee",
+          "last_ts": 1700001100.548779,
+          "packets": 10,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "UDP",
+          "quic_version": "QUIC v1",
+          "reasons": [
+            {
+              "feature": "iat_min_s",
+              "value": 0.0284,
+              "z_score": 5.19
+            },
+            {
+              "feature": "iat_fwd_std_s",
+              "value": 0.0109,
+              "z_score": -4.67
+            },
+            {
+              "feature": "fin_count",
+              "value": 0.0,
+              "z_score": -4.47
+            }
+          ],
+          "score": 100.0,
+          "slice": "default",
+          "sni": "quic.example",
+          "snn_score": 92.68,
+          "src": "10.0.0.7:44444",
+          "start_ts": 1700001100.0,
+          "swarm_flag": false,
+          "threat": {
+            "candidate": "C2_BEACONING",
+            "confidence": 0.45,
+            "contradicting": [],
+            "insufficient_evidence": true,
+            "supporting": [
+              {
+                "detail": "forward IAT mad/mean 0.06 over 0.13s spacing (steady cadence)",
+                "signal": "periodic_forward_timing",
+                "unit": "s",
+                "value": 0.1252,
+                "weight": 0.5
+              },
+              {
+                "detail": "forward IAT mad 0.007s (near-constant interval)",
+                "signal": "low_timing_mad",
+                "unit": "s",
+                "value": 0.0074,
+                "weight": 0.3
+              }
+            ],
+            "threat_type": "UNKNOWN_ANOMALY"
+          },
+          "tls_version": "TLS 1.3",
+          "ts": 1700001100.548779
+        },
+        {
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "anomaly": false,
+          "bytes": 8218,
+          "bytes_fwd": 4397,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 0.97162,
+          "extension_count": 7,
+          "id": 21,
+          "immune": {
+            "affinity": 0.0527,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "t13d1007h2_6f559355f741_babb055429ee",
+          "last_ts": 1700001021.97162,
+          "packets": 21,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "TCP",
+          "quic_version": null,
+          "reasons": null,
+          "score": 14.63,
+          "slice": "default",
+          "sni": "example.com",
+          "snn_score": 36.59,
+          "src": "10.0.0.5:42007",
+          "start_ts": 1700001021.0,
+          "swarm_flag": false,
+          "tls_version": "TLS 1.3",
+          "ts": 1700001021.97162
+        },
+        {
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "anomaly": false,
+          "bytes": 7940,
+          "bytes_fwd": 4076,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 0.913215,
+          "extension_count": 7,
+          "id": 20,
+          "immune": {
+            "affinity": 0.039,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "t13d1007h2_6f559355f741_babb055429ee",
+          "last_ts": 1700001018.913215,
+          "packets": 21,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "TCP",
+          "quic_version": null,
+          "reasons": null,
+          "score": 7.32,
+          "slice": "default",
+          "sni": "example.com",
+          "snn_score": 31.71,
+          "src": "10.0.0.5:42006",
+          "start_ts": 1700001018.0,
+          "swarm_flag": false,
+          "tls_version": "TLS 1.3",
+          "ts": 1700001018.913215
+        },
+        {
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "anomaly": false,
+          "bytes": 4436,
+          "bytes_fwd": 2228,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 0.670731,
+          "extension_count": 7,
+          "id": 19,
+          "immune": {
+            "affinity": 0.0739,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "t13d1007h2_6f559355f741_babb055429ee",
+          "last_ts": 1700001015.670731,
+          "packets": 15,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "TCP",
+          "quic_version": null,
+          "reasons": null,
+          "score": 48.78,
+          "slice": "default",
+          "sni": "example.com",
+          "snn_score": 36.59,
+          "src": "10.0.0.5:42005",
+          "start_ts": 1700001015.0,
+          "swarm_flag": false,
+          "tls_version": "TLS 1.3",
+          "ts": 1700001015.670731
+        },
+        {
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "anomaly": false,
+          "bytes": 8845,
+          "bytes_fwd": 4384,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 1.071948,
+          "extension_count": 7,
+          "id": 18,
+          "immune": {
+            "affinity": 0.0772,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "t13d1007h2_6f559355f741_babb055429ee",
+          "last_ts": 1700001013.071948,
+          "packets": 23,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "TCP",
+          "quic_version": null,
+          "reasons": null,
+          "score": 58.54,
+          "slice": "default",
+          "sni": "example.com",
+          "snn_score": 39.02,
+          "src": "10.0.0.5:42004",
+          "start_ts": 1700001012.0,
+          "swarm_flag": false,
+          "tls_version": "TLS 1.3",
+          "ts": 1700001013.071948
+        },
+        {
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "anomaly": false,
+          "bytes": 8088,
+          "bytes_fwd": 4410,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 0.933733,
+          "extension_count": 7,
+          "id": 17,
+          "immune": {
+            "affinity": 0.0509,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "t13d1007h2_6f559355f741_babb055429ee",
+          "last_ts": 1700001009.933733,
+          "packets": 21,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "TCP",
+          "quic_version": null,
+          "reasons": null,
+          "score": 26.83,
+          "slice": "default",
+          "sni": "example.com",
+          "snn_score": 39.02,
+          "src": "10.0.0.5:42003",
+          "start_ts": 1700001009.0,
+          "swarm_flag": false,
+          "tls_version": "TLS 1.3",
+          "ts": 1700001009.933733
+        },
+        {
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "anomaly": false,
+          "bytes": 6754,
+          "bytes_fwd": 3453,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 0.759866,
+          "extension_count": 7,
+          "id": 16,
+          "immune": {
+            "affinity": 0.0493,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "t13d1007h2_6f559355f741_babb055429ee",
+          "last_ts": 1700001006.759866,
+          "packets": 19,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "TCP",
+          "quic_version": null,
+          "reasons": null,
+          "score": 31.71,
+          "slice": "default",
+          "sni": "example.com",
+          "snn_score": 46.34,
+          "src": "10.0.0.5:42002",
+          "start_ts": 1700001006.0,
+          "swarm_flag": false,
+          "tls_version": "TLS 1.3",
+          "ts": 1700001006.759866
+        },
+        {
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "anomaly": false,
+          "bytes": 6159,
+          "bytes_fwd": 3144,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 0.805898,
+          "extension_count": 7,
+          "id": 15,
+          "immune": {
+            "affinity": 0.0319,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "t13d1007h2_6f559355f741_babb055429ee",
+          "last_ts": 1700001003.805898,
+          "packets": 19,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "TCP",
+          "quic_version": null,
+          "reasons": null,
+          "score": 7.32,
+          "slice": "default",
+          "sni": "example.com",
+          "snn_score": 53.66,
+          "src": "10.0.0.5:42001",
+          "start_ts": 1700001003.0,
+          "swarm_flag": false,
+          "tls_version": "TLS 1.3",
+          "ts": 1700001003.805898
+        },
+        {
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "anomaly": false,
+          "bytes": 6908,
+          "bytes_fwd": 3397,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 0.914572,
+          "extension_count": 7,
+          "id": 14,
+          "immune": {
+            "affinity": 0.0517,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "t13d1007h2_6f559355f741_babb055429ee",
+          "last_ts": 1700001000.914572,
+          "packets": 19,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "TCP",
+          "quic_version": null,
+          "reasons": null,
+          "score": 31.71,
+          "slice": "default",
+          "sni": "example.com",
+          "snn_score": 46.34,
+          "src": "10.0.0.5:42000",
+          "start_ts": 1700001000.0,
+          "swarm_flag": false,
+          "tls_version": "TLS 1.3",
+          "ts": 1700001000.914572
+        },
+        {
+          "alert_id": "alrt_9de57ae832fd",
+          "alpn": [
+            "h3",
+            "http/1.1"
+          ],
+          "anomaly": true,
+          "bytes": 6580,
+          "bytes_fwd": 3573,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 0.548779,
+          "extension_count": 7,
+          "id": 9,
+          "immune": {
+            "affinity": 0.2867,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "q13d1007h3_6f559355f741_babb055429ee",
+          "last_ts": 1700001100.548779,
+          "packets": 10,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "UDP",
+          "quic_version": "QUIC v1",
+          "reasons": [
+            {
+              "feature": "iat_min_s",
+              "value": 0.0284,
+              "z_score": 5.19
+            },
+            {
+              "feature": "iat_fwd_std_s",
+              "value": 0.0109,
+              "z_score": -4.67
+            },
+            {
+              "feature": "fin_count",
+              "value": 0.0,
+              "z_score": -4.47
+            }
+          ],
+          "score": 100.0,
+          "slice": "default",
+          "sni": "quic.example",
+          "snn_score": 92.68,
+          "src": "10.0.0.7:44444",
+          "start_ts": 1700001100.0,
+          "swarm_flag": false,
+          "threat": {
+            "candidate": "C2_BEACONING",
+            "confidence": 0.45,
+            "contradicting": [],
+            "insufficient_evidence": true,
+            "supporting": [
+              {
+                "detail": "forward IAT mad/mean 0.06 over 0.13s spacing (steady cadence)",
+                "signal": "periodic_forward_timing",
+                "unit": "s",
+                "value": 0.1252,
+                "weight": 0.5
+              },
+              {
+                "detail": "forward IAT mad 0.007s (near-constant interval)",
+                "signal": "low_timing_mad",
+                "unit": "s",
+                "value": 0.0074,
+                "weight": 0.3
+              }
+            ],
+            "threat_type": "UNKNOWN_ANOMALY"
+          },
+          "tls_version": "TLS 1.3",
+          "ts": 1700001100.548779
+        },
+        {
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "anomaly": false,
+          "bytes": 8218,
+          "bytes_fwd": 4397,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 0.97162,
+          "extension_count": 7,
+          "id": 8,
+          "immune": {
+            "affinity": 0.0527,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "t13d1007h2_6f559355f741_babb055429ee",
+          "last_ts": 1700001021.97162,
+          "packets": 21,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "TCP",
+          "quic_version": null,
+          "reasons": null,
+          "score": 14.63,
+          "slice": "default",
+          "sni": "example.com",
+          "snn_score": 36.59,
+          "src": "10.0.0.5:42007",
+          "start_ts": 1700001021.0,
+          "swarm_flag": false,
+          "tls_version": "TLS 1.3",
+          "ts": 1700001021.97162
+        },
+        {
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "anomaly": false,
+          "bytes": 7940,
+          "bytes_fwd": 4076,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 0.913215,
+          "extension_count": 7,
+          "id": 7,
+          "immune": {
+            "affinity": 0.039,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "t13d1007h2_6f559355f741_babb055429ee",
+          "last_ts": 1700001018.913215,
+          "packets": 21,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "TCP",
+          "quic_version": null,
+          "reasons": null,
+          "score": 7.32,
+          "slice": "default",
+          "sni": "example.com",
+          "snn_score": 31.71,
+          "src": "10.0.0.5:42006",
+          "start_ts": 1700001018.0,
+          "swarm_flag": false,
+          "tls_version": "TLS 1.3",
+          "ts": 1700001018.913215
+        },
+        {
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "anomaly": false,
+          "bytes": 4436,
+          "bytes_fwd": 2228,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 0.670731,
+          "extension_count": 7,
+          "id": 6,
+          "immune": {
+            "affinity": 0.0739,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "t13d1007h2_6f559355f741_babb055429ee",
+          "last_ts": 1700001015.670731,
+          "packets": 15,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "TCP",
+          "quic_version": null,
+          "reasons": null,
+          "score": 48.78,
+          "slice": "default",
+          "sni": "example.com",
+          "snn_score": 36.59,
+          "src": "10.0.0.5:42005",
+          "start_ts": 1700001015.0,
+          "swarm_flag": false,
+          "tls_version": "TLS 1.3",
+          "ts": 1700001015.670731
+        },
+        {
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "anomaly": false,
+          "bytes": 8845,
+          "bytes_fwd": 4384,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 1.071948,
+          "extension_count": 7,
+          "id": 5,
+          "immune": {
+            "affinity": 0.0772,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "t13d1007h2_6f559355f741_babb055429ee",
+          "last_ts": 1700001013.071948,
+          "packets": 23,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "TCP",
+          "quic_version": null,
+          "reasons": null,
+          "score": 58.54,
+          "slice": "default",
+          "sni": "example.com",
+          "snn_score": 39.02,
+          "src": "10.0.0.5:42004",
+          "start_ts": 1700001012.0,
+          "swarm_flag": false,
+          "tls_version": "TLS 1.3",
+          "ts": 1700001013.071948
+        },
+        {
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "anomaly": false,
+          "bytes": 8088,
+          "bytes_fwd": 4410,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 0.933733,
+          "extension_count": 7,
+          "id": 4,
+          "immune": {
+            "affinity": 0.0509,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "t13d1007h2_6f559355f741_babb055429ee",
+          "last_ts": 1700001009.933733,
+          "packets": 21,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "TCP",
+          "quic_version": null,
+          "reasons": null,
+          "score": 26.83,
+          "slice": "default",
+          "sni": "example.com",
+          "snn_score": 39.02,
+          "src": "10.0.0.5:42003",
+          "start_ts": 1700001009.0,
+          "swarm_flag": false,
+          "tls_version": "TLS 1.3",
+          "ts": 1700001009.933733
+        },
+        {
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "anomaly": false,
+          "bytes": 6754,
+          "bytes_fwd": 3453,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 0.759866,
+          "extension_count": 7,
+          "id": 3,
+          "immune": {
+            "affinity": 0.0493,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "t13d1007h2_6f559355f741_babb055429ee",
+          "last_ts": 1700001006.759866,
+          "packets": 19,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "TCP",
+          "quic_version": null,
+          "reasons": null,
+          "score": 31.71,
+          "slice": "default",
+          "sni": "example.com",
+          "snn_score": 46.34,
+          "src": "10.0.0.5:42002",
+          "start_ts": 1700001006.0,
+          "swarm_flag": false,
+          "tls_version": "TLS 1.3",
+          "ts": 1700001006.759866
+        },
+        {
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "anomaly": false,
+          "bytes": 6159,
+          "bytes_fwd": 3144,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 0.805898,
+          "extension_count": 7,
+          "id": 2,
+          "immune": {
+            "affinity": 0.0319,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "t13d1007h2_6f559355f741_babb055429ee",
+          "last_ts": 1700001003.805898,
+          "packets": 19,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "TCP",
+          "quic_version": null,
+          "reasons": null,
+          "score": 7.32,
+          "slice": "default",
+          "sni": "example.com",
+          "snn_score": 53.66,
+          "src": "10.0.0.5:42001",
+          "start_ts": 1700001003.0,
+          "swarm_flag": false,
+          "tls_version": "TLS 1.3",
+          "ts": 1700001003.805898
+        },
+        {
+          "alpn": [
+            "h2",
+            "http/1.1"
+          ],
+          "anomaly": false,
+          "bytes": 6908,
+          "bytes_fwd": 3397,
+          "cipher_count": 10,
+          "dst": "93.184.216.34:443",
+          "duration": 0.914572,
+          "extension_count": 7,
+          "id": 1,
+          "immune": {
+            "affinity": 0.0517,
+            "danger_total": 0.0,
+            "level": 0,
+            "memory_hit": false,
+            "response": "ignore",
+            "slice_policy": "default:unchanged"
+          },
+          "ja3": "be3538e59c61fb4413c62864b2ce924c",
+          "ja4": "t13d1007h2_6f559355f741_babb055429ee",
+          "last_ts": 1700001000.914572,
+          "packets": 19,
+          "pqc": {
+            "actions": [
+              "enable a hybrid group (e.g. X25519MLKEM768) for x25519",
+              "plan certificate migration to ML-DSA (FIPS 204)"
+            ],
+            "applicable": true,
+            "auth": {
+              "classical_signatures_offered": 5,
+              "pq_signatures_offered": []
+            },
+            "cipher": {
+              "aead": true,
+              "auth": "tls13",
+              "code": "<redacted>",
+              "deprecated": false,
+              "name": "TLS_AES_128_GCM_SHA256",
+              "scheme": "tls13",
+              "source": "negotiated"
+            },
+            "kx": {
+              "code": "<redacted>",
+              "kx_class": "classical",
+              "name": "x25519",
+              "offered": [
+                "x25519"
+              ],
+              "quantum": "vulnerable",
+              "source": "negotiated"
+            },
+            "kx_scheme": "classical_ephemeral",
+            "quantum_vulnerable": true,
+            "reasons": [
+              "key exchange uses classical group x25519 (harvestable)",
+              "authentication is classically signed only (RSA/ECDSA/EdDSA)"
+            ],
+            "risk": "moderate",
+            "score": 45,
+            "version": "TLS 1.3",
+            "version_code": 772
+          },
+          "proto": "TCP",
+          "quic_version": null,
+          "reasons": null,
+          "score": 31.71,
+          "slice": "default",
+          "sni": "example.com",
+          "snn_score": 46.34,
+          "src": "10.0.0.5:42000",
+          "start_ts": 1700001000.0,
+          "swarm_flag": false,
+          "tls_version": "TLS 1.3",
+          "ts": 1700001000.914572
+        }
+      ],
+      "offset": 0
+    },
+    "generated_at": 1800000000.0,
+    "graph": {
+      "available": true,
+      "edges": [
+        {
+          "source": "host:10.0.0.7",
+          "target": "ip:93.184.216.34",
+          "type": "talks_to",
+          "weight": 26307.0
+        },
+        {
+          "source": "domain:quic.example",
+          "target": "ip:93.184.216.34",
+          "type": "served_by",
+          "weight": 4.0
+        },
+        {
+          "source": "domain:quic.example",
+          "target": "sector:general",
+          "type": "in_sector",
+          "weight": 4.0
+        },
+        {
+          "source": "host:10.0.0.5",
+          "target": "ip:93.184.216.34",
+          "type": "talks_to",
+          "weight": 214208.0
+        },
+        {
+          "source": "domain:example.com",
+          "target": "ip:93.184.216.34",
+          "type": "served_by",
+          "weight": 32.0
+        },
+        {
+          "source": "domain:example.com",
+          "target": "sector:general",
+          "type": "in_sector",
+          "weight": 32.0
+        }
+      ],
+      "missing": [
+        "ip:10.0.0.7",
+        "host:93.184.216.34"
+      ],
+      "nodes": [
+        {
+          "bytes": 26307,
+          "detections": 4,
+          "domains": [],
+          "first_ts": 1700001100.52612,
+          "flows": 4,
+          "id": "domain:quic.example",
+          "label": "quic.example",
+          "last_ts": 1700001100.548779,
+          "sector": "general",
+          "type": "domain"
+        },
+        {
+          "bytes": 26307,
+          "detections": 4,
+          "domains": [
+            "domain:quic.example"
+          ],
+          "first_ts": 1700001100.52612,
+          "flows": 4,
+          "id": "host:10.0.0.7",
+          "label": "10.0.0.7",
+          "last_ts": 1700001100.548779,
+          "sector": null,
+          "type": "host"
+        },
+        {
+          "bytes": 240515,
+          "detections": 4,
+          "domains": [
+            "domain:example.com",
+            "domain:quic.example"
+          ],
+          "first_ts": 1700001000.776883,
+          "flows": 36,
+          "id": "ip:93.184.216.34",
+          "label": "93.184.216.34",
+          "last_ts": 1700001100.548779,
+          "sector": "general",
+          "type": "ip"
+        },
+        {
+          "bytes": 240515,
+          "detections": 4,
+          "domains": [],
+          "first_ts": 1700001000.776883,
+          "flows": 36,
+          "id": "sector:general",
+          "label": "general",
+          "last_ts": 1700001100.548779,
+          "sector": "general",
+          "type": "sector"
+        },
+        {
+          "bytes": 214208,
+          "detections": 0,
+          "domains": [
+            "domain:example.com"
+          ],
+          "first_ts": 1700001000.776883,
+          "flows": 32,
+          "id": "host:10.0.0.5",
+          "label": "10.0.0.5",
+          "last_ts": 1700001021.97162,
+          "sector": null,
+          "type": "host"
+        },
+        {
+          "bytes": 214208,
+          "detections": 0,
+          "domains": [],
+          "first_ts": 1700001000.776883,
+          "flows": 32,
+          "id": "domain:example.com",
+          "label": "example.com",
+          "last_ts": 1700001021.97162,
+          "sector": "general",
+          "type": "domain"
+        }
+      ],
+      "truncated": false
+    },
+    "hosts": [
+      {
+        "detections": 4,
+        "first_ts": 1700001000.776883,
+        "flows": 36,
+        "host": "93.184.216.34",
+        "last_ts": 1700001100.548779,
+        "roles": [
+          "dst"
+        ]
+      },
+      {
+        "detections": 0,
+        "first_ts": 1700001000.776883,
+        "flows": 32,
+        "host": "10.0.0.5",
+        "last_ts": 1700001021.97162,
+        "roles": [
+          "src"
+        ]
+      },
+      {
+        "detections": 4,
+        "first_ts": 1700001100.52612,
+        "flows": 4,
+        "host": "10.0.0.7",
+        "last_ts": 1700001100.548779,
+        "roles": [
+          "src"
+        ]
+      }
+    ],
+    "incident": {
+      "acknowledged_at": null,
+      "acknowledged_by": null,
+      "affected_entities": [
+        "10.0.0.7",
+        "93.184.216.34",
+        "quic.example"
+      ],
+      "alert_count": 2,
+      "confidence": 0.95,
+      "created_at": 1800000000.0,
+      "created_by": "admin",
+      "detection_id": null,
+      "evidence_summary": "2 linked alert(s); C2_BEACONING: Connections repeated approximately every 0 seconds with unusually stable timing.",
+      "first_seen": 1700001100.536348,
+      "id": 1,
+      "last_seen": 1700001100.548779,
+      "model_versions": [
+        "spectra_model.joblib@1"
+      ],
+      "primary_threat_class": "C2_BEACONING",
+      "related_graph_nodes": [
+        "domain:quic.example",
+        "host:10.0.0.7",
+        "ip:93.184.216.34"
+      ],
+      "resolved_at": null,
+      "resolved_by": null,
+      "severity": "CRITICAL",
+      "status": "INVESTIGATING",
+      "summary": "Two periodic flows from the suspicious demo capture",
+      "title": "Demo beacon investigation",
+      "updated_at": 1800000000.0,
+      "updated_by": "admin"
+    },
+    "models": {
+      "alerts": [
+        {
+          "alert_id": "alrt_9de57ae832fd",
+          "model_id": "spectra_model.joblib",
+          "model_version": "1"
+        },
+        {
+          "alert_id": "alrt_f4d6cb1720c4",
+          "model_id": "spectra_model.joblib",
+          "model_version": "1"
+        }
+      ],
+      "current": {
+        "contamination": 0.02,
+        "feature_names": [
+          "duration_s",
+          "packets_total",
+          "packets_fwd",
+          "packets_bwd",
+          "bytes_total",
+          "bytes_fwd",
+          "bytes_bwd",
+          "bytes_mean",
+          "bytes_std",
+          "bytes_min",
+          "bytes_max",
+          "fwd_bwd_pkt_ratio",
+          "fwd_bwd_byte_ratio",
+          "iat_mean_s",
+          "iat_std_s",
+          "iat_min_s",
+          "iat_max_s",
+          "iat_fwd_mean_s",
+          "iat_fwd_std_s",
+          "iat_fwd_mad_s",
+          "packets_per_s",
+          "bytes_per_s",
+          "syn_count",
+          "fin_count",
+          "rst_count",
+          "psh_count",
+          "payload_ratio",
+          "size_entropy",
+          "is_tcp",
+          "dst_port_norm",
+          "tls_present",
+          "tls_version_norm",
+          "tls_cipher_count",
+          "tls_extension_count",
+          "sni_present",
+          "sni_length",
+          "alpn_count",
+          "handshake_ms",
+          "server_hello_ms"
+        ],
+        "id": "spectra_model.joblib",
+        "n_estimators": 300,
+        "n_features": 39,
+        "n_train": 42,
+        "threshold": 0.194095,
+        "trained": true,
+        "trained_at": "2027-01-15T08:00:00+00:00",
+        "version": 1
+      },
+      "versions": [
+        "spectra_model.joblib@1"
+      ]
+    },
+    "modules": {
+      "items": [
+        {
+          "affects_alert_scoring": false,
+          "available": true,
+          "contributed": 38,
+          "detail": "2 endpoints assessed",
+          "evidence_only": true,
+          "failures": 0,
+          "hardware_backed": false,
+          "key": "pqc",
+          "status": "REAL",
+          "summary": "38 quantum-readiness annotation(s) on this incident's evidence",
+          "title": "PQC crypto-readiness"
+        },
+        {
+          "affects_alert_scoring": false,
+          "available": true,
+          "contributed": 0,
+          "detail": "evasion watch warming up; model trained",
+          "evidence_only": true,
+          "failures": 0,
+          "hardware_backed": false,
+          "key": "adversarial",
+          "status": "REAL",
+          "summary": "0 evasion/drift observation(s) inside the incident window",
+          "title": "Adversarial resilience"
+        },
+        {
+          "affects_alert_scoring": false,
+          "available": true,
+          "contributed": 6,
+          "detail": "8 nodes / 7 edges observed",
+          "evidence_only": true,
+          "failures": 0,
+          "hardware_backed": false,
+          "key": "correlation",
+          "status": "REAL",
+          "summary": "6 related graph node(s) in the bundle slice",
+          "title": "Correlation graph"
+        },
+        {
+          "affects_alert_scoring": false,
+          "available": true,
+          "contributed": 5,
+          "detail": "hash chain at seq 32",
+          "evidence_only": true,
+          "failures": 0,
+          "hardware_backed": false,
+          "key": "audit",
+          "status": "EXPERIMENTAL",
+          "summary": "5 audit integrity reference(s) for this incident",
+          "title": "Audit chain / ZKP"
+        },
+        {
+          "affects_alert_scoring": false,
+          "available": true,
+          "contributed": 38,
+          "detail": "trained",
+          "evidence_only": true,
+          "failures": 0,
+          "hardware_backed": false,
+          "key": "bio",
+          "status": "EXPERIMENTAL",
+          "summary": "38 behavioural annotation(s) (immune/SNN/swarm)",
+          "title": "Bio-inspired detection"
+        },
+        {
+          "affects_alert_scoring": false,
+          "available": true,
+          "contributed": 0,
+          "detail": "local simulated enclave (never hardware-backed)",
+          "evidence_only": true,
+          "failures": 0,
+          "hardware_backed": false,
+          "key": "tee",
+          "status": "SIMULATED",
+          "summary": "on-demand simulated attestation status only; no per-alert evidence (local simulated enclave (never hardware-backed))",
+          "title": "TEE attestation"
+        },
+        {
+          "affects_alert_scoring": false,
+          "available": true,
+          "contributed": 0,
+          "detail": "simulated parties; secret sharing verified locally",
+          "evidence_only": true,
+          "failures": 0,
+          "hardware_backed": false,
+          "key": "federated",
+          "status": "SIMULATED",
+          "summary": "on-demand simulated aggregation only; no per-alert evidence",
+          "title": "Federated aggregation"
+        },
+        {
+          "affects_alert_scoring": false,
+          "available": true,
+          "contributed": 1,
+          "detail": "local simulator over 8 topology node(s)",
+          "evidence_only": true,
+          "failures": 0,
+          "hardware_backed": false,
+          "key": "twin",
+          "status": "SIMULATED",
+          "summary": "simulated blast radius over 6 topology node(s)",
+          "title": "Digital twin"
+        },
+        {
+          "affects_alert_scoring": false,
+          "available": true,
+          "contributed": 38,
+          "detail": "link terrestrial, micro trained=True",
+          "evidence_only": true,
+          "failures": 0,
+          "hardware_backed": false,
+          "key": "edge",
+          "status": "LOCAL",
+          "summary": "38 slice tag(s) on flows/alerts",
+          "title": "Edge / 5G slicing"
+        },
+        {
+          "affects_alert_scoring": false,
+          "available": true,
+          "contributed": 0,
+          "detail": "0 simulated deployment(s) registered (no MEC/5G control plane)",
+          "evidence_only": true,
+          "failures": 0,
+          "hardware_backed": false,
+          "key": "edge_deployment",
+          "status": "SIMULATED",
+          "summary": "simulated deployment registry; not incident evidence",
+          "title": "Edge deployment registry"
+        },
+        {
+          "affects_alert_scoring": false,
+          "available": false,
+          "contributed": 0,
+          "detail": "no list files - intel is off",
+          "evidence_only": true,
+          "failures": 0,
+          "hardware_backed": false,
+          "key": "intel",
+          "status": "LOCAL",
+          "summary": "JA3/JA4/SNI list hits render inside threat classification signals and alert evidence (intel_* signals), not as a separate list",
+          "title": "Local threat intel (JA3/JA4/SNI lists)"
+        }
+      ],
+      "scoring_policy": "No advanced module changes the anomaly score, the alert confidence, or the severity: every module contributes supporting evidence or context only, and no module may invent an independent threat verdict."
+    },
+    "note_count": 1,
+    "notes": [
+      {
+        "author": "admin",
+        "body": "Checked the destination: unknown.",
+        "created_at": 1800000000.0,
+        "id": 1,
+        "incident_id": 1
+      }
+    ],
+    "timeline": [
+      {
+        "actor": "admin",
+        "data": {
+          "alert_count": 1,
+          "detection_id": null
+        },
+        "id": 1,
+        "incident_id": 1,
+        "kind": "created",
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "admin",
+        "data": {
+          "alert_id": "alrt_9de57ae832fd",
+          "reason": "selected by admin",
+          "source": "manual"
+        },
+        "id": 2,
+        "incident_id": 1,
+        "kind": "alert_added",
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "admin",
+        "data": {
+          "note_id": 1
+        },
+        "id": 3,
+        "incident_id": 1,
+        "kind": "note_added",
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "admin",
+        "data": {
+          "action": "investigate",
+          "from": "OPEN",
+          "to": "INVESTIGATING"
+        },
+        "id": 4,
+        "incident_id": 1,
+        "kind": "status_changed",
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "spectra",
+        "data": {
+          "alert_id": "alrt_f4d6cb1720c4",
+          "reason": "same source host 10.0.0.7; same destination host 93.184.216.34; same SNI quic.example; graph-linked host:10.0.0.7 <-> ip:93.184.216.34; temporally proximate (0s apart)",
+          "score": 13.0,
+          "source": "auto"
+        },
+        "id": 11,
+        "incident_id": 1,
+        "kind": "alert_added",
+        "ts": 1800000000.0
+      }
+    ],
+    "tls": {
+      "alpn": {
+        "h2,http/1.1": 32,
+        "h3,http/1.1": 4
+      },
+      "fingerprints": [
+        {
+          "flows": 36,
+          "kind": "ja3",
+          "snis": [
+            "example.com",
+            "quic.example"
+          ],
+          "value": "59e27c0f3729c1eb14c30886afad61cd"
+        },
+        {
+          "flows": 32,
+          "kind": "ja4",
+          "snis": [
+            "example.com"
+          ],
+          "value": "t13d1007h2_6f559355f741_babb055429ee"
+        },
+        {
+          "flows": 4,
+          "kind": "ja4",
+          "snis": [
+            "quic.example"
+          ],
+          "value": "q13d1007h3_6f559355f741_babb055429ee"
+        }
+      ],
+      "flows_total": 36,
+      "quic_versions": {
+        "QUIC v1": 4
+      },
+      "sampled": 36,
+      "tls_versions": {
+        "TLS 1.3": 36
+      }
+    },
+    "twin": {
+      "asset_edges": [
+        {
+          "cross_zone": false,
+          "normalized": 1.0,
+          "source": "host:10.0.0.5",
+          "target": "ip:93.184.216.34",
+          "to_external": false,
+          "weight": 214208.0
+        },
+        {
+          "cross_zone": false,
+          "normalized": 0.1228,
+          "source": "host:10.0.0.7",
+          "target": "ip:93.184.216.34",
+          "to_external": false,
+          "weight": 26307.0
+        }
+      ],
+      "available": true,
+      "nodes": [
+        {
+          "asset": false,
+          "bytes": 214208,
+          "criticality": 0.4,
+          "detections": 0,
+          "first_ts": 1700001000.776883,
+          "flows": 32,
+          "id": "domain:example.com",
+          "label": "example.com",
+          "last_ts": 1700001021.97162,
+          "role": "service",
+          "sector": "general",
+          "type": "domain",
+          "zone": "general"
+        },
+        {
+          "asset": false,
+          "bytes": 26307,
+          "criticality": 0.52,
+          "detections": 4,
+          "first_ts": 1700001100.52612,
+          "flows": 4,
+          "id": "domain:quic.example",
+          "label": "quic.example",
+          "last_ts": 1700001100.548779,
+          "role": "service",
+          "sector": "general",
+          "type": "domain",
+          "zone": "general"
+        },
+        {
+          "asset": true,
+          "bytes": 214208,
+          "criticality": 0.4,
+          "detections": 0,
+          "first_ts": 1700001000.776883,
+          "flows": 32,
+          "id": "host:10.0.0.5",
+          "label": "10.0.0.5",
+          "last_ts": 1700001021.97162,
+          "role": "endpoint",
+          "sector": null,
+          "type": "host",
+          "zone": "general"
+        },
+        {
+          "asset": true,
+          "bytes": 26307,
+          "criticality": 0.52,
+          "detections": 4,
+          "first_ts": 1700001100.52612,
+          "flows": 4,
+          "id": "host:10.0.0.7",
+          "label": "10.0.0.7",
+          "last_ts": 1700001100.548779,
+          "role": "endpoint",
+          "sector": null,
+          "type": "host",
+          "zone": "general"
+        },
+        {
+          "asset": true,
+          "bytes": 240515,
+          "criticality": 0.413,
+          "detections": 4,
+          "first_ts": 1700001000.776883,
+          "flows": 36,
+          "id": "ip:93.184.216.34",
+          "label": "93.184.216.34",
+          "last_ts": 1700001100.548779,
+          "role": "server",
+          "sector": "general",
+          "type": "ip",
+          "zone": "general"
+        },
+        {
+          "asset": false,
+          "bytes": 240515,
+          "criticality": 0.413,
+          "detections": 4,
+          "first_ts": 1700001000.776883,
+          "flows": 36,
+          "id": "sector:general",
+          "label": "general",
+          "last_ts": 1700001100.548779,
+          "role": "zone",
+          "sector": "general",
+          "type": "sector",
+          "zone": "general"
+        }
+      ],
+      "summary": {
+        "assets": 3,
+        "edges": 2,
+        "nodes": 6,
+        "zones": 1
+      },
+      "zones": [
+        {
+          "assets": [
+            "host:10.0.0.5",
+            "host:10.0.0.66",
+            "host:10.0.0.7",
+            "ip:93.184.216.34"
+          ],
+          "criticality": 0.4,
+          "id": "general",
+          "size": 4
+        }
+      ]
+    },
+    "window": {
+      "evidence_rows": 36,
+      "evidence_total": 36,
+      "since": 1699999300.536348,
+      "until": 1700002900.548779
+    }
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/investigations/1",
+    "query": {}
+  },
+  "status": 200
+}

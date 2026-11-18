@@ -1,0 +1,596 @@
+{
+  "body": {
+    "count": 32,
+    "items": [
+      {
+        "actor": "admin",
+        "entry_hash": "07a50310b212a63c19307591bd58c07d7d2c747f77714fca9a2220ec36002ec6",
+        "kind": "alert.resolve",
+        "leaves": null,
+        "merkle_root": null,
+        "payload": {
+          "alert_id": "alrt_f4d6cb1720c4",
+          "severity": "CRITICAL"
+        },
+        "prev_hash": "378f4f30a78a0870599f9d7fda621e2757b9b87f1c681e85b585272bab365216",
+        "seq": 32,
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "admin",
+        "entry_hash": "3ff3b49f5f601b8525958a3fb6a71ebe75ae0a3c4584d2216e67f182fddc111b",
+        "kind": "alert.acknowledge",
+        "leaves": null,
+        "merkle_root": null,
+        "payload": {
+          "alert_id": "alrt_f4d6cb1720c4",
+          "severity": "CRITICAL"
+        },
+        "prev_hash": "2902648e3c2a7f2356588448ed411343529197f94e4bfa093c8830065720ed68",
+        "seq": 31,
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "spectra",
+        "entry_hash": "726aa87645fe37939f1b4544fe756040a704a543a922fc6ce9e4a398830807ed",
+        "kind": "incident.alert_add",
+        "leaves": null,
+        "merkle_root": null,
+        "payload": {
+          "alert_id": "alrt_f4d6cb1720c4",
+          "id": 1,
+          "score": 13.0,
+          "source": "auto"
+        },
+        "prev_hash": "b76253483fa7ad372b35407bbaa61cdaa3811344504d36bce6cf204521ba0350",
+        "seq": 30,
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "admin",
+        "entry_hash": "5efc50a7c85abf786639ae441c0195015309ce636cc98705dbbaaf9b25c9f9b4",
+        "kind": "incident.correlate",
+        "leaves": null,
+        "merkle_root": null,
+        "payload": {
+          "created": [],
+          "grouped": 0,
+          "ungrouped": 1
+        },
+        "prev_hash": "937d06ac3df4967f1723a35b2e20f23995171fd9fa920e307546eccad9bb0455",
+        "seq": 29,
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "admin",
+        "entry_hash": "1283b5c85daead539d2c4fe11f7fb737d8d9864434a47753e95ad1228f228890",
+        "kind": "incident.false_positive",
+        "leaves": null,
+        "merkle_root": null,
+        "payload": {
+          "from": "OPEN",
+          "id": 3,
+          "to": "FALSE_POSITIVE"
+        },
+        "prev_hash": "3bcec0f23ef5593a91cb9443e05bd59abbe190a63152650407425fb3fcf74aa5",
+        "seq": 28,
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "admin",
+        "entry_hash": "b406cc5ab618fbde69987cc7ec958ad1869dc724bbfba652937644eeaf908a60",
+        "kind": "incident.create",
+        "leaves": null,
+        "merkle_root": null,
+        "payload": {
+          "alert_count": 0,
+          "detection_id": null,
+          "id": 3,
+          "title": "False positive"
+        },
+        "prev_hash": "113cc161fc32861e25265bb600ab7368be002150b0864c2218ca432caafd931b",
+        "seq": 27,
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "admin",
+        "entry_hash": "8fc84fb7fb1ca49af89e1589f5366f806508ce0dacbe9b241483084626c6d620",
+        "kind": "incident.reopen",
+        "leaves": null,
+        "merkle_root": null,
+        "payload": {
+          "from": "RESOLVED",
+          "id": 2,
+          "to": "INVESTIGATING"
+        },
+        "prev_hash": "9b31b32c5213db9ce178fc6edd092eab109042615e12633dbcd0ee216297756b",
+        "seq": 26,
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "admin",
+        "entry_hash": "940780f6ec96c8face69dba21b3f03334e450908190c1ddc58bdbc8c948b331c",
+        "kind": "incident.resolve",
+        "leaves": null,
+        "merkle_root": null,
+        "payload": {
+          "from": "ACKNOWLEDGED",
+          "id": 2,
+          "to": "RESOLVED"
+        },
+        "prev_hash": "913590eea51df192caaa0b383f683314515cc1484dbec6460028203fd238bd41",
+        "seq": 25,
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "admin",
+        "entry_hash": "47c6f9280f90895127c3d97a9056399cc581fc44a65a1869f09edd7fc57fc9de",
+        "kind": "incident.acknowledge",
+        "leaves": null,
+        "merkle_root": null,
+        "payload": {
+          "from": "OPEN",
+          "id": 2,
+          "to": "ACKNOWLEDGED"
+        },
+        "prev_hash": "cc92670c54e17866a913cf7f2ed62fefa67e529025fce6b0b471660af1513972",
+        "seq": 24,
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "admin",
+        "entry_hash": "55004d05a849d9ab24ce2e398ecca1c1fc64071d768b8211f7450ddeff1ea5c2",
+        "kind": "incident.create",
+        "leaves": null,
+        "merkle_root": null,
+        "payload": {
+          "alert_count": 0,
+          "detection_id": null,
+          "id": 2,
+          "title": "Resolve me"
+        },
+        "prev_hash": "0fde75942b95c32bf62829ff846bc76c7bc1fb36b88b200ba3678bb44b2af362",
+        "seq": 23,
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "admin",
+        "entry_hash": "80e10bfdaac78ff1d9b12da8282e3b89e83dedca9d4e2271d10989519bed3fe8",
+        "kind": "incident.investigate",
+        "leaves": null,
+        "merkle_root": null,
+        "payload": {
+          "from": "OPEN",
+          "id": 1,
+          "to": "INVESTIGATING"
+        },
+        "prev_hash": "2b42f9b8f6e76ebb8579d0400ff70d2012162e8d455cc4c1b72394b507893603",
+        "seq": 22,
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "admin",
+        "entry_hash": "19869a703addf186ce5c73b7ec72fb49086423560769ff34d785371bf72c0ec2",
+        "kind": "incident.note",
+        "leaves": null,
+        "merkle_root": null,
+        "payload": {
+          "incident_id": 1,
+          "note_id": 1
+        },
+        "prev_hash": "f85a8e77f3512988138833c95ce620ac37ad760d98d84e41a5ad09a683981ed7",
+        "seq": 21,
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "admin",
+        "entry_hash": "7ffddd8201cce3f2e08b77a64f0816a1e1c0cc6020ed19c3d800e4014e30a025",
+        "kind": "incident.create",
+        "leaves": null,
+        "merkle_root": null,
+        "payload": {
+          "alert_count": 1,
+          "detection_id": null,
+          "id": 1,
+          "title": "Demo beacon investigation"
+        },
+        "prev_hash": "a4af4cebc32c62c9803fd6438a7195bf362e02e89ac53f26a3de71b9eb1e4f75",
+        "seq": 20,
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "admin",
+        "entry_hash": "e7316ee22f5bace1dc57c54fc2746a930c1f1e5ad654d3027b660190a27010d4",
+        "kind": "user.create",
+        "leaves": null,
+        "merkle_root": null,
+        "payload": {
+          "role": "VIEWER",
+          "username": "contract-totp"
+        },
+        "prev_hash": "c98c6bd6cdc5b424f66df3ac40165c0154e21f79fe7cb9a6198e9e79ff6d0140",
+        "seq": 19,
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "admin",
+        "entry_hash": "5365e26ec36d8ccf422a516a2a27ff14479191b31949c86df0f28cd0476b821c",
+        "kind": "user.create",
+        "leaves": null,
+        "merkle_root": null,
+        "payload": {
+          "role": "ANALYST",
+          "username": "contract-pwchange"
+        },
+        "prev_hash": "ff6b7ecf8e8d615f55094dec2a375aae6671709da8c9caf6edfbce68b625953b",
+        "seq": 18,
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "admin",
+        "entry_hash": "08e0b1a2f06109e3f228fd65377b2401a3eda6c39bdf6fa26ba228992bac95f6",
+        "kind": "user.create",
+        "leaves": null,
+        "merkle_root": null,
+        "payload": {
+          "role": "ANALYST",
+          "username": "contract-analyst"
+        },
+        "prev_hash": "44d77d71f0ca26abf393c5cb88622ea3944300aa072b01978fb6a42cbf0c634e",
+        "seq": 17,
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "admin",
+        "entry_hash": "0366f403ba66dee568fae948f0c2748e80fe9740531e41dea5647e62541f17a3",
+        "kind": "user.create",
+        "leaves": null,
+        "merkle_root": null,
+        "payload": {
+          "role": "VIEWER",
+          "username": "contract-viewer"
+        },
+        "prev_hash": "418d40a6865581b22bfc25331ba16eb849ee9e5eeac3cfbe7e8b041bbd5c02cd",
+        "seq": 16,
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "spectra",
+        "entry_hash": "31807307c9919439a4cd0e6e06bd9e5ce58c37becbf4a82584db4613d7dc1faa",
+        "kind": "capture.stop",
+        "leaves": [
+          "8ca9165c04c743cd9fe90ed47ba44bcf6031469a8f753e2ccc4572fc4573ab5a",
+          "c59c96091df2250b2bc56efce895a49aa9f05683a67a178851e3755be6768737",
+          "7826b35394ed289057c3be0b6e8b6d8c61ef1d7186a58a93552ad6d551349ba0",
+          "c76e2bb7e97b22434410acecaef61a0f7231b8ec6b6a7d10e782fd90398a49ce",
+          "b04d4b9becddc3b5cf9efd55d976b1d7d8ea399d28648fa3594e81b8eab6bb2a",
+          "4e11bf1be641900e1e79aefb69b2f795eb8df5d527a1058285d7225535a3ba88",
+          "87a5f5642df371818c11ffb1e8c8c0aa682e7433bcacf1604593207d9d69bf4b",
+          "5d545aa61c297145c5c54650265621d810d68796f483d9df6a7eb4fd408afd4a",
+          "5fa86f42af09cd29f7443d62c7450023012bf6b104a55d6815ce2dc3a485c1df",
+          "cfc00b9759069d3449aa7f23aeab5f7053463e50ae49ec9e20b1c1b4a806d38b",
+          "157fc0fb3cbd4a3c30827cfd6f7c8d774d8ab6780dcb118849bf0faec315406f",
+          "98d3d942700c2cbd58e707d39b4a274d230ba8e8923f3f5851b7e2c8e7c42ecb",
+          "464d0554d5c924baa9d85b297769d9301f89486aeaccf1047ad4cc788831b2a2"
+        ],
+        "merkle_root": "c2fa36d185461b1a97ea79076fdc2ab5f404ecc7066084cea2c2ba5a6482be6c",
+        "payload": {
+          "avg_score": 62.29,
+          "detections": 1,
+          "error": null,
+          "evidence_included": 13,
+          "evidence_records": 13,
+          "flows": 13,
+          "mode": "pcap",
+          "packets": 284,
+          "source": "suspicious3.pcap"
+        },
+        "prev_hash": "81b25b6ece593907496a8cddfc94859c888d05235aaa5642c3d466100e96b50f",
+        "seq": 15,
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "spectra",
+        "entry_hash": "f51596ebc2c22488ea91082938ea271d08273d3c69a00a7e6c7db2295e1b027d",
+        "kind": "capture.start",
+        "leaves": null,
+        "merkle_root": null,
+        "payload": {
+          "filter": null,
+          "mode": "pcap",
+          "model_trained": true,
+          "source": "suspicious3.pcap"
+        },
+        "prev_hash": "51aeb1deb0073158c7fc9c1bd2695f869047f7a49369a875dab336c27576ca81",
+        "seq": 14,
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "spectra",
+        "entry_hash": "2627aedbbbed05fd2e955ebfb09ea1ab879ac96c4b9b2cf8abb1fc1ae3716d41",
+        "kind": "capture.stop",
+        "leaves": [
+          "7d9346ac7ae4838ce233089f9a9dcc1bb181092a7529b702dd86442372c0f455",
+          "737480f8ea2352171fecc9e4d55698c1026ad24b8aeabdf15ce58cb34b05aad0",
+          "cc7e07b7d08c17124bcbdae41a78560f9fe049c8cf37b03ab6a38e10e26cfa13",
+          "cec755db8943bd1be077acfd1f67bc734e0b2517477d7cb76532ed22202484c7",
+          "14c40cf3acc80238195a5642387e32d092622a5d1b289c090e63b6b199918b0e",
+          "791bc3800a6afed36ae74322131e57c3ac15e55d928640d9dc916b06aa2e5e32",
+          "5eb2c1feee25159a28d661599b195d0792a8c575dba48df79efbfdebb0d728ad",
+          "4ac28c26d3b68eceb0f6beb86653db9c911bad27d3effa0a60ed6b92461c1dce",
+          "408cbc36508d6ff078d3af6395e63c9679cb51bb96f68decefefa7459525c79e",
+          "d9f7c07e8d49a175137dee8c2154ab0c5b74a361217695e8d812fe351d380965",
+          "8533b690a6fbebcf4d8a3bed0cb34e0db61ca8942bb4418ae8e7595b9e605142",
+          "5731c7581384162fa9e248fa5c4c24d297af150cfef42182288fd44bf6f11b95",
+          "d5c34210b60d373bd94d95e57a49236f62f308a79fbf3403bfd8bafe9c225ce4"
+        ],
+        "merkle_root": "d712cdd384cb1eacb66c0950166ff9b6c6b15e7b944e6003aa3de4c2c9ae3c59",
+        "payload": {
+          "avg_score": 69.04,
+          "detections": 1,
+          "error": null,
+          "evidence_included": 13,
+          "evidence_records": 13,
+          "flows": 13,
+          "mode": "pcap",
+          "packets": 254,
+          "source": "suspicious2.pcap"
+        },
+        "prev_hash": "63e0bca4d9c74a3c313a2276691bf148d25c28ce63b34a4ae6e3f61c6676dc3d",
+        "seq": 13,
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "spectra",
+        "entry_hash": "4efcd35e4b1e8ea8d29d0fbedf6427590a4c1c6783dc10f0229a9c719bc743f9",
+        "kind": "capture.start",
+        "leaves": null,
+        "merkle_root": null,
+        "payload": {
+          "filter": null,
+          "mode": "pcap",
+          "model_trained": true,
+          "source": "suspicious2.pcap"
+        },
+        "prev_hash": "21c36b00939e35fdec3464547cefff917e0b99c20feec2eca7e889ad2731b102",
+        "seq": 12,
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "spectra",
+        "entry_hash": "c58453faffeb9396ae25bbbf15f21eff050c1a50a30da4363529bede957ead3e",
+        "kind": "capture.stop",
+        "leaves": [
+          "08c4ac00e1df803a03c193d193eceb45affb101e79a267e62307f8ef62338cf1",
+          "4b261ce66af31eb3bcf9175e253a272d4f3c1905cd65eef1cf84478f0dedbdc6",
+          "bfe7472fdfe039401b048159b847af8c2d1e0ce95f583f0f71e269fa57e968dc",
+          "838857fea5b1736900aadd2ed53d30b1c944fb40f9a02a54360c09a25b6e3c42",
+          "4bd86ec9c05f9d0feb0777c0509e980fe66df1cce57be6c4434d08bb4b06c3c6",
+          "e013444f3298db398b7b048a3cadf19b1eec0426c3f89425f99486bde6a13b9a",
+          "976042d1b0070adf4d26d189d3d0323833cf01848d0224c3b3912c2a9cc8c063",
+          "3476e2ed85c5db9e47c6c2807508cf0fcd40981b4eaecdaef8607092f0912050",
+          "3e7c5834d4f8584e5d03a70835ae4b1d50928b73fc3e3721f5d762204852924a",
+          "97768dfbf968698e2192335744ae3e33f0b184433011420d3804b589a4fba934",
+          "760982385568fdf652a52f98b8190011f8926135b6efe0ea25ce2a3c29d3e61e",
+          "263027eee0966374598754c20b5823270c125b820babe75398de7f1d86076bbd",
+          "3c96ed7b5d6f439e68941433b48415f3e5ea7356c8cf826272aed40e673dc71c"
+        ],
+        "merkle_root": "9f53ffd11dda0f588d5fd4af35902afde9ba7337458b8a8bda26fd38440c34c2",
+        "payload": {
+          "avg_score": 55.16,
+          "detections": 1,
+          "error": null,
+          "evidence_included": 13,
+          "evidence_records": 13,
+          "flows": 13,
+          "mode": "pcap",
+          "packets": 288,
+          "source": "suspicious.pcap"
+        },
+        "prev_hash": "daa829741533cdf6107ac6db84851c129e00b9a51d2ca23cdef1d208b0c20f9a",
+        "seq": 11,
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "spectra",
+        "entry_hash": "81b4761543f10419b0d66a73aa440b2c49a9aa7322bb408e1a06a3eacbed3279",
+        "kind": "capture.start",
+        "leaves": null,
+        "merkle_root": null,
+        "payload": {
+          "filter": null,
+          "mode": "pcap",
+          "model_trained": true,
+          "source": "suspicious.pcap"
+        },
+        "prev_hash": "f1dcf2de5d8e8b526e2d3da8c1cd8852afc2d14cc5a53df42af0199d3a8c2f7e",
+        "seq": 10,
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "spectra",
+        "entry_hash": "9e851b4cfe6bb208619d4e2ea54fa19c0696542ec5f0c5d2f48ea62d1fc9ccb1",
+        "kind": "capture.stop",
+        "leaves": [
+          "f03edbc98f3ffc735af50fe27d34e572d00bf6c5e73b387d82d23cd9fb1a92cd",
+          "a646752614ac964ee0d8d2680f07484418caab25bc0242f69bba763860b5d28d",
+          "a6743c46b67c99558d3cc0e911b08a935fa1f64d1cb6fb31997b145b61f5ffa7",
+          "979ba196f2b99405dadfb5f14c94ac41725b0cb8d76714b6ee4ac5264d399b81",
+          "d2bc08253cc4188ef4cf9b359c113776222423cc4a19c8036942091fcb7d7d46",
+          "0fdb71bcfd993e94cb337bf7e380d261f35e30638e63e6c277d285cb208df607",
+          "318107619f02daef1bcd9a5d77e9d376ca1115726e8f60282be3bdd613b4111f",
+          "71d84ac76734342c3167091ec9fe2594f92152d0b0fe2e05a4d05a0afcd815e0",
+          "db047aaad6a515ea4a0fe0845822406c0a320c57eddf6b84475b8f33292c9a40",
+          "d9aa491e7d5c41248191760b18429dd60d7e801f800fb51b1bb57dbf5ea2808d",
+          "af5b8ed38c78288549527705fa85c8a72c58e55b9c9db1ca2caafb440eae4801",
+          "fb90bf324475f715ab84557082d1715a43e46bf33c23c158c6f21a1aa98719b8",
+          "0e0f256d868b8a68acbe88ec46cf1c4477dc363dd2fe5e327316c7ded7f17d58"
+        ],
+        "merkle_root": "70d50422a2a941d17eccbbdde89cf2ed9c0e45c5563e0610586ba8eb1c48867b",
+        "payload": {
+          "avg_score": 55.16,
+          "detections": 1,
+          "error": null,
+          "evidence_included": 13,
+          "evidence_records": 13,
+          "flows": 13,
+          "mode": "pcap",
+          "packets": 288,
+          "source": "suspicious.pcap"
+        },
+        "prev_hash": "5007369cffa39be4e8420f578cf8d7d6df769ae067814b46fb31739f3d98f6b3",
+        "seq": 9,
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "spectra",
+        "entry_hash": "4a17bb453a89530b6b4c01507a2354c8e6bf620d48f00094d0767e865724732b",
+        "kind": "capture.start",
+        "leaves": null,
+        "merkle_root": null,
+        "payload": {
+          "filter": null,
+          "mode": "pcap",
+          "model_trained": true,
+          "source": "suspicious.pcap"
+        },
+        "prev_hash": "3a59e185a366e8a47d63c2f0e1c7d565271106517b8f14df510c22b46bc15afc",
+        "seq": 8,
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "spectra",
+        "entry_hash": "84bf504bca763546a0d5238a9fa10921baf1e6aa8d732e09d1c9d67a15b514e5",
+        "kind": "model.train",
+        "leaves": null,
+        "merkle_root": null,
+        "payload": {
+          "activated": false,
+          "augmented": 0,
+          "contamination": 0.05,
+          "model_id": "mdl_337d2fdc600b",
+          "model_path": "<DATA_DIR>/spectra_model.joblib",
+          "model_sha256": "78dcf605cf39598abe7e7e4ab44b12cd423631d99c9d7487d968a7908e647c95",
+          "n_features": null,
+          "n_train": 42,
+          "pcap": "<DATA_DIR>/captures/cap_342559062c5caa2055adf3fa7dd1ea42.pcap",
+          "registry_status": "CANDIDATE"
+        },
+        "prev_hash": "697aec1752de2204bf5741cf72505f58e6eb15b271e0b18d09d01a9c47061ad9",
+        "seq": 7,
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "admin",
+        "entry_hash": "5a6d4c84c27d26767a3a5306f626e49f671ddc0d8471db7c06c8e92cf8a4ab8f",
+        "kind": "model.register",
+        "leaves": null,
+        "merkle_root": null,
+        "payload": {
+          "artifact_sha256": "45e45a0b65596745d38e817cb395efbae53d7e7b230c69877b9c2df85ed330c6",
+          "contamination": 0.05,
+          "model_id": "mdl_337d2fdc600b",
+          "n_train": 42,
+          "source": "<DATA_DIR>/captures/cap_342559062c5caa2055adf3fa7dd1ea42.pcap"
+        },
+        "prev_hash": "92924dc5f8d8e6d0675351f663932aff63f7e3684094b9830a48d019dec086c5",
+        "seq": 6,
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "spectra",
+        "entry_hash": "ecaf08411632b7c2044702b5a6f2016bcdfc5c4c04af6e00e21b557b36896570",
+        "kind": "model.train",
+        "leaves": null,
+        "merkle_root": null,
+        "payload": {
+          "activated": true,
+          "augmented": 0,
+          "contamination": 0.02,
+          "model_id": "mdl_fdb71cbd5b6c",
+          "model_path": "<DATA_DIR>/spectra_model.joblib",
+          "model_sha256": "4d9ce1fe8c75de0d5b05f6eae57d7fd2063b02f18e72af5ee8aafb2fc00db972",
+          "n_features": null,
+          "n_train": 42,
+          "pcap": "<DATA_DIR>/captures/cap_342559062c5caa2055adf3fa7dd1ea42.pcap",
+          "registry_status": "ACTIVE"
+        },
+        "prev_hash": "7e7ea3cd0eddec7442063ec98b9a66e41e209173b86440dd96d4300cf3e38a44",
+        "seq": 5,
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "admin",
+        "entry_hash": "1b389030ffd264a3dc087622b47c78cc4f59df76799fce4dadcaff3ba26a5b30",
+        "kind": "model.activate",
+        "leaves": null,
+        "merkle_root": null,
+        "payload": {
+          "applied": true,
+          "artifact_sha256": "337363a75f3154bc18fb2363f90671f5d71db34b61f973bbaaa896b1e6ca6e65",
+          "model_id": "mdl_fdb71cbd5b6c",
+          "previous": null
+        },
+        "prev_hash": "29110918298d36f383dcf05f0c0b512d6e5344dc2b79d75cf2357336e551210d",
+        "seq": 4,
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "admin",
+        "entry_hash": "08d2efe3d2faedbbd3a10c4c01b1784730a5bb5b5f84d61f3d7f5eeaa60e6118",
+        "kind": "model.validate",
+        "leaves": null,
+        "merkle_root": null,
+        "payload": {
+          "model_id": "mdl_fdb71cbd5b6c",
+          "ok": true,
+          "threshold": 0.194095
+        },
+        "prev_hash": "1b286d784f8b27e47ca6b1a2cddabd22a5e18e7c322c9b66d6ea5fbb54e22cc4",
+        "seq": 3,
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "admin",
+        "entry_hash": "e00979ddfefa8bde77e0551d4329191e14891183efad46dc0c1c97ac42df874e",
+        "kind": "model.register",
+        "leaves": null,
+        "merkle_root": null,
+        "payload": {
+          "artifact_sha256": "1fda05f669ac9027d059c42bbd2c0246459a8d4802329e0052203f3a37b61f5e",
+          "contamination": 0.02,
+          "model_id": "mdl_fdb71cbd5b6c",
+          "n_train": 42,
+          "source": "<DATA_DIR>/captures/cap_342559062c5caa2055adf3fa7dd1ea42.pcap"
+        },
+        "prev_hash": "a2c71fa59611badae761f0832a1ff8ec7c8826dada22c9c6159a12359c16e46a",
+        "seq": 2,
+        "ts": 1800000000.0
+      },
+      {
+        "actor": "admin",
+        "entry_hash": "9dbe4a151d8ce1b30bdcfb7a329c6ad7a539180250c5cc15959c6a44c5fb4fb6",
+        "kind": "auth.login",
+        "leaves": null,
+        "merkle_root": null,
+        "payload": {
+          "username": "admin"
+        },
+        "prev_hash": "c22841b02b769fd35f5799c428c766faa3423974a606552d8e3ecc660fe398b3",
+        "seq": 1,
+        "ts": 1800000000.0
+      }
+    ],
+    "signing_key": "59e27c0f3729c1eb14c30886afad61cd909ed1342786b76f2def8978e4e4a08d59"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/audit/entries",
+    "query": {}
+  },
+  "status": 200
+}

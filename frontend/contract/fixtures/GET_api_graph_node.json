@@ -1,0 +1,17 @@
+{
+  "body": {
+    "detail": "unknown node: 10.0.0.7"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/graph/node",
+    "query": {
+      "id": "10.0.0.7"
+    }
+  },
+  "status": 404
+}

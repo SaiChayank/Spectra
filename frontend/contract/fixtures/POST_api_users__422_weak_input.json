@@ -1,0 +1,53 @@
+{
+  "body": {
+    "detail": [
+      {
+        "ctx": {
+          "min_length": 3
+        },
+        "loc": [
+          "body",
+          "username"
+        ],
+        "msg": "String should have at least 3 characters",
+        "type": "string_too_short"
+      },
+      {
+        "ctx": {
+          "min_length": 8
+        },
+        "loc": [
+          "body",
+          "password"
+        ],
+        "msg": "String should have at least 8 characters",
+        "type": "string_too_short"
+      },
+      {
+        "ctx": {
+          "pattern": "^(ADMIN|ANALYST|VIEWER)$"
+        },
+        "loc": [
+          "body",
+          "role"
+        ],
+        "msg": "String should match pattern '^(ADMIN|ANALYST|VIEWER)$'",
+        "type": "string_pattern_mismatch"
+      }
+    ]
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": {
+      "password": "<redacted>",
+      "role": "NOPE",
+      "username": "x"
+    },
+    "method": "POST",
+    "path": "/api/users",
+    "query": {}
+  },
+  "status": 422
+}

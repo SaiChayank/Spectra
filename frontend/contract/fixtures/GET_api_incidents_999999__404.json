@@ -1,0 +1,15 @@
+{
+  "body": {
+    "detail": "incident not found"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/incidents/999999",
+    "query": {}
+  },
+  "status": 404
+}

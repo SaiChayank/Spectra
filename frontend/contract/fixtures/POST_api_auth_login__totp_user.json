@@ -1,0 +1,30 @@
+{
+  "body": {
+    "expires_at": 1800043200.0,
+    "user": {
+      "id": 5,
+      "permissions": [
+        "read"
+      ],
+      "role": "VIEWER",
+      "totp_enabled": false,
+      "username": "contract-totp"
+    }
+  },
+  "headers": {
+    "content-type": "application/json",
+    "set-cookie-names": [
+      "spectra_session"
+    ]
+  },
+  "request": {
+    "body": {
+      "password": "<redacted>",
+      "username": "contract-totp"
+    },
+    "method": "POST",
+    "path": "/api/auth/login",
+    "query": {}
+  },
+  "status": 200
+}

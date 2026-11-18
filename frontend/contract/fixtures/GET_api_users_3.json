@@ -1,0 +1,20 @@
+{
+  "body": {
+    "created_at": 1800000000.0,
+    "id": 3,
+    "last_login_at": null,
+    "role": "ANALYST",
+    "updated_at": 1800000000.0,
+    "username": "contract-analyst"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/users/3",
+    "query": {}
+  },
+  "status": 200
+}

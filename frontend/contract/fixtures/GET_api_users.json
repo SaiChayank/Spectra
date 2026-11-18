@@ -1,0 +1,57 @@
+{
+  "body": {
+    "count": 5,
+    "items": [
+      {
+        "created_at": 1800000000.0,
+        "id": 1,
+        "last_login_at": 1800000000.0,
+        "role": "ADMIN",
+        "updated_at": 1800000000.0,
+        "username": "admin"
+      },
+      {
+        "created_at": 1800000000.0,
+        "id": 2,
+        "last_login_at": null,
+        "role": "VIEWER",
+        "updated_at": 1800000000.0,
+        "username": "contract-viewer"
+      },
+      {
+        "created_at": 1800000000.0,
+        "id": 3,
+        "last_login_at": null,
+        "role": "ANALYST",
+        "updated_at": 1800000000.0,
+        "username": "contract-analyst"
+      },
+      {
+        "created_at": 1800000000.0,
+        "id": 4,
+        "last_login_at": null,
+        "role": "ANALYST",
+        "updated_at": 1800000000.0,
+        "username": "contract-pwchange"
+      },
+      {
+        "created_at": 1800000000.0,
+        "id": 5,
+        "last_login_at": null,
+        "role": "VIEWER",
+        "updated_at": 1800000000.0,
+        "username": "contract-totp"
+      }
+    ]
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/users",
+    "query": {}
+  },
+  "status": 200
+}

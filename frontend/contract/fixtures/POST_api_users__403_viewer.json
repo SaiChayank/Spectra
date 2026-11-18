@@ -1,0 +1,19 @@
+{
+  "body": {
+    "detail": "role VIEWER lacks the 'users:manage' permission"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": {
+      "password": "<redacted>",
+      "role": "VIEWER",
+      "username": "contract-nope"
+    },
+    "method": "POST",
+    "path": "/api/users",
+    "query": {}
+  },
+  "status": 403
+}

@@ -1,0 +1,34 @@
+{
+  "body": {
+    "details": [
+      {
+        "description": "",
+        "id": "eth0",
+        "ip": "192.0.2.10",
+        "mac": "02:00:00:00:00:01",
+        "name": "eth0"
+      },
+      {
+        "description": "",
+        "id": "lo",
+        "ip": "127.0.0.1",
+        "mac": "00:00:00:00:00:00",
+        "name": "lo"
+      }
+    ],
+    "interfaces": [
+      "eth0",
+      "lo"
+    ]
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/interfaces",
+    "query": {}
+  },
+  "status": 200
+}

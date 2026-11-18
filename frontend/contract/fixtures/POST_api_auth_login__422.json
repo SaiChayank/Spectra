@@ -1,0 +1,37 @@
+{
+  "body": {
+    "detail": [
+      {
+        "ctx": {
+          "min_length": 1
+        },
+        "loc": [
+          "body",
+          "username"
+        ],
+        "msg": "String should have at least 1 character",
+        "type": "string_too_short"
+      },
+      {
+        "loc": [
+          "body",
+          "password"
+        ],
+        "msg": "Field required",
+        "type": "missing"
+      }
+    ]
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": {
+      "username": ""
+    },
+    "method": "POST",
+    "path": "/api/auth/login",
+    "query": {}
+  },
+  "status": 422
+}

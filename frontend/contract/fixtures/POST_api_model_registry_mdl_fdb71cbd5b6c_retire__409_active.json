@@ -1,0 +1,15 @@
+{
+  "body": {
+    "detail": "activate another model before retiring mdl_fdb71cbd5b6c"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "POST",
+    "path": "/api/model/registry/mdl_fdb71cbd5b6c/retire",
+    "query": {}
+  },
+  "status": 409
+}

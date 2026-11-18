@@ -1,0 +1,315 @@
+{
+  "body": {
+    "counts": {
+      "DEGRADED": 0,
+      "HEALTHY": 12,
+      "SIMULATED": 2,
+      "UNAVAILABLE": 0
+    },
+    "metrics": {
+      "database": {
+        "budget_p95_ms": 0.0,
+        "commits": 0,
+        "enabled": true,
+        "errors": 0,
+        "flushes": 0,
+        "size_bytes": 4096,
+        "staged": 0,
+        "write_p50_ms": 0.0,
+        "write_p95_ms": 0.0,
+        "write_samples": 0
+      },
+      "errors": {
+        "by_component": {},
+        "capture_error": null,
+        "total": 0
+      },
+      "flows": {
+        "active": 0,
+        "active_limit": 5000,
+        "dropped": 0,
+        "evicted": 1,
+        "processed": 13,
+        "rate_fps": 0.0
+      },
+      "inference": {
+        "budget_p95_ms": 0.0,
+        "max_ms": 0.0,
+        "mean_ms": 0.0,
+        "ops": 13,
+        "p50_ms": 0.0,
+        "p95_ms": 0.0
+      },
+      "model": {
+        "drift_level": null,
+        "id": "spectra_model.joblib",
+        "n_train": 42,
+        "trained": true,
+        "trained_at": "2027-01-15T08:00:00+00:00",
+        "version": 1
+      },
+      "packets": {
+        "captured": 284,
+        "drop_ratio": 0.0,
+        "dropped": 0,
+        "rate_pps": 0.0
+      },
+      "processing_lag_max_ms": 0.0,
+      "processing_lag_ms": 0.0,
+      "queues": {
+        "flow_queue": {
+          "accepted": 13,
+          "depth": 0,
+          "dropped": 0,
+          "limit": 1024,
+          "offered": 13,
+          "utilization": 0.0
+        },
+        "live_capture": {
+          "depth": 0,
+          "dropped": 0,
+          "max_depth": 0,
+          "queued": 0,
+          "received": 0
+        },
+        "packet_queue": {
+          "accepted": 284,
+          "depth": 0,
+          "dropped": 0,
+          "limit": 4096,
+          "offered": 284,
+          "utilization": 0.0
+        },
+        "publish_queue": {
+          "accepted": 13,
+          "depth": 0,
+          "dropped": 0,
+          "limit": 1024,
+          "offered": 13,
+          "utilization": 0.0
+        },
+        "saturation": []
+      },
+      "rates": {
+        "detections_per_min": 0.0,
+        "events_per_min": 0.0,
+        "failures_per_min": 0.0,
+        "flow_drops_per_min": 0.0,
+        "flows_per_min": 0.0,
+        "incidents_per_min": 0.0,
+        "packet_drops_per_min": 0.0,
+        "packets_per_min": 0.0
+      },
+      "uptime_s": 0.0,
+      "websocket": {
+        "clients": 0,
+        "events_emitted": 79,
+        "slow_client_drops": 0,
+        "subscribers": 2
+      }
+    },
+    "reason": "2 subsystem(s) simulated by design (TEE module, Digital twin); operating normally",
+    "state": "SIMULATED",
+    "subsystems": [
+      {
+        "evidence": {
+          "drop_ratio": 0.0,
+          "dropped": 0,
+          "error": null,
+          "lag_ms": 0.0,
+          "mode": "pcap",
+          "packets": 284,
+          "queue_utilization": 0.0,
+          "running": false,
+          "source": "suspicious3.pcap"
+        },
+        "name": "capture",
+        "reason": "idle (no capture session); 284 packet(s) this run",
+        "state": "HEALTHY",
+        "title": "Capture engine"
+      },
+      {
+        "evidence": {
+          "active": 0,
+          "dropped_new": 0,
+          "evicted": 1,
+          "evicted_new": 0,
+          "limit": 5000,
+          "parse_errors_new": 0,
+          "utilization": 0.0
+        },
+        "name": "flow_tracker",
+        "reason": "0/5000 active flow(s); 1 eviction(s) total",
+        "state": "HEALTHY",
+        "title": "Flow tracker"
+      },
+      {
+        "evidence": {
+          "flows": 13,
+          "tls_flows": 9
+        },
+        "name": "tls_parser",
+        "reason": "9 flow(s) with TLS metadata parsed",
+        "state": "HEALTHY",
+        "title": "TLS parser"
+      },
+      {
+        "evidence": {
+          "crypto_available": true,
+          "quic_flows": 1
+        },
+        "name": "quic_parser",
+        "reason": "1 QUIC handshake(s) parsed (Initial decryption available)",
+        "state": "HEALTHY",
+        "title": "QUIC parser"
+      },
+      {
+        "evidence": {
+          "budget_p95_ms": 0.0,
+          "failures_new": 0,
+          "ops": 13,
+          "p50_ms": 0.0,
+          "p95_ms": 0.0,
+          "trained": true
+        },
+        "name": "inference",
+        "reason": "p50 0ms / p95 0ms across 13 scoring op(s)",
+        "state": "HEALTHY",
+        "title": "Inference engine"
+      },
+      {
+        "evidence": {
+          "drift_level": null,
+          "error": null,
+          "id": "spectra_model.joblib",
+          "n_train": 42,
+          "trained": true,
+          "version": 1
+        },
+        "name": "model",
+        "reason": "model 'spectra_model.joblib' v1 loaded (42 training flow(s)); drift stable",
+        "state": "HEALTHY",
+        "title": "Active model"
+      },
+      {
+        "evidence": {
+          "budget_p95_ms": 0.0,
+          "commits": 0,
+          "enabled": true,
+          "error": null,
+          "errors_new": 0,
+          "size_bytes": 4096,
+          "write_p50_ms": 0.0,
+          "write_p95_ms": 0.0
+        },
+        "name": "database",
+        "reason": "writable; write p95 0ms; 0.0MB on disk",
+        "state": "HEALTHY",
+        "title": "Database"
+      },
+      {
+        "evidence": {
+          "clients": 0,
+          "events_emitted": 79,
+          "listener_errors_new": 0,
+          "slow_client_drops_new": 0,
+          "subscribers": 2
+        },
+        "name": "events",
+        "reason": "0 websocket client(s), 2 listener(s); 79 event(s) emitted",
+        "state": "HEALTHY",
+        "title": "WebSocket / event bus"
+      },
+      {
+        "evidence": {
+          "enabled": true,
+          "entries": 32,
+          "error": null,
+          "failures": 0,
+          "seq": 32
+        },
+        "name": "audit",
+        "reason": "hash chain intact at seq 32 (32 entries)",
+        "state": "HEALTHY",
+        "title": "Audit chain"
+      },
+      {
+        "evidence": {
+          "available": true,
+          "detail": "2 endpoints assessed",
+          "failures": 0,
+          "failures_new": 0,
+          "simulated": false
+        },
+        "name": "pqc",
+        "reason": "2 endpoints assessed",
+        "state": "HEALTHY",
+        "title": "PQC module"
+      },
+      {
+        "evidence": {
+          "available": true,
+          "detail": "trained",
+          "failures": 0,
+          "failures_new": 0,
+          "simulated": false
+        },
+        "name": "bio",
+        "reason": "trained",
+        "state": "HEALTHY",
+        "title": "Bio module"
+      },
+      {
+        "evidence": {
+          "available": true,
+          "detail": "local simulated enclave (never hardware-backed)",
+          "failures": 0,
+          "failures_new": 0,
+          "simulated": true
+        },
+        "name": "tee",
+        "reason": "local simulated enclave (never hardware-backed)",
+        "state": "SIMULATED",
+        "title": "TEE module"
+      },
+      {
+        "evidence": {
+          "available": true,
+          "detail": "link terrestrial, micro trained=True; deployment: 0 simulated deployment(s) registered (no MEC/5G control plane)",
+          "failures": 0,
+          "failures_new": 0,
+          "simulated": false
+        },
+        "name": "edge",
+        "reason": "link terrestrial, micro trained=True; deployment: 0 simulated deployment(s) registered (no MEC/5G control plane)",
+        "state": "HEALTHY",
+        "title": "Edge module"
+      },
+      {
+        "evidence": {
+          "available": true,
+          "detail": "local simulator over 8 topology node(s)",
+          "failures": 0,
+          "failures_new": 0,
+          "simulated": true
+        },
+        "name": "twin",
+        "reason": "local simulator over 8 topology node(s)",
+        "state": "SIMULATED",
+        "title": "Digital twin"
+      }
+    ],
+    "ts": 1800000000.0,
+    "uptime_s": 0.0
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/health/system",
+    "query": {}
+  },
+  "status": 200
+}

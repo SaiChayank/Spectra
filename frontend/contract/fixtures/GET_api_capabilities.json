@@ -1,0 +1,188 @@
+{
+  "body": {
+    "definitions": {
+      "EXPERIMENTAL": "Research prototype: real mathematics, not hardened for production use.",
+      "HARDWARE_BACKED": "Backed by dedicated hardware (e.g. an SGX/SEV enclave or a vendor MEC/5G control plane).",
+      "LOCAL": "Real computation with local-only, single-process scope (not a distributed production integration).",
+      "REAL": "Real functionality operating on real inputs - no simulated components.",
+      "SIMULATED": "Modeled or emulated behavior - the underlying integration does not exist in this build.",
+      "UNAVAILABLE": "Not functional in this build."
+    },
+    "hardware_backed_count": 0,
+    "modules": {
+      "adversarial": {
+        "affects_alert_scoring": false,
+        "available": true,
+        "consumes": "The live score stream (evasion watch window) and the fitted model with recent feature vectors (drift and robustness runs).",
+        "detail": "evasion watch warming up; model trained",
+        "evidence_only": true,
+        "failure": "Guarded (component 'adversarial_watch'); drift refresh is best effort and report endpoints return available:false instead of raising.",
+        "failures": 0,
+        "hardware_backed": false,
+        "note": "White-box evasion, drift and robustness analysis against the fitted model.",
+        "produces": "Evasion/drift context as system events and audit entries, plus on-demand robustness reports; surfaced as robustness observations in investigations.",
+        "status": "REAL",
+        "title": "Adversarial resilience"
+      },
+      "audit": {
+        "affects_alert_scoring": false,
+        "available": true,
+        "consumes": "Audit events emitted across the pipeline and flow records committed as Merkle leaves at capture stop.",
+        "detail": "hash chain at seq 32",
+        "evidence_only": true,
+        "failure": "Guarded (component 'audit'): appends are best effort - a failure is counted and logged while capture and detection continue.",
+        "failures": 0,
+        "hardware_backed": false,
+        "note": "Research-grade pure-Python cryptography (hash chain, Merkle, Schnorr, ZK statements); not production-hardened. Proofs demonstrate tamper-evidence of this log, not regulatory compliance.",
+        "produces": "Tamper-evident integrity references - chained entries, Merkle inclusion proofs, signed checkpoints - which investigation bundles cite for incident/alert actions.",
+        "status": "EXPERIMENTAL",
+        "title": "Audit chain / ZKP"
+      },
+      "bio": {
+        "affects_alert_scoring": false,
+        "available": true,
+        "consumes": "Scored feature vectors plus drift/evasion context and the edge timing scale.",
+        "detail": "trained",
+        "evidence_only": true,
+        "failure": "Guarded (component 'bio'): an untrained or failing bio system is skipped; detection continues without the annotation.",
+        "failures": 0,
+        "hardware_backed": false,
+        "note": "Bio-inspired danger/SNN/swarm heuristics - research prototype.",
+        "produces": "Behavioural annotations (immune danger level, SNN score, swarm vote) on flow records and alerts - supporting evidence that never invents an independent threat verdict.",
+        "status": "EXPERIMENTAL",
+        "title": "Bio-inspired detection"
+      },
+      "correlation": {
+        "affects_alert_scoring": false,
+        "available": true,
+        "consumes": "Published flow records (endpoints, SNI, sector) and hydrated flow history.",
+        "detail": "8 nodes / 7 edges observed",
+        "evidence_only": true,
+        "failure": "Guarded (component 'correlation'): a graph failure never kills publication, and bundles degrade to available:false graph/twin sections.",
+        "failures": 0,
+        "hardware_backed": false,
+        "note": "Attack-graph correlation over observed flow records.",
+        "produces": "Attack-graph nodes/edges plus incident relatedness context: anchors, affected entities and one-hop graph slices for investigations.",
+        "status": "REAL",
+        "title": "Correlation graph"
+      },
+      "edge": {
+        "affects_alert_scoring": false,
+        "available": true,
+        "consumes": "Flow records for slice classification, fitted micro-detector features for local scoring, and link profile RTT for the timing scale.",
+        "detail": "link terrestrial, micro trained=True",
+        "evidence_only": true,
+        "failure": "Guarded (component 'edge_slice'): classification falls back to the 'default' slice and capture continues.",
+        "failures": 0,
+        "hardware_backed": false,
+        "note": "Real micro-detector scoring with local, single-process scope.",
+        "produces": "Network-slice tags on flows and alerts, slice policy adjustments for the immune ladder, and local micro-detector latency reports.",
+        "status": "LOCAL",
+        "title": "Edge / 5G slicing"
+      },
+      "edge_deployment": {
+        "affects_alert_scoring": false,
+        "available": true,
+        "consumes": "Deploy requests naming a node and a network slice.",
+        "detail": "0 simulated deployment(s) registered (no MEC/5G control plane)",
+        "evidence_only": true,
+        "failure": "Off the detection path: validation errors return HTTP 400 on its own routes only.",
+        "failures": 0,
+        "hardware_backed": false,
+        "note": "In-process deployment/NTN registry; no real MEC or 5G control plane.",
+        "produces": "In-process deployment records explicitly marked capability: SIMULATED - not a remote edge agent.",
+        "status": "SIMULATED",
+        "title": "Edge deployment registry"
+      },
+      "federated": {
+        "affects_alert_scoring": false,
+        "available": true,
+        "consumes": "Model delta vectors (explicit, or derived from the live score window).",
+        "detail": "simulated parties; secret sharing verified locally",
+        "evidence_only": true,
+        "failure": "Off the detection path: errors surface as explicit API errors only.",
+        "failures": 0,
+        "hardware_backed": false,
+        "note": "Real secret-sharing math (additive k-of-k, or opt-in Shamir t-of-n with dropout) over locally simulated parties.",
+        "produces": "Secret-shared secure aggregation over locally simulated parties with a verifiable aggregate digest.",
+        "status": "SIMULATED",
+        "title": "Federated aggregation"
+      },
+      "intel": {
+        "affects_alert_scoring": false,
+        "available": false,
+        "consumes": "ja3/ja4/sni fields already parsed from TLS/QUIC handshakes (never payload) plus the list files under the intel directory.",
+        "detail": "no list files - intel is off",
+        "evidence_only": true,
+        "failure": "Guarded (component 'intel'): a bad directory or list degrades to empty lists with a counted failure; capture and scoring continue without intel.",
+        "failures": 0,
+        "hardware_backed": false,
+        "note": "Operator-maintained file lists matched against parsed handshake metadata; a hit is evidence, never an auto-verdict.",
+        "produces": "intel_* classification signals (spectra.threats), record['intel'] hits on flows, and list provenance on GET /api/model/intel.",
+        "status": "LOCAL",
+        "title": "Local threat intel (JA3/JA4/SNI lists)"
+      },
+      "pqc": {
+        "affects_alert_scoring": false,
+        "available": true,
+        "consumes": "Parsed TLS/QUIC handshake metadata (versions, groups, ciphers, JA3/JA4) from every scored flow.",
+        "detail": "2 endpoints assessed",
+        "evidence_only": true,
+        "failure": "Guarded on the detection path (component 'pqc'): a failure drops the annotation, never the flow.",
+        "failures": 0,
+        "hardware_backed": false,
+        "note": "Heuristic quantum-risk scoring over real parsed TLS/QUIC handshakes.",
+        "produces": "Per-flow quantum-risk assessment persisted on the flow record and copied onto alerts as module evidence; an endpoint inventory with a migration roadmap.",
+        "status": "REAL",
+        "title": "PQC crypto-readiness"
+      },
+      "tee": {
+        "affects_alert_scoring": false,
+        "available": true,
+        "consumes": "The model artifact path (for its measurement), caller-supplied nonces, feature vectors and quotes.",
+        "detail": "local simulated enclave (never hardware-backed)",
+        "evidence_only": true,
+        "failure": "Off the detection path: a missing enclave raises TeeError -> HTTP 400 on its own routes and never affects scoring or capture.",
+        "failures": 0,
+        "hardware_backed": false,
+        "note": "Simulated enclave in-process; a real deployment requires SGX/SEV hardware. Never hardware-backed in this build.",
+        "produces": "Local simulated attestation quotes, verification checks and sealed-inference receipts - reported as simulated unless real hardware is present, which it never is in this build.",
+        "status": "SIMULATED",
+        "title": "TEE attestation"
+      },
+      "twin": {
+        "affects_alert_scoring": false,
+        "available": true,
+        "consumes": "The correlation graph topology built from observed flows only (no invented infrastructure).",
+        "detail": "local simulator over 8 topology node(s)",
+        "evidence_only": true,
+        "failure": "Read-side only: bundle twin context degrades to available:false and never raises into the pipeline.",
+        "failures": 0,
+        "hardware_backed": false,
+        "note": "Deterministic local simulator; no live-network coupling.",
+        "produces": "Deterministic blast-radius simulation, playbook rehearsal and zone/criticality context alongside an investigation.",
+        "status": "SIMULATED",
+        "title": "Digital twin"
+      }
+    },
+    "scoring_policy": "No advanced module changes the anomaly score, the alert confidence, or the severity: every module contributes supporting evidence or context only, and no module may invent an independent threat verdict.",
+    "statuses": [
+      "REAL",
+      "LOCAL",
+      "SIMULATED",
+      "EXPERIMENTAL",
+      "HARDWARE_BACKED",
+      "UNAVAILABLE"
+    ]
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/capabilities",
+    "query": {}
+  },
+  "status": 200
+}

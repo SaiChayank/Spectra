@@ -1,0 +1,26 @@
+{
+  "body": {
+    "available": false,
+    "counts": {
+      "ja3": 0,
+      "ja4": 0,
+      "sni": 0,
+      "total": 0
+    },
+    "directory": "<DATA_DIR>/intel",
+    "error": null,
+    "failures": 0,
+    "loaded_at": "2027-01-15T08:00:00+00:00",
+    "sources": []
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/model/intel",
+    "query": {}
+  },
+  "status": 200
+}

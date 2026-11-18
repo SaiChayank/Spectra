@@ -1,0 +1,15 @@
+{
+  "body": {
+    "detail": "you cannot delete your own account"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "DELETE",
+    "path": "/api/users/1",
+    "query": {}
+  },
+  "status": 409
+}

@@ -1,0 +1,18 @@
+{
+  "body": {
+    "detail": "no path between nodes"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/graph/path",
+    "query": {
+      "dst": "93.184.216.34",
+      "src": "10.0.0.7"
+    }
+  },
+  "status": 404
+}

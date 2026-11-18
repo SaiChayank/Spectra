@@ -1,0 +1,15 @@
+{
+  "body": {
+    "detail": "model mdl_337d2fdc600b is already retired"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "POST",
+    "path": "/api/model/registry/mdl_337d2fdc600b/retire",
+    "query": {}
+  },
+  "status": 409
+}

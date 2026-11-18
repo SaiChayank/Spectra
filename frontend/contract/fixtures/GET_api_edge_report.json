@@ -1,0 +1,104 @@
+{
+  "body": {
+    "deployments": [],
+    "link": {
+      "jitter_ms": 0.0,
+      "label": "fiber / 5G non-standalone",
+      "link": "terrestrial",
+      "rtt_ms": 0.0,
+      "timing_scale": 1.0
+    },
+    "link_profiles": {
+      "geostationary": {
+        "jitter_ms": 0.0,
+        "label": "GEO satellite (remote clinics)",
+        "rtt_ms": 0.0
+      },
+      "leo_satellite": {
+        "jitter_ms": 0.0,
+        "label": "LEO satellite constellation",
+        "rtt_ms": 0.0
+      },
+      "terrestrial": {
+        "jitter_ms": 0.0,
+        "label": "fiber / 5G non-standalone",
+        "rtt_ms": 0.0
+      },
+      "uav": {
+        "jitter_ms": 0.0,
+        "label": "UAV aerial backhaul",
+        "rtt_ms": 0.0
+      }
+    },
+    "micro": {
+      "budget_ms": 0.0,
+      "digest": "59e27c0f3729c1eb14c30886afad61cd909ed1342786b76f2def8978e4e4a08d",
+      "features": [
+        "duration_s",
+        "packets_total",
+        "bytes_total",
+        "bytes_mean",
+        "iat_mean_s",
+        "iat_std_s",
+        "packets_per_s",
+        "bytes_per_s",
+        "size_entropy",
+        "payload_ratio",
+        "dst_port_norm",
+        "tls_present"
+      ],
+      "latency": {
+        "available": true,
+        "budget_ms": 0.0,
+        "n": 126,
+        "p50_ms": 0.0,
+        "p95_ms": 0.0,
+        "within_budget": true
+      },
+      "n_features": 12,
+      "threshold": 0.230375,
+      "threshold_pct": 98.0,
+      "trained": true
+    },
+    "slice_counts": {
+      "default": 9,
+      "mmtc": 4
+    },
+    "slices": {
+      "default": {
+        "label": "best-effort default slice",
+        "max_rtt_ms": 0,
+        "policy": "standard response ladder",
+        "sensitivity": 0
+      },
+      "embb": {
+        "label": "eMBB - enhanced mobile broadband (video / bulk)",
+        "max_rtt_ms": 0,
+        "policy": "standard response ladder",
+        "sensitivity": 0
+      },
+      "mmtc": {
+        "label": "mMTC - massive machine-type comms (sensor fleets)",
+        "max_rtt_ms": 0,
+        "policy": "mute single-flow monitor chatter",
+        "sensitivity": -1
+      },
+      "urllc": {
+        "label": "URLLC - ultra-reliable low latency (healthcare / ICS)",
+        "max_rtt_ms": 0,
+        "policy": "escalate alert -> isolate",
+        "sensitivity": 1
+      }
+    }
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/edge/report",
+    "query": {}
+  },
+  "status": 200
+}

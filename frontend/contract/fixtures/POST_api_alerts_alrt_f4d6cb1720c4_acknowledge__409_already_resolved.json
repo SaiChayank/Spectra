@@ -1,0 +1,15 @@
+{
+  "body": {
+    "detail": "alert is RESOLVED; only OPEN alerts can be acknowledged"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "POST",
+    "path": "/api/alerts/alrt_f4d6cb1720c4/acknowledge",
+    "query": {}
+  },
+  "status": 409
+}

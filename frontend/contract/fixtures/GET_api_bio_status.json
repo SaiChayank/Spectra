@@ -1,0 +1,54 @@
+{
+  "body": {
+    "assessed": 52,
+    "available": true,
+    "contamination": 0.02,
+    "drift_level": null,
+    "evasion_active": false,
+    "memory_cells": 2,
+    "response_histogram": {
+      "alert": 0,
+      "ignore": 0,
+      "isolate": 0,
+      "monitor": 0
+    },
+    "self_model": {
+      "n_features": 39,
+      "trained": true
+    },
+    "snn": {
+      "threshold": 26.313318,
+      "threshold_pct": 98.0,
+      "trained": true
+    },
+    "swarm": {
+      "agents": [
+        "forest",
+        "immune",
+        "snn",
+        "entropy",
+        "cadence"
+      ],
+      "min_agents": 2,
+      "quorum": 0.5,
+      "weights": {
+        "cadence": 2.656,
+        "entropy": 3.0,
+        "forest": 2.576,
+        "immune": 3.0,
+        "snn": 3.0
+      }
+    },
+    "timing_scale": 1.0
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/bio/status",
+    "query": {}
+  },
+  "status": 200
+}

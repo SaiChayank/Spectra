@@ -1,0 +1,215 @@
+{
+  "body": {
+    "asset_edges": [
+      {
+        "cross_zone": false,
+        "normalized": 1.0,
+        "source": "host:10.0.0.5",
+        "target": "ip:93.184.216.34",
+        "to_external": false,
+        "weight": 214208.0
+      },
+      {
+        "cross_zone": true,
+        "normalized": 0.089,
+        "source": "host:10.0.0.66",
+        "target": "ip:198.51.100.7",
+        "to_external": true,
+        "weight": 19072.0
+      },
+      {
+        "cross_zone": false,
+        "normalized": 0.1228,
+        "source": "host:10.0.0.7",
+        "target": "ip:93.184.216.34",
+        "to_external": false,
+        "weight": 26307.0
+      }
+    ],
+    "assets": [
+      "host:10.0.0.5",
+      "host:10.0.0.66",
+      "host:10.0.0.7",
+      "ip:198.51.100.7",
+      "ip:93.184.216.34"
+    ],
+    "by_domain": {
+      "domain:example.com": [
+        "ip:93.184.216.34"
+      ],
+      "domain:quic.example": [
+        "ip:93.184.216.34"
+      ]
+    },
+    "flow_lag": 0.0,
+    "hydrated_at": 1800000000.0,
+    "nodes": [
+      {
+        "asset": false,
+        "bytes": 214208,
+        "criticality": 0.4,
+        "detections": 0,
+        "first_ts": 1700001000.776883,
+        "flows": 32,
+        "id": "domain:example.com",
+        "label": "example.com",
+        "last_ts": 1700001021.97162,
+        "role": "service",
+        "sector": "general",
+        "type": "domain",
+        "zone": "general"
+      },
+      {
+        "asset": false,
+        "bytes": 26307,
+        "criticality": 0.52,
+        "detections": 4,
+        "first_ts": 1700001100.52612,
+        "flows": 4,
+        "id": "domain:quic.example",
+        "label": "quic.example",
+        "last_ts": 1700001100.548779,
+        "role": "service",
+        "sector": "general",
+        "type": "domain",
+        "zone": "general"
+      },
+      {
+        "asset": true,
+        "bytes": 214208,
+        "criticality": 0.4,
+        "detections": 0,
+        "first_ts": 1700001000.776883,
+        "flows": 32,
+        "id": "host:10.0.0.5",
+        "label": "10.0.0.5",
+        "last_ts": 1700001021.97162,
+        "role": "endpoint",
+        "sector": null,
+        "type": "host",
+        "zone": "general"
+      },
+      {
+        "asset": true,
+        "bytes": 19072,
+        "criticality": 0.4,
+        "detections": 0,
+        "first_ts": 1700002012.526001,
+        "flows": 16,
+        "id": "host:10.0.0.66",
+        "label": "10.0.0.66",
+        "last_ts": 1700002102.526001,
+        "role": "endpoint",
+        "sector": "general",
+        "type": "host",
+        "zone": "general"
+      },
+      {
+        "asset": true,
+        "bytes": 26307,
+        "criticality": 0.52,
+        "detections": 4,
+        "first_ts": 1700001100.52612,
+        "flows": 4,
+        "id": "host:10.0.0.7",
+        "label": "10.0.0.7",
+        "last_ts": 1700001100.548779,
+        "role": "endpoint",
+        "sector": null,
+        "type": "host",
+        "zone": "general"
+      },
+      {
+        "asset": true,
+        "bytes": 19072,
+        "criticality": 0.4,
+        "detections": 0,
+        "first_ts": 1700002012.526001,
+        "flows": 16,
+        "id": "ip:198.51.100.7",
+        "label": "198.51.100.7",
+        "last_ts": 1700002102.526001,
+        "role": "server",
+        "sector": null,
+        "type": "ip",
+        "zone": "external"
+      },
+      {
+        "asset": true,
+        "bytes": 240515,
+        "criticality": 0.413,
+        "detections": 4,
+        "first_ts": 1700001000.776883,
+        "flows": 36,
+        "id": "ip:93.184.216.34",
+        "label": "93.184.216.34",
+        "last_ts": 1700001100.548779,
+        "role": "server",
+        "sector": "general",
+        "type": "ip",
+        "zone": "general"
+      },
+      {
+        "asset": false,
+        "bytes": 240515,
+        "criticality": 0.413,
+        "detections": 4,
+        "first_ts": 1700001000.776883,
+        "flows": 36,
+        "id": "sector:general",
+        "label": "general",
+        "last_ts": 1700001100.548779,
+        "role": "zone",
+        "sector": "general",
+        "type": "sector",
+        "zone": "general"
+      }
+    ],
+    "stale": false,
+    "summary": {
+      "assets": 5,
+      "by_type": {
+        "domain": 2,
+        "host": 3,
+        "ip": 2,
+        "sector": 1
+      },
+      "detections": 8,
+      "edges": 3,
+      "mean_criticality": 0.427,
+      "nodes": 8,
+      "zones": 2
+    },
+    "zones": [
+      {
+        "assets": [
+          "ip:198.51.100.7"
+        ],
+        "criticality": 0.4,
+        "id": "external",
+        "size": 1
+      },
+      {
+        "assets": [
+          "host:10.0.0.5",
+          "host:10.0.0.66",
+          "host:10.0.0.7",
+          "ip:93.184.216.34"
+        ],
+        "criticality": 0.4,
+        "id": "general",
+        "size": 4
+      }
+    ]
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/twin/topology",
+    "query": {}
+  },
+  "status": 200
+}

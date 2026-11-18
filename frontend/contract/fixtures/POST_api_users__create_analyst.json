@@ -1,0 +1,24 @@
+{
+  "body": {
+    "created_at": 1800000000.0,
+    "id": 3,
+    "last_login_at": null,
+    "role": "ANALYST",
+    "updated_at": 1800000000.0,
+    "username": "contract-analyst"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": {
+      "password": "<redacted>",
+      "role": "ANALYST",
+      "username": "contract-analyst"
+    },
+    "method": "POST",
+    "path": "/api/users",
+    "query": {}
+  },
+  "status": 200
+}

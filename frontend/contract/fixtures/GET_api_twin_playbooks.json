@@ -1,0 +1,108 @@
+{
+  "body": {
+    "count": 4,
+    "items": [
+      {
+        "actions": [
+          {
+            "action": "block_domain",
+            "round": 1,
+            "target": "auto"
+          },
+          {
+            "action": "monitor",
+            "round": 2,
+            "value": 0.5
+          }
+        ],
+        "description": "Isolate the beaconing host and block its C2 at round 1; monitor the estate from round 2.",
+        "name": "beacon_containment",
+        "thresholds": {
+          "min_reduction": 0.5
+        }
+      },
+      {
+        "actions": [
+          {
+            "action": "isolate_host",
+            "round": 0,
+            "target": "auto"
+          },
+          {
+            "action": "segment_zone",
+            "round": 1,
+            "value": 0.1
+          },
+          {
+            "action": "patch",
+            "round": 1,
+            "value": 4
+          },
+          {
+            "action": "monitor",
+            "round": 2,
+            "value": 0.6
+          }
+        ],
+        "description": "Everything at once: isolate seeds, segment, patch, monitor.",
+        "name": "full_containment",
+        "thresholds": {
+          "min_reduction": 0.7
+        }
+      },
+      {
+        "actions": [
+          {
+            "action": "patch",
+            "round": 0,
+            "value": 4
+          },
+          {
+            "action": "segment_zone",
+            "round": 1,
+            "value": 0.15
+          },
+          {
+            "action": "monitor",
+            "round": 3,
+            "value": 0.4
+          }
+        ],
+        "description": "Preventive posture: patch critical assets first, then segment cross-zone traffic, then raise monitoring.",
+        "name": "patch_and_segment",
+        "thresholds": {
+          "min_reduction": 0.4
+        }
+      },
+      {
+        "actions": [
+          {
+            "action": "segment_zone",
+            "round": 1,
+            "value": 0.1
+          },
+          {
+            "action": "patch",
+            "round": 2,
+            "value": 3
+          }
+        ],
+        "description": "Segment the compromised zone immediately and patch the most critical exposed assets.",
+        "name": "sector_lockdown",
+        "thresholds": {
+          "min_reduction": 0.4
+        }
+      }
+    ]
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/twin/playbooks",
+    "query": {}
+  },
+  "status": 200
+}

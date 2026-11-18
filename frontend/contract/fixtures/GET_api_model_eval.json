@@ -1,0 +1,17 @@
+{
+  "body": {
+    "count": 0,
+    "directory": "<DATA_DIR>/eval",
+    "reports": []
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/model/eval",
+    "query": {}
+  },
+  "status": 200
+}

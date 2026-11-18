@@ -1,0 +1,39 @@
+{
+  "body": {
+    "capture_id": 3,
+    "detections": 0,
+    "error": null,
+    "flows": 0,
+    "imported_at": 1800000000.0,
+    "mode": "pcap",
+    "original_name": "suspicious2.pcap",
+    "packets": 0,
+    "running": false,
+    "size_bytes": 60786,
+    "source_type": "upload",
+    "started_at": 1800000000.0,
+    "status": "UPLOADED",
+    "stopped_at": null,
+    "stored_name": "cap_3b1c93af04030ba8e2044d7cb7cf5b44.pcap",
+    "unscored_flows": 0,
+    "warnings": []
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": {
+      "multipart": {
+        "file": {
+          "bytes": "<omitted>",
+          "content_type": "application/octet-stream",
+          "filename": "suspicious2.pcap"
+        }
+      }
+    },
+    "method": "POST",
+    "path": "/api/captures",
+    "query": {}
+  },
+  "status": 200
+}

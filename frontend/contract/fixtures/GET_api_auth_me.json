@@ -1,0 +1,30 @@
+{
+  "body": {
+    "expires_at": 1800043200.0,
+    "user": {
+      "id": 1,
+      "permissions": [
+        "read",
+        "investigate",
+        "incidents:manage",
+        "capture:manage",
+        "model:manage",
+        "config:manage",
+        "users:manage"
+      ],
+      "role": "ADMIN",
+      "totp_enabled": false,
+      "username": "admin"
+    }
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/auth/me",
+    "query": {}
+  },
+  "status": 200
+}

@@ -1,0 +1,29 @@
+{
+  "body": {
+    "by_sector": {
+      "general": 36
+    },
+    "by_type": {
+      "domain": 2,
+      "host": 3,
+      "ip": 2,
+      "sector": 1
+    },
+    "edges": 7,
+    "nodes": 8,
+    "shared_infrastructure": 1,
+    "shared_ip_nodes": [
+      "ip:93.184.216.34"
+    ]
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/graph/summary",
+    "query": {}
+  },
+  "status": 200
+}

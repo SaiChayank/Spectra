@@ -1,0 +1,22 @@
+{
+  "body": {
+    "anomaly_rate": 0.0,
+    "avg_score": null,
+    "by_proto": {},
+    "detections": 0,
+    "first_ts": null,
+    "flows": 0,
+    "last_ts": null,
+    "top_sni": []
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/history/stats",
+    "query": {}
+  },
+  "status": 200
+}

@@ -1,0 +1,1099 @@
+{
+  "body": {
+    "count": 17,
+    "items": [
+      {
+        "capture_id": null,
+        "data": {
+          "detections": 1,
+          "error": null,
+          "failures": {},
+          "filter": null,
+          "flows": 13,
+          "mode": "pcap",
+          "model_trained": true,
+          "packets": 284,
+          "persist": true,
+          "pipeline": {
+            "active_flows": 0,
+            "active_flows_max": 1,
+            "dropped_flows": 0,
+            "dropped_packets": 0,
+            "flow_queue": {
+              "accepted": 13,
+              "depth": 0,
+              "dropped": 0,
+              "limit": 1024,
+              "max_depth": 0,
+              "offered": 13,
+              "policy": "drop_oldest"
+            },
+            "flows_evicted": 1,
+            "flows_per_sec": 0.0,
+            "inference_histogram": {
+              "bounds_ms": [
+                0.1,
+                0.25,
+                0.5,
+                1.0,
+                2.5,
+                5.0,
+                10.0,
+                25.0,
+                50.0,
+                100.0,
+                250.0,
+                1000.0
+              ],
+              "count": 13,
+              "cumulative": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "sum_ms": 0.0
+            },
+            "inference_latency_max_ms": 0.0,
+            "inference_latency_ms": 0.0,
+            "inference_latency_p50_ms": 0.0,
+            "inference_latency_p95_ms": 0.0,
+            "inference_ops": 13,
+            "limits": {
+              "active_flows": 5000,
+              "flow_lifetime_s": 900.0,
+              "flow_packets": 512,
+              "flow_queue": 1024,
+              "idle_timeout_s": 30.0,
+              "packet_queue": 4096,
+              "publish_queue": 1024
+            },
+            "overload": false,
+            "packet_queue": {
+              "accepted": 284,
+              "depth": 0,
+              "dropped": 0,
+              "limit": 4096,
+              "max_depth": 0,
+              "offered": 284,
+              "policy": "drop_newest"
+            },
+            "packets_per_sec": 0.0,
+            "processing_lag_max_ms": 0.0,
+            "processing_lag_ms": 0.0,
+            "publish_queue": {
+              "accepted": 13,
+              "depth": 0,
+              "dropped": 0,
+              "limit": 1024,
+              "max_depth": 0,
+              "offered": 13,
+              "policy": "drop_oldest"
+            }
+          },
+          "queue": {
+            "max_queue_depth": 0,
+            "packets_dropped": 0,
+            "packets_queued": 0,
+            "packets_received": 0,
+            "queue_depth": 0
+          },
+          "running": false,
+          "source": "suspicious3.pcap",
+          "started_at": 1800000000.0,
+          "websocket": {
+            "clients": 0,
+            "slow_client_drops": 0
+          }
+        },
+        "id": 17,
+        "ts": 1800000000.0,
+        "type": "status"
+      },
+      {
+        "capture_id": 4,
+        "data": {
+          "action": "process",
+          "capture_id": 4,
+          "original_name": "suspicious3.pcap"
+        },
+        "id": 16,
+        "ts": 1800000000.0,
+        "type": "capture"
+      },
+      {
+        "capture_id": 4,
+        "data": {
+          "detections": 0,
+          "error": null,
+          "failures": {},
+          "filter": null,
+          "flows": 0,
+          "mode": "pcap",
+          "model_trained": true,
+          "packets": 0,
+          "persist": true,
+          "pipeline": {
+            "active_flows": 0,
+            "active_flows_max": 0,
+            "dropped_flows": 0,
+            "dropped_packets": 0,
+            "flow_queue": {
+              "accepted": 0,
+              "depth": 0,
+              "dropped": 0,
+              "limit": 1024,
+              "max_depth": 0,
+              "offered": 0,
+              "policy": "drop_oldest"
+            },
+            "flows_evicted": 0,
+            "flows_per_sec": 0.0,
+            "inference_histogram": {
+              "bounds_ms": [
+                0.1,
+                0.25,
+                0.5,
+                1.0,
+                2.5,
+                5.0,
+                10.0,
+                25.0,
+                50.0,
+                100.0,
+                250.0,
+                1000.0
+              ],
+              "count": 0,
+              "cumulative": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "sum_ms": 0.0
+            },
+            "inference_latency_max_ms": 0.0,
+            "inference_latency_ms": 0.0,
+            "inference_latency_p50_ms": 0.0,
+            "inference_latency_p95_ms": 0.0,
+            "inference_ops": 0,
+            "limits": {
+              "active_flows": 5000,
+              "flow_lifetime_s": 900.0,
+              "flow_packets": 512,
+              "flow_queue": 1024,
+              "idle_timeout_s": 30.0,
+              "packet_queue": 4096,
+              "publish_queue": 1024
+            },
+            "overload": false,
+            "packet_queue": {
+              "accepted": 0,
+              "depth": 0,
+              "dropped": 0,
+              "limit": 4096,
+              "max_depth": 0,
+              "offered": 0,
+              "policy": "drop_newest"
+            },
+            "packets_per_sec": 0.0,
+            "processing_lag_max_ms": 0.0,
+            "processing_lag_ms": 0.0,
+            "publish_queue": {
+              "accepted": 0,
+              "depth": 0,
+              "dropped": 0,
+              "limit": 1024,
+              "max_depth": 0,
+              "offered": 0,
+              "policy": "drop_oldest"
+            }
+          },
+          "queue": {
+            "max_queue_depth": 0,
+            "packets_dropped": 0,
+            "packets_queued": 0,
+            "packets_received": 0,
+            "queue_depth": 0
+          },
+          "running": true,
+          "source": "suspicious3.pcap",
+          "started_at": 1800000000.0,
+          "websocket": {
+            "clients": 0,
+            "slow_client_drops": 0
+          }
+        },
+        "id": 15,
+        "ts": 1800000000.0,
+        "type": "status"
+      },
+      {
+        "capture_id": null,
+        "data": {
+          "detections": 1,
+          "error": null,
+          "failures": {},
+          "filter": null,
+          "flows": 13,
+          "mode": "pcap",
+          "model_trained": true,
+          "packets": 254,
+          "persist": true,
+          "pipeline": {
+            "active_flows": 0,
+            "active_flows_max": 1,
+            "dropped_flows": 0,
+            "dropped_packets": 0,
+            "flow_queue": {
+              "accepted": 13,
+              "depth": 0,
+              "dropped": 0,
+              "limit": 1024,
+              "max_depth": 0,
+              "offered": 13,
+              "policy": "drop_oldest"
+            },
+            "flows_evicted": 1,
+            "flows_per_sec": 0.0,
+            "inference_histogram": {
+              "bounds_ms": [
+                0.1,
+                0.25,
+                0.5,
+                1.0,
+                2.5,
+                5.0,
+                10.0,
+                25.0,
+                50.0,
+                100.0,
+                250.0,
+                1000.0
+              ],
+              "count": 13,
+              "cumulative": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "sum_ms": 0.0
+            },
+            "inference_latency_max_ms": 0.0,
+            "inference_latency_ms": 0.0,
+            "inference_latency_p50_ms": 0.0,
+            "inference_latency_p95_ms": 0.0,
+            "inference_ops": 13,
+            "limits": {
+              "active_flows": 5000,
+              "flow_lifetime_s": 900.0,
+              "flow_packets": 512,
+              "flow_queue": 1024,
+              "idle_timeout_s": 30.0,
+              "packet_queue": 4096,
+              "publish_queue": 1024
+            },
+            "overload": false,
+            "packet_queue": {
+              "accepted": 254,
+              "depth": 0,
+              "dropped": 0,
+              "limit": 4096,
+              "max_depth": 0,
+              "offered": 254,
+              "policy": "drop_newest"
+            },
+            "packets_per_sec": 0.0,
+            "processing_lag_max_ms": 0.0,
+            "processing_lag_ms": 0.0,
+            "publish_queue": {
+              "accepted": 13,
+              "depth": 0,
+              "dropped": 0,
+              "limit": 1024,
+              "max_depth": 0,
+              "offered": 13,
+              "policy": "drop_oldest"
+            }
+          },
+          "queue": {
+            "max_queue_depth": 0,
+            "packets_dropped": 0,
+            "packets_queued": 0,
+            "packets_received": 0,
+            "queue_depth": 0
+          },
+          "running": false,
+          "source": "suspicious2.pcap",
+          "started_at": 1800000000.0,
+          "websocket": {
+            "clients": 0,
+            "slow_client_drops": 0
+          }
+        },
+        "id": 14,
+        "ts": 1800000000.0,
+        "type": "status"
+      },
+      {
+        "capture_id": 3,
+        "data": {
+          "action": "process",
+          "capture_id": 3,
+          "original_name": "suspicious2.pcap"
+        },
+        "id": 13,
+        "ts": 1800000000.0,
+        "type": "capture"
+      },
+      {
+        "capture_id": 3,
+        "data": {
+          "detections": 0,
+          "error": null,
+          "failures": {},
+          "filter": null,
+          "flows": 0,
+          "mode": "pcap",
+          "model_trained": true,
+          "packets": 0,
+          "persist": true,
+          "pipeline": {
+            "active_flows": 0,
+            "active_flows_max": 0,
+            "dropped_flows": 0,
+            "dropped_packets": 0,
+            "flow_queue": {
+              "accepted": 0,
+              "depth": 0,
+              "dropped": 0,
+              "limit": 1024,
+              "max_depth": 0,
+              "offered": 0,
+              "policy": "drop_oldest"
+            },
+            "flows_evicted": 0,
+            "flows_per_sec": 0.0,
+            "inference_histogram": {
+              "bounds_ms": [
+                0.1,
+                0.25,
+                0.5,
+                1.0,
+                2.5,
+                5.0,
+                10.0,
+                25.0,
+                50.0,
+                100.0,
+                250.0,
+                1000.0
+              ],
+              "count": 0,
+              "cumulative": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "sum_ms": 0.0
+            },
+            "inference_latency_max_ms": 0.0,
+            "inference_latency_ms": 0.0,
+            "inference_latency_p50_ms": 0.0,
+            "inference_latency_p95_ms": 0.0,
+            "inference_ops": 0,
+            "limits": {
+              "active_flows": 5000,
+              "flow_lifetime_s": 900.0,
+              "flow_packets": 512,
+              "flow_queue": 1024,
+              "idle_timeout_s": 30.0,
+              "packet_queue": 4096,
+              "publish_queue": 1024
+            },
+            "overload": false,
+            "packet_queue": {
+              "accepted": 0,
+              "depth": 0,
+              "dropped": 0,
+              "limit": 4096,
+              "max_depth": 0,
+              "offered": 0,
+              "policy": "drop_newest"
+            },
+            "packets_per_sec": 0.0,
+            "processing_lag_max_ms": 0.0,
+            "processing_lag_ms": 0.0,
+            "publish_queue": {
+              "accepted": 0,
+              "depth": 0,
+              "dropped": 0,
+              "limit": 1024,
+              "max_depth": 0,
+              "offered": 0,
+              "policy": "drop_oldest"
+            }
+          },
+          "queue": {
+            "max_queue_depth": 0,
+            "packets_dropped": 0,
+            "packets_queued": 0,
+            "packets_received": 0,
+            "queue_depth": 0
+          },
+          "running": true,
+          "source": "suspicious2.pcap",
+          "started_at": 1800000000.0,
+          "websocket": {
+            "clients": 0,
+            "slow_client_drops": 0
+          }
+        },
+        "id": 12,
+        "ts": 1800000000.0,
+        "type": "status"
+      },
+      {
+        "capture_id": null,
+        "data": {
+          "detections": 1,
+          "error": null,
+          "failures": {},
+          "filter": null,
+          "flows": 13,
+          "mode": "pcap",
+          "model_trained": true,
+          "packets": 288,
+          "persist": true,
+          "pipeline": {
+            "active_flows": 0,
+            "active_flows_max": 1,
+            "dropped_flows": 0,
+            "dropped_packets": 0,
+            "flow_queue": {
+              "accepted": 13,
+              "depth": 0,
+              "dropped": 0,
+              "limit": 1024,
+              "max_depth": 0,
+              "offered": 13,
+              "policy": "drop_oldest"
+            },
+            "flows_evicted": 1,
+            "flows_per_sec": 0.0,
+            "inference_histogram": {
+              "bounds_ms": [
+                0.1,
+                0.25,
+                0.5,
+                1.0,
+                2.5,
+                5.0,
+                10.0,
+                25.0,
+                50.0,
+                100.0,
+                250.0,
+                1000.0
+              ],
+              "count": 13,
+              "cumulative": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "sum_ms": 0.0
+            },
+            "inference_latency_max_ms": 0.0,
+            "inference_latency_ms": 0.0,
+            "inference_latency_p50_ms": 0.0,
+            "inference_latency_p95_ms": 0.0,
+            "inference_ops": 13,
+            "limits": {
+              "active_flows": 5000,
+              "flow_lifetime_s": 900.0,
+              "flow_packets": 512,
+              "flow_queue": 1024,
+              "idle_timeout_s": 30.0,
+              "packet_queue": 4096,
+              "publish_queue": 1024
+            },
+            "overload": false,
+            "packet_queue": {
+              "accepted": 288,
+              "depth": 0,
+              "dropped": 0,
+              "limit": 4096,
+              "max_depth": 0,
+              "offered": 288,
+              "policy": "drop_newest"
+            },
+            "packets_per_sec": 0.0,
+            "processing_lag_max_ms": 0.0,
+            "processing_lag_ms": 0.0,
+            "publish_queue": {
+              "accepted": 13,
+              "depth": 0,
+              "dropped": 0,
+              "limit": 1024,
+              "max_depth": 0,
+              "offered": 13,
+              "policy": "drop_oldest"
+            }
+          },
+          "queue": {
+            "max_queue_depth": 0,
+            "packets_dropped": 0,
+            "packets_queued": 0,
+            "packets_received": 0,
+            "queue_depth": 0
+          },
+          "running": false,
+          "source": "suspicious.pcap",
+          "started_at": 1800000000.0,
+          "websocket": {
+            "clients": 0,
+            "slow_client_drops": 0
+          }
+        },
+        "id": 11,
+        "ts": 1800000000.0,
+        "type": "status"
+      },
+      {
+        "capture_id": 2,
+        "data": {
+          "action": "process",
+          "capture_id": 2,
+          "original_name": "suspicious.pcap"
+        },
+        "id": 10,
+        "ts": 1800000000.0,
+        "type": "capture"
+      },
+      {
+        "capture_id": 2,
+        "data": {
+          "detections": 0,
+          "error": null,
+          "failures": {},
+          "filter": null,
+          "flows": 0,
+          "mode": "pcap",
+          "model_trained": true,
+          "packets": 0,
+          "persist": true,
+          "pipeline": {
+            "active_flows": 0,
+            "active_flows_max": 0,
+            "dropped_flows": 0,
+            "dropped_packets": 0,
+            "flow_queue": {
+              "accepted": 0,
+              "depth": 0,
+              "dropped": 0,
+              "limit": 1024,
+              "max_depth": 0,
+              "offered": 0,
+              "policy": "drop_oldest"
+            },
+            "flows_evicted": 0,
+            "flows_per_sec": 0.0,
+            "inference_histogram": {
+              "bounds_ms": [
+                0.1,
+                0.25,
+                0.5,
+                1.0,
+                2.5,
+                5.0,
+                10.0,
+                25.0,
+                50.0,
+                100.0,
+                250.0,
+                1000.0
+              ],
+              "count": 0,
+              "cumulative": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "sum_ms": 0.0
+            },
+            "inference_latency_max_ms": 0.0,
+            "inference_latency_ms": 0.0,
+            "inference_latency_p50_ms": 0.0,
+            "inference_latency_p95_ms": 0.0,
+            "inference_ops": 0,
+            "limits": {
+              "active_flows": 5000,
+              "flow_lifetime_s": 900.0,
+              "flow_packets": 512,
+              "flow_queue": 1024,
+              "idle_timeout_s": 30.0,
+              "packet_queue": 4096,
+              "publish_queue": 1024
+            },
+            "overload": false,
+            "packet_queue": {
+              "accepted": 0,
+              "depth": 0,
+              "dropped": 0,
+              "limit": 4096,
+              "max_depth": 0,
+              "offered": 0,
+              "policy": "drop_newest"
+            },
+            "packets_per_sec": 0.0,
+            "processing_lag_max_ms": 0.0,
+            "processing_lag_ms": 0.0,
+            "publish_queue": {
+              "accepted": 0,
+              "depth": 0,
+              "dropped": 0,
+              "limit": 1024,
+              "max_depth": 0,
+              "offered": 0,
+              "policy": "drop_oldest"
+            }
+          },
+          "queue": {
+            "max_queue_depth": 0,
+            "packets_dropped": 0,
+            "packets_queued": 0,
+            "packets_received": 0,
+            "queue_depth": 0
+          },
+          "running": true,
+          "source": "suspicious.pcap",
+          "started_at": 1800000000.0,
+          "websocket": {
+            "clients": 0,
+            "slow_client_drops": 0
+          }
+        },
+        "id": 9,
+        "ts": 1800000000.0,
+        "type": "status"
+      },
+      {
+        "capture_id": null,
+        "data": {
+          "detections": 1,
+          "error": null,
+          "failures": {},
+          "filter": null,
+          "flows": 13,
+          "mode": "pcap",
+          "model_trained": true,
+          "packets": 288,
+          "persist": true,
+          "pipeline": {
+            "active_flows": 0,
+            "active_flows_max": 1,
+            "dropped_flows": 0,
+            "dropped_packets": 0,
+            "flow_queue": {
+              "accepted": 13,
+              "depth": 0,
+              "dropped": 0,
+              "limit": 1024,
+              "max_depth": 0,
+              "offered": 13,
+              "policy": "drop_oldest"
+            },
+            "flows_evicted": 1,
+            "flows_per_sec": 0.0,
+            "inference_histogram": {
+              "bounds_ms": [
+                0.1,
+                0.25,
+                0.5,
+                1.0,
+                2.5,
+                5.0,
+                10.0,
+                25.0,
+                50.0,
+                100.0,
+                250.0,
+                1000.0
+              ],
+              "count": 13,
+              "cumulative": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "sum_ms": 0.0
+            },
+            "inference_latency_max_ms": 0.0,
+            "inference_latency_ms": 0.0,
+            "inference_latency_p50_ms": 0.0,
+            "inference_latency_p95_ms": 0.0,
+            "inference_ops": 13,
+            "limits": {
+              "active_flows": 5000,
+              "flow_lifetime_s": 900.0,
+              "flow_packets": 512,
+              "flow_queue": 1024,
+              "idle_timeout_s": 30.0,
+              "packet_queue": 4096,
+              "publish_queue": 1024
+            },
+            "overload": false,
+            "packet_queue": {
+              "accepted": 288,
+              "depth": 0,
+              "dropped": 0,
+              "limit": 4096,
+              "max_depth": 0,
+              "offered": 288,
+              "policy": "drop_newest"
+            },
+            "packets_per_sec": 0.0,
+            "processing_lag_max_ms": 0.0,
+            "processing_lag_ms": 0.0,
+            "publish_queue": {
+              "accepted": 13,
+              "depth": 0,
+              "dropped": 0,
+              "limit": 1024,
+              "max_depth": 0,
+              "offered": 13,
+              "policy": "drop_oldest"
+            }
+          },
+          "queue": {
+            "max_queue_depth": 0,
+            "packets_dropped": 0,
+            "packets_queued": 0,
+            "packets_received": 0,
+            "queue_depth": 0
+          },
+          "running": false,
+          "source": "suspicious.pcap",
+          "started_at": 1800000000.0,
+          "websocket": {
+            "clients": 0,
+            "slow_client_drops": 0
+          }
+        },
+        "id": 8,
+        "ts": 1800000000.0,
+        "type": "status"
+      },
+      {
+        "capture_id": 2,
+        "data": {
+          "action": "process",
+          "capture_id": 2,
+          "original_name": "suspicious.pcap"
+        },
+        "id": 7,
+        "ts": 1800000000.0,
+        "type": "capture"
+      },
+      {
+        "capture_id": 2,
+        "data": {
+          "detections": 0,
+          "error": null,
+          "failures": {},
+          "filter": null,
+          "flows": 0,
+          "mode": "pcap",
+          "model_trained": true,
+          "packets": 0,
+          "persist": true,
+          "pipeline": {
+            "active_flows": 0,
+            "active_flows_max": 0,
+            "dropped_flows": 0,
+            "dropped_packets": 0,
+            "flow_queue": {
+              "accepted": 0,
+              "depth": 0,
+              "dropped": 0,
+              "limit": 1024,
+              "max_depth": 0,
+              "offered": 0,
+              "policy": "drop_oldest"
+            },
+            "flows_evicted": 0,
+            "flows_per_sec": 0.0,
+            "inference_histogram": {
+              "bounds_ms": [
+                0.1,
+                0.25,
+                0.5,
+                1.0,
+                2.5,
+                5.0,
+                10.0,
+                25.0,
+                50.0,
+                100.0,
+                250.0,
+                1000.0
+              ],
+              "count": 0,
+              "cumulative": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+              ],
+              "sum_ms": 0.0
+            },
+            "inference_latency_max_ms": 0.0,
+            "inference_latency_ms": 0.0,
+            "inference_latency_p50_ms": 0.0,
+            "inference_latency_p95_ms": 0.0,
+            "inference_ops": 0,
+            "limits": {
+              "active_flows": 5000,
+              "flow_lifetime_s": 900.0,
+              "flow_packets": 512,
+              "flow_queue": 1024,
+              "idle_timeout_s": 30.0,
+              "packet_queue": 4096,
+              "publish_queue": 1024
+            },
+            "overload": false,
+            "packet_queue": {
+              "accepted": 0,
+              "depth": 0,
+              "dropped": 0,
+              "limit": 4096,
+              "max_depth": 0,
+              "offered": 0,
+              "policy": "drop_newest"
+            },
+            "packets_per_sec": 0.0,
+            "processing_lag_max_ms": 0.0,
+            "processing_lag_ms": 0.0,
+            "publish_queue": {
+              "accepted": 0,
+              "depth": 0,
+              "dropped": 0,
+              "limit": 1024,
+              "max_depth": 0,
+              "offered": 0,
+              "policy": "drop_oldest"
+            }
+          },
+          "queue": {
+            "max_queue_depth": 0,
+            "packets_dropped": 0,
+            "packets_queued": 0,
+            "packets_received": 0,
+            "queue_depth": 0
+          },
+          "running": true,
+          "source": "suspicious.pcap",
+          "started_at": 1800000000.0,
+          "websocket": {
+            "clients": 0,
+            "slow_client_drops": 0
+          }
+        },
+        "id": 6,
+        "ts": 1800000000.0,
+        "type": "status"
+      },
+      {
+        "capture_id": null,
+        "data": {
+          "action": "import",
+          "capture_id": 4,
+          "original_name": "suspicious3.pcap"
+        },
+        "id": 5,
+        "ts": 1800000000.0,
+        "type": "capture"
+      },
+      {
+        "capture_id": null,
+        "data": {
+          "action": "import",
+          "capture_id": 3,
+          "original_name": "suspicious2.pcap"
+        },
+        "id": 4,
+        "ts": 1800000000.0,
+        "type": "capture"
+      },
+      {
+        "capture_id": null,
+        "data": {
+          "action": "import",
+          "capture_id": 2,
+          "original_name": "suspicious.pcap"
+        },
+        "id": 3,
+        "ts": 1800000000.0,
+        "type": "capture"
+      },
+      {
+        "capture_id": null,
+        "data": {
+          "contamination": 0.02,
+          "feature_names": [
+            "duration_s",
+            "packets_total",
+            "packets_fwd",
+            "packets_bwd",
+            "bytes_total",
+            "bytes_fwd",
+            "bytes_bwd",
+            "bytes_mean",
+            "bytes_std",
+            "bytes_min",
+            "bytes_max",
+            "fwd_bwd_pkt_ratio",
+            "fwd_bwd_byte_ratio",
+            "iat_mean_s",
+            "iat_std_s",
+            "iat_min_s",
+            "iat_max_s",
+            "iat_fwd_mean_s",
+            "iat_fwd_std_s",
+            "iat_fwd_mad_s",
+            "packets_per_s",
+            "bytes_per_s",
+            "syn_count",
+            "fin_count",
+            "rst_count",
+            "psh_count",
+            "payload_ratio",
+            "size_entropy",
+            "is_tcp",
+            "dst_port_norm",
+            "tls_present",
+            "tls_version_norm",
+            "tls_cipher_count",
+            "tls_extension_count",
+            "sni_present",
+            "sni_length",
+            "alpn_count",
+            "handshake_ms",
+            "server_hello_ms"
+          ],
+          "n_estimators": 300,
+          "n_features": 39,
+          "n_train": 42,
+          "threshold": 0.194095,
+          "trained": true,
+          "trained_at": "2027-01-15T08:00:00+00:00",
+          "version": 1
+        },
+        "id": 2,
+        "ts": 1800000000.0,
+        "type": "model"
+      },
+      {
+        "capture_id": null,
+        "data": {
+          "action": "import",
+          "capture_id": 1,
+          "original_name": "baseline.pcap"
+        },
+        "id": 1,
+        "ts": 1800000000.0,
+        "type": "capture"
+      }
+    ],
+    "offset": 0
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/history/events",
+    "query": {}
+  },
+  "status": 200
+}

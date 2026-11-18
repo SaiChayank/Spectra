@@ -1,0 +1,23 @@
+{
+  "body": {
+    "covered_from": 1,
+    "covered_to": 36,
+    "entries": 36,
+    "entry_hash": "59e27c0f3729c1eb14c30886afad61cd909ed1342786b76f2def8978e4e4a08d",
+    "epoch": 1,
+    "pubkey": "07a50310b212a63c19307591bd58c07d7d2c747f77714fca9a2220ec36002ec607",
+    "root": "2902648e3c2a7f2356588448ed411343529197f94e4bfa093c8830065720ed68",
+    "seq": 37,
+    "signature": "378f4f30a78a0870599f9d7fda621e2757b9b87f1c681e85b585272bab365216378f4f30a78a0870599f9d7fda621e2757b9b87f1c681e85b585272bab36521637"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "POST",
+    "path": "/api/audit/checkpoint",
+    "query": {}
+  },
+  "status": 200
+}

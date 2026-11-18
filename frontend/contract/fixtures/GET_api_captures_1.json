@@ -1,0 +1,31 @@
+{
+  "body": {
+    "capture_id": 1,
+    "detections": 0,
+    "error": null,
+    "flows": 0,
+    "imported_at": 1800000000.0,
+    "mode": "pcap",
+    "original_name": "baseline.pcap",
+    "packets": 0,
+    "running": false,
+    "size_bytes": 324108,
+    "source_type": "upload",
+    "started_at": 1800000000.0,
+    "status": "UPLOADED",
+    "stopped_at": null,
+    "stored_name": "cap_342559062c5caa2055adf3fa7dd1ea42.pcap",
+    "unscored_flows": 0,
+    "warnings": []
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/captures/1",
+    "query": {}
+  },
+  "status": 200
+}

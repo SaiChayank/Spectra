@@ -1,0 +1,18 @@
+{
+  "body": {
+    "detail": "no Merkle leaf 0 on entry 1 (entry missing or has no leaves)"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/audit/proof",
+    "query": {
+      "leaf": 0,
+      "seq": 1
+    }
+  },
+  "status": 404
+}

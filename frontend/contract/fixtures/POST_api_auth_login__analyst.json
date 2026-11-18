@@ -1,0 +1,32 @@
+{
+  "body": {
+    "expires_at": 1800043200.0,
+    "user": {
+      "id": 3,
+      "permissions": [
+        "read",
+        "investigate",
+        "incidents:manage"
+      ],
+      "role": "ANALYST",
+      "totp_enabled": false,
+      "username": "contract-analyst"
+    }
+  },
+  "headers": {
+    "content-type": "application/json",
+    "set-cookie-names": [
+      "spectra_session"
+    ]
+  },
+  "request": {
+    "body": {
+      "password": "<redacted>",
+      "username": "contract-analyst"
+    },
+    "method": "POST",
+    "path": "/api/auth/login",
+    "query": {}
+  },
+  "status": 200
+}

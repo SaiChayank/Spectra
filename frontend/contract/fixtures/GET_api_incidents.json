@@ -1,0 +1,106 @@
+{
+  "body": {
+    "count": 3,
+    "items": [
+      {
+        "acknowledged_at": null,
+        "acknowledged_by": null,
+        "affected_entities": [],
+        "alert_count": 0,
+        "confidence": null,
+        "created_at": 1800000000.0,
+        "created_by": "admin",
+        "detection_id": null,
+        "evidence_summary": null,
+        "first_seen": null,
+        "id": 3,
+        "last_seen": null,
+        "model_versions": [],
+        "note_count": 0,
+        "primary_threat_class": null,
+        "related_graph_nodes": [],
+        "resolved_at": null,
+        "resolved_by": null,
+        "severity": null,
+        "status": "FALSE_POSITIVE",
+        "summary": null,
+        "title": "False positive",
+        "updated_at": 1800000000.0,
+        "updated_by": "admin"
+      },
+      {
+        "acknowledged_at": 1800000000.0,
+        "acknowledged_by": "admin",
+        "affected_entities": [],
+        "alert_count": 0,
+        "confidence": null,
+        "created_at": 1800000000.0,
+        "created_by": "admin",
+        "detection_id": null,
+        "evidence_summary": null,
+        "first_seen": null,
+        "id": 2,
+        "last_seen": null,
+        "model_versions": [],
+        "note_count": 0,
+        "primary_threat_class": null,
+        "related_graph_nodes": [],
+        "resolved_at": 1800000000.0,
+        "resolved_by": "admin",
+        "severity": null,
+        "status": "INVESTIGATING",
+        "summary": null,
+        "title": "Resolve me",
+        "updated_at": 1800000000.0,
+        "updated_by": "admin"
+      },
+      {
+        "acknowledged_at": null,
+        "acknowledged_by": null,
+        "affected_entities": [
+          "10.0.0.7",
+          "93.184.216.34",
+          "quic.example"
+        ],
+        "alert_count": 2,
+        "confidence": 0.95,
+        "created_at": 1800000000.0,
+        "created_by": "admin",
+        "detection_id": null,
+        "evidence_summary": "2 linked alert(s); C2_BEACONING: Connections repeated approximately every 0 seconds with unusually stable timing.",
+        "first_seen": 1700001100.536348,
+        "id": 1,
+        "last_seen": 1700001100.548779,
+        "model_versions": [
+          "spectra_model.joblib@1"
+        ],
+        "note_count": 1,
+        "primary_threat_class": "C2_BEACONING",
+        "related_graph_nodes": [
+          "domain:quic.example",
+          "host:10.0.0.7",
+          "ip:93.184.216.34"
+        ],
+        "resolved_at": null,
+        "resolved_by": null,
+        "severity": "CRITICAL",
+        "status": "INVESTIGATING",
+        "summary": "Two periodic flows from the suspicious demo capture",
+        "title": "Demo beacon investigation",
+        "updated_at": 1800000000.0,
+        "updated_by": "admin"
+      }
+    ],
+    "offset": 0
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/incidents",
+    "query": {}
+  },
+  "status": 200
+}
