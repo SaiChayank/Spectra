@@ -122,7 +122,7 @@ On first start with an empty user table, the backend bootstraps one `ADMIN`:
 3. Later starts never re-bootstrap, never reset, and never overwrite the
    account.
 
-Then: sign in → change the password with `PATCH /api/users/{id}` (the dashboard has no
+Then: sign in → change the password with `POST /api/auth/password` (the dashboard has no
 password screen yet; see `docs/guide/first-run.md`; this revokes every session for the user) →
 delete `admin_bootstrap.txt`.
 

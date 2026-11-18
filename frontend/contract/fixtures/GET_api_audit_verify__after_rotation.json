@@ -1,6 +1,6 @@
 {
   "body": {
-    "entries": 49,
+    "entries": 51,
     "epoch": 2,
     "epochs": [
       {
@@ -13,14 +13,14 @@
         "created_at": 1800000000.0,
         "epoch": 2,
         "pubkey": "2902648e3c2a7f2356588448ed411343529197f94e4bfa093c8830065720ed6829",
-        "start_seq": 49
+        "start_seq": 51
       }
     ],
     "errors": [],
     "head": {
       "entry_hash": "59e27c0f3729c1eb14c30886afad61cd909ed1342786b76f2def8978e4e4a08d",
       "kind": "audit.key_rotated",
-      "seq": 49,
+      "seq": 51,
       "ts": 1800000000.0
     },
     "ok": true,
