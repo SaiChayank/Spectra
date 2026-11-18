@@ -607,9 +607,16 @@ def generate(out: Path) -> dict:
         files["fixtures/" + name] = dumps(item)
         key = str(item["status"])
         counts[key] = counts.get(key, 0) + 1
+    def zero_numbers(v):       # every counter at any depth (pipeline queues included): the snapshot timing is a race
+        if isinstance(v, dict):
+            return {k: zero_numbers(x) for k, x in v.items()}
+        if isinstance(v, list):
+            return [zero_numbers(x) for x in v]
+        return 0 if isinstance(v, (int, float)) and not isinstance(v, bool) else v
+
     for m in rec.ws:           # status snapshots are taken mid-processing: their counters are a race, zero them
         if m.get("type") == "status" and isinstance(m.get("data"), dict):
-            m["data"] = {k: (0 if isinstance(v, int) and not isinstance(v, bool) else v) for k, v in m["data"].items()}
+            m["data"] = zero_numbers(m["data"])
     files["fixtures/ws_events.json"] = dumps({
         "description": "First messages from /ws/events: a status snapshot, then events emitted while a "
                        "capture is uploaded and processed.", "messages": norm.walk(rec.ws)})
