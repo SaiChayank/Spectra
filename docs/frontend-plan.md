@@ -75,7 +75,7 @@ Each item lists the real endpoints. **P0** is needed for a first usable release,
 * Login (`POST /api/auth/login`), logout (`/api/auth/logout`), current user (`GET /api/auth/me`), TOTP setup/enable/disable
   (`/api/auth/totp/*`): already partly there; finish the TOTP flow (QR/secret shown once, code entry, recovery message).
 * **Change own password**: missing today. `PATCH /api/users/{id}` works only with `users:manage` (ADMIN); a VIEWER or ANALYST gets 403
-  (fixture `PATCH_api_users_{user_id}__viewer_self_403.json` or similar in `frontend/contract/fixtures/`), so non-admins cannot change
+  (fixture `frontend/contract/fixtures/PATCH_api_users_2__403_viewer_own_password.json`), so non-admins cannot change
   their own password at all. This needs a new backend endpoint (proposed: `POST /api/auth/password` with the current and new password,
   §6); build the screen against that proposal. On success the session is revoked: return to login with a clear message.
 * Users admin (ADMIN): list/create/edit/delete (`/api/users`, `/api/users/{id}`), reset someone's TOTP (`DELETE /api/users/{id}/totp`).
