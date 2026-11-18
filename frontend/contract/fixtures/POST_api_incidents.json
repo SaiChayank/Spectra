@@ -41,7 +41,7 @@
   "request": {
     "body": {
       "alert_ids": [
-        "alrt_3b1c93af0403"
+        "alrt_9de57ae832fd"
       ],
       "summary": "Two periodic flows from the suspicious demo capture",
       "title": "Demo beacon investigation"

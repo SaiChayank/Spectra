@@ -1,6 +1,6 @@
 {
   "body": {
-    "detail": "activate another model before retiring mdl_1d13ba251e45"
+    "detail": "role VIEWER lacks the 'incidents:manage' permission"
   },
   "headers": {
     "content-type": "application/json"
@@ -8,8 +8,8 @@
   "request": {
     "body": null,
     "method": "POST",
-    "path": "/api/model/registry/mdl_1d13ba251e45/retire",
+    "path": "/api/alerts/alrt_9de57ae832fd/acknowledge",
     "query": {}
   },
-  "status": 409
+  "status": 403
 }

@@ -7,10 +7,10 @@
     "evasion_active": false,
     "memory_cells": 2,
     "response_histogram": {
-      "alert": 2,
-      "ignore": 26,
-      "isolate": 18,
-      "monitor": 6
+      "alert": 0,
+      "ignore": 0,
+      "isolate": 0,
+      "monitor": 0
     },
     "self_model": {
       "n_features": 39,

@@ -3,59 +3,10 @@
     "details": [
       {
         "description": "",
-        "id": "wlp8s0",
-        "ip": "192.168.0.117",
-        "mac": "c0:35:32:76:a8:65",
-        "name": "wlp8s0"
-      },
-      {
-        "description": "",
-        "id": "br-8d7ff565adf4",
-        "ip": "172.19.0.1",
-        "mac": "4e:b2:bd:2d:52:a2",
-        "name": "br-8d7ff565adf4"
-      },
-      {
-        "description": "",
-        "id": "br-d0d3b09b64ad",
-        "ip": "172.23.0.1",
-        "mac": "de:09:45:eb:da:5a",
-        "name": "br-d0d3b09b64ad"
-      },
-      {
-        "description": "",
-        "id": "docker0",
-        "ip": "172.17.0.1",
-        "mac": "9a:6f:0b:74:17:4a",
-        "name": "docker0"
-      },
-      {
-        "description": "",
-        "id": "br-207b2411263a",
-        "ip": "172.18.0.1",
-        "mac": "5a:2b:7b:fd:31:2a",
-        "name": "br-207b2411263a"
-      },
-      {
-        "description": "",
-        "id": "br-3658e0bf1342",
-        "ip": "172.20.0.1",
-        "mac": "e2:7c:3c:e1:8c:a6",
-        "name": "br-3658e0bf1342"
-      },
-      {
-        "description": "",
-        "id": "br-5eb5302c64ea",
-        "ip": "172.22.0.1",
-        "mac": "62:b4:cf:a9:ae:b4",
-        "name": "br-5eb5302c64ea"
-      },
-      {
-        "description": "",
-        "id": "br-61e165186041",
-        "ip": "172.21.0.1",
-        "mac": "a6:51:3d:8f:c2:a7",
-        "name": "br-61e165186041"
+        "id": "eth0",
+        "ip": "192.0.2.10",
+        "mac": "02:00:00:00:00:01",
+        "name": "eth0"
       },
       {
         "description": "",
@@ -63,98 +14,11 @@
         "ip": "127.0.0.1",
         "mac": "00:00:00:00:00:00",
         "name": "lo"
-      },
-      {
-        "description": "",
-        "id": "enp7s0",
-        "ip": "",
-        "mac": "40:c2:ba:60:f4:d8",
-        "name": "enp7s0"
-      },
-      {
-        "description": "",
-        "id": "vethb358b55",
-        "ip": "",
-        "mac": "6e:56:50:2a:7d:7b",
-        "name": "vethb358b55"
-      },
-      {
-        "description": "",
-        "id": "vethbd3e8f9",
-        "ip": "",
-        "mac": "42:1f:cc:c8:cd:e4",
-        "name": "vethbd3e8f9"
-      },
-      {
-        "description": "",
-        "id": "veth6ab72d6",
-        "ip": "",
-        "mac": "aa:e1:60:b0:2c:92",
-        "name": "veth6ab72d6"
-      },
-      {
-        "description": "",
-        "id": "vethfa13d9b",
-        "ip": "",
-        "mac": "aa:a9:01:bd:74:16",
-        "name": "vethfa13d9b"
-      },
-      {
-        "description": "",
-        "id": "veth4aa9544",
-        "ip": "",
-        "mac": "9a:e0:0b:ce:ea:57",
-        "name": "veth4aa9544"
-      },
-      {
-        "description": "",
-        "id": "veth5bc1aa5",
-        "ip": "",
-        "mac": "1e:01:da:a1:cd:68",
-        "name": "veth5bc1aa5"
-      },
-      {
-        "description": "",
-        "id": "veth1b817f3",
-        "ip": "",
-        "mac": "a6:f7:a0:47:d7:a9",
-        "name": "veth1b817f3"
-      },
-      {
-        "description": "",
-        "id": "veth3b6812c",
-        "ip": "",
-        "mac": "32:8e:01:4e:9c:a4",
-        "name": "veth3b6812c"
-      },
-      {
-        "description": "",
-        "id": "veth2065d3d",
-        "ip": "",
-        "mac": "a2:3f:6e:ab:0e:bb",
-        "name": "veth2065d3d"
       }
     ],
     "interfaces": [
-      "wlp8s0",
-      "br-8d7ff565adf4",
-      "br-d0d3b09b64ad",
-      "docker0",
-      "br-207b2411263a",
-      "br-3658e0bf1342",
-      "br-5eb5302c64ea",
-      "br-61e165186041",
-      "lo",
-      "enp7s0",
-      "vethb358b55",
-      "vethbd3e8f9",
-      "veth6ab72d6",
-      "vethfa13d9b",
-      "veth4aa9544",
-      "veth5bc1aa5",
-      "veth1b817f3",
-      "veth3b6812c",
-      "veth2065d3d"
+      "eth0",
+      "lo"
     ]
   },
   "headers": {

@@ -2,37 +2,37 @@
   "body": {
     "deployments": [],
     "link": {
-      "jitter_ms": 5.0,
+      "jitter_ms": 0.0,
       "label": "fiber / 5G non-standalone",
       "link": "terrestrial",
-      "rtt_ms": 15.0,
+      "rtt_ms": 0.0,
       "timing_scale": 1.0
     },
     "link_profiles": {
       "geostationary": {
-        "jitter_ms": 30.0,
+        "jitter_ms": 0.0,
         "label": "GEO satellite (remote clinics)",
-        "rtt_ms": 600.0
+        "rtt_ms": 0.0
       },
       "leo_satellite": {
-        "jitter_ms": 10.0,
+        "jitter_ms": 0.0,
         "label": "LEO satellite constellation",
-        "rtt_ms": 40.0
+        "rtt_ms": 0.0
       },
       "terrestrial": {
-        "jitter_ms": 5.0,
+        "jitter_ms": 0.0,
         "label": "fiber / 5G non-standalone",
-        "rtt_ms": 15.0
+        "rtt_ms": 0.0
       },
       "uav": {
-        "jitter_ms": 15.0,
+        "jitter_ms": 0.0,
         "label": "UAV aerial backhaul",
-        "rtt_ms": 45.0
+        "rtt_ms": 0.0
       }
     },
     "micro": {
-      "budget_ms": 10.0,
-      "digest": "1f0b7b166245b6a1de820e1088cdc7dd18e6a87fcc68c0eb28738fb6e4850ba9",
+      "budget_ms": 0.0,
+      "digest": "59e27c0f3729c1eb14c30886afad61cd909ed1342786b76f2def8978e4e4a08d",
       "features": [
         "duration_s",
         "packets_total",
@@ -49,10 +49,10 @@
       ],
       "latency": {
         "available": true,
-        "budget_ms": 10.0,
+        "budget_ms": 0.0,
         "n": 126,
-        "p50_ms": 0.0334,
-        "p95_ms": 0.0397,
+        "p50_ms": 0.0,
+        "p95_ms": 0.0,
         "within_budget": true
       },
       "n_features": 12,
@@ -67,25 +67,25 @@
     "slices": {
       "default": {
         "label": "best-effort default slice",
-        "max_rtt_ms": 150,
+        "max_rtt_ms": 0,
         "policy": "standard response ladder",
         "sensitivity": 0
       },
       "embb": {
         "label": "eMBB - enhanced mobile broadband (video / bulk)",
-        "max_rtt_ms": 50,
+        "max_rtt_ms": 0,
         "policy": "standard response ladder",
         "sensitivity": 0
       },
       "mmtc": {
         "label": "mMTC - massive machine-type comms (sensor fleets)",
-        "max_rtt_ms": 1000,
+        "max_rtt_ms": 0,
         "policy": "mute single-flow monitor chatter",
         "sensitivity": -1
       },
       "urllc": {
         "label": "URLLC - ultra-reliable low latency (healthcare / ICS)",
-        "max_rtt_ms": 10,
+        "max_rtt_ms": 0,
         "policy": "escalate alert -> isolate",
         "sensitivity": 1
       }

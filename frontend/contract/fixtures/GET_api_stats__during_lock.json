@@ -48,7 +48,7 @@
       "n_train": 42,
       "threshold": 0.194095,
       "trained": true,
-      "trained_at": "2026-11-18T17:01:36+00:00",
+      "trained_at": "2027-01-15T08:00:00+00:00",
       "version": 1
     },
     "protocols": {
@@ -75,7 +75,7 @@
           "depth": 0,
           "dropped": 0,
           "limit": 1024,
-          "max_depth": 5,
+          "max_depth": 0,
           "offered": 13,
           "policy": "drop_oldest"
         },
@@ -102,22 +102,22 @@
             0,
             0,
             0,
-            2,
-            12,
-            13,
-            13,
-            13,
-            13,
-            13,
-            13,
-            13
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
           ],
-          "sum_ms": 43.795923702418804
+          "sum_ms": 0.0
         },
-        "inference_latency_max_ms": 5.727,
-        "inference_latency_ms": 2.592,
-        "inference_latency_p50_ms": 3.246,
-        "inference_latency_p95_ms": 4.847,
+        "inference_latency_max_ms": 0.0,
+        "inference_latency_ms": 0.0,
+        "inference_latency_p50_ms": 0.0,
+        "inference_latency_p95_ms": 0.0,
         "inference_ops": 13,
         "limits": {
           "active_flows": 5000,
@@ -134,19 +134,19 @@
           "depth": 0,
           "dropped": 0,
           "limit": 4096,
-          "max_depth": 284,
+          "max_depth": 0,
           "offered": 284,
           "policy": "drop_newest"
         },
         "packets_per_sec": 0.0,
-        "processing_lag_max_ms": 38.087,
-        "processing_lag_ms": 38.06,
+        "processing_lag_max_ms": 0.0,
+        "processing_lag_ms": 0.0,
         "publish_queue": {
           "accepted": 13,
           "depth": 0,
           "dropped": 0,
           "limit": 1024,
-          "max_depth": 8,
+          "max_depth": 0,
           "offered": 13,
           "policy": "drop_oldest"
         }

@@ -1,14 +1,13 @@
 {
   "body": {
     "activated_count": 1,
-    "applied": true,
     "artifact": "mdl_fdb71cbd5b6c.joblib",
-    "artifact_sha256": "b000c68a3eb3d378fe32b7e75d30f295f351025d07cd5a715976c18a23429ac5",
-    "contamination": 0.05,
+    "artifact_sha256": "59e27c0f3729c1eb14c30886afad61cd909ed1342786b76f2def8978e4e4a08d",
+    "contamination": 0.02,
     "created_at": 1800000000.0,
     "error": null,
-    "feature_schema": "88af9890d6fa4e88d74b6649dfd048137723018c4e39e23461d6a7c061e91f47",
-    "id": 2,
+    "feature_schema": "378f4f30a78a0870599f9d7fda621e2757b9b87f1c681e85b585272bab365216",
+    "id": 1,
     "last_activated_at": 1800000000.0,
     "metrics": {
       "checks": [
@@ -23,7 +22,7 @@
           "ok": true
         },
         {
-          "detail": "file 89a8d7142472...",
+          "detail": "file 07a50310b212...",
           "name": "artifact_sha256",
           "ok": true
         },
@@ -38,7 +37,7 @@
           "ok": true
         },
         {
-          "detail": "0.057092",
+          "detail": "0.194095",
           "name": "threshold_set",
           "ok": true
         },
@@ -62,9 +61,9 @@
     "n_features": 39,
     "n_train": 42,
     "retired_at": null,
-    "source": "<DATA_DIR>/captures/cap_9de57ae832fd9ef7ae7bb285f561cc0d.pcap",
+    "source": "<DATA_DIR>/captures/cap_342559062c5caa2055adf3fa7dd1ea42.pcap",
     "status": "ACTIVE",
-    "threshold": 0.057092,
+    "threshold": 0.194095,
     "trained_at": 1800000000.0
   },
   "headers": {
@@ -72,8 +71,8 @@
   },
   "request": {
     "body": null,
-    "method": "POST",
-    "path": "/api/model/registry/mdl_fdb71cbd5b6c/activate",
+    "method": "GET",
+    "path": "/api/model/registry/mdl_fdb71cbd5b6c",
     "query": {}
   },
   "status": 200

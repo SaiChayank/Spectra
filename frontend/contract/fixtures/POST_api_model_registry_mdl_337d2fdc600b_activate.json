@@ -1,28 +1,29 @@
 {
   "body": {
     "activated_count": 1,
-    "artifact": "mdl_1d13ba251e45.joblib",
-    "artifact_sha256": "16890ae2c2b55572f3366f9da616ab8fa7b1a2075f02139cd9c2a3558d418568",
-    "contamination": 0.02,
+    "applied": true,
+    "artifact": "mdl_337d2fdc600b.joblib",
+    "artifact_sha256": "59e27c0f3729c1eb14c30886afad61cd909ed1342786b76f2def8978e4e4a08d",
+    "contamination": 0.05,
     "created_at": 1800000000.0,
     "error": null,
-    "feature_schema": "88af9890d6fa4e88d74b6649dfd048137723018c4e39e23461d6a7c061e91f47",
-    "id": 1,
+    "feature_schema": "378f4f30a78a0870599f9d7fda621e2757b9b87f1c681e85b585272bab365216",
+    "id": 2,
     "last_activated_at": 1800000000.0,
     "metrics": {
       "checks": [
         {
-          "detail": "mdl_1d13ba251e45.joblib",
+          "detail": "mdl_337d2fdc600b.joblib",
           "name": "artifact_contained",
           "ok": true
         },
         {
-          "detail": "mdl_1d13ba251e45.joblib",
+          "detail": "mdl_337d2fdc600b.joblib",
           "name": "artifact_exists",
           "ok": true
         },
         {
-          "detail": "file 33cf86e5e6d8...",
+          "detail": "file 07a50310b212...",
           "name": "artifact_sha256",
           "ok": true
         },
@@ -37,7 +38,7 @@
           "ok": true
         },
         {
-          "detail": "0.194095",
+          "detail": "0.057092",
           "name": "threshold_set",
           "ok": true
         },
@@ -56,14 +57,14 @@
       "passed": true,
       "validated_at": 1800000000.0
     },
-    "model_id": "mdl_1d13ba251e45",
+    "model_id": "mdl_337d2fdc600b",
     "model_version": "1",
     "n_features": 39,
     "n_train": 42,
     "retired_at": null,
-    "source": "<DATA_DIR>/captures/cap_9de57ae832fd9ef7ae7bb285f561cc0d.pcap",
+    "source": "<DATA_DIR>/captures/cap_342559062c5caa2055adf3fa7dd1ea42.pcap",
     "status": "ACTIVE",
-    "threshold": 0.194095,
+    "threshold": 0.057092,
     "trained_at": 1800000000.0
   },
   "headers": {
@@ -71,8 +72,8 @@
   },
   "request": {
     "body": null,
-    "method": "GET",
-    "path": "/api/model/registry/mdl_1d13ba251e45",
+    "method": "POST",
+    "path": "/api/model/registry/mdl_337d2fdc600b/activate",
     "query": {}
   },
   "status": 200

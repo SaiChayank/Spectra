@@ -15,6 +15,8 @@ Redaction and normalisation (so a re-run is byte-identical and nothing sensitive
     (type kept: float stays float). Synthetic capture timestamps (2023) are untouched: they are stable.
   * ids with a random part (alrt_*, mdl_*, cap_*) and every 64-hex digest -> deterministic stand-ins of the
     same length, numbered by first appearance. Absolute paths -> <DATA_DIR> / <REPO>.
+  * counters in /ws/events status snapshots (a race with processing) -> 0; ISO timestamps and "12.3ms" in text,
+    *_ms keys, queue depths, immune-system level/response, host interfaces (replaced by fixed examples) -> constants.
   * keys in VOLATILE_KEYS (uptimes, durations, host load) -> 0; X-Request-ID and Retry-After are not kept
     except Retry-After (rounded to a bucket).
 """
@@ -133,12 +135,20 @@ def _redact(o):
 
 class Normaliser:
     ID_RE = re.compile(r"\b(alrt|mdl|cap)_([0-9a-f]{8,})\b")
-    HEX64 = re.compile(r"(?<![0-9A-Za-z])[0-9a-f]{64}(?![0-9A-Za-z])")
+    HEX_RE = re.compile(r"(?<![0-9A-Za-z_])[0-9a-f]{12,}(?![0-9A-Za-z_])")
+    ISO_RE = re.compile(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)?")
+    STABLE_HEX_KEYS = {"ja3"}            # fingerprints of the synthetic captures: stable, keep as recorded
+    ZERO_KEYS = {"max_depth", "commits", "flushes", "write_samples", "cumulative", "loaded_at",
+                 "response_histogram", }
+    IMMUNE = {"danger_total": 0.0, "level": 0, "response": "ignore"}
 
-    def __init__(self, start: float, paths: dict[str, str]):
+    def __init__(self, start: float, paths: dict[str, str], id_order: list[str]):
         self.start = start
         self.paths = sorted(paths.items(), key=lambda kv: -len(kv[0]))
         self.map: dict[str, str] = {}
+        self.local = 0
+        for tok in id_order:                       # fix the numbering of random ids by content, not by arrival
+            self._stand_in(tok)
 
     def _stand_in(self, token: str) -> str:
         if token not in self.map:
@@ -146,11 +156,20 @@ class Normaliser:
             self.map[token] = (h * 2)[:len(token)]
         return self.map[token]
 
-    def string(self, s: str) -> str:
+    def _local(self, token: str) -> str:
+        """Digest/key/proof values: numbered per fixture by position (they are never cross-referenced)."""
+        self.local += 1
+        return (hashlib.sha256(f"local-{self.local}".encode()).hexdigest() * 4)[:len(token)]
+
+    def string(self, s: str, key: str | None = None) -> str:
         for real, ph in self.paths:
             s = s.replace(real, ph)
         s = self.ID_RE.sub(lambda m: f"{m.group(1)}_{self._stand_in(m.group(2))}", s)
-        return self.HEX64.sub(lambda m: self._stand_in(m.group(0)), s)
+        s = re.sub(r"\d+(?:\.\d+)?ms\b", "0ms", s)
+        s = self.ISO_RE.sub("2027-01-15T08:00:00+00:00", s)
+        if key in self.STABLE_HEX_KEYS:
+            return s
+        return self.HEX_RE.sub(lambda m: self._local(m.group(0)), s)
 
     def number(self, x):
         if isinstance(x, bool):
@@ -160,16 +179,34 @@ class Normaliser:
             return float(v) if isinstance(x, float) else int(v)
         return x
 
-    def walk(self, o, key: str | None = None):
-        if isinstance(o, dict):
-            return {self.string(k): self.walk(v, k) for k, v in o.items()}
-        if isinstance(o, list):
-            return [self.walk(v) for v in o]
-        if isinstance(o, str):
-            return self.string(o)
-        if isinstance(o, (int, float)) and not isinstance(o, bool):
-            if key in VOLATILE_KEYS:
+    def start_record(self) -> None:
+        self.local = 0
+
+    def walk(self, o, key: str | None = None, parent: str | None = None):
+        if key in self.ZERO_KEYS or (key and key.endswith("_ms")) or key in VOLATILE_KEYS:
+            if isinstance(o, bool):
+                return o
+            if isinstance(o, (int, float)):
                 return 0.0 if isinstance(o, float) else 0
+            if isinstance(o, list):
+                return [0 if isinstance(v, int) else v for v in o] if key != "interfaces" else ["<interface>"]
+            if isinstance(o, dict):
+                return {k: (0 if isinstance(v, (int, float)) and not isinstance(v, bool) else v)
+                        for k, v in o.items()}
+        if parent == "immune" and key in self.IMMUNE:
+            return self.IMMUNE[key]
+        if isinstance(o, dict):
+            return {self.string(k): self.walk(v, k, key) for k, v in o.items()}
+        if isinstance(o, list):
+            return [self.walk(v, key, key) for v in o]
+        if isinstance(o, str):
+            if key == "metrics" and o[:1] == "{":          # JSON stored as a string: normalise its content
+                try:
+                    return json.dumps(self.walk(json.loads(o)), sort_keys=True)
+                except ValueError:
+                    pass
+            return self.string(o, key)
+        if isinstance(o, (int, float)) and not isinstance(o, bool):
             return self.number(o)
         return o
 
@@ -194,7 +231,18 @@ def wait_done(client, capture_id: int, timeout: float = 60.0) -> dict:
         if d.get("status") in ("COMPLETED", "FAILED", "STOPPED"):
             return d
         time.sleep(0.05)
-    raise RuntimeError(f"capture {capture_id} did not finish")
+    raise RuntimeError(f"capture {capture_id} did not finish: {d}")
+
+
+def seed_process(client, cid: int) -> None:
+    for _ in range(20):
+        r = client.post(f"/api/captures/{cid}/process")
+        if r.status_code == 200:
+            break
+        time.sleep(0.5)
+    else:
+        raise RuntimeError(f"could not start processing capture {cid}: {r.status_code} {r.text}")
+    wait_done(client, cid)
 
 
 def run_scenario(work: Path, rec: Recorder, app, engine, TestClient) -> None:
@@ -217,6 +265,7 @@ def run_scenario(work: Path, rec: Recorder, app, engine, TestClient) -> None:
         data = pcaps[tag].read_bytes()
         shape = {"multipart": {"file": {"filename": f"{tag}.pcap", "content_type": "application/octet-stream",
                                         "bytes": "<omitted>"}}}
+        kw.setdefault("variant", tag)
         return rec.call(client, "POST", "/api/captures", shape=shape,
                         files={"file": (f"{tag}.pcap", data, "application/octet-stream")}, **kw)
 
@@ -241,7 +290,7 @@ def run_scenario(work: Path, rec: Recorder, app, engine, TestClient) -> None:
     base = upload(admin, "baseline", expect=200).json()
     base_id = base["capture_id"]
     upload(admin, "baseline", variant="409_duplicate", expect=409)
-    rec.call(admin, "POST", "/api/model/train", variant="400_too_few_flows_or_bad", json_body={
+    rec.call(admin, "POST", "/api/model/train", json_body={
         "capture_id": base_id, "contamination": 0.02}, expect=200)       # real training (the P0 write)
     train_ok = rec.items[-1]["status"] == 200
     assert train_ok, "training the demo baseline failed"
@@ -263,8 +312,7 @@ def run_scenario(work: Path, rec: Recorder, app, engine, TestClient) -> None:
     wait_done(admin, first)
     rec.call(admin, "POST", f"/api/captures/{first}/process", variant="reprocess", expect=200)
     for cid in susp_ids[1:]:
-        admin.post(f"/api/captures/{cid}/process")      # not recorded: seeding (same call as above)
-        wait_done(admin, cid)
+        seed_process(admin, cid)                        # not recorded: seeding (same call as above)
 
     alerts = admin.get("/api/alerts?limit=100").json()["items"]
     alert_ids = [a["alert_id"] for a in alerts]
@@ -473,12 +521,15 @@ def record_ws(rec: Recorder, admin, upload, susp_ids_extra: str, pcaps) -> None:
         time.sleep(0.3)
         res = upload(admin, susp_ids_extra)
         cid = res.json()["capture_id"]
-        admin.post(f"/api/captures/{cid}/process")
-        wait_done(admin, cid)
+        seed_process(admin, cid)
         time.sleep(0.5)
         stop.set()
     t.join(timeout=3)
     rec.ws = msgs[:WS_MESSAGES]
+    al = sorted(admin.get("/api/alerts?limit=500").json()["items"], key=lambda a: (
+        a["first_seen"], a["source"], a["destination"], a["protocol"], a["anomaly_score"], a["capture_id"] or 0))
+    mo = sorted(admin.get("/api/model/registry").json()["items"], key=lambda m: m["id"])
+    rec.id_order = [a["alert_id"].split("_", 1)[1] for a in al] + [m["model_id"].split("_", 1)[1] for m in mo]
     # the upload/process above went through ``upload`` (recorded as POST /api/captures); drop that duplicate
     rec.items = [i for i in rec.items if not (i["request"]["body"] and isinstance(i["request"]["body"], dict)
                  and i["request"]["body"].get("multipart", {}).get("file", {}).get("filename") ==
@@ -509,6 +560,7 @@ def generate(out: Path) -> dict:
 
     rec = Recorder()
     rec.ws = []
+    rec.id_order = []
     try:
         run_scenario(work, rec, app, engine, TestClient)
         openapi = app.openapi()
@@ -516,12 +568,19 @@ def generate(out: Path) -> dict:
         pass
 
     norm = Normaliser(rec.start, {str(data): "<DATA_DIR>", str(work): "<WORK_DIR>", str(BACKEND): "<REPO>/backend",
-                                  str(ROOT): "<REPO>"})
+                                  str(ROOT): "<REPO>"}, rec.id_order)
     files: dict[str, str] = {"openapi.json": dumps(openapi)}
     counts: dict[str, int] = {}
     seen: dict[str, int] = {}
     for it in rec.items:
         item = {k: v for k, v in it.items() if not k.startswith("_")}
+        norm.start_record()
+        if item["request"]["path"] == "/api/interfaces" and isinstance(item["body"], dict):
+            # host-specific (names, addresses, MACs of the machine running the export): replace with fixed examples
+            item["body"]["details"] = [
+                {"description": "", "id": "eth0", "ip": "192.0.2.10", "mac": "02:00:00:00:00:01", "name": "eth0"},
+                {"description": "", "id": "lo", "ip": "127.0.0.1", "mac": "00:00:00:00:00:00", "name": "lo"}]
+            item["body"]["interfaces"] = ["eth0", "lo"]
         item = norm.walk(item)
         h = item["headers"]
         if "retry-after" in h:
@@ -534,6 +593,9 @@ def generate(out: Path) -> dict:
         files["fixtures/" + name] = dumps(item)
         key = str(item["status"])
         counts[key] = counts.get(key, 0) + 1
+    for m in rec.ws:           # status snapshots are taken mid-processing: their counters are a race, zero them
+        if m.get("type") == "status" and isinstance(m.get("data"), dict):
+            m["data"] = {k: (0 if isinstance(v, int) and not isinstance(v, bool) else v) for k, v in m["data"].items()}
     files["fixtures/ws_events.json"] = dumps({
         "description": "First messages from /ws/events: a status snapshot, then events emitted while a "
                        "capture is uploaded and processed.", "messages": norm.walk(rec.ws)})
@@ -573,7 +635,7 @@ def main() -> int:
         new, old = tree(tmp), tree(CONTRACT)
         diff = sorted(k for k in set(new) | set(old) if new.get(k) != old.get(k))
         if diff:
-            print(f"contract is stale ({len(diff)} file(s) differ); run: python scripts/export_frontend_contract.py")
+            print(f"contract is stale ({len(diff)} file(s) differ; fresh copy in {tmp}); run: python scripts/export_frontend_contract.py")
             for k in diff[:30]:
                 print("  ", k, "(missing)" if k not in old else "(removed)" if k not in new else "(changed)")
             return 1

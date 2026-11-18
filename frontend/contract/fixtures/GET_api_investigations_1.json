@@ -4,7 +4,7 @@
       "count": 2,
       "items": [
         {
-          "alert_id": "alrt_3b1c93af0403",
+          "alert_id": "alrt_9de57ae832fd",
           "anomaly_score": 100.0,
           "capture_id": 2,
           "confidence": 0.45,
@@ -56,10 +56,10 @@
           "module_annotations": {
             "immune": {
               "affinity": 0.2867,
-              "danger_total": 0.8,
-              "level": 2,
+              "danger_total": 0.0,
+              "level": 0,
               "memory_hit": false,
-              "response": "alert",
+              "response": "ignore",
               "slice_policy": "default:unchanged"
             },
             "pqc": {
@@ -122,7 +122,7 @@
           "updated_at": 1800000000.0
         },
         {
-          "alert_id": "alrt_2eedb30fc188",
+          "alert_id": "alrt_f4d6cb1720c4",
           "anomaly_score": 100.0,
           "capture_id": 4,
           "confidence": 0.95,
@@ -195,10 +195,10 @@
           "module_annotations": {
             "immune": {
               "affinity": 0.2698,
-              "danger_total": 0.8,
-              "level": 3,
+              "danger_total": 0.0,
+              "level": 0,
               "memory_hit": true,
-              "response": "isolate",
+              "response": "ignore",
               "slice_policy": "default:unchanged"
             },
             "pqc": {
@@ -268,10 +268,10 @@
         {
           "immune": {
             "affinity": 0.2698,
-            "danger_total": 0.8,
-            "level": 3,
+            "danger_total": 0.0,
+            "level": 0,
             "memory_hit": true,
-            "response": "isolate",
+            "response": "ignore",
             "slice_policy": "default:unchanged"
           },
           "ref": "flow:48",
@@ -333,10 +333,10 @@
         {
           "immune": {
             "affinity": 0.1118,
-            "danger_total": 0.35,
-            "level": 1,
+            "danger_total": 0.0,
+            "level": 0,
             "memory_hit": false,
-            "response": "monitor",
+            "response": "ignore",
             "slice_policy": "default:unchanged"
           },
           "ref": "flow:43",
@@ -385,10 +385,10 @@
         {
           "immune": {
             "affinity": 0.2819,
-            "danger_total": 0.8,
-            "level": 3,
+            "danger_total": 0.0,
+            "level": 0,
             "memory_hit": true,
-            "response": "isolate",
+            "response": "ignore",
             "slice_policy": "default:unchanged"
           },
           "ref": "flow:35",
@@ -411,10 +411,10 @@
         {
           "immune": {
             "affinity": 0.1051,
-            "danger_total": 0.35,
-            "level": 1,
+            "danger_total": 0.0,
+            "level": 0,
             "memory_hit": false,
-            "response": "monitor",
+            "response": "ignore",
             "slice_policy": "default:unchanged"
           },
           "ref": "flow:33",
@@ -450,10 +450,10 @@
         {
           "immune": {
             "affinity": 0.1051,
-            "danger_total": 0.35,
-            "level": 1,
+            "danger_total": 0.0,
+            "level": 0,
             "memory_hit": false,
-            "response": "monitor",
+            "response": "ignore",
             "slice_policy": "default:unchanged"
           },
           "ref": "flow:30",
@@ -502,10 +502,10 @@
         {
           "immune": {
             "affinity": 0.2867,
-            "danger_total": 0.8,
-            "level": 3,
+            "danger_total": 0.0,
+            "level": 0,
             "memory_hit": true,
-            "response": "isolate",
+            "response": "ignore",
             "slice_policy": "default:unchanged"
           },
           "ref": "flow:22",
@@ -1481,10 +1481,10 @@
       "items": [
         {
           "actor": "admin",
-          "entry_hash": "3702b7d50e0ab42893aff3acd70da047497dab55b5e1fad26efe7d5b662abfec",
+          "entry_hash": "378f4f30a78a0870599f9d7fda621e2757b9b87f1c681e85b585272bab365216",
           "kind": "alert.resolve",
           "payload": {
-            "alert_id": "alrt_2eedb30fc188",
+            "alert_id": "alrt_f4d6cb1720c4",
             "severity": "CRITICAL"
           },
           "seq": 32,
@@ -1492,10 +1492,10 @@
         },
         {
           "actor": "admin",
-          "entry_hash": "1ae87acd77c8c039a7f4a440e8c9a1a9f0a231a0a2eda76127540d5090b45cd8",
+          "entry_hash": "07a50310b212a63c19307591bd58c07d7d2c747f77714fca9a2220ec36002ec6",
           "kind": "alert.acknowledge",
           "payload": {
-            "alert_id": "alrt_2eedb30fc188",
+            "alert_id": "alrt_f4d6cb1720c4",
             "severity": "CRITICAL"
           },
           "seq": 31,
@@ -1503,10 +1503,10 @@
         },
         {
           "actor": "spectra",
-          "entry_hash": "3bd6ca1b914737ae31bc98d0038faaaea5c8bedcc7642e8dc1fc6804a3218a32",
+          "entry_hash": "2902648e3c2a7f2356588448ed411343529197f94e4bfa093c8830065720ed68",
           "kind": "incident.alert_add",
           "payload": {
-            "alert_id": "alrt_2eedb30fc188",
+            "alert_id": "alrt_f4d6cb1720c4",
             "id": 1,
             "score": 13.0,
             "source": "auto"
@@ -1516,7 +1516,7 @@
         },
         {
           "actor": "admin",
-          "entry_hash": "e46b2422cead852295d92d109ba892a409df12ac0515e782999aebb190ec3880",
+          "entry_hash": "3ff3b49f5f601b8525958a3fb6a71ebe75ae0a3c4584d2216e67f182fddc111b",
           "kind": "incident.investigate",
           "payload": {
             "from": "OPEN",
@@ -1528,7 +1528,7 @@
         },
         {
           "actor": "admin",
-          "entry_hash": "ecaa71cf55aaddc4fdae0dfedd551024e63a72d311c49c2586f04a2fd1272828",
+          "entry_hash": "b76253483fa7ad372b35407bbaa61cdaa3811344504d36bce6cf204521ba0350",
           "kind": "incident.create",
           "payload": {
             "alert_count": 1,
@@ -1560,7 +1560,7 @@
     "evidence": {
       "alerts": [
         {
-          "alert_id": "alrt_3b1c93af0403",
+          "alert_id": "alrt_9de57ae832fd",
           "anomaly_score": 100.0,
           "confidence": 0.45,
           "evidence": {
@@ -1587,7 +1587,7 @@
           "threat_type": "UNKNOWN_ANOMALY"
         },
         {
-          "alert_id": "alrt_2eedb30fc188",
+          "alert_id": "alrt_f4d6cb1720c4",
           "anomaly_score": 100.0,
           "confidence": 0.95,
           "evidence": {
@@ -1740,7 +1740,7 @@
       "count": 36,
       "items": [
         {
-          "alert_id": "alrt_2eedb30fc188",
+          "alert_id": "alrt_f4d6cb1720c4",
           "alpn": [
             "h3",
             "http/1.1"
@@ -1755,10 +1755,10 @@
           "id": 48,
           "immune": {
             "affinity": 0.2698,
-            "danger_total": 0.8,
-            "level": 3,
+            "danger_total": 0.0,
+            "level": 0,
             "memory_hit": true,
-            "response": "isolate",
+            "response": "ignore",
             "slice_policy": "default:unchanged"
           },
           "ja3": "be3538e59c61fb4413c62864b2ce924c",
@@ -2203,10 +2203,10 @@
           "id": 43,
           "immune": {
             "affinity": 0.1118,
-            "danger_total": 0.35,
-            "level": 1,
+            "danger_total": 0.0,
+            "level": 0,
             "memory_hit": false,
-            "response": "monitor",
+            "response": "ignore",
             "slice_policy": "default:unchanged"
           },
           "ja3": "be3538e59c61fb4413c62864b2ce924c",
@@ -2501,7 +2501,7 @@
           "ts": 1700001000.776883
         },
         {
-          "alert_id": "alrt_3b1c93af0403",
+          "alert_id": "alrt_9de57ae832fd",
           "alpn": [
             "h3",
             "http/1.1"
@@ -2516,10 +2516,10 @@
           "id": 35,
           "immune": {
             "affinity": 0.2819,
-            "danger_total": 0.8,
-            "level": 3,
+            "danger_total": 0.0,
+            "level": 0,
             "memory_hit": true,
-            "response": "isolate",
+            "response": "ignore",
             "slice_policy": "default:unchanged"
           },
           "ja3": "be3538e59c61fb4413c62864b2ce924c",
@@ -2711,10 +2711,10 @@
           "id": 33,
           "immune": {
             "affinity": 0.1051,
-            "danger_total": 0.35,
-            "level": 1,
+            "danger_total": 0.0,
+            "level": 0,
             "memory_hit": false,
-            "response": "monitor",
+            "response": "ignore",
             "slice_policy": "default:unchanged"
           },
           "ja3": "be3538e59c61fb4413c62864b2ce924c",
@@ -2945,10 +2945,10 @@
           "id": 30,
           "immune": {
             "affinity": 0.1051,
-            "danger_total": 0.35,
-            "level": 1,
+            "danger_total": 0.0,
+            "level": 0,
             "memory_hit": false,
-            "response": "monitor",
+            "response": "ignore",
             "slice_policy": "default:unchanged"
           },
           "ja3": "be3538e59c61fb4413c62864b2ce924c",
@@ -3243,7 +3243,7 @@
           "ts": 1700001000.872059
         },
         {
-          "alert_id": "alrt_3b1c93af0403",
+          "alert_id": "alrt_9de57ae832fd",
           "alpn": [
             "h3",
             "http/1.1"
@@ -3258,10 +3258,10 @@
           "id": 22,
           "immune": {
             "affinity": 0.2867,
-            "danger_total": 0.8,
-            "level": 3,
+            "danger_total": 0.0,
+            "level": 0,
             "memory_hit": true,
-            "response": "isolate",
+            "response": "ignore",
             "slice_policy": "default:unchanged"
           },
           "ja3": "be3538e59c61fb4413c62864b2ce924c",
@@ -3985,7 +3985,7 @@
           "ts": 1700001000.914572
         },
         {
-          "alert_id": "alrt_3b1c93af0403",
+          "alert_id": "alrt_9de57ae832fd",
           "alpn": [
             "h3",
             "http/1.1"
@@ -4000,10 +4000,10 @@
           "id": 9,
           "immune": {
             "affinity": 0.2867,
-            "danger_total": 0.8,
-            "level": 2,
+            "danger_total": 0.0,
+            "level": 0,
             "memory_hit": false,
-            "response": "alert",
+            "response": "ignore",
             "slice_policy": "default:unchanged"
           },
           "ja3": "be3538e59c61fb4413c62864b2ce924c",
@@ -4273,10 +4273,10 @@
           "id": 6,
           "immune": {
             "affinity": 0.0739,
-            "danger_total": 0.3,
-            "level": 1,
+            "danger_total": 0.0,
+            "level": 0,
             "memory_hit": false,
-            "response": "monitor",
+            "response": "ignore",
             "slice_policy": "default:unchanged"
           },
           "ja3": "be3538e59c61fb4413c62864b2ce924c",
@@ -4351,10 +4351,10 @@
           "id": 5,
           "immune": {
             "affinity": 0.0772,
-            "danger_total": 0.3,
-            "level": 1,
+            "danger_total": 0.0,
+            "level": 0,
             "memory_hit": false,
-            "response": "monitor",
+            "response": "ignore",
             "slice_policy": "default:unchanged"
           },
           "ja3": "be3538e59c61fb4413c62864b2ce924c",
@@ -4429,10 +4429,10 @@
           "id": 4,
           "immune": {
             "affinity": 0.0509,
-            "danger_total": 0.3,
-            "level": 1,
+            "danger_total": 0.0,
+            "level": 0,
             "memory_hit": false,
-            "response": "monitor",
+            "response": "ignore",
             "slice_policy": "default:unchanged"
           },
           "ja3": "be3538e59c61fb4413c62864b2ce924c",
@@ -4927,12 +4927,12 @@
     "models": {
       "alerts": [
         {
-          "alert_id": "alrt_3b1c93af0403",
+          "alert_id": "alrt_9de57ae832fd",
           "model_id": "spectra_model.joblib",
           "model_version": "1"
         },
         {
-          "alert_id": "alrt_2eedb30fc188",
+          "alert_id": "alrt_f4d6cb1720c4",
           "model_id": "spectra_model.joblib",
           "model_version": "1"
         }
@@ -4986,7 +4986,7 @@
         "n_train": 42,
         "threshold": 0.194095,
         "trained": true,
-        "trained_at": "2026-11-18T17:01:36+00:00",
+        "trained_at": "2027-01-15T08:00:00+00:00",
         "version": 1
       },
       "versions": [
@@ -5166,7 +5166,7 @@
       {
         "actor": "admin",
         "data": {
-          "alert_id": "alrt_3b1c93af0403",
+          "alert_id": "alrt_9de57ae832fd",
           "reason": "selected by admin",
           "source": "manual"
         },
@@ -5200,7 +5200,7 @@
       {
         "actor": "spectra",
         "data": {
-          "alert_id": "alrt_2eedb30fc188",
+          "alert_id": "alrt_f4d6cb1720c4",
           "reason": "same source host 10.0.0.7; same destination host 93.184.216.34; same SNI quic.example; graph-linked host:10.0.0.7 <-> ip:93.184.216.34; temporally proximate (0s apart)",
           "score": 13.0,
           "source": "auto"
@@ -5224,7 +5224,7 @@
             "example.com",
             "quic.example"
           ],
-          "value": "be3538e59c61fb4413c62864b2ce924c"
+          "value": "59e27c0f3729c1eb14c30886afad61cd"
         },
         {
           "flows": 32,

@@ -10,7 +10,7 @@
     "alert_count": 2,
     "alerts": [
       {
-        "alert_id": "alrt_3b1c93af0403",
+        "alert_id": "alrt_9de57ae832fd",
         "anomaly_score": 100.0,
         "capture_id": 2,
         "confidence": 0.45,
@@ -62,10 +62,10 @@
         "module_annotations": {
           "immune": {
             "affinity": 0.2867,
-            "danger_total": 0.8,
-            "level": 2,
+            "danger_total": 0.0,
+            "level": 0,
             "memory_hit": false,
-            "response": "alert",
+            "response": "ignore",
             "slice_policy": "default:unchanged"
           },
           "pqc": {
@@ -128,7 +128,7 @@
         "updated_at": 1800000000.0
       },
       {
-        "alert_id": "alrt_2eedb30fc188",
+        "alert_id": "alrt_f4d6cb1720c4",
         "anomaly_score": 100.0,
         "capture_id": 4,
         "confidence": 0.95,
@@ -201,10 +201,10 @@
         "module_annotations": {
           "immune": {
             "affinity": 0.2698,
-            "danger_total": 0.8,
-            "level": 3,
+            "danger_total": 0.0,
+            "level": 0,
             "memory_hit": true,
-            "response": "isolate",
+            "response": "ignore",
             "slice_policy": "default:unchanged"
           },
           "pqc": {
@@ -315,7 +315,7 @@
       {
         "actor": "admin",
         "data": {
-          "alert_id": "alrt_3b1c93af0403",
+          "alert_id": "alrt_9de57ae832fd",
           "reason": "selected by admin",
           "source": "manual"
         },
@@ -349,7 +349,7 @@
       {
         "actor": "spectra",
         "data": {
-          "alert_id": "alrt_2eedb30fc188",
+          "alert_id": "alrt_f4d6cb1720c4",
           "reason": "same source host 10.0.0.7; same destination host 93.184.216.34; same SNI quic.example; graph-linked host:10.0.0.7 <-> ip:93.184.216.34; temporally proximate (0s apart)",
           "score": 13.0,
           "source": "auto"

@@ -3,7 +3,7 @@
     "count": 4,
     "items": [
       {
-        "alert_id": "alrt_2eedb30fc188",
+        "alert_id": "alrt_f4d6cb1720c4",
         "alpn": [
           "h3",
           "http/1.1"
@@ -18,10 +18,10 @@
         "extension_count": 7,
         "immune": {
           "affinity": 0.2698,
-          "danger_total": 0.8,
-          "level": 3,
+          "danger_total": 0.0,
+          "level": 0,
           "memory_hit": true,
-          "response": "isolate",
+          "response": "ignore",
           "slice_policy": "default:unchanged"
         },
         "ja3": "be3538e59c61fb4413c62864b2ce924c",
@@ -139,7 +139,7 @@
         "tls_version": "TLS 1.3"
       },
       {
-        "alert_id": "alrt_3b1c93af0403",
+        "alert_id": "alrt_9de57ae832fd",
         "alpn": [
           "h3",
           "http/1.1"
@@ -154,10 +154,10 @@
         "extension_count": 7,
         "immune": {
           "affinity": 0.2819,
-          "danger_total": 0.8,
-          "level": 3,
+          "danger_total": 0.0,
+          "level": 0,
           "memory_hit": true,
-          "response": "isolate",
+          "response": "ignore",
           "slice_policy": "default:unchanged"
         },
         "ja3": "be3538e59c61fb4413c62864b2ce924c",
@@ -256,7 +256,7 @@
         "tls_version": "TLS 1.3"
       },
       {
-        "alert_id": "alrt_3b1c93af0403",
+        "alert_id": "alrt_9de57ae832fd",
         "alpn": [
           "h3",
           "http/1.1"
@@ -271,10 +271,10 @@
         "extension_count": 7,
         "immune": {
           "affinity": 0.2867,
-          "danger_total": 0.8,
-          "level": 3,
+          "danger_total": 0.0,
+          "level": 0,
           "memory_hit": true,
-          "response": "isolate",
+          "response": "ignore",
           "slice_policy": "default:unchanged"
         },
         "ja3": "be3538e59c61fb4413c62864b2ce924c",
@@ -373,7 +373,7 @@
         "tls_version": "TLS 1.3"
       },
       {
-        "alert_id": "alrt_3b1c93af0403",
+        "alert_id": "alrt_9de57ae832fd",
         "alpn": [
           "h3",
           "http/1.1"
@@ -388,10 +388,10 @@
         "extension_count": 7,
         "immune": {
           "affinity": 0.2867,
-          "danger_total": 0.8,
-          "level": 2,
+          "danger_total": 0.0,
+          "level": 0,
           "memory_hit": false,
-          "response": "alert",
+          "response": "ignore",
           "slice_policy": "default:unchanged"
         },
         "ja3": "be3538e59c61fb4413c62864b2ce924c",

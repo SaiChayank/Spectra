@@ -1,6 +1,6 @@
 {
   "body": {
-    "detail": "alert is RESOLVED; only OPEN alerts can be acknowledged"
+    "detail": "activate another model before retiring mdl_fdb71cbd5b6c"
   },
   "headers": {
     "content-type": "application/json"
@@ -8,7 +8,7 @@
   "request": {
     "body": null,
     "method": "POST",
-    "path": "/api/alerts/alrt_2eedb30fc188/acknowledge",
+    "path": "/api/model/registry/mdl_fdb71cbd5b6c/retire",
     "query": {}
   },
   "status": 409

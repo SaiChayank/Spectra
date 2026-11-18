@@ -6,25 +6,25 @@
       {
         "created_at": 1800000000.0,
         "epoch": 1,
-        "pubkey": "0287138ddf316967ccf301bc8ec4d0661c3f4e16875c8b7ca3964eba3feef74657",
+        "pubkey": "07a50310b212a63c19307591bd58c07d7d2c747f77714fca9a2220ec36002ec607",
         "start_seq": 0
       },
       {
         "created_at": 1800000000.0,
         "epoch": 2,
-        "pubkey": "02b7ca3bc5699285c28518c19e3a05e6d1f6ac38fe1a2fd1977eaa3a88ca59964b",
+        "pubkey": "2902648e3c2a7f2356588448ed411343529197f94e4bfa093c8830065720ed6829",
         "start_seq": 49
       }
     ],
     "errors": [],
     "head": {
-      "entry_hash": "55242a105a4d71152340c4e45b31d0031f25b891a3fd6f6904db2fb171ad5b4b",
+      "entry_hash": "59e27c0f3729c1eb14c30886afad61cd909ed1342786b76f2def8978e4e4a08d",
       "kind": "audit.key_rotated",
       "seq": 49,
       "ts": 1800000000.0
     },
     "ok": true,
-    "signing_key": "02b7ca3bc5699285c28518c19e3a05e6d1f6ac38fe1a2fd1977eaa3a88ca59964b"
+    "signing_key": "378f4f30a78a0870599f9d7fda621e2757b9b87f1c681e85b585272bab36521637"
   },
   "headers": {
     "content-type": "application/json"

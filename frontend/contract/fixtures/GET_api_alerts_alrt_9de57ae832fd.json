@@ -1,63 +1,42 @@
 {
   "body": {
-    "alert_id": "alrt_2eedb30fc188",
+    "alert_id": "alrt_9de57ae832fd",
     "anomaly_score": 100.0,
-    "capture_id": 4,
-    "confidence": 0.95,
+    "capture_id": 2,
+    "confidence": 0.45,
     "destination": "93.184.216.34:443",
     "evidence": {
       "contradicting": [],
-      "summary": "Connections repeated approximately every 0 seconds with unusually stable timing.",
+      "summary": "The detector flagged this flow, but behavioural evidence did not reach any specific threat category. Closest sub-threshold candidate: c2 beaconing.",
       "supporting": [
         {
-          "detail": "forward IAT mad/mean 0.06 over 0.12s spacing (steady cadence)",
+          "detail": "forward IAT mad/mean 0.06 over 0.13s spacing (steady cadence)",
           "key": "periodicity",
           "label": "Periodicity",
           "unit": "s",
-          "value": 0.1176
+          "value": 0.1252
         },
         {
           "detail": "forward IAT mad 0.007s (near-constant interval)",
           "key": "timing_mad",
           "label": "Timing MAD",
           "unit": "s",
-          "value": 0.0068
-        },
-        {
-          "detail": "same src->dst pair seen 3 times before",
-          "key": "repeated_destination",
-          "label": "Repeated destination",
-          "unit": "count",
-          "value": 3.0
-        },
-        {
-          "detail": "within-flow size cv 0.44, cross-session size cv 0.22",
-          "key": "similar_packet_sizes",
-          "label": "Similar packet sizes",
-          "unit": "ratio",
-          "value": 0.4372
-        },
-        {
-          "detail": "3 prior <=10KB sessions to this host",
-          "key": "repeated_small_sessions",
-          "label": "Repeated small sessions",
-          "unit": "count",
-          "value": 3.0
+          "value": 0.0074
         }
       ]
     },
-    "first_seen": 1700001100.536348,
+    "first_seen": 1700001100.548779,
     "flow_id": null,
-    "last_seen": 1700001100.536348,
+    "last_seen": 1700001100.548779,
     "metadata": {
       "alpn": [
         "h3",
         "http/1.1"
       ],
       "asset_criticality": null,
-      "bytes": 6666,
+      "bytes": 6580,
       "dst_port": "443",
-      "duration": 0.536348,
+      "duration": 0.548779,
       "ja3": "be3538e59c61fb4413c62864b2ce924c",
       "ja4": "q13d1007h3_6f559355f741_babb055429ee",
       "packets": 10,
@@ -72,11 +51,11 @@
     "model_version": "1",
     "module_annotations": {
       "immune": {
-        "affinity": 0.2698,
-        "danger_total": 0.8,
-        "level": 3,
-        "memory_hit": true,
-        "response": "isolate",
+        "affinity": 0.2867,
+        "danger_total": 0.0,
+        "level": 0,
+        "memory_hit": false,
+        "response": "ignore",
         "slice_policy": "default:unchanged"
       },
       "pqc": {
@@ -122,20 +101,19 @@
       "snn_score": 92.68,
       "swarm_flag": false
     },
-    "occurrences": 1,
+    "occurrences": 3,
     "protocol": "UDP",
-    "severity": "CRITICAL",
+    "severity": "MEDIUM",
     "severity_factors": [
-      "threat category C2_BEACONING -> base HIGH",
-      "confidence 0.95 >= 0.85 -> raised one level",
+      "threat category UNKNOWN_ANOMALY -> base LOW",
+      "confidence 0.45 < 0.50 -> lowered one level (thin evidence)",
       "anomaly intensity 100.0 >= 99 -> raised one level",
       "no asset context available -> no change",
-      "1 sighting(s) of this behaviour -> no change",
-      "clamped to CRITICAL (severity is ordinal: LOW..CRITICAL)"
+      "same behaviour seen 3 times (correlated) -> raised one level"
     ],
     "source": "10.0.0.7:44444",
-    "status": "RESOLVED",
-    "threat_type": "C2_BEACONING",
+    "status": "OPEN",
+    "threat_type": "UNKNOWN_ANOMALY",
     "timestamp": 1800000000.0,
     "updated_at": 1800000000.0
   },
@@ -144,8 +122,8 @@
   },
   "request": {
     "body": null,
-    "method": "POST",
-    "path": "/api/alerts/alrt_2eedb30fc188/resolve",
+    "method": "GET",
+    "path": "/api/alerts/alrt_9de57ae832fd",
     "query": {}
   },
   "status": 200

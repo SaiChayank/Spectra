@@ -13,10 +13,10 @@
         "extension_count": 0,
         "immune": {
           "affinity": 0.5035,
-          "danger_total": 0.65,
-          "level": 3,
+          "danger_total": 0.0,
+          "level": 0,
           "memory_hit": true,
-          "response": "isolate",
+          "response": "ignore",
           "slice_policy": "mmtc:unchanged"
         },
         "ja3": null,
@@ -54,10 +54,10 @@
         "extension_count": 0,
         "immune": {
           "affinity": 0.5035,
-          "danger_total": 0.65,
-          "level": 3,
+          "danger_total": 0.0,
+          "level": 0,
           "memory_hit": true,
-          "response": "isolate",
+          "response": "ignore",
           "slice_policy": "mmtc:unchanged"
         },
         "ja3": null,

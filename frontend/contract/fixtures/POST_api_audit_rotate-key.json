@@ -2,8 +2,8 @@
   "body": {
     "entry_seq": 49,
     "epoch": 2,
-    "previous_pubkey": "0287138ddf316967ccf301bc8ec4d0661c3f4e16875c8b7ca3964eba3feef74657",
-    "pubkey": "02b7ca3bc5699285c28518c19e3a05e6d1f6ac38fe1a2fd1977eaa3a88ca59964b",
+    "previous_pubkey": "378f4f30a78a0870599f9d7fda621e2757b9b87f1c681e85b585272bab36521637",
+    "pubkey": "59e27c0f3729c1eb14c30886afad61cd909ed1342786b76f2def8978e4e4a08d59",
     "start_seq": 49
   },
   "headers": {

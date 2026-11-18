@@ -3,14 +3,14 @@
   "messages": [
     {
       "data": {
-        "detections": 1,
+        "detections": 0,
         "error": null,
         "failures": {},
         "filter": null,
-        "flows": 13,
+        "flows": 0,
         "mode": "pcap",
         "model_trained": true,
-        "packets": 284,
+        "packets": 0,
         "persist": true,
         "pipeline": {
           "active_flows": 0,
@@ -22,7 +22,7 @@
             "depth": 0,
             "dropped": 0,
             "limit": 1024,
-            "max_depth": 5,
+            "max_depth": 0,
             "offered": 13,
             "policy": "drop_oldest"
           },
@@ -49,22 +49,22 @@
               0,
               0,
               0,
-              2,
-              12,
-              13,
-              13,
-              13,
-              13,
-              13,
-              13,
-              13
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
             ],
-            "sum_ms": 43.795923702418804
+            "sum_ms": 0.0
           },
-          "inference_latency_max_ms": 5.727,
-          "inference_latency_ms": 2.592,
-          "inference_latency_p50_ms": 3.246,
-          "inference_latency_p95_ms": 4.847,
+          "inference_latency_max_ms": 0.0,
+          "inference_latency_ms": 0.0,
+          "inference_latency_p50_ms": 0.0,
+          "inference_latency_p95_ms": 0.0,
           "inference_ops": 13,
           "limits": {
             "active_flows": 5000,
@@ -81,19 +81,19 @@
             "depth": 0,
             "dropped": 0,
             "limit": 4096,
-            "max_depth": 284,
+            "max_depth": 0,
             "offered": 284,
             "policy": "drop_newest"
           },
           "packets_per_sec": 0.0,
-          "processing_lag_max_ms": 38.087,
-          "processing_lag_ms": 38.06,
+          "processing_lag_max_ms": 0.0,
+          "processing_lag_ms": 0.0,
           "publish_queue": {
             "accepted": 13,
             "depth": 0,
             "dropped": 0,
             "limit": 1024,
-            "max_depth": 8,
+            "max_depth": 0,
             "offered": 13,
             "policy": "drop_oldest"
           }
@@ -260,10 +260,10 @@
         "extension_count": 7,
         "immune": {
           "affinity": 0.1055,
-          "danger_total": 0.8,
-          "level": 2,
+          "danger_total": 0.0,
+          "level": 0,
           "memory_hit": false,
-          "response": "alert",
+          "response": "ignore",
           "slice_policy": "default:unchanged"
         },
         "ja3": "be3538e59c61fb4413c62864b2ce924c",
@@ -338,10 +338,10 @@
         "extension_count": 7,
         "immune": {
           "affinity": 0.0328,
-          "danger_total": 0.45,
-          "level": 1,
+          "danger_total": 0.0,
+          "level": 0,
           "memory_hit": false,
-          "response": "monitor",
+          "response": "ignore",
           "slice_policy": "default:unchanged"
         },
         "ja3": "be3538e59c61fb4413c62864b2ce924c",
@@ -416,10 +416,10 @@
         "extension_count": 7,
         "immune": {
           "affinity": 0.0737,
-          "danger_total": 0.45,
-          "level": 1,
+          "danger_total": 0.0,
+          "level": 0,
           "memory_hit": false,
-          "response": "monitor",
+          "response": "ignore",
           "slice_policy": "default:unchanged"
         },
         "ja3": "be3538e59c61fb4413c62864b2ce924c",
@@ -494,10 +494,10 @@
         "extension_count": 7,
         "immune": {
           "affinity": 0.0287,
-          "danger_total": 0.45,
-          "level": 1,
+          "danger_total": 0.0,
+          "level": 0,
           "memory_hit": false,
-          "response": "monitor",
+          "response": "ignore",
           "slice_policy": "default:unchanged"
         },
         "ja3": "be3538e59c61fb4413c62864b2ce924c",
@@ -572,10 +572,10 @@
         "extension_count": 7,
         "immune": {
           "affinity": 0.0506,
-          "danger_total": 0.45,
-          "level": 1,
+          "danger_total": 0.0,
+          "level": 0,
           "memory_hit": false,
-          "response": "monitor",
+          "response": "ignore",
           "slice_policy": "default:unchanged"
         },
         "ja3": "be3538e59c61fb4413c62864b2ce924c",
@@ -650,10 +650,10 @@
         "extension_count": 7,
         "immune": {
           "affinity": 0.0388,
-          "danger_total": 0.45,
-          "level": 1,
+          "danger_total": 0.0,
+          "level": 0,
           "memory_hit": false,
-          "response": "monitor",
+          "response": "ignore",
           "slice_policy": "default:unchanged"
         },
         "ja3": "be3538e59c61fb4413c62864b2ce924c",
@@ -728,10 +728,10 @@
         "extension_count": 7,
         "immune": {
           "affinity": 0.041,
-          "danger_total": 0.45,
-          "level": 1,
+          "danger_total": 0.0,
+          "level": 0,
           "memory_hit": false,
-          "response": "monitor",
+          "response": "ignore",
           "slice_policy": "default:unchanged"
         },
         "ja3": "be3538e59c61fb4413c62864b2ce924c",
@@ -806,10 +806,10 @@
         "extension_count": 7,
         "immune": {
           "affinity": 0.0552,
-          "danger_total": 0.45,
-          "level": 1,
+          "danger_total": 0.0,
+          "level": 0,
           "memory_hit": false,
-          "response": "monitor",
+          "response": "ignore",
           "slice_policy": "default:unchanged"
         },
         "ja3": "be3538e59c61fb4413c62864b2ce924c",
@@ -871,7 +871,7 @@
     },
     {
       "data": {
-        "alert_id": "alrt_409348ffaea9",
+        "alert_id": "alrt_1d13ba251e45",
         "anomaly_score": 100.0,
         "capture_id": 5,
         "confidence": 0.95,
@@ -944,10 +944,10 @@
         "module_annotations": {
           "immune": {
             "affinity": 0.2825,
-            "danger_total": 1.0,
-            "level": 3,
+            "danger_total": 0.0,
+            "level": 0,
             "memory_hit": true,
-            "response": "isolate",
+            "response": "ignore",
             "slice_policy": "default:unchanged"
           },
           "pqc": {
@@ -1014,7 +1014,7 @@
     },
     {
       "data": {
-        "alert_id": "alrt_409348ffaea9",
+        "alert_id": "alrt_1d13ba251e45",
         "alpn": [
           "h3",
           "http/1.1"
@@ -1028,10 +1028,10 @@
         "extension_count": 7,
         "immune": {
           "affinity": 0.2825,
-          "danger_total": 1.0,
-          "level": 3,
+          "danger_total": 0.0,
+          "level": 0,
           "memory_hit": true,
-          "response": "isolate",
+          "response": "ignore",
           "slice_policy": "default:unchanged"
         },
         "ja3": "be3538e59c61fb4413c62864b2ce924c",
@@ -1135,7 +1135,7 @@
     },
     {
       "data": {
-        "alert_id": "alrt_409348ffaea9",
+        "alert_id": "alrt_1d13ba251e45",
         "alpn": [
           "h3",
           "http/1.1"
@@ -1150,10 +1150,10 @@
         "extension_count": 7,
         "immune": {
           "affinity": 0.2825,
-          "danger_total": 1.0,
-          "level": 3,
+          "danger_total": 0.0,
+          "level": 0,
           "memory_hit": true,
-          "response": "isolate",
+          "response": "ignore",
           "slice_policy": "default:unchanged"
         },
         "ja3": "be3538e59c61fb4413c62864b2ce924c",
@@ -1284,10 +1284,10 @@
         "extension_count": 0,
         "immune": {
           "affinity": 0.5035,
-          "danger_total": 1.0,
-          "level": 3,
+          "danger_total": 0.0,
+          "level": 0,
           "memory_hit": true,
-          "response": "isolate",
+          "response": "ignore",
           "slice_policy": "mmtc:unchanged"
         },
         "ja3": null,
@@ -1328,10 +1328,10 @@
         "extension_count": 0,
         "immune": {
           "affinity": 0.5035,
-          "danger_total": 1.0,
-          "level": 3,
+          "danger_total": 0.0,
+          "level": 0,
           "memory_hit": true,
-          "response": "isolate",
+          "response": "ignore",
           "slice_policy": "mmtc:unchanged"
         },
         "ja3": null,
@@ -1372,10 +1372,10 @@
         "extension_count": 0,
         "immune": {
           "affinity": 0.5035,
-          "danger_total": 1.0,
-          "level": 3,
+          "danger_total": 0.0,
+          "level": 0,
           "memory_hit": true,
-          "response": "isolate",
+          "response": "ignore",
           "slice_policy": "mmtc:unchanged"
         },
         "ja3": null,
@@ -1416,10 +1416,10 @@
         "extension_count": 0,
         "immune": {
           "affinity": 0.5035,
-          "danger_total": 1.0,
-          "level": 3,
+          "danger_total": 0.0,
+          "level": 0,
           "memory_hit": true,
-          "response": "isolate",
+          "response": "ignore",
           "slice_policy": "mmtc:unchanged"
         },
         "ja3": null,
@@ -1450,14 +1450,14 @@
     },
     {
       "data": {
-        "detections": 1,
+        "detections": 0,
         "error": null,
         "failures": {},
         "filter": null,
-        "flows": 13,
+        "flows": 0,
         "mode": "pcap",
         "model_trained": true,
-        "packets": 276,
+        "packets": 0,
         "persist": true,
         "pipeline": {
           "active_flows": 0,
@@ -1469,7 +1469,7 @@
             "depth": 0,
             "dropped": 0,
             "limit": 1024,
-            "max_depth": 12,
+            "max_depth": 0,
             "offered": 13,
             "policy": "drop_oldest"
           },
@@ -1496,22 +1496,22 @@
               0,
               0,
               0,
-              6,
-              11,
-              12,
-              13,
-              13,
-              13,
-              13,
-              13,
-              13
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
             ],
-            "sum_ms": 42.60231368243694
+            "sum_ms": 0.0
           },
-          "inference_latency_max_ms": 10.192,
-          "inference_latency_ms": 2.542,
-          "inference_latency_p50_ms": 2.515,
-          "inference_latency_p95_ms": 7.891,
+          "inference_latency_max_ms": 0.0,
+          "inference_latency_ms": 0.0,
+          "inference_latency_p50_ms": 0.0,
+          "inference_latency_p95_ms": 0.0,
           "inference_ops": 13,
           "limits": {
             "active_flows": 5000,
@@ -1528,19 +1528,19 @@
             "depth": 0,
             "dropped": 0,
             "limit": 4096,
-            "max_depth": 276,
+            "max_depth": 0,
             "offered": 276,
             "policy": "drop_newest"
           },
           "packets_per_sec": 0.0,
-          "processing_lag_max_ms": 10.954,
-          "processing_lag_ms": 10.596,
+          "processing_lag_max_ms": 0.0,
+          "processing_lag_ms": 0.0,
           "publish_queue": {
             "accepted": 13,
             "depth": 0,
             "dropped": 0,
             "limit": 1024,
-            "max_depth": 8,
+            "max_depth": 0,
             "offered": 13,
             "policy": "drop_oldest"
           }

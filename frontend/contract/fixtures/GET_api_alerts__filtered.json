@@ -3,7 +3,7 @@
     "count": 1,
     "items": [
       {
-        "alert_id": "alrt_3b1c93af0403",
+        "alert_id": "alrt_9de57ae832fd",
         "anomaly_score": 100.0,
         "capture_id": 2,
         "confidence": 0.45,
@@ -55,10 +55,10 @@
         "module_annotations": {
           "immune": {
             "affinity": 0.2867,
-            "danger_total": 0.8,
-            "level": 2,
+            "danger_total": 0.0,
+            "level": 0,
             "memory_hit": false,
-            "response": "alert",
+            "response": "ignore",
             "slice_policy": "default:unchanged"
           },
           "pqc": {
