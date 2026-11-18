@@ -405,7 +405,7 @@ def run_scenario(work: Path, rec: Recorder, app, engine, TestClient) -> None:
     # -- audit writes ---------------------------------------------------------------------------------------------
     rec.call(admin, "POST", "/api/audit/checkpoint", expect=200)
     rec.call(admin, "GET", "/api/audit/checkpoint/verify", variant="after_checkpoint", expect=200)
-    cert = rec.call(admin, "POST", "/api/audit/certificate", json_body={"seq": 1}, expect=None)
+    rec.call(admin, "POST", "/api/audit/certificate", json_body={"seq": 1}, expect=None)
 
     # -- error variants --------------------------------------------------------------------------------------------
     rec.call(admin, "GET", "/api/alerts/alrt_doesnotexist", variant="404", expect=404)

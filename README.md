@@ -32,7 +32,7 @@ Three target verticals: **Fintech · Healthcare · Smart City Infrastructure**.
 | [`docs/datasets.md`](./docs/datasets.md) | evaluation datasets: catalog, operator fetch, label generation, manifest integrity |
 | [`docs/intel.md`](./docs/intel.md) | local threat intel: file-based JA3/JA4/SNI lists, evidence-signal semantics, FP caution |
 | [`docs/security.md`](./docs/security.md) | auth, RBAC, managed captures, artifact integrity, audit chain, local-only assumptions |
-| [`docs/testing.md`](./docs/testing.md) | 924 tests · 156 acceptance checks · performance · live-capture validation |
+| [`docs/testing.md`](./docs/testing.md) | 925 tests · 156 acceptance checks · performance · live-capture validation |
 | [`SECURITY.md`](./SECURITY.md) | supported versions and how to report a vulnerability privately (proposed timelines, scope, safe harbour) |
 | [`docs/limitations.md`](./docs/limitations.md) | detection, classification, TEE/twin/edge, metadata-only analysis, operational caveats |
 | [`docs/readiness-report.md`](./docs/readiness-report.md) | final readiness report (completed / partial / future / known limitations) |
@@ -63,7 +63,7 @@ with the passing pytest suite below. Local authentication
 | React dashboard | ✅ live (local login, role-aware UI) |
 | Local threat intel (JA3/JA4/SNI lists, `spectra intel`) | ✅ file-based, evidence signal only |
 | Labeled offline evaluation (`spectra eval run/train/compare`) | ✅ honesty-gated metrics, versioned reports |
-| Automated tests (pytest) | ✅ 924 passing tests |
+| Automated tests (pytest) | ✅ 925 passing tests |
 | Authentication & RBAC (ADMIN / ANALYST / VIEWER) | ✅ scrypt + sessions |
 | Live capture on Windows | ✅ validated with [Npcap](https://nmap.org/npcap/) (driver required) |
 
@@ -261,7 +261,7 @@ route checks a permission from `spectra/authz.py`.
 
 ```bash
 cd backend
-python -m pytest tests -q      # 924 tests
+python -m pytest tests -q      # 925 tests
 ```
 
 Full verification workflow (pytest + acceptance runner + performance + build):
@@ -320,7 +320,7 @@ start.ps1           # optional convenience launcher (backend + frontend)
 
 `1.0.0` — PCAP + **live NIC capture** (Npcap 1.88, validated 2026-09-29),
 101-route API + WebSocket, CLI, React console, model registry with integrity
-checks: **924 tests**, **156/156 acceptance checks**, performance at or better
+checks: **925 tests**, **156/156 acceptance checks**, performance at or better
 than the recorded baseline. Evidence:
 [`docs/acceptance-report.md`](./docs/acceptance-report.md),
 [`docs/hardening-report.md`](./docs/hardening-report.md),
