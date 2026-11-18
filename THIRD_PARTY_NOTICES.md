@@ -35,7 +35,7 @@ None: every listed package ships a licence file.
 | joblib | 1.6.0 | BSD-3-Clause |
 | narwhals | 2.27.1 | MIT |
 | numpy | 2.5.4 | BSD-3-Clause AND 0BSD AND MIT AND Zlib AND CC0-1.0 |
-| opentelemetry-api | 1.45.1 | Apache-2.0 |
+| opentelemetry-api | 1.45.2 | Apache-2.0 |
 | pycparser | 3.12 | BSD-3-Clause |
 | pydantic | 2.14.1 | MIT |
 | pydantic_core | 2.50.1 | MIT |
@@ -2660,7 +2660,7 @@ worldwide. This software is distributed without any warranty.
 See <http://creativecommons.org/publicdomain/zero/1.0/>.
 ```
 
-### opentelemetry-api 1.45.1
+### opentelemetry-api 1.45.2
 
 - SPDX licence: `Apache-2.0`
 - Upstream: https://github.com/open-telemetry/opentelemetry-python/tree/main/opentelemetry-api
