@@ -416,6 +416,40 @@
         "title": "LoginRequest",
         "type": "object"
       },
+      "PasswordChangeRequest": {
+        "properties": {
+          "current_password": {
+            "maxLength": 1024,
+            "minLength": 1,
+            "title": "Current Password",
+            "type": "string"
+          },
+          "new_password": {
+            "maxLength": 1024,
+            "minLength": 8,
+            "title": "New Password",
+            "type": "string"
+          },
+          "totp_code": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Totp Code"
+          }
+        },
+        "required": [
+          "current_password",
+          "new_password"
+        ],
+        "title": "PasswordChangeRequest",
+        "type": "object"
+      },
       "PlaybookRequest": {
         "properties": {
           "actions": {
@@ -1792,6 +1826,47 @@
           }
         },
         "summary": "Auth Me"
+      }
+    },
+    "/api/auth/password": {
+      "post": {
+        "description": "Change the caller's own password (any role; needs the current one).\n\nWrong current password (or missing/wrong TOTP code) answers a generic 403\nand counts toward the login throttle for (ip, username), so a stolen\nsession cannot be used to guess the password; once throttled: 429 +\n``Retry-After`` before any scrypt work.  Success revokes every session of\nthe user (this one included), clears the cookie and audits the change\n(never the password).  401 is left to mean \"no/expired session\" so the\ndashboard's global 401 handler is not triggered by a typo.",
+        "operationId": "auth_password_api_auth_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordChangeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Auth Password Api Auth Password Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Auth Password"
       }
     },
     "/api/auth/totp/disable": {

@@ -72,17 +72,19 @@ HTTP 429.
 
 ## 4. Change the admin password
 
-The dashboard has **no change-password screen** (the frontend source has no call to the users API). Use the API as
-the admin; the user id of the first admin is 1 (list users with `GET /api/users` to confirm):
+The dashboard has **no change-password screen yet**. Use the API; any signed-in user (admin, analyst or viewer) can
+change their own password with the current one (add `"totp_code"` if the account has two-factor enabled):
 
 ```
-$ curl -s -b cookies.txt -X PATCH -H 'content-type: application/json' \
-    -d '{"password":"<new password, at least 8 characters>"}' http://127.0.0.1:8787/api/users/1
-{"id":1,"username":"admin","role":"ADMIN",...}
+$ curl -s -b cookies.txt -X POST -H 'content-type: application/json' \
+    -d '{"current_password":"<current>","new_password":"<new password, at least 8 characters>"}' \
+    http://127.0.0.1:8787/api/auth/password
+{"ok":true,"sign_in_required":true}
 ```
 
-This revokes every session of that user (the next call with the old cookie returned `{"detail":"not authenticated"}`),
-so sign in again with the new password. Then delete `admin_bootstrap.txt` if it exists.
+This revokes every session of that user (the next call with the old cookie returns `{"detail":"not authenticated"}`),
+so sign in again with the new password. A wrong current password answers `403` and counts toward the login throttle.
+(An admin can still reset someone else's password with `PATCH /api/users/{id}`.) Then delete `admin_bootstrap.txt` if it exists.
 
 ## 5. Upload a capture
 

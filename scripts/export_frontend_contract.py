@@ -46,9 +46,10 @@ VIEWER = ("contract-viewer", "contract-fake-viewer-pw")
 ANALYST = ("contract-analyst", "contract-fake-analyst-pw")
 PW_USER = ("contract-pwchange", "contract-fake-old-pw-1")
 PW_NEW = "contract-fake-new-pw-2"
+PW_NEW2 = "contract-fake-new-pw-3"
 TOTP_USER = ("contract-totp", "contract-fake-totp-pw-1")
 
-SECRET_KEYS = {"password", "code", "totp_code", "secret", "otpauth_uri", "otpauth", "recovery_codes",
+SECRET_KEYS = {"password", "current_password", "new_password", "code", "totp_code", "secret", "otpauth_uri", "otpauth", "recovery_codes",
                "token", "csrf", "csrf_token", "session"}
 VOLATILE_KEYS = {"uptime_s", "latency_ms", "duration_ms", "load_avg", "cpu_percent", "mem_percent",
                  "rss_bytes", "elapsed_s", "elapsed_ms"}
@@ -437,12 +438,25 @@ def run_scenario(work: Path, rec: Recorder, app, engine, TestClient) -> None:
     rec.call(out, "POST", "/api/auth/logout", expect=200)
     rec.call(out, "GET", "/api/auth/me", variant="401_after_logout", expect=401)
 
-    # -- change password (admin-only route today: see README) -------------------------------------------------------
+    # -- change password (admin PATCH, then the self-service route) -------------------------------------------------------
     pw = TestClient(app)
     login(pw, *PW_USER, variant="before_password_change", expect=200)
     rec.call(admin, "PATCH", f"/api/users/{uid[PW_USER[0]]}", json_body={"password": PW_NEW}, expect=200)
     rec.call(pw, "GET", "/api/auth/me", variant="401_session_revoked_by_password_change", expect=401)
     login(pw, PW_USER[0], PW_NEW, variant="new_password", expect=200)
+    # self-service change (any role; here an ANALYST): 401, 403 wrong current, 422 policy/equal, 200 + revoked
+    rec.call(TestClient(app), "POST", "/api/auth/password", variant="401_no_session",
+             json_body={"current_password": PW_NEW, "new_password": PW_NEW2}, expect=401)
+    rec.call(pw, "POST", "/api/auth/password", variant="403_wrong_current_password",
+             json_body={"current_password": "contract-fake-wrong-pw", "new_password": PW_NEW2}, expect=403)
+    rec.call(pw, "POST", "/api/auth/password", variant="422_short_new_password",
+             json_body={"current_password": PW_NEW, "new_password": "x"}, expect=422)
+    rec.call(pw, "POST", "/api/auth/password", variant="422_same_password",
+             json_body={"current_password": PW_NEW, "new_password": PW_NEW}, expect=422)
+    rec.call(pw, "POST", "/api/auth/password", json_body={"current_password": PW_NEW, "new_password": PW_NEW2},
+             expect=200)
+    rec.call(pw, "GET", "/api/auth/me", variant="401_session_revoked_by_own_password_change", expect=401)
+    login(pw, PW_USER[0], PW_NEW2, variant="new_password_after_self_change", expect=200)
     rec.call(admin, "PATCH", f"/api/users/{uid[PW_USER[0]]}", variant="422_short_password",
              json_body={"password": "x"}, expect=422)
     rec.call(admin, "DELETE", f"/api/users/{uid[PW_USER[0]]}", expect=200)
@@ -600,7 +614,7 @@ def generate(out: Path) -> dict:
         "description": "First messages from /ws/events: a status snapshot, then events emitted while a "
                        "capture is uploaded and processed.", "messages": norm.walk(rec.ws)})
 
-    leaks = [s for s in sorted(rec.secrets | {ADMIN_PW, PW_NEW, VIEWER[1], ANALYST[1], PW_USER[1], TOTP_USER[1]})
+    leaks = [s for s in sorted(rec.secrets | {ADMIN_PW, PW_NEW, PW_NEW2, VIEWER[1], ANALYST[1], PW_USER[1], TOTP_USER[1]})
              if len(s) >= 6 and any(s in v for v in files.values())]
     paths = [p for p in (str(work), str(data), str(ROOT), str(Path.home()), "admin_bootstrap", "/tmp/")
              if any(p in v for v in files.values())]

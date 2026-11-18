@@ -49,6 +49,18 @@ on. Code: `backend/spectra/auth/`, `authz.py`, `api/security.py`,
   user's sessions; deleting a user cascades their sessions. Role changes take
   effect on the next request (role is re-read, not cached in the token).
 * `/api/auth/*` responses carry `Cache-Control: no-store`.
+* **Changing your own password:** `POST /api/auth/password` (`current_password`,
+  `new_password`, plus `totp_code` when the account has a second factor). Any
+  signed-in role may use it. The current password is verified with the same
+  scrypt/constant-time check as login; the new one goes through the same policy
+  (8-1024 chars) and must differ (`422`). A wrong current password (or missing
+  TOTP code) answers a generic `403 current password is incorrect` and counts
+  toward the login throttle for that (ip, username), so a stolen session cannot
+  brute-force the password (`429` once blocked, before any scrypt work). `403`
+  rather than `401` so the dashboard's "401 means signed out" handling is not
+  triggered by a typo. On success every session of the user is revoked (the
+  caller's too), the cookie is cleared and `auth.password_changed` is audit-chained
+  (username only, never a password). Tests: `test_change_password.py`.
 
 **Login throttling with escalating backoff** (`LoginThrottle`, checked
 *before* any scrypt work): 10 failures / 60 s per *(ip, username)* or 40 / 60 s

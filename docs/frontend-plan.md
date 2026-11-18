@@ -74,10 +74,11 @@ Each item lists the real endpoints. **P0** is needed for a first usable release,
 ### P0-1 Session, account and users
 * Login (`POST /api/auth/login`), logout (`/api/auth/logout`), current user (`GET /api/auth/me`), TOTP setup/enable/disable
   (`/api/auth/totp/*`): already partly there; finish the TOTP flow (QR/secret shown once, code entry, recovery message).
-* **Change own password**: missing today. `PATCH /api/users/{id}` works only with `users:manage` (ADMIN); a VIEWER or ANALYST gets 403
-  (fixture `frontend/contract/fixtures/PATCH_api_users_2__403_viewer_own_password.json`), so non-admins cannot change
-  their own password at all. This needs a new backend endpoint (proposed: `POST /api/auth/password` with the current and new password,
-  §6); build the screen against that proposal. On success the session is revoked: return to login with a clear message.
+* **Change own password**: implemented, `POST /api/auth/password` with `current_password` and `new_password` (plus `totp_code` when the
+  account has TOTP). Any signed-in role. Fixtures: `POST_api_auth_password.json` (200, session revoked, cookie cleared),
+  `..__401_no_session`, `..__403_wrong_current_password` (counts toward the login throttle; 429 when blocked),
+  `..__422_short_new_password`, `..__422_same_password`. (`PATCH /api/users/{id}` stays ADMIN-only, for resetting someone else.)
+  On success every session is revoked: return to login with a clear message.
 * Users admin (ADMIN): list/create/edit/delete (`/api/users`, `/api/users/{id}`), reset someone's TOTP (`DELETE /api/users/{id}/totp`).
 * Global handling: 401 → back to login keeping the deep link; 403 → "you do not have permission" (not a crash); 429 → show the wait from
   `Retry-After`; never log or display passwords or TOTP secrets after the first display.
@@ -132,7 +133,7 @@ Known proposals to start with (shapes are yours to draft; nothing here exists ye
 
 | Need | Proposed endpoint | Notes |
 |---|---|---|
-| Change own password | `POST /api/auth/password` | current + new password; any signed-in user; revokes the session; audited |
+| ~~Change own password~~ | `POST /api/auth/password` | **implemented** (see §5 P0-1); current + new password; any signed-in user; revokes all sessions; audited |
 | Host triage list | `GET /api/hosts?sort=risk` | rank, host, confidence, top evidence, last seen |
 | Host evidence | `GET /api/hosts/{host}/evidence` | detector, technique, time, destination, strength, flow ids |
 | Analyst verdict | `POST /api/hosts/{host}/verdict` | `true` / `expected` / `false`, optional note; audited |

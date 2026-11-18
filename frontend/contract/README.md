@@ -33,6 +33,6 @@ Treat these as shape examples, not real measurements. Synthetic capture timestam
 
 ## Things the frontend must know
 
-* `PATCH /api/users/{id}` needs `users:manage` (ADMIN): a VIEWER or ANALYST cannot change their own password today
-  (`PATCH_api_users_2__403_viewer_own_password.json`). Contract change request for the backend.
+* Change your own password with `POST /api/auth/password` (any role; fixtures `POST_api_auth_password*.json`). `PATCH /api/users/{id}`
+  needs `users:manage` (ADMIN) and is only for resetting someone else (`PATCH_api_users_2__403_viewer_own_password.json`).
 * Re-processing an already processed capture returns 200 (no 409).
