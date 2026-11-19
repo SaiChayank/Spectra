@@ -27,3 +27,27 @@ def test_core_routes_have_typed_responses():
                if path.startswith("/api/") and not path.startswith(UNTYPED_ALLOWED)
                for method, op in ops.items() if not _typed(op)]
     assert not untyped, f"routes without a response_model: {untyped}"
+
+
+def test_response_model_mismatch_fails_open_in_production(client, caplog):
+    """Outside the test suite a model mismatch logs and returns the data, never a 500."""
+    from pydantic import BaseModel
+
+    from spectra.api.app import app
+
+    class Strict(BaseModel):
+        n: int
+
+    def bad() -> dict:
+        return {"n": "not-a-number", "extra": 1}
+
+    app.router.routes.insert(0, __import__("fastapi").routing.APIRoute(
+        "/api/_t_mismatch", bad, response_model=Strict))
+    app.state.strict_responses = False
+    try:
+        res = client.get("/api/_t_mismatch")
+        assert res.status_code == 200 and res.json() == {"n": "not-a-number", "extra": 1}
+        assert any(r.getMessage() == "response model mismatch" for r in caplog.records)
+    finally:
+        app.state.strict_responses = True
+        app.router.routes.pop(0)

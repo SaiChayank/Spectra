@@ -589,6 +589,7 @@ def generate(out: Path) -> dict:
 
     import spectra.api.app as app_module
     app, engine = app_module.app, app_module.engine
+    app.state.strict_responses = True      # a response-model mismatch must fail the export, not be papered over
 
     rec = Recorder()
     rec.ws = []
