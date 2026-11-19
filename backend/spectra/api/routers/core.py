@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse, PlainTextResponse, Response
@@ -86,31 +86,31 @@ class Flow(Out):
     src: str
     dst: str
     proto: str
-    score: Num
+    score: Optional[Num] = None  # null while no model is trained
     anomaly: bool
     start_ts: Num
     last_ts: Num
     duration: Num
     packets: int
     bytes: int
-    bytes_fwd: int
-    cipher_count: int
-    extension_count: int
-    slice: str
-    snn_score: Num
-    swarm_flag: bool
+    bytes_fwd: Optional[int] = None
+    cipher_count: Optional[int] = None
+    extension_count: Optional[int] = None
+    slice: Optional[str] = None
+    snn_score: Optional[Num] = None
+    swarm_flag: Optional[bool] = None
     sni: Optional[str] = None
     ja3: Optional[str] = None
     ja4: Optional[str] = None
     tls_version: Optional[str] = None
     quic_version: Optional[str] = None
-    alpn: Optional[list[str]] = None
+    alpn: Optional[Union[list[str], str]] = None
     alert_id: Optional[str] = None
     threat: Optional[dict[str, Any]] = None
     reasons: Optional[list[Any]] = None
     detected_at: Optional[Num] = None
-    immune: dict[str, Any]
-    pqc: dict[str, Any]
+    immune: Optional[dict[str, Any]] = None
+    pqc: Optional[dict[str, Any]] = None
 
 
 class FlowList(Out):
