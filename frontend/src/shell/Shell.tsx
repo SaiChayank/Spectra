@@ -11,6 +11,7 @@ import {
 import { NAV_ICONS } from "./icons";
 import SearchDrawer from "./SearchDrawer";
 import "./shell.css";
+import "./legacy.css";
 
 /** Sidebar order (Account and Experimental are rendered separately). */
 const MAIN: Section[] = ["overview", "monitor", "captures", "incidents", "hosts", "traffic", "network", "models", "audit", "system"];

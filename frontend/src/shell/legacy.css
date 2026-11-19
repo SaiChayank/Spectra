@@ -1,0 +1,275 @@
+/*
+ * Legacy bridge: restyles the class names the pre-redesign pages use
+ * (index.css) to the design system, inside the console only. New components
+ * use `sx-` classes and are excluded from every rule here. Remove a rule once
+ * no page uses its class.
+ */
+
+.sx-content :where(.panel) {
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  box-shadow: none;
+  backdrop-filter: none;
+  position: relative;
+}
+.sx-content .panel > h2,
+.sx-content .panel h2:first-child {
+  font: 500 var(--fs-caption) / 1.4 var(--font-sans);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--text-2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.sx-content .panel > h2::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  flex: none;
+  background: var(--blue-400);
+  transform: rotate(45deg);
+}
+
+/* page headers */
+.sx-content .page-title {
+  font: 300 var(--fs-title) / 1.15 var(--font-sans);
+  letter-spacing: 0;
+  color: var(--text-1);
+  text-transform: none;
+}
+.sx-content .page-subtitle {
+  color: var(--text-2);
+  font-size: var(--fs-body);
+}
+.sx-content .section-label {
+  font: 500 var(--fs-caption) var(--font-sans);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+/* text */
+.sx-content .note {
+  color: var(--text-2);
+}
+.sx-content .dim {
+  color: var(--text-3);
+}
+.sx-content .mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.sx-content .empty {
+  color: var(--text-3);
+  border-color: var(--line);
+}
+
+/* buttons: skewed like the design system */
+.sx-content button:not([class*="sx-"]) {
+  --k: var(--skew-s);
+  height: 32px;
+  padding: 0 calc(14px + var(--k));
+  border: 0;
+  border-radius: 0;
+  clip-path: polygon(var(--k) 0, 100% 0, calc(100% - var(--k)) 100%, 0 100%);
+  background: var(--primary-gradient);
+  box-shadow: var(--primary-highlight);
+  color: #fff;
+  font: 500 var(--fs-ui) / 1 var(--font-sans);
+  letter-spacing: var(--track-ui);
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: filter var(--t-hover) var(--ease);
+}
+.sx-content button:not([class*="sx-"]):hover:not(:disabled) {
+  filter: brightness(1.12);
+  background: var(--primary-gradient);
+}
+.sx-content button.ghost:not([class*="sx-"]) {
+  background: var(--surface-2);
+  color: var(--text-1);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+.sx-content button.ghost:not([class*="sx-"]):hover:not(:disabled) {
+  background: var(--surface-3);
+  filter: none;
+}
+.sx-content button.stop:not([class*="sx-"]) {
+  background: rgba(255, 77, 94, 0.14);
+  color: #ff8a96;
+  box-shadow: inset 0 0 0 1px rgba(255, 77, 94, 0.5);
+}
+.sx-content button:not([class*="sx-"]):disabled {
+  filter: saturate(0.2) brightness(0.7);
+  cursor: not-allowed;
+}
+.sx-content button:not([class*="sx-"]):focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--text-1);
+}
+
+/* form controls */
+.sx-content input:not([class*="sx-"]):not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.sx-content select:not([class*="sx-"]),
+.sx-content textarea:not([class*="sx-"]) {
+  background: var(--surface-1);
+  color: var(--text-1);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-s);
+  font-family: var(--font-sans);
+}
+.sx-content input:not([class*="sx-"]):focus-visible,
+.sx-content select:not([class*="sx-"]):focus-visible,
+.sx-content textarea:not([class*="sx-"]):focus-visible {
+  outline: 2px solid var(--blue-400);
+  outline-offset: 0;
+  border-color: var(--blue-400);
+}
+.sx-content .controls label {
+  color: var(--text-1);
+  font-size: var(--fs-ui);
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* tables */
+.sx-content .table-wrap {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  background: var(--surface-1);
+}
+.sx-content table:not(.sx-table) th {
+  background: var(--surface-2);
+  color: var(--text-2);
+  font: 500 var(--fs-caption) var(--font-sans);
+  letter-spacing: var(--track-ui);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--line-strong);
+}
+.sx-content table:not(.sx-table) td {
+  color: var(--text-1);
+  border-bottom: 1px solid var(--line);
+}
+.sx-content table:not(.sx-table) tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+/* badges and tags: text + tinted fill, like sx-badge */
+.sx-content .badge,
+.sx-content .tag {
+  border-radius: var(--radius-s);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: var(--track-ui);
+  background: color-mix(in srgb, var(--sev-info) 12%, transparent);
+  color: var(--sev-info);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sev-info) 40%, transparent);
+  border: 0;
+}
+.sx-content .badge.low {
+  color: var(--sev-low);
+  background: color-mix(in srgb, var(--sev-low) 12%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sev-low) 45%, transparent);
+}
+.sx-content .badge.mid {
+  color: var(--sev-medium);
+  background: color-mix(in srgb, var(--sev-medium) 12%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sev-medium) 45%, transparent);
+}
+.sx-content .badge.high {
+  color: var(--sev-critical);
+  background: color-mix(in srgb, var(--sev-critical) 12%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sev-critical) 45%, transparent);
+}
+
+/* key/value rows */
+.sx-content .kv {
+  border-bottom: 1px solid var(--line);
+}
+.sx-content .kv .k {
+  color: var(--text-3);
+  letter-spacing: 0;
+  text-transform: none;
+  font-size: var(--fs-ui);
+}
+.sx-content .kv .v {
+  color: var(--text-1);
+}
+
+/* state blocks */
+.sx-content .state-block {
+  background: var(--surface-1);
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-m);
+  color: var(--text-2);
+}
+.sx-content .state-block .state-title {
+  color: var(--text-1);
+}
+.sx-content .state-block.error {
+  border: 1px solid color-mix(in srgb, var(--error) 45%, transparent);
+  border-left: 3px solid var(--error);
+}
+
+/* small bars and health metrics */
+.sx-content .bar {
+  background: var(--surface-3);
+}
+.sx-content .bar-fill {
+  background: linear-gradient(90deg, var(--blue-600), var(--blue-300));
+}
+.sx-content .health-metric {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+}
+.sx-content .health-metric-label {
+  color: var(--text-3);
+}
+.sx-content .health-metric-value {
+  color: var(--text-1);
+  font-family: var(--font-mono);
+}
+
+/* severity chips (.severity.sev-*): tinted, text stays the signal */
+.sx-content .severity {
+  --c: var(--sev-info);
+  border-radius: var(--radius-s);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: var(--track-ui);
+  color: var(--c);
+  background: color-mix(in srgb, var(--c) 12%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c) 45%, transparent);
+  border: 0;
+}
+.sx-content .severity.sev-low {
+  --c: var(--sev-low);
+}
+.sx-content .severity.sev-medium {
+  --c: var(--sev-medium);
+}
+.sx-content .severity.sev-high {
+  --c: var(--sev-high);
+}
+.sx-content .severity.sev-critical {
+  --c: var(--sev-critical);
+}
+
+/* buttons inside table cells are row links/actions: quiet, not primary */
+.sx-content td button:not([class*="sx-"]),
+.sx-content td button:not([class*="sx-"]):hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--blue-400);
+  box-shadow: inset 0 0 0 1px var(--line);
+  font-family: var(--font-mono);
+  text-transform: none;
+  letter-spacing: 0;
+  filter: none;
+}
+.sx-content td button:not([class*="sx-"]):hover:not(:disabled) {
+  background: var(--surface-3);
+  color: var(--blue-300);
+}

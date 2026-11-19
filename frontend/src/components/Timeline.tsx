@@ -26,32 +26,41 @@ export default function Timeline({ points }: { points: TimelinePoint[] }) {
       ) : (
         <ResponsiveContainer width="100%" height={260}>
           <ComposedChart data={data} margin={{ top: 6, right: 8, left: -14, bottom: 0 }}>
-            <CartesianGrid stroke="#1d2a3f" strokeDasharray="3 3" />
-            <XAxis dataKey="time" tick={{ fill: "#7c8ba4", fontSize: 11 }} minTickGap={40} />
-            <YAxis yAxisId="left" tick={{ fill: "#7c8ba4", fontSize: 11 }} allowDecimals={false} />
+            <defs>
+              <linearGradient id="sx-flow-area" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor="#5DA2F7" stopOpacity={0.7} />
+                <stop offset="1" stopColor="#1A57BB" stopOpacity={0.15} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid stroke="rgba(255,255,255,0.08)" vertical={false} />
+            <XAxis dataKey="time" tick={{ fill: "#8E8E93", fontSize: 11, fontFamily: "JetBrains Mono Variable, monospace" }} minTickGap={40} stroke="rgba(255,255,255,0.16)" />
+            <YAxis yAxisId="left" tick={{ fill: "#8E8E93", fontSize: 11, fontFamily: "JetBrains Mono Variable, monospace" }} allowDecimals={false} stroke="rgba(255,255,255,0.16)" />
             <YAxis
               yAxisId="right"
               orientation="right"
               domain={[0, 100]}
-              tick={{ fill: "#7c8ba4", fontSize: 11 }}
+              tick={{ fill: "#8E8E93", fontSize: 11, fontFamily: "JetBrains Mono Variable, monospace" }}
+              stroke="rgba(255,255,255,0.16)"
             />
             <Tooltip
               contentStyle={{
-                background: "#0d1420",
-                border: "1px solid #1d2a3f",
-                borderRadius: 8,
+                background: "rgba(22,23,29,0.92)",
+                border: "1px solid rgba(255,255,255,0.2)",
+                borderRadius: 6,
                 fontSize: 12,
+                fontFamily: "JetBrains Mono Variable, monospace",
               }}
-              labelStyle={{ color: "#d7e1f0" }}
+              labelStyle={{ color: "#F5F5F5" }}
+              cursor={{ fill: "rgba(93,162,247,0.08)" }}
             />
-            <Legend wrapperStyle={{ fontSize: 12 }} />
-            <Bar yAxisId="left" dataKey="flows" fill="#35e0d0" fillOpacity={0.55} name="Flows" />
-            <Bar yAxisId="left" dataKey="anomalies" fill="#ff4d6d" name="Detections" />
+            <Legend wrapperStyle={{ fontSize: 12, color: "#A3A3A6" }} />
+            <Bar yAxisId="left" dataKey="flows" fill="url(#sx-flow-area)" name="Flows" />
+            <Bar yAxisId="left" dataKey="anomalies" fill="#FF4D5E" name="Above threshold" />
             <Line
               yAxisId="right"
               type="monotone"
               dataKey="avg_score"
-              stroke="#7c5cff"
+              stroke="#8B7CFF"
               strokeWidth={2}
               dot={false}
               name="Avg score"
