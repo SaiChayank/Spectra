@@ -13,7 +13,7 @@ import SearchDrawer from "./SearchDrawer";
 import "./shell.css";
 
 /** Sidebar order (Account and Experimental are rendered separately). */
-const MAIN: Section[] = ["overview", "monitor", "incidents", "hosts", "traffic", "network", "models", "audit", "system"];
+const MAIN: Section[] = ["overview", "monitor", "captures", "incidents", "hosts", "traffic", "network", "models", "audit", "system"];
 
 /** Sections the server gates behind `investigate` (shown, but restricted). */
 const INVESTIGATE_ONLY: Section[] = ["incidents", "network", "audit"];

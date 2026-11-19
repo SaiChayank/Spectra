@@ -8,6 +8,7 @@ import { useCallback, useEffect, useState } from "react";
 export const SECTIONS = [
   "overview",
   "monitor",
+  "captures",
   "incidents",
   "hosts",
   "traffic",
@@ -24,6 +25,7 @@ export type Section = (typeof SECTIONS)[number];
 export const SECTION_LABELS: Record<Section, string> = {
   overview: "Overview",
   monitor: "Monitor",
+  captures: "Captures & model",
   incidents: "Alerts & Incidents",
   hosts: "Hosts",
   traffic: "Traffic",

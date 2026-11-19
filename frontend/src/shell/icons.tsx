@@ -23,6 +23,12 @@ export const NAV_ICONS: Record<string, ReactNode> = {
       <path d="M3 12h4l3-7 4 14 3-7h4" />
     </Icon>
   ),
+  captures: (
+    <Icon>
+      <path d="M12 3v12m0 0-4-4m4 4 4-4" />
+      <path d="M4 17v3h16v-3" />
+    </Icon>
+  ),
   incidents: (
     <Icon>
       <path d="M12 3 2 20h20Z" />

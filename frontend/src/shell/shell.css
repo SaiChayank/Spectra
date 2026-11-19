@@ -53,6 +53,7 @@
   background: var(--bg-0);
   border-right: 1px solid var(--line);
   overflow-y: auto;
+  overflow-x: hidden;
 }
 .sx-sidebar-head {
   padding: 2px 8px 10px;

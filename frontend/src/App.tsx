@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Landing from "./components/Landing";
 import { LoginScreen, type LoginNotice } from "./components/LoginPanel";
-import { Banner, SkewButton, StorageBanner, UntrainedBanner } from "./components/ui";
+import { Banner, SkewButton, SkewTabs, StorageBanner, UntrainedBanner } from "./components/ui";
 import {
   ApiError,
   NetworkError,
@@ -19,6 +19,8 @@ import Shell, { type LiveState } from "./shell/Shell";
 import { useConnection } from "./shell/useConnection";
 import AuditPage from "./pages/AuditPage";
 import AccountPage from "./pages/AccountPage";
+import AlertsPage from "./pages/AlertsPage";
+import CapturesPage from "./pages/CapturesPage";
 import HostsPage from "./pages/HostsPage";
 import IncidentDetailPage from "./pages/IncidentDetailPage";
 import IncidentsPage from "./pages/IncidentsPage";
@@ -73,11 +75,12 @@ export default function App() {
   }, []);
 
   const [connection, clearStorage] = useConnection();
+  const [incidentTab, setIncidentTab] = useState<"alerts" | "incidents">("alerts");
 
   // Promise chain (not async/await) so state is set in callbacks, not
   // synchronously in the polling effect.
   const refresh = useCallback(() => {
-    Promise.all([api.stats(), api.flows(60), api.detections(40), api.alerts(40)])
+    Promise.all([api.stats(), api.flows(60), api.detections(40), api.alerts(200)])
       .then(([stats, flowList, detList, alertList]) => {
         setSnapshot(stats);
         setFlows(flowList.items);
@@ -159,6 +162,17 @@ export default function App() {
     }
   };
 
+  // Alerts screen: errors go back to the drawer (409 conflicts are explained there)
+  const triageAlert = async (alertId: string, action: "acknowledge" | "resolve") => {
+    try {
+      const updated = await (action === "acknowledge" ? api.acknowledgeAlert(alertId) : api.resolveAlert(alertId));
+      setAlerts((prev) => prev.map((a) => (a.alert_id === alertId ? updated : a)));
+    } catch (err) {
+      refresh(); // show the alert's current state
+      throw err;
+    }
+  };
+
   const status = snapshot?.status;
   const live: LiveState = connected ? "live" : connection.offline ? "offline" : "reconnecting";
 
@@ -224,7 +238,7 @@ export default function App() {
         />
       ) : null}
       {snapshot && !snapshot.model.trained ? (
-        <UntrainedBanner canTrain={can("model:manage")} onTrain={() => navigate("#/models")} />
+        <UntrainedBanner canTrain={can("model:manage")} onTrain={() => navigate("#/captures")} />
       ) : null}
       {status?.error ? (
         <Banner tone="error" title="Capture error">
@@ -293,8 +307,25 @@ export default function App() {
         (incidentId != null ? (
           <IncidentDetailPage incidentId={incidentId} can={can} onError={setError} onNotice={setNotice} />
         ) : (
-          <IncidentsPage can={can} onError={setError} onNotice={setNotice} />
+          <div style={{ display: "grid", gap: 16 }}>
+            <SkewTabs
+              label="Alerts and incidents"
+              value={incidentTab}
+              onChange={setIncidentTab}
+              items={[
+                { id: "alerts", label: `Alerts${alerts.filter((a) => a.status === "OPEN").length ? ` · ${alerts.filter((a) => a.status === "OPEN").length} open` : ""}` },
+                { id: "incidents", label: "Incidents" },
+              ]}
+            />
+            {incidentTab === "alerts" ? (
+              <AlertsPage alerts={alerts} loading={snapshot === null} model={snapshot?.model} canTriage={canTriage} triage={triageAlert} />
+            ) : (
+              <IncidentsPage can={can} onError={setError} onNotice={setNotice} />
+            )}
+          </div>
         ))}
+
+      {section === "captures" && <CapturesPage can={can} capture={status} model={snapshot?.model} onChanged={refresh} />}
 
       {section === "hosts" && <HostsPage />}
 
