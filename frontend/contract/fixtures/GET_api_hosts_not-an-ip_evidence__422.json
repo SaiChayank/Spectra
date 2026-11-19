@@ -1,0 +1,15 @@
+{
+  "body": {
+    "detail": "host must be an IP address"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/hosts/not-an-ip/evidence",
+    "query": {}
+  },
+  "status": 422
+}

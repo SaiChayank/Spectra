@@ -1,0 +1,33 @@
+{
+  "body": {
+    "count": 1,
+    "items": [
+      {
+        "confidence": 1.0,
+        "evidence_count": 2,
+        "first_seen": 1700001100.536348,
+        "host": "10.0.0.7",
+        "last_seen": 1700001100.548779,
+        "rank": 1,
+        "top_evidence": {
+          "destination": "93.184.216.34:443",
+          "detector": "anomaly_model",
+          "strength": 1.0,
+          "technique": null
+        },
+        "verdict": null
+      }
+    ],
+    "offset": 0
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/hosts",
+    "query": {}
+  },
+  "status": 200
+}

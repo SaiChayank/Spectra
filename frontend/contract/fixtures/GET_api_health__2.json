@@ -2,7 +2,7 @@
   "body": {
     "database": "enabled",
     "ok": true,
-    "schema_version": 13,
+    "schema_version": 14,
     "service": "spectra",
     "uptime_s": 0.0,
     "version": "1.0.0",
