@@ -1,37 +1,82 @@
-/* Landing + login (design step 4). Tokens: src/styles/tokens.css. */
+/* Landing + login. Tokens: src/styles/tokens.css. Reference: Cyntra hero (composition only; all art is our own SVG). */
 
 /* -- outer frame: rounded panel with a glowing blue edge on a blue backdrop -- */
 .sx-landing-page {
   min-height: 100vh;
-  padding: clamp(6px, 1.6vw, 22px);
+  padding: clamp(6px, 1.4vw, 20px);
   background:
-    radial-gradient(1200px 700px at 0% 30%, rgba(70, 153, 245, 0.85), transparent 60%),
+    radial-gradient(1100px 800px at 0% 40%, rgba(70, 153, 245, 0.95), transparent 60%),
     radial-gradient(900px 600px at 100% 0%, rgba(26, 87, 187, 0.9), transparent 60%),
     linear-gradient(135deg, #15418a 0%, #1a57bb 45%, #0b2350 100%);
 }
 .sx-landing-frame {
   position: relative;
-  max-width: 1440px;
+  max-width: 1480px;
   margin: 0 auto;
   border-radius: var(--radius-frame);
   background: var(--bg-0);
   overflow: hidden;
   box-shadow:
-    0 0 0 1px rgba(149, 193, 240, 0.55),
-    0 0 40px rgba(70, 153, 245, 0.35),
+    0 0 0 1px rgba(149, 193, 240, 0.6),
+    0 0 46px rgba(70, 153, 245, 0.45),
     0 30px 80px rgba(0, 0, 0, 0.55);
 }
 
-/* -- header -------------------------------------------------------------------- */
-.sx-landing-head {
+/* -- hero: the scene keeps 1440:900 so the mark sits on the ledge at every width -- */
+.sx-hero {
   position: relative;
+  aspect-ratio: 1440 / 900;
+  min-height: 600px;
+  max-height: 100vh;
+  width: 100%;
+  isolation: isolate;
+  overflow: hidden;
+}
+.sx-scene {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+}
+.sx-scene-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+/* dot-matrix sky over the scene, fading out downward */
+.sx-scene::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.16) 1px, transparent 1.3px);
+  background-size: 11px 11px;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.5) 30%, transparent 55%);
+  mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.5) 30%, transparent 55%);
+  pointer-events: none;
+}
+.sx-scene-focal {
+  position: absolute;
+  left: 50%;
+  /* ledge is at 62.2 % of the scene height; the mark floats just above it */
+  top: 62.2%;
+  translate: -50% -100%;
+  margin-top: -10px;
+  z-index: 1;
+}
+
+.sx-landing-head {
+  position: absolute;
   z-index: 3;
+  top: 0;
+  left: 0;
+  right: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
-  padding: 22px clamp(16px, 4vw, 48px);
+  padding: 22px clamp(16px, 4vw, 52px);
 }
 .sx-landing-nav {
   display: flex;
@@ -43,92 +88,56 @@
   display: inline-flex;
   align-items: center;
   text-decoration: none;
+  height: 34px;
+  background: linear-gradient(180deg, rgba(40, 42, 48, 0.85), rgba(18, 19, 23, 0.85));
+  backdrop-filter: blur(6px);
 }
 
-/* -- hero -------------------------------------------------------------------------- */
-.sx-hero {
-  position: relative;
-  min-height: clamp(560px, 78vh, 760px);
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  isolation: isolate;
-}
-.sx-hero-sky {
-  position: absolute;
-  inset: 0;
-  z-index: -3;
-}
-.sx-hero-mist {
-  position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(60% 40% at 50% 30%, rgba(60, 64, 72, 0.35), transparent 70%),
-    radial-gradient(40% 30% at 20% 45%, rgba(40, 44, 52, 0.4), transparent 70%),
-    radial-gradient(40% 30% at 85% 40%, rgba(40, 44, 52, 0.35), transparent 70%),
-    radial-gradient(120% 80% at 50% 120%, #000 40%, transparent 70%);
-}
-.sx-hero-terrain {
+.sx-hero-copy {
   position: absolute;
   left: 0;
   right: 0;
-  top: 32%;
-  z-index: -2;
-  opacity: 0.95;
-}
-.sx-hero-focal {
-  position: absolute;
-  left: 50%;
-  top: 14%;
-  transform: translateX(-50%);
-  z-index: -1;
-}
-/* blue pool where the beam meets the ground (reference: glow at the waterfall's base) */
-.sx-hero::after {
-  content: "";
-  position: absolute;
-  z-index: -2;
-  left: 50%;
-  /* sits where the beam meets the terrain, above the copy: text never lies on the glow */
-  top: 34%;
-  width: min(560px, 70%);
-  height: 200px;
-  transform: translateX(-50%);
-  background:
-    radial-gradient(50% 30% at 50% 60%, rgba(70, 153, 245, 0.32), transparent 70%),
-    radial-gradient(18% 50% at 50% 40%, rgba(149, 193, 240, 0.18), transparent 70%);
-  filter: blur(6px);
-  pointer-events: none;
-}
-.sx-hero-copy {
+  bottom: 0;
+  z-index: 2;
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
   gap: 32px;
   flex-wrap: wrap;
-  padding: 0 clamp(16px, 4vw, 48px) clamp(28px, 5vw, 56px);
-  /* readable over the art: a dark floor behind the copy (no blur behind text) */
-  background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.7) 40%, #000 100%);
-  padding-top: 90px;
+  padding: 0 clamp(16px, 4vw, 52px) clamp(24px, 4vw, 48px);
 }
 .sx-hero-left {
   display: grid;
-  gap: 18px;
+  gap: 16px;
   flex: 1 1 520px;
   min-width: 0;
 }
-/* reference hero type is ~72 px at 1280 wide: three lines fit beside the right column */
 .sx-hero .sx-display {
-  font-size: clamp(34px, 5.4vw, 76px);
+  font-size: clamp(34px, 5.2vw, 74px);
+  font-weight: 300;
+  line-height: 1.02;
+  /* the headline crosses the light, as in the reference: a soft dark halo keeps it legible */
+  text-shadow:
+    0 2px 18px rgba(0, 0, 0, 0.85),
+    0 0 2px rgba(0, 0, 0, 0.9);
+}
+.sx-hero-line {
+  display: block;
+}
+/* gradient text is transparent: a text-shadow would show through it, so glow with a filter instead */
+.sx-hero .sx-gold {
+  text-shadow: none;
+  filter: drop-shadow(0 2px 14px rgba(0, 0, 0, 0.9));
 }
 .sx-hero-right {
   display: grid;
   gap: 18px;
   justify-items: end;
-  flex: 0 1 340px;
+  flex: 0 1 330px;
   text-align: right;
-  font-size: var(--fs-lead);
-  color: var(--text-2);
+  font-size: var(--fs-body);
+  color: #c9cbd1;
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.9);
 }
 .sx-hero-actions {
   display: flex;
@@ -140,80 +149,369 @@
   text-decoration: none;
 }
 
-/* -- sections ------------------------------------------------------------------------- */
-.sx-landing-section {
-  position: relative;
-  padding: clamp(40px, 6vw, 80px) clamp(16px, 4vw, 48px);
-  border-top: 1px solid var(--line);
+/* -- scene animation (off under reduced motion via tokens.css) -- */
+@keyframes sx-fall-k {
+  to {
+    stroke-dashoffset: -220;
+  }
 }
+.sx-fall {
+  animation: sx-fall-k linear infinite;
+}
+@keyframes sx-twinkle-k {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+.sx-twinkle {
+  animation: sx-twinkle-k ease-in-out infinite;
+}
+@keyframes sx-mist-k {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(40px);
+  }
+}
+.sx-mist {
+  animation: sx-mist-k 22s ease-in-out infinite;
+}
+.sx-mist-b {
+  animation-duration: 30s;
+  animation-direction: reverse;
+}
+
+/* -- module strip: skewed tiles sliding past (pauses on hover/focus) -- */
 .sx-capstrip {
+  position: relative;
   display: grid;
   gap: 18px;
   justify-items: center;
   text-align: center;
+  padding: 40px 0 48px;
+  background: radial-gradient(60% 100% at 50% 0%, rgba(26, 87, 187, 0.18), transparent 70%);
 }
 .sx-capstrip-title {
-  justify-content: center;
+  font: 500 var(--fs-caption) var(--font-sans);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--text-2);
 }
-.sx-capstrip-tiles {
+.sx-marquee {
+  width: 100%;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+}
+.sx-marquee-track {
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 6px 0;
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
+  gap: 12px;
+  width: max-content;
+  animation: sx-marquee-k 48s linear infinite;
 }
-/* logo-strip tiles, reused honestly: module name + maturity */
+.sx-marquee:hover .sx-marquee-track,
+.sx-marquee:focus-within .sx-marquee-track,
+.sx-marquee[data-still] .sx-marquee-track {
+  animation-play-state: paused;
+}
+.sx-marquee[data-still] .sx-marquee-track {
+  flex-wrap: wrap;
+  width: auto;
+  justify-content: center;
+}
+@keyframes sx-marquee-k {
+  to {
+    transform: translateX(calc(-50% - 6px));
+  }
+}
 .sx-captile {
-  --k: 12px;
+  --k: 16px;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  min-height: 46px;
-  padding: 8px calc(18px + var(--k));
+  gap: 12px;
+  min-height: 64px;
+  padding: 10px calc(26px + var(--k));
   clip-path: polygon(var(--k) 0, 100% 0, calc(100% - var(--k)) 100%, 0 100%);
-  background: linear-gradient(180deg, #15161a, #0c0d10);
+  background: linear-gradient(180deg, #17181d, #0b0c0f);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
     inset 0 0 0 1px var(--line);
   color: var(--text-1);
-  font-size: 13px;
+  font-size: 14px;
+  white-space: nowrap;
 }
 .sx-capstrip-note {
   max-width: 70ch;
+  padding: 0 16px;
 }
-.sx-feature-grid {
+
+/* -- sections -- */
+.sx-landing-section {
+  position: relative;
+  padding: clamp(48px, 6vw, 88px) clamp(16px, 4vw, 52px);
+}
+.sx-duo {
   display: grid;
   gap: 18px;
-  margin-top: 32px;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  margin-top: 36px;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
 }
-.sx-never {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
-  align-items: center;
-  gap: 32px;
+.sx-duo-card {
+  position: relative;
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  background: var(--surface-1);
+  overflow: hidden;
+  min-height: 300px;
+  transition:
+    border-color var(--t-hover) var(--ease),
+    box-shadow var(--t-hover) var(--ease),
+    transform var(--t-hover) var(--ease);
 }
-.sx-never-art {
+.sx-duo-card:hover {
+  border-color: rgba(93, 162, 247, 0.45);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(93, 162, 247, 0.2);
+  transform: translateY(-3px);
+}
+.sx-duo-art {
+  position: relative;
+  flex: 0 0 42%;
   display: grid;
   place-items: center;
-  max-width: 100%;
+  background:
+    radial-gradient(70% 60% at 50% 70%, rgba(42, 102, 204, 0.55), transparent 70%),
+    linear-gradient(180deg, #050a16, #0a1a3d);
+  border-right: 1px solid var(--line);
+}
+.sx-duo-art-glow {
+  position: absolute;
+  left: 20%;
+  right: 20%;
+  bottom: 14%;
+  height: 24px;
+  background: radial-gradient(ellipse, rgba(93, 162, 247, 0.7), transparent 70%);
+  filter: blur(6px);
+}
+.sx-duo-body {
+  display: grid;
+  align-content: start;
+  gap: 14px;
+  padding: 26px;
+}
+.sx-duo-title {
+  font-size: clamp(20px, 2vw, 26px) !important;
+  font-weight: 300 !important;
+  line-height: 1.15;
+}
+.sx-duo-stats {
+  display: flex;
+  gap: 36px;
+  margin: 10px 0 0;
+}
+.sx-duo-stats dt {
+  font: 500 10px var(--font-sans);
+  letter-spacing: var(--track-eyebrow);
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.sx-duo-stats dd {
+  margin: 4px 0 0;
+  color: var(--text-1);
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.sx-duo-card--glow {
+  flex-direction: column;
+  justify-content: space-between;
+  background:
+    radial-gradient(80% 70% at 100% 100%, rgba(42, 102, 204, 0.55), transparent 65%),
+    radial-gradient(60% 50% at 0% 0%, rgba(26, 87, 187, 0.25), transparent 70%),
+    var(--surface-1);
+}
+.sx-duo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 26px 26px;
+  padding: 12px 14px;
+  background: rgba(10, 11, 13, 0.85);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-s);
+  color: var(--text-1);
+  font-size: 13px;
+}
+.sx-grid-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.sx-six {
+  display: grid;
+  margin-top: 32px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+.sx-six-card {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+  min-height: 260px;
+  padding: 22px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, rgba(17, 18, 20, 0.9), rgba(10, 11, 13, 0.9));
+  transition:
+    background var(--t-hover) var(--ease),
+    box-shadow var(--t-hover) var(--ease);
+}
+.sx-six-card:hover {
+  background: linear-gradient(180deg, rgba(23, 24, 29, 1), rgba(14, 18, 28, 1));
+  box-shadow: inset 0 0 0 1px rgba(93, 162, 247, 0.35);
+  z-index: 1;
+}
+/* corner "+" marks on the grid joints */
+.sx-six-card::after {
+  content: "";
+  position: absolute;
+  right: -5px;
+  bottom: -5px;
+  width: 9px;
+  height: 9px;
+  background:
+    linear-gradient(var(--text-3), var(--text-3)) center / 1px 100% no-repeat,
+    linear-gradient(var(--text-3), var(--text-3)) center / 100% 1px no-repeat;
+  opacity: 0.8;
+}
+.sx-six-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 40px;
+}
+.sx-l-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-s);
+  color: var(--text-1);
+  background: rgba(255, 255, 255, 0.02);
+  flex: none;
+}
+.sx-six-card:hover .sx-l-icon {
+  color: var(--blue-300);
+  border-color: rgba(93, 162, 247, 0.5);
+}
+.sx-six-title {
+  font-size: 18px !important;
+  font-weight: 400 !important;
+}
+.sx-six-body {
+  color: var(--text-2);
+  font-size: 13px;
+}
+.sx-six-tags {
+  margin-top: auto !important;
+  padding-top: 8px;
+  font: 500 10px var(--font-sans);
+  letter-spacing: var(--track-eyebrow);
+  color: var(--text-3);
+}
+
+/* -- lens section -- */
+.sx-lens-section {
+  display: grid;
+  gap: 32px;
+  justify-items: center;
+}
+.sx-lens-frame {
+  position: relative;
+  width: 100%;
+  max-width: 1080px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
   overflow: hidden;
+}
+.sx-lens-frame::before,
+.sx-lens-frame::after {
+  content: "+";
+  position: absolute;
+  color: var(--text-3);
+  font-size: 14px;
+  line-height: 1;
+}
+.sx-lens-frame::before {
+  left: 8px;
+  top: 6px;
+}
+.sx-lens-frame::after {
+  right: 8px;
+  bottom: 6px;
+}
+.sx-lens {
+  display: block;
+  width: 100%;
+  height: clamp(220px, 32vw, 380px);
+}
+@keyframes sx-lens-k {
+  0%,
+  100% {
+    stroke-opacity: 0.25;
+  }
+  50% {
+    stroke-opacity: 0.85;
+  }
+}
+.sx-lens-line {
+  animation: sx-lens-k 6s ease-in-out infinite;
+}
+.sx-lens-callout {
+  position: absolute;
+  z-index: 1;
+  left: clamp(12px, 3vw, 28px);
+  top: clamp(12px, 3vw, 28px);
+  max-width: 340px;
+  display: grid;
+  gap: 8px;
+  padding: 14px 16px;
+  background: rgba(0, 0, 0, 0.82);
+  border: 1px solid var(--line-strong);
+  color: var(--text-1);
+  font-size: 13px;
 }
 .sx-never-copy {
   display: grid;
-  gap: 16px;
+  gap: 18px;
+  justify-items: center;
 }
 .sx-never-list {
   margin: 0;
   padding: 0;
   list-style: none;
-  display: grid;
-  gap: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px 28px;
 }
 .sx-never-list li {
-  padding-left: 18px;
+  padding-left: 16px;
   position: relative;
 }
 .sx-never-list li::before {
@@ -252,20 +550,11 @@
   justify-content: space-between;
   gap: 16px;
   flex-wrap: wrap;
-  padding: 28px clamp(16px, 4vw, 48px);
+  padding: 28px clamp(16px, 4vw, 52px);
   border-top: 1px solid var(--line);
 }
 
-/* -- entrance motion (fade + 8 px rise; off under reduced motion via tokens.css) ---------- */
-.sx-hero-left,
-.sx-hero-right {
-  animation: sx-rise 600ms var(--ease) both;
-}
-.sx-hero-right {
-  animation-delay: 120ms;
-}
-
-/* -- login ---------------------------------------------------------------------------------- */
+/* -- login ------------------------------------------------------------------------------- */
 .sx-login-page {
   position: relative;
   min-height: 100vh;
@@ -275,6 +564,10 @@
   background: var(--bg-0);
   overflow: hidden;
   isolation: isolate;
+}
+.sx-login-page > .sx-scene {
+  z-index: -1;
+  opacity: 0.85;
 }
 .sx-login-terrain {
   position: absolute;
@@ -292,7 +585,8 @@
   display: grid;
   gap: 16px;
   padding: 24px;
-  background: var(--glass);
+  background: rgba(10, 11, 13, 0.86);
+  backdrop-filter: blur(14px);
   border: 1px solid var(--line-strong);
   border-radius: var(--radius-m);
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
@@ -306,8 +600,21 @@
   justify-content: center;
 }
 
-/* -- narrow screens ---------------------------------------------------------------------------- */
+/* -- narrow screens -- */
+@media (max-width: 900px) {
+  .sx-duo {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sx-six {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 @media (max-width: 760px) {
+  .sx-hero {
+    aspect-ratio: auto;
+    min-height: 720px;
+    max-height: none;
+  }
   .sx-landing-head {
     padding: 16px;
   }
@@ -316,15 +623,8 @@
     width: 100%;
     justify-content: flex-start;
   }
-  .sx-hero {
-    min-height: 620px;
-  }
-  .sx-hero-focal {
-    top: 4%;
-    transform: translateX(-50%) scale(0.8);
-  }
-  .sx-hero-terrain {
-    top: 22%;
+  .sx-scene-focal {
+    top: 50%;
   }
   .sx-hero-right {
     justify-items: start;
@@ -333,7 +633,20 @@
   .sx-hero-actions {
     justify-content: flex-start;
   }
-  .sx-never {
+  .sx-duo-card {
+    flex-direction: column;
+  }
+  .sx-duo-art {
+    min-height: 200px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .sx-six {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .sx-lens-callout {
+    position: static;
+    max-width: none;
+    border-width: 0 0 1px;
   }
 }

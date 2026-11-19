@@ -111,12 +111,28 @@ Additional departures in this step:
 | Headline sentence: our own copy ("See the flow. Never the payload. Act on evidence.") | rule 2/4: Cyntra's copy is theirs |
 | Capability strip shows module name + REAL/LOCAL/SIMULATED/EXPERIMENTAL instead of partner logos | rule 2: real facts only |
 
+## Round 2: hero scene, landing sections, motion (2026-11-19)
+
+* Owner asked for the landing to match the first reference shot as closely as possible, and approved new dependencies. Added
+  `motion` 12.43 (MIT) for animation; `THIRD_PARTY_NOTICES.md` regenerated on Linux (WSL) and `--check` passes.
+* `src/components/HeroScene.tsx`: the hero is now a full drawn scene (no photo): misty sky with dot grid, jagged ridges by
+  deterministic midpoint displacement, a V-shaped chasm with blue-lit cliff texture, a lit ledge, a wide waterfall of animated light
+  streaks with a bright core, sparks, a pool glow and a vignette; layers drift with the pointer (spring parallax). The mark is a
+  faceted gem (`HeroMark`), floating in viewfinder brackets on the ledge. The login page uses the same scene as its backdrop.
+* Landing sections follow the other shots: a sliding module-maturity marquee (pauses on hover/focus), two large feature cards, a
+  six-card grid with eyebrow tags, icon squares, numbers and hashtags, and the "lens" section (lines converging through a ring) with
+  a callout box. Sections reveal on scroll.
+* Console: page transitions between sections, a sliding active indicator in the sidebar and in tab bars (`layoutId`), spring
+  entrances for drawers and dialogs, hover lift on cards and panels.
+* Every animation honours the OS reduce-motion setting (`MotionConfig reducedMotion="user"` plus the CSS switch in tokens.css).
+* Dev-only preview of the signed-out landing while signed in: `#/styleguide/landing`.
+
+Departure in this round: the headline now crosses the light as in the reference; a dark text halo keeps it legible, but where a
+glyph sits directly on the waterfall's bright core the local contrast is lower than AA. The core is a few pixels wide.
+
 ## Not done yet / known gaps
 
-* **`THIRD_PARTY_NOTICES.md`** is not regenerated: the generator resolves Python packages for the Linux container (it needs
-  `uvloop`), so it cannot run correctly on Windows. Until it is run on Linux or in CI, `gen_third_party_notices.py --check` will fail
-  because the two font packages are new production dependencies. The font CSS is also not in the built bundle yet, because nothing in
-  the production app imports the UI kit until step 3.
+* The main bundle is about 980 kB (285 kB gzip); route-level code splitting would bring the first load down.
 * **CSP check** of the built, backend-served bundle happens at checkpoint C3; the dev server sends no CSP.
 * Hover/focus/active are shown as forced states in the styleguide; live behaviour checked by keyboard and mouse at 1280 px; 390 px
   checked inside a 390 px frame (no horizontal page overflow) because phone emulation does not apply while the browser pane is hidden.

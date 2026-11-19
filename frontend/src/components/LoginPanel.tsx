@@ -2,16 +2,15 @@ import { useState, type FormEvent, type ReactNode } from "react";
 import { ApiError, api, type Identity } from "../lib/api";
 import {
   Banner,
-  DotGridBackground,
   Input,
   PasswordInput,
   SkewButton,
-  Terrain,
   Viewfinder,
   Wordmark,
   useCountdown,
   type BannerTone,
 } from "./ui";
+import HeroScene from "./HeroScene";
 import "./landing.css";
 
 export interface LoginNotice {
@@ -109,10 +108,7 @@ export default function LoginPanel({ onLogin }: Props) {
 export function LoginScreen({ onLogin, notice }: Props & { notice?: LoginNotice | null }) {
   return (
     <div className="sx sx-login-page">
-      <DotGridBackground opacity={0.09} pitch={11} fade="70%" />
-      <div className="sx-login-terrain" aria-hidden>
-        <Terrain height={220} />
-      </div>
+      <HeroScene />
       <div className="sx-login-col">
         {notice ? (
           <Banner tone={notice.tone} title={notice.title}>

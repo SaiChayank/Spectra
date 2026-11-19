@@ -1,3 +1,4 @@
+import { AnimatePresence, motion } from "motion/react";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { DotGridBackground, Drawer, RoleChip, SkewButton, SpectraMark, StatusPill, Wordmark, type Status } from "../components/ui";
 import type { CaptureStatus, Identity, ModelInfo } from "../lib/api";
@@ -55,12 +56,15 @@ function NavList({
   can,
   collapsed,
   onPick,
+  layoutGroup = "side",
 }: {
   section: Section;
   module: ExperimentalModule | null;
   can: (p: string) => boolean;
   collapsed: boolean;
   onPick?: () => void;
+  /** separate indicator per nav instance (sidebar vs. drawer) */
+  layoutGroup?: string;
 }) {
   const item = (id: Section, href: string, label: string, note?: string, current = section === id) => (
     <li key={href}>
@@ -71,6 +75,7 @@ function NavList({
         title={collapsed ? `${label}${note ? ` (${note})` : ""}` : undefined}
         onClick={onPick}
       >
+        {current ? <motion.span layoutId={`sx-nav-active-${layoutGroup}`} className="sx-nav-active" transition={{ type: "spring", stiffness: 420, damping: 36 }} /> : null}
         <span className="sx-nav-icon">{NAV_ICONS[id]}</span>
         <span className="sx-nav-label">{label}</span>
         {note && !collapsed ? <span className="sx-nav-note">{note}</span> : null}
@@ -214,12 +219,23 @@ export default function Shell({
 
         <main id="sx-main" className="sx-content" tabIndex={-1}>
           <DotGridBackground opacity={0.03} fade="40%" />
-          <div className="sx-content-inner">{children}</div>
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={`${section}/${module ?? ""}/${title}`}
+              className="sx-content-inner"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.22, ease: [0.2, 0.7, 0.2, 1] }}
+            >
+              {children}
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
 
       <Drawer open={menuOpen} onClose={() => setMenuOpen(false)} title="Spectra">
-        <NavList section={section} module={module} can={can} collapsed={false} onPick={() => setMenuOpen(false)} />
+        <NavList section={section} module={module} can={can} collapsed={false} onPick={() => setMenuOpen(false)} layoutGroup="drawer" />
       </Drawer>
       <SearchDrawer query={searched} onClose={() => setSearched(null)} />
     </div>

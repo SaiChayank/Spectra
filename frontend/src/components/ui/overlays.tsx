@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { SkewButton } from "./controls";
@@ -68,8 +69,18 @@ export function Modal({
   if (!open) return null;
   return (
     <Portal>
-      <div className="sx-scrim" onClick={onClose} />
-      <div ref={ref} className="sx-modal" role="dialog" aria-modal="true" aria-labelledby={id} tabIndex={-1}>
+      <motion.div className="sx-scrim" onClick={onClose} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} />
+      <motion.div
+        ref={ref}
+        className="sx-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={id}
+        tabIndex={-1}
+        initial={{ opacity: 0, scale: 0.96, x: "-50%", y: "-46%" }}
+        animate={{ opacity: 1, scale: 1, x: "-50%", y: "-50%" }}
+        transition={{ type: "spring", stiffness: 380, damping: 32 }}
+      >
         <div className="sx-overlay-head">
           <h2 id={id} style={{ fontSize: 20 }}>
             {title}
@@ -80,7 +91,7 @@ export function Modal({
         </div>
         {children}
         {actions ? <div className="sx-overlay-actions">{actions}</div> : null}
-      </div>
+      </motion.div>
     </Portal>
   );
 }
@@ -151,8 +162,18 @@ export function Drawer({
   if (!open) return null;
   return (
     <Portal>
-      <div className="sx-scrim" onClick={onClose} />
-      <aside ref={ref} className="sx-drawer" role="dialog" aria-modal="true" aria-labelledby={id} tabIndex={-1}>
+      <motion.div className="sx-scrim" onClick={onClose} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.2 }} />
+      <motion.aside
+        ref={ref}
+        className="sx-drawer"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={id}
+        tabIndex={-1}
+        initial={{ x: 48, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ type: "spring", stiffness: 340, damping: 34 }}
+      >
         <div className="sx-overlay-head">
           <h2 id={id} style={{ fontSize: 20 }}>
             {title}
@@ -162,7 +183,7 @@ export function Drawer({
           </button>
         </div>
         {children}
-      </aside>
+      </motion.aside>
     </Portal>
   );
 }

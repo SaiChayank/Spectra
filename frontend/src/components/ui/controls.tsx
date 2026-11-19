@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import { useId, useRef, useState, type ButtonHTMLAttributes, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from "react";
 
 /* -- SkewButton ------------------------------------------------------------- */
@@ -64,6 +65,7 @@ export function SkewTabs<T extends string>({
   label: string;
 }) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
+  const tabsId = useId();
   const enabled = items.filter((i) => !i.disabled);
   const move = (from: T, delta: number | "home" | "end") => {
     const at = enabled.findIndex((i) => i.id === from);
@@ -97,7 +99,10 @@ export function SkewTabs<T extends string>({
             }
           }}
         >
-          {item.label}
+          {item.id === value ? (
+            <motion.span layoutId={`sx-tab-active-${tabsId}`} className="sx-tab-active" transition={{ type: "spring", stiffness: 420, damping: 36 }} />
+          ) : null}
+          <span className="sx-tab-label">{item.label}</span>
         </button>
       ))}
     </div>

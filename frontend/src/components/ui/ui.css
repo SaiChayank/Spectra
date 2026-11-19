@@ -234,13 +234,25 @@
 .sx-tab:hover {
   background: var(--surface-3);
 }
-.sx-tab[aria-selected="true"],
-.sx-tab[aria-current="page"] {
-  /* reference active tab: dark blue tint (#0F1923) with a blue edge */
+.sx-tab {
+  position: relative;
+  isolation: isolate;
+}
+.sx-tab[aria-current="page"],
+.sx-tab-active {
+  /* reference active tab: dark blue tint (#0F1923) with a blue edge; slides between tabs */
   background: linear-gradient(180deg, rgba(42, 102, 204, 0.28) 0%, var(--tab-active-fill) 100%);
   box-shadow:
     inset 0 1px 0 rgba(93, 162, 247, 0.9),
     inset 0 0 0 1px var(--tab-active-edge);
+}
+.sx-tab-active {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+}
+.sx-tab-label {
+  position: relative;
 }
 .sx-tab:disabled {
   color: var(--text-3);
@@ -941,7 +953,6 @@
   inset: 0;
   z-index: 100;
   background: rgba(3, 4, 7, 0.72);
-  animation: sx-fade var(--t-enter) var(--ease);
 }
 @keyframes sx-fade {
   from {
@@ -953,7 +964,6 @@
   z-index: 101;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
   width: min(520px, calc(100vw - 32px));
   max-height: calc(100vh - 48px);
   overflow: auto;
@@ -975,7 +985,6 @@
   background: var(--surface-1);
   border-left: 1px solid var(--line-strong);
   box-shadow: -24px 0 64px rgba(0, 0, 0, 0.5);
-  animation: sx-slide var(--t-enter) var(--ease);
 }
 @keyframes sx-slide {
   from {
@@ -1126,4 +1135,19 @@
   height: 44px;
   border-radius: var(--radius-s);
   border: 1px solid var(--line-strong);
+}
+
+/* -- hover lift on cards (transform only; off under reduced motion) -- */
+.sx-card {
+  transition:
+    border-color var(--t-hover) var(--ease),
+    box-shadow var(--t-hover) var(--ease),
+    transform var(--t-hover) var(--ease);
+}
+.sx-card:hover {
+  border-color: rgba(93, 162, 247, 0.32);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+.sx-crosshair:hover {
+  transform: translateY(-2px);
 }

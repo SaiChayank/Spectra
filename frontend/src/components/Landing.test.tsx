@@ -1,7 +1,26 @@
 import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import capabilityExport from "../../contract/fixtures/GET_api_capabilities.json";
 import Landing from "./Landing";
+
+// jsdom has no IntersectionObserver (used by scroll-reveal); report everything as visible
+beforeEach(() => {
+  class IO {
+    cb: IntersectionObserverCallback;
+    constructor(cb: IntersectionObserverCallback) {
+      this.cb = cb;
+    }
+    observe(el: Element) {
+      this.cb([{ isIntersecting: true, target: el, intersectionRatio: 1 } as IntersectionObserverEntry], this as unknown as IntersectionObserver);
+    }
+    unobserve() {}
+    disconnect() {}
+    takeRecords() {
+      return [];
+    }
+  }
+  vi.stubGlobal("IntersectionObserver", IO);
+});
 
 afterEach(() => {
   cleanup();
@@ -20,7 +39,8 @@ describe("Landing", () => {
     render(<Landing />);
     const modules = Object.values(capabilityExport.body.modules) as { title: string; status: string }[];
     for (const m of modules) {
-      const tile = screen.getByText(m.title).closest("li")!;
+      // the strip repeats its tiles for a seamless marquee; the visible (first) copy carries the status
+      const tile = screen.getAllByText(m.title)[0].closest("li")!;
       expect(tile.textContent).toContain(m.status.replace("_", " "));
     }
   });

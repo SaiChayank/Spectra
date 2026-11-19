@@ -1,3 +1,4 @@
+import { MotionConfig } from "motion/react";
 import { StrictMode, type ComponentType } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
@@ -10,17 +11,25 @@ async function boot() {
     const { installMocks } = await import("./mock/install");
     installMocks();
   }
-  // Dev-only component gallery: `#/styleguide` (never in a build).
-  let Styleguide: ComponentType | null = null;
+  // Dev-only previews (never in a build): `#/styleguide` (component gallery)
+  // and `#/styleguide/landing` (the public landing while signed in).
+  let Preview: ComponentType | null = null;
   if (import.meta.env.DEV) {
-    const onGuide = window.location.hash === "#/styleguide";
-    if (onGuide) Styleguide = (await import("./pages/Styleguide")).default;
-    // entering or leaving the gallery swaps the whole tree: reload
+    const hash = window.location.hash;
+    const onPreview = hash.startsWith("#/styleguide");
+    if (hash === "#/styleguide") Preview = (await import("./pages/Styleguide")).default;
+    else if (hash === "#/styleguide/landing") Preview = (await import("./components/Landing")).default;
+    // entering, leaving or switching a preview swaps the whole tree: reload
     window.addEventListener("hashchange", () => {
-      if ((window.location.hash === "#/styleguide") !== onGuide) window.location.reload();
+      if (onPreview || window.location.hash.startsWith("#/styleguide")) window.location.reload();
     });
   }
-  createRoot(document.getElementById("root")!).render(<StrictMode>{Styleguide ? <Styleguide /> : <App />}</StrictMode>);
+  createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+      {/* every motion animation honours the OS "reduce motion" setting */}
+      <MotionConfig reducedMotion="user">{Preview ? <Preview /> : <App />}</MotionConfig>
+    </StrictMode>,
+  );
 }
 
 void boot();
