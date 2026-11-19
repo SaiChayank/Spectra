@@ -493,6 +493,61 @@
         "title": "HostVerdict",
         "type": "object"
       },
+      "Identity": {
+        "additionalProperties": true,
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "permissions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Permissions",
+            "type": "array"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "totp_enabled": {
+            "title": "Totp Enabled",
+            "type": "boolean"
+          },
+          "username": {
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "role",
+          "permissions",
+          "totp_enabled"
+        ],
+        "title": "Identity",
+        "type": "object"
+      },
+      "IdentityResponse": {
+        "additionalProperties": true,
+        "properties": {
+          "expires_at": {
+            "title": "Expires At",
+            "type": "number"
+          },
+          "user": {
+            "$ref": "#/components/schemas/Identity"
+          }
+        },
+        "required": [
+          "user",
+          "expires_at"
+        ],
+        "title": "IdentityResponse",
+        "type": "object"
+      },
       "IncidentAttach": {
         "properties": {
           "alert_ids": {
@@ -636,6 +691,20 @@
         "title": "LoginRequest",
         "type": "object"
       },
+      "OkResponse": {
+        "additionalProperties": true,
+        "properties": {
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok"
+        ],
+        "title": "OkResponse",
+        "type": "object"
+      },
       "PasswordChangeRequest": {
         "properties": {
           "current_password": {
@@ -668,6 +737,25 @@
           "new_password"
         ],
         "title": "PasswordChangeRequest",
+        "type": "object"
+      },
+      "PasswordChanged": {
+        "additionalProperties": true,
+        "properties": {
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "sign_in_required": {
+            "title": "Sign In Required",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok",
+          "sign_in_required"
+        ],
+        "title": "PasswordChanged",
         "type": "object"
       },
       "PlaybookRequest": {
@@ -1130,6 +1218,20 @@
         "title": "TotpDisableRequest",
         "type": "object"
       },
+      "TotpDisabled": {
+        "additionalProperties": true,
+        "properties": {
+          "totp_enabled": {
+            "title": "Totp Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "totp_enabled"
+        ],
+        "title": "TotpDisabled",
+        "type": "object"
+      },
       "TotpEnableRequest": {
         "properties": {
           "code": {
@@ -1143,6 +1245,71 @@
           "code"
         ],
         "title": "TotpEnableRequest",
+        "type": "object"
+      },
+      "TotpRecovery": {
+        "additionalProperties": true,
+        "properties": {
+          "recovery_codes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Recovery Codes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "recovery_codes"
+        ],
+        "title": "TotpRecovery",
+        "type": "object"
+      },
+      "TotpReset": {
+        "additionalProperties": true,
+        "properties": {
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "totp_enabled": {
+            "title": "Totp Enabled",
+            "type": "boolean"
+          },
+          "user_id": {
+            "title": "User Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "ok",
+          "user_id",
+          "totp_enabled"
+        ],
+        "title": "TotpReset",
+        "type": "object"
+      },
+      "TotpSetup": {
+        "additionalProperties": true,
+        "properties": {
+          "issuer": {
+            "title": "Issuer",
+            "type": "string"
+          },
+          "otpauth_uri": {
+            "title": "Otpauth Uri",
+            "type": "string"
+          },
+          "secret": {
+            "title": "Secret",
+            "type": "string"
+          }
+        },
+        "required": [
+          "secret",
+          "issuer",
+          "otpauth_uri"
+        ],
+        "title": "TotpSetup",
         "type": "object"
       },
       "TotpSetupRequest": {
@@ -1193,6 +1360,51 @@
         "title": "TrainRequest",
         "type": "object"
       },
+      "User": {
+        "additionalProperties": true,
+        "properties": {
+          "created_at": {
+            "title": "Created At",
+            "type": "number"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "last_login_at": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Login At"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "updated_at": {
+            "title": "Updated At",
+            "type": "number"
+          },
+          "username": {
+            "title": "Username",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "role",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "User",
+        "type": "object"
+      },
       "UserCreate": {
         "properties": {
           "password": {
@@ -1219,6 +1431,47 @@
           "role"
         ],
         "title": "UserCreate",
+        "type": "object"
+      },
+      "UserDeleted": {
+        "additionalProperties": true,
+        "properties": {
+          "deleted": {
+            "title": "Deleted",
+            "type": "integer"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ok",
+          "deleted"
+        ],
+        "title": "UserDeleted",
+        "type": "object"
+      },
+      "UserList": {
+        "additionalProperties": true,
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/User"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "count",
+          "items"
+        ],
+        "title": "UserList",
         "type": "object"
       },
       "UserUpdate": {
@@ -2092,9 +2345,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Auth Login Api Auth Login Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/IdentityResponse"
                 }
               }
             },
@@ -2123,9 +2374,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Auth Logout Api Auth Logout Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/OkResponse"
                 }
               }
             },
@@ -2144,9 +2393,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Auth Me Api Auth Me Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/IdentityResponse"
                 }
               }
             },
@@ -2175,9 +2422,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Auth Password Api Auth Password Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/PasswordChanged"
                 }
               }
             },
@@ -2216,9 +2461,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Totp Disable Api Auth Totp Disable Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/TotpDisabled"
                 }
               }
             },
@@ -2257,9 +2500,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Totp Enable Api Auth Totp Enable Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/TotpRecovery"
                 }
               }
             },
@@ -2298,9 +2539,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Totp Setup Api Auth Totp Setup Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/TotpSetup"
                 }
               }
             },
@@ -6001,9 +6240,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Users List Api Users Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/UserList"
                 }
               }
             },
@@ -6030,9 +6267,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Users Create Api Users Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/User"
                 }
               }
             },
@@ -6072,9 +6307,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Users Delete Api Users  User Id  Delete",
-                  "type": "object"
+                  "$ref": "#/components/schemas/UserDeleted"
                 }
               }
             },
@@ -6111,9 +6344,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Users Get Api Users  User Id  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/User"
                 }
               }
             },
@@ -6161,9 +6392,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Users Update Api Users  User Id  Patch",
-                  "type": "object"
+                  "$ref": "#/components/schemas/User"
                 }
               }
             },
@@ -6203,9 +6432,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Users Totp Reset Api Users  User Id  Totp Delete",
-                  "type": "object"
+                  "$ref": "#/components/schemas/TotpReset"
                 }
               }
             },
