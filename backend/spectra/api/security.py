@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import hmac
 from collections.abc import Mapping
+from urllib.parse import urlsplit
 
 from fastapi import HTTPException, Request, Response
 from fastapi.responses import JSONResponse
@@ -48,6 +49,42 @@ PUBLIC_ROUTES: frozenset[tuple[str, str]] = frozenset({
 #: FastAPI's own schema/doc surfaces (static descriptions, no data) and the
 #: non-API paths that should keep answering 404 rather than 401.
 _PUBLIC_PREFIXES = ("/docs", "/redoc", "/openapi.json", "/favicon.ico")
+
+#: Methods that change state; these get the browser-origin check below.
+_UNSAFE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
+
+
+def origin_allowed(origin: str, host: str | None) -> bool:
+    """True when a browser request from ``origin`` may act on this API.
+
+    Allowed: the configured dashboard origins (``SPECTRA_CORS_ORIGINS``) and
+    the API's own host (same-origin, e.g. the dashboard served by
+    ``spectra serve``). Anything else, ``null`` included, is refused.
+    """
+    if origin in engine.config.cors_origins:
+        return True
+    try:
+        netloc = urlsplit(origin).netloc
+    except ValueError:  # pragma: no cover - urlsplit is tolerant
+        return False
+    return bool(host) and bool(netloc) and netloc == host
+
+
+def _foreign_origin(request: Request) -> bool:
+    """CSRF check for state-changing requests (see :func:`auth_gate`).
+
+    SameSite=Lax keeps the session cookie off cross-*site* requests, but other
+    ports on the same host and sibling subdomains are the *same site*, and an
+    HTML form POST there needs no CORS preflight. Browsers always send
+    ``Origin`` on such a POST, so a foreign one is refused. Requests without
+    ``Origin`` (curl, scripts, the CLI) cannot be a forged browser form and
+    pass unchanged.
+    """
+    if request.method not in _UNSAFE_METHODS:
+        return False
+    origin = request.headers.get("origin")
+    return origin is not None and not origin_allowed(
+        origin, request.headers.get("host"))
 
 
 def token_from_request(request: Request) -> str | None:
@@ -168,6 +205,9 @@ async def auth_gate(request: Request, call_next):
     if request.method == "OPTIONS":
         return await call_next(request)  # CORS preflight carries no session
     path = request.url.path
+    if path.startswith("/api/") and _foreign_origin(request):
+        # before the public-route branch: login CSRF is refused too
+        return _no_store(_error_response(403, "cross-origin request refused"), path)
     if path.startswith(_PUBLIC_PREFIXES) or \
             (request.method, path) in PUBLIC_ROUTES:
         return _no_store(await call_next(request), path)
