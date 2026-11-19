@@ -149,7 +149,7 @@ export function Terrain({ height = 180 }: { height?: number }) {
 }
 
 /** Hero focal: the mark in viewfinder brackets with the flow beam rising into it. */
-export function HeroFocal({ children }: { children?: ReactNode }) {
+export function HeroFocal({ children, beam = 240 }: { children?: ReactNode; beam?: number }) {
   return (
     <div style={{ display: "grid", justifyItems: "center" }}>
       <Viewfinder size={18} padding={18}>
@@ -157,7 +157,7 @@ export function HeroFocal({ children }: { children?: ReactNode }) {
           <SpectraMark size={72} />
         </div>
       </Viewfinder>
-      <LightBeam />
+      <LightBeam height={beam} />
       {children}
     </div>
   );

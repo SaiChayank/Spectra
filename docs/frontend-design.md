@@ -87,6 +87,30 @@ viewfinder brackets. Motion: 200 ms hovers, 500 ms entrances, everything off und
   restyled in steps 5–7. Hosts is a "planned" page; Account shows the profile until step 5.
 * Mock: the switcher is now bottom-left, with a "Demo data, no trained model" scenario.
 
+## Step 4: landing and login (2026-11-19)
+
+* `src/components/Landing.tsx`: framed panel on the blue backdrop; header with the wordmark, skewed nav (Overview, How it works,
+  Modules, Limitations, Docs) and Sign in; hero with the dot-grid sky, mist, terrain, the mark in viewfinder brackets and the flow
+  beam, the light caps headline "See the flow. / Never the payload. / Act on **evidence**." (gold on the last word), right-aligned copy
+  and "⚡ Sign in" / "How it works ↗"; capability strip; four numbered crosshair cards; "What it never does" with the signal field;
+  an honest detector-status card citing evaluation report §14 and §20; footer.
+* The landing makes **no API calls** (every route but `/api/health` needs a session). The capability strip reads only module title
+  and maturity from the generated contract export at build time; those are fixed in backend `capabilities.py` and the contract
+  drift check fails CI if they change without a re-export.
+* `src/components/LoginPanel.tsx`: glass card inside viewfinder brackets over the hero backdrop; username, password with reveal,
+  optional authenticator/recovery code; a 429 disables the form and counts down from `Retry-After`; "Your session ended" and "Sign in
+  to continue" notices come from the shell's 401/deep-link handling.
+* Docs and Limitations links point at the GitHub repository; if the repository is private, signed-out visitors cannot open them.
+
+Additional departures in this step:
+
+| Departure | Reason |
+|---|---|
+| The beam fades out behind the headline instead of running through it as the reference waterfall does | accessibility: white text on the beam's light blue would be about 1.9:1 |
+| The glow pool sits where the beam meets the terrain, above the copy, not under the text | accessibility: no text on a glow |
+| Headline sentence: our own copy ("See the flow. Never the payload. Act on evidence.") | rule 2/4: Cyntra's copy is theirs |
+| Capability strip shows module name + REAL/LOCAL/SIMULATED/EXPERIMENTAL instead of partner logos | rule 2: real facts only |
+
 ## Not done yet / known gaps
 
 * **`THIRD_PARTY_NOTICES.md`** is not regenerated: the generator resolves Python packages for the Linux container (it needs

@@ -31,6 +31,27 @@ describe("LoginPanel", () => {
     expect(onLogin).not.toHaveBeenCalled();
   });
 
+  it("disables sign-in and counts down from Retry-After on 429", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(JSON.stringify({ detail: "too many failed login attempts" }), {
+          status: 429,
+          headers: { "Content-Type": "application/json", "Retry-After": "2" },
+        }),
+      ),
+    );
+    render(<LoginPanel onLogin={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText("Username"), { target: { value: "alice" } });
+    fireEvent.change(screen.getByLabelText("Password"), { target: { value: "x" } });
+    fireEvent.click(screen.getByRole("button", { name: "Sign in" }));
+
+    expect(await screen.findByText(/Too many failed sign-in attempts\. Try again in 2 s\./)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Sign in" })).toBeDisabled();
+    // the countdown ends and the form is usable again
+    await vi.waitFor(() => expect(screen.getByRole("button", { name: "Sign in" })).not.toBeDisabled(), { timeout: 4000 });
+  });
+
   it("sends the authenticator code in the same request, only when typed", async () => {
     const identity = { user: { id: 1, username: "alice", role: "ADMIN", permissions: [] }, expires_at: 1 };
     const fetchMock = vi.fn().mockImplementation(() =>

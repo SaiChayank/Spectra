@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import Landing from "./components/Landing";
-import LoginPanel from "./components/LoginPanel";
+import { LoginScreen } from "./components/LoginPanel";
 import { Banner, Card, KeyValue, RoleChip, SkewButton, StorageBanner, UntrainedBanner } from "./components/ui";
 import {
   ApiError,
@@ -182,23 +182,18 @@ export default function App() {
       setReturnTo(null);
       navigate(pending ?? "#/overview");
     };
+    if (route.kind !== "login" && !deepLink) return <Landing />;
     return (
-      <div className="app">
-        {route.kind === "login" || deepLink ? (
-          <div className="sx" style={{ background: "transparent", display: "grid", gap: 16 }}>
-            {sessionEnded ? (
-              <Banner tone="warn" title="Your session ended">
-                Sign in again to continue{pending ? " where you left off" : ""}.
-              </Banner>
-            ) : deepLink ? (
-              <Banner title="Sign in to continue">That page needs a signed-in user.</Banner>
-            ) : null}
-            <LoginPanel onLogin={finishLogin} />
-          </div>
-        ) : (
-          <Landing />
-        )}
-      </div>
+      <LoginScreen
+        onLogin={finishLogin}
+        notice={
+          sessionEnded
+            ? { tone: "warn", title: "Your session ended", body: `Sign in again to continue${pending ? " where you left off" : ""}.` }
+            : deepLink
+              ? { tone: "info", title: "Sign in to continue", body: "That page needs a signed-in user." }
+              : null
+        }
+      />
     );
   }
 
