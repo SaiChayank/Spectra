@@ -604,8 +604,19 @@ def generate(out: Path) -> dict:
     files: dict[str, str] = {"openapi.json": dumps(openapi)}
     counts: dict[str, int] = {}
     seen: dict[str, int] = {}
+    def zero_numbers(v):       # every counter at any depth (pipeline queues included): the snapshot timing is a race
+        if isinstance(v, dict):
+            return {k: zero_numbers(x) for k, x in v.items()}
+        if isinstance(v, list):
+            return [zero_numbers(x) for x in v]
+        return 0 if isinstance(v, (int, float)) and not isinstance(v, bool) else v
+
     for it in rec.items:
         item = {k: v for k, v in it.items() if not k.startswith("_")}
+        if item["request"]["path"] == "/api/history/events" and isinstance(item["body"], dict):
+            for ev in item["body"].get("items", []):   # stored status snapshots: same race as the WebSocket ones
+                if ev.get("type") == "status" and isinstance(ev.get("data"), dict):
+                    ev["data"] = zero_numbers(ev["data"])
         norm.start_record()
         if item["request"]["path"] == "/api/interfaces" and isinstance(item["body"], dict):
             # host-specific (names, addresses, MACs of the machine running the export): replace with fixed examples
@@ -625,13 +636,6 @@ def generate(out: Path) -> dict:
         files["fixtures/" + name] = dumps(item)
         key = str(item["status"])
         counts[key] = counts.get(key, 0) + 1
-    def zero_numbers(v):       # every counter at any depth (pipeline queues included): the snapshot timing is a race
-        if isinstance(v, dict):
-            return {k: zero_numbers(x) for k, x in v.items()}
-        if isinstance(v, list):
-            return [zero_numbers(x) for x in v]
-        return 0 if isinstance(v, (int, float)) and not isinstance(v, bool) else v
-
     for m in rec.ws:           # status snapshots are taken mid-processing: their counters are a race, zero them
         if m.get("type") == "status" and isinstance(m.get("data"), dict):
             m["data"] = zero_numbers(m["data"])
