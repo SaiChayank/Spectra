@@ -46,7 +46,7 @@ from ..auth import (
 )
 from ..authz import ADMIN, ROLES, permissions_for
 from ..config import Config, get_config
-from ..store import Store, StoreError
+from ..store import Store, StoreError, StoreUnavailable
 
 log = logging.getLogger("spectra.auth")
 
@@ -510,7 +510,10 @@ class AuthService:
             self.store.delete_session(token_hash)
             return None
         if now - float(row["last_seen_at"]) > _TOUCH_INTERVAL:
-            self.store.touch_session(token_hash, now)
+            try:  # best-effort: a locked/full DB must not turn a read into a failure
+                self.store.touch_session(token_hash, now)
+            except StoreUnavailable:
+                log.warning("session touch skipped: storage unavailable")
         return {
             "user_id": user["id"],
             "username": user["username"],

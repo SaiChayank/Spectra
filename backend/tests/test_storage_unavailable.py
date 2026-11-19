@@ -44,6 +44,22 @@ def test_locked_database_write_returns_503_reads_and_health_work(client):
     assert res.status_code == 200, res.text                  # recovers, no restart
 
 
+def test_locked_database_read_with_stale_session_still_works(client, monkeypatch):
+    """A read whose session is due a last-seen touch must not fail while the DB is locked."""
+    import spectra.services.auth as auth_service
+    monkeypatch.setattr(auth_service, "_TOUCH_INTERVAL", -1.0)   # every request touches the session
+    db = engine.store._db
+    db.conn.execute("PRAGMA busy_timeout=100")
+    other = sqlite3.connect(engine.config.db_path, timeout=1, isolation_level=None)
+    other.execute("BEGIN EXCLUSIVE")
+    try:
+        assert client.get("/api/stats").status_code == 200
+    finally:
+        other.execute("ROLLBACK")
+        other.close()
+        db.conn.execute("PRAGMA busy_timeout=5000")
+
+
 def test_disk_full_login_returns_503(raw_client, monkeypatch):
     real = Database.execute
 
