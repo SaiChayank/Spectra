@@ -86,7 +86,7 @@ def _host(host: str) -> str:
     try:
         return str(ipaddress.ip_address(host))
     except ValueError:
-        raise HTTPException(status_code=422, detail="host must be an IP address")
+        raise HTTPException(status_code=422, detail="host must be an IP address") from None
 
 
 @router.get("/api/hosts", response_model=HostList)
@@ -107,7 +107,7 @@ def hosts_evidence(host: str) -> dict:
     try:
         return engine.hosts.evidence(_host(host))
     except HostNotFound:
-        raise HTTPException(status_code=404, detail="no evidence for host")
+        raise HTTPException(status_code=404, detail="no evidence for host") from None
 
 
 @router.post("/api/hosts/{host}/verdict", response_model=StoredVerdict)
@@ -121,7 +121,7 @@ def hosts_verdict(
         stored = engine.hosts.set_verdict(host, body.verdict, body.note,
                                           principal["username"])
     except HostNotFound:
-        raise HTTPException(status_code=404, detail="no evidence for host")
+        raise HTTPException(status_code=404, detail="no evidence for host") from None
     engine.audit_service.append(
         "host.verdict", {"host": host, "verdict": body.verdict},
         actor=principal["username"])

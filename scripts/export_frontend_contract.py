@@ -276,6 +276,7 @@ def run_scenario(work: Path, rec: Recorder, app, engine, TestClient) -> None:
     rec.call(anon, "GET", "/api/health")
     rec.call(anon, "GET", "/api/auth/me", variant="401", expect=401)
     rec.call(anon, "GET", "/api/alerts", variant="401", expect=401)
+    rec.call(anon, "GET", "/api/hosts", variant="401", expect=401)
     rec.call(anon, "POST", "/api/auth/login", variant="422", json_body={"username": ""}, expect=422)
     login(anon, ADMIN_USER, "wrong-password-fake", variant="401_bad_password")
     login(admin, ADMIN_USER, ADMIN_PW, expect=200)
@@ -375,6 +376,9 @@ def run_scenario(work: Path, rec: Recorder, app, engine, TestClient) -> None:
     ids["model_id"] = active
     QUERY["/api/model/registry/compare"] = {"a": active, "b": other}
     ids["name"] = None
+    hosts = admin.get("/api/hosts?limit=5").json()["items"]
+    assert hosts, "expected >=1 internal host with evidence from the demo alerts"
+    host = ids["host"] = hosts[0]["host"]
 
     # -- read every GET route (ids that exist) -------------------------------------------------------------
     spec = app.openapi()
@@ -395,6 +399,16 @@ def run_scenario(work: Path, rec: Recorder, app, engine, TestClient) -> None:
         else:
             rec.call(admin, "GET", real, query=QUERY.get(path))
     rec.call(admin, "GET", "/api/alerts", variant="filtered", query={"status": "OPEN", "limit": 2})
+
+    # -- host triage v0 (aggregation of alert evidence per internal host) --------------------------------------------
+    rec.call(admin, "GET", "/api/hosts", variant="last_seen", query={"sort": "last_seen", "limit": 2}, expect=200)
+    rec.call(admin, "GET", "/api/hosts", variant="422_bad_sort", query={"sort": "nope"}, expect=422)
+    rec.call(admin, "GET", "/api/hosts/203.0.113.250/evidence", variant="404", expect=404)
+    rec.call(admin, "GET", "/api/hosts/not-an-ip/evidence", variant="422", expect=422)
+    rec.call(admin, "POST", f"/api/hosts/{host}/verdict", json_body={"verdict": "expected", "note": "known scanner"},
+             expect=200)
+    rec.call(admin, "POST", f"/api/hosts/{host}/verdict", variant="422_bad_verdict", json_body={"verdict": "maybe"},
+             expect=422)
     rec.call(admin, "GET", "/api/flows", variant="limit_2", query={"limit": 2})
     rec.call(admin, "GET", "/api/flows", variant="422_bad_limit", query={"limit": "abc"}, expect=422)
 
@@ -426,6 +440,8 @@ def run_scenario(work: Path, rec: Recorder, app, engine, TestClient) -> None:
     rec.call(viewer, "POST", "/api/users", variant="403_viewer", expect=403,
              json_body={"username": "contract-nope", "password": "contract-fake-pw-9", "role": "VIEWER"})
     rec.call(viewer, "POST", f"/api/alerts/{alert_ids[0]}/acknowledge", variant="403_viewer", expect=403)
+    rec.call(viewer, "POST", f"/api/hosts/{host}/verdict", variant="403_viewer", json_body={"verdict": "true"},
+             expect=403)
     rec.call(viewer, "PATCH", f"/api/users/{uid[VIEWER[0]]}", variant="403_viewer_own_password",
              json_body={"password": PW_NEW}, expect=403)
     analyst = TestClient(app)

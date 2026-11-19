@@ -1,0 +1,15 @@
+{
+  "body": {
+    "detail": "no evidence for host"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/hosts/203.0.113.250/evidence",
+    "query": {}
+  },
+  "status": 404
+}

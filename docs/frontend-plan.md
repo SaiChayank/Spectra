@@ -102,7 +102,7 @@ Each item lists the real endpoints. **P0** is needed for a first usable release,
 
 ### P1-1 Host-centric triage (new; needs backend work, mock it)
 The detection plan (`docs/35_threat_engine_plan.md` §7, P2) moves the alert unit from a flow to a **host**: "10.0.4.17 looks compromised
-because A, B, C". Build the screen now against a PROPOSED contract (§6): a ranked host list with confidence, per-host evidence
+because A, B, C". The backend v0 now exists (§6; fixtures in `frontend/contract`): a ranked host list with confidence, per-host evidence
 timeline (which detector, when, which destination), and one-click analyst verdict *true / expected (benign but known) / false*. The
 verdicts will feed per-site learning (plan E6), so they must be quick to give.
 
@@ -134,9 +134,7 @@ Known proposals to start with (shapes are yours to draft; nothing here exists ye
 | Need | Proposed endpoint | Notes |
 |---|---|---|
 | ~~Change own password~~ | `POST /api/auth/password` | **implemented** (see §5 P0-1); current + new password; any signed-in user; revokes all sessions; audited |
-| Host triage list | `GET /api/hosts?sort=risk` | rank, host, confidence, top evidence, last seen |
-| Host evidence | `GET /api/hosts/{host}/evidence` | detector, technique, time, destination, strength, flow ids |
-| Analyst verdict | `POST /api/hosts/{host}/verdict` | `true` / `expected` / `false`, optional note; audited |
+| ~~Host triage~~ | `GET /api/hosts`, `GET /api/hosts/{host}/evidence`, `POST /api/hosts/{host}/verdict` | **implemented as v0** (see §5 P1-1): an aggregation of existing alert evidence per internal source host (internal = `beaconing_internal_nets`, RFC1918/ULA by default), not fusion (E4). `confidence` = highest per-alert strength = max(classifier confidence, anomaly percentile / 100), 0-1, **not calibrated**. `technique` is always null (no ATT&CK mapping yet). Verdict needs `incidents:manage` (same as acknowledge/resolve), is append-only (latest wins), audited, and **not yet used for suppression** (E6) |
 | Per-site allow-list view | `GET /api/allowlist` | periodic services learned or entered; read-only at first |
 | Typed responses | response models on existing routes | backend work, so the generated types become trustworthy |
 

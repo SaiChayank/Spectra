@@ -1,0 +1,17 @@
+{
+  "body": {
+    "detail": "role VIEWER lacks the 'incidents:manage' permission"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": {
+      "verdict": "true"
+    },
+    "method": "POST",
+    "path": "/api/hosts/10.0.0.7/verdict",
+    "query": {}
+  },
+  "status": 403
+}

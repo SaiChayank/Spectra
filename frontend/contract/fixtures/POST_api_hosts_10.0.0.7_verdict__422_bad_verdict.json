@@ -1,0 +1,29 @@
+{
+  "body": {
+    "detail": [
+      {
+        "ctx": {
+          "expected": "'true', 'expected' or 'false'"
+        },
+        "loc": [
+          "body",
+          "verdict"
+        ],
+        "msg": "Input should be 'true', 'expected' or 'false'",
+        "type": "literal_error"
+      }
+    ]
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": {
+      "verdict": "maybe"
+    },
+    "method": "POST",
+    "path": "/api/hosts/10.0.0.7/verdict",
+    "query": {}
+  },
+  "status": 422
+}

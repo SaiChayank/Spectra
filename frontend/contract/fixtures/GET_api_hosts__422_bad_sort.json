@@ -1,0 +1,29 @@
+{
+  "body": {
+    "detail": [
+      {
+        "ctx": {
+          "expected": "'risk' or 'last_seen'"
+        },
+        "loc": [
+          "query",
+          "sort"
+        ],
+        "msg": "Input should be 'risk' or 'last_seen'",
+        "type": "literal_error"
+      }
+    ]
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/hosts",
+    "query": {
+      "sort": "nope"
+    }
+  },
+  "status": 422
+}
