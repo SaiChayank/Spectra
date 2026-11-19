@@ -141,7 +141,8 @@ class Normaliser:
     ISO_RE = re.compile(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)?")
     STABLE_HEX_KEYS = {"ja3"}            # fingerprints of the synthetic captures: stable, keep as recorded
     ZERO_KEYS = {"max_depth", "commits", "flushes", "write_samples", "cumulative", "loaded_at",
-                 "response_histogram", }
+                 "response_histogram",
+                 "snn_score", }   # spike-count score: one spike flips on a different CPU (CI 3.11: 63.41 vs 65.85)
     IMMUNE = {"danger_total": 0.0, "level": 0, "response": "ignore"}
 
     def __init__(self, start: float, paths: dict[str, str], id_order: list[str]):

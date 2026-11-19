@@ -23,7 +23,7 @@ without the contract being regenerated and committed.
 Passwords, TOTP secrets, otpauth URIs and recovery codes are `<redacted>`; session cookies appear only as cookie names;
 absolute paths are `<DATA_DIR>`; wall-clock timestamps become `1800000000` plus whole hours since the run start (expiry = +43200);
 random ids (`alrt_*`, `mdl_*`, `cap_*`) and digests/keys/signatures get deterministic stand-ins of the same length; timings
-(`*_ms`), queue depths, DB counters and the immune-system level/response are constants; host interfaces are fixed examples.
+(`*_ms`), queue depths, DB counters, `snn_score` (CPU-sensitive) and the immune-system level/response are constants; host interfaces are fixed examples.
 Treat these as shape examples, not real measurements. Synthetic capture timestamps (2023) are as recorded.
 
 ## Not recorded
