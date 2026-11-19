@@ -24,6 +24,7 @@ Redaction and normalisation (so a re-run is byte-identical and nothing sensitive
 from __future__ import annotations
 
 import argparse
+import difflib
 import hashlib
 import json
 import os
@@ -659,6 +660,9 @@ def main() -> int:
             print(f"contract is stale ({len(diff)} file(s) differ; fresh copy in {tmp}); run: python scripts/export_frontend_contract.py")
             for k in diff[:30]:
                 print("  ", k, "(missing)" if k not in old else "(removed)" if k not in new else "(changed)")
+            for k in [k for k in diff if k in old and k in new][:3]:   # show what changed, so a CI-only failure is diagnosable
+                print("".join(list(difflib.unified_diff(old[k].decode().splitlines(True), new[k].decode().splitlines(True),
+                                                       k, k + " (fresh)", n=2))[:60]))
             return 1
         print(f"contract up to date ({summary['files']} files)")
         return 0
