@@ -17,6 +17,7 @@ import { EXPERIMENTAL_LABELS, SECTION_LABELS, useRoute, type Section } from "./l
 import { useEvents } from "./lib/useEvents";
 import Shell, { type LiveState } from "./shell/Shell";
 import { useConnection } from "./shell/useConnection";
+import { startPage, startupSession } from "./lib/session";
 import AlertsPage from "./pages/AlertsPage";
 import CapturesPage from "./pages/CapturesPage";
 
@@ -50,14 +51,19 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
-  // Restore the session from the HttpOnly cookie on load; any failure means
-  // "not signed in" — the landing page / login form take over.
+  // A new tab or window starts signed out on the landing page: any leftover
+  // session cookie is ended first. A reload in the same tab restores the
+  // session from the HttpOnly cookie instead.
   useEffect(() => {
-    api
-      .me()
-      .then((id) => setIdentity(id))
-      .catch(() => setIdentity(null))
-      .finally(() => setAuthChecked(true));
+    let live = true;
+    startupSession().then((id) => {
+      if (!live) return;
+      setIdentity(id);
+      setAuthChecked(true);
+    });
+    return () => {
+      live = false;
+    };
   }, []);
 
   // A 401 anywhere in the app ends the session: go to sign-in with a message,
@@ -197,7 +203,7 @@ export default function App() {
       setLoginNotice(null);
       setIdentity(next);
       setReturnTo(null);
-      navigate(pending ?? "#/overview");
+      navigate(pending ?? startPage(next));
     };
     if (route.kind !== "login" && !deepLink) return <Landing />;
     return (
@@ -211,7 +217,11 @@ export default function App() {
     );
   }
 
-  // -- signed in: console routes (any other hash lands on Overview) ----------
+  // -- signed in: the landing stays at #/ (with "Open console"); #/login goes to the start page
+  if (route.kind === "landing") return <Landing signedIn onEnter={() => navigate(startPage(identity))} />;
+  if (route.kind === "login") return <RedirectTo path={startPage(identity)} />;
+
+  // -- signed in: console routes ------------------------------------------------
   const section: Section = route.kind === "console" ? route.section : "overview";
   const incidentId = route.kind === "console" ? route.incidentId : null;
   const module = route.kind === "console" ? route.module : null;
@@ -368,4 +378,12 @@ export default function App() {
       </Suspense>
     </Shell>
   );
+}
+
+/** Navigate once after render (never during it). */
+function RedirectTo({ path }: { path: string }) {
+  useEffect(() => {
+    window.location.hash = path;
+  }, [path]);
+  return null;
 }

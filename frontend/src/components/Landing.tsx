@@ -131,8 +131,15 @@ function TunnelLens() {
   );
 }
 
-export default function Landing() {
-  const signIn = () => navigate("#/login");
+interface LandingProps {
+  /** A session is active: the calls to action open the console instead of sign-in. */
+  signedIn?: boolean;
+  onEnter?: () => void;
+}
+
+export default function Landing({ signedIn = false, onEnter }: LandingProps = {}) {
+  const signIn = () => (signedIn && onEnter ? onEnter() : navigate("#/login"));
+  const cta = signedIn ? "Open console" : "Sign in";
   const reduce = useReducedMotion() ?? false;
   const lines = ["See the flow.", "Never the payload.", <>Act on evi<span className="sx-gold">dence</span>.</>];
 
@@ -162,7 +169,7 @@ export default function Landing() {
               </a>
             </nav>
             <SkewButton size="sm" onClick={signIn}>
-              Sign in
+              {cta}
             </SkewButton>
           </motion.header>
 
@@ -186,7 +193,7 @@ export default function Landing() {
               </p>
               <div className="sx-hero-actions">
                 <SkewButton icon="⚡" onClick={signIn}>
-                  Sign in
+                  {cta}
                 </SkewButton>
                 <a href="#how" className="sx-btn sx-btn--secondary sx-hero-link">
                   How it works <span aria-hidden>↗</span>

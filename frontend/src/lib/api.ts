@@ -1094,7 +1094,7 @@ function notifyUnauthorized(path: string): void {
   // check (/api/auth/me) answers 401 when nobody is signed in: also not "ended".
   // The TOTP and password routes answer 401 for a wrong code or current
   // password (fixture POST_api_auth_totp_enable__wrong_code): a typo, not a dead session.
-  const ownsItsOwn401 = ["/api/auth/login", "/api/auth/me", "/api/auth/totp/", "/api/auth/password"];
+  const ownsItsOwn401 = ["/api/auth/login", "/api/auth/logout", "/api/auth/me", "/api/auth/totp/", "/api/auth/password"];
   if (!ownsItsOwn401.some((p) => path.startsWith(p))) {
     window.dispatchEvent(new CustomEvent("spectra:unauthorized"));
   }
