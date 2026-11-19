@@ -39,10 +39,11 @@ from ..services.auth import (
 )
 from .runtime import engine
 
-#: Reachable without a session. Login must precede having one; health is the
-#: liveness probe. Everything else under ``/api/`` is default-deny.
+#: Reachable without a session. Login must precede having one; health and
+#: ready are the liveness and readiness probes (booleans and fixed strings only). Everything else under ``/api/`` is default-deny.
 PUBLIC_ROUTES: frozenset[tuple[str, str]] = frozenset({
     ("GET", "/api/health"),
+    ("GET", "/api/ready"),
     ("POST", "/api/auth/login"),
 })
 

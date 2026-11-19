@@ -9,6 +9,13 @@ All notable changes to Spectra are documented here. The format follows
 ### Security
 - CSRF: state-changing `/api/` requests (POST/PUT/PATCH/DELETE) with a browser `Origin` that is neither a configured dashboard origin nor the API's own host are refused with 403. SameSite=Lax alone let same-site pages (another localhost port, a sibling subdomain) submit forms to the 16 body-less POST routes and the capture upload with the operator's cookie. Clients that send no `Origin` (CLI, scripts) are unaffected.
 - The last-ADMIN guard is now part of the demoting `UPDATE` and the `DELETE` statement, so two concurrent requests can no longer leave the system without an ADMIN.
+- Every `/api/` response carries `X-Content-Type-Options: nosniff`. Login-throttle blocks are logged (`event=login_throttled`, no username or address) and counted in `spectra_login_blocks_total`.
+
+### Added
+- `GET /api/ready` (public readiness probe): 200 only when the data dir and database are writable and the schema is current, else 503. `/api/health` stays the liveness probe.
+
+### Fixed
+- An exception no handler maps now answers a JSON 500 with the request id (`{"detail": "internal server error", "request_id": ...}`) and keeps CORS headers; it used to be Starlette's plain-text 500, which the dashboard could not read. The traceback is logged under the same id.
 
 ### Changed
 - scapy (GPL-2.0-only) is no longer a core dependency (ADR-011): pcap, pcapng and gzip are read by an in-tree `struct` reader and packets are decoded by an in-tree dissector (`spectra.capture.packet`). scapy remains only as the optional `live` extra (live NIC capture) and a dev/test dependency. Interface listing uses `socket.if_nameindex()` and returns names only (no Windows friendly names). The compose `capture` service builds its own image with the `live` extra.

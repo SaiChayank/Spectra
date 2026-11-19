@@ -4877,6 +4877,23 @@
         "summary": "Pqc Scan"
       }
     },
+    "/api/ready": {
+      "get": {
+        "description": "Readiness for a load balancer or orchestrator (public, like health):\n200 only when storage is writable and the schema is current, else 503.\nLiveness stays ``/api/health``.",
+        "operationId": "ready_api_ready_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Ready"
+      }
+    },
     "/api/search": {
       "get": {
         "description": "Global search: classify the query, then bounded hits per entity.",

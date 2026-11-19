@@ -37,6 +37,15 @@ def health() -> JSONResponse:
     return JSONResponse(body, status_code=200 if body["ok"] else 503)
 
 
+@router.get("/api/ready")
+def ready() -> JSONResponse:
+    """Readiness for a load balancer or orchestrator (public, like health):
+    200 only when storage is writable and the schema is current, else 503.
+    Liveness stays ``/api/health``."""
+    body = engine.system.readiness()
+    return JSONResponse(body, status_code=200 if body["ready"] else 503)
+
+
 @router.get("/api/health/system",
             dependencies=[Depends(require("read"))])
 def system_health() -> dict:

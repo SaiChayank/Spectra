@@ -32,7 +32,7 @@ Three target verticals: **Fintech · Healthcare · Smart City Infrastructure**.
 | [`docs/datasets.md`](./docs/datasets.md) | evaluation datasets: catalog, operator fetch, label generation, manifest integrity |
 | [`docs/intel.md`](./docs/intel.md) | local threat intel: file-based JA3/JA4/SNI lists, evidence-signal semantics, FP caution |
 | [`docs/security.md`](./docs/security.md) | auth, RBAC, managed captures, artifact integrity, audit chain, local-only assumptions |
-| [`docs/testing.md`](./docs/testing.md) | 940 tests · 156 acceptance checks · performance · live-capture validation |
+| [`docs/testing.md`](./docs/testing.md) | 953 tests · 156 acceptance checks · performance · live-capture validation |
 | [`SECURITY.md`](./SECURITY.md) | supported versions and how to report a vulnerability privately (proposed timelines, scope, safe harbour) |
 | [`docs/limitations.md`](./docs/limitations.md) | detection, classification, TEE/twin/edge, metadata-only analysis, operational caveats |
 | [`docs/readiness-report.md`](./docs/readiness-report.md) | final readiness report (completed / partial / future / known limitations) |
@@ -58,12 +58,12 @@ with the passing pytest suite below. Local authentication
 | Feature extraction (39-feature vector per flow) | ✅ |
 | ML anomaly detector (IsolationForest + scaler, 0–100 scoring, σ-explanations) | ✅ trained from a benign baseline |
 | 8 strategic modules (see matrix below) | ✅ |
-| API (101 HTTP routes + WebSocket, default-deny auth) + CLI (17 commands) | ✅ |
+| API (102 HTTP routes + WebSocket, default-deny auth) + CLI (17 commands) | ✅ |
 | Persistence (SQLite: migration-driven schema, batched writes, bounded retention) | ✅ |
 | React dashboard | ✅ live (local login, role-aware UI) |
 | Local threat intel (JA3/JA4/SNI lists, `spectra intel`) | ✅ file-based, evidence signal only |
 | Labeled offline evaluation (`spectra eval run/train/compare`) | ✅ honesty-gated metrics, versioned reports |
-| Automated tests (pytest) | ✅ 940 passing tests |
+| Automated tests (pytest) | ✅ 953 passing tests |
 | Authentication & RBAC (ADMIN / ANALYST / VIEWER) | ✅ scrypt + sessions |
 | Live capture on Windows | ✅ validated with [Npcap](https://nmap.org/npcap/) (driver required) |
 
@@ -179,11 +179,11 @@ out-of-distribution (validated in
 
 ## API
 
-101 HTTP routes + 1 WebSocket, grouped by module:
+102 HTTP routes + 1 WebSocket, grouped by module:
 
 | Group | Routes |
 |---|---|
-| Core | `GET /api/health`, `/api/status`, `/api/stats`, `/api/flows`, `/api/detections`, `/api/interfaces`, `/api/metrics`, `/api/capabilities` |
+| Core | `GET /api/health`, `/api/ready`, `/api/status`, `/api/stats`, `/api/flows`, `/api/detections`, `/api/interfaces`, `/api/metrics`, `/api/capabilities` |
 | Auth (local) | `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`, optional second factor: `POST /api/auth/totp/{setup,enable,disable}` |
 | Users (ADMIN) | `GET/POST /api/users`, `GET/PATCH/DELETE /api/users/{id}`, `DELETE /api/users/{id}/totp` (reset a lost second factor) |
 | Incidents | `GET/POST /api/incidents`, `GET /api/incidents/{id}`, `POST /api/incidents/{id}/{acknowledge,resolve,notes}` |
@@ -211,8 +211,8 @@ shadow all address captures by this generated id.
 ## Authentication & access control
 
 Local accounts only — no external OAuth/identity provider. A middleware makes
-`/api/*` **default-deny** (public: `GET /api/health`, `POST /api/auth/login`,
-`/docs`); every other request must resolve to a live session, and each protected
+`/api/*` **default-deny** (public: `GET /api/health`, `GET /api/ready`,
+`POST /api/auth/login`, `/docs`); every other request must resolve to a live session, and each protected
 route checks a permission from `spectra/authz.py`.
 
 | Role | Permissions |
@@ -261,7 +261,7 @@ route checks a permission from `spectra/authz.py`.
 
 ```bash
 cd backend
-python -m pytest tests -q      # 940 tests
+python -m pytest tests -q      # 953 tests
 ```
 
 Full verification workflow (pytest + acceptance runner + performance + build):
@@ -295,7 +295,7 @@ backend/
     modules/        # eight strategic modules (pqc, tee, adv, twin, audit, bio, corr, edge)
     auth/           # password policy + scrypt hashing
     authz.py        # RBAC matrix (ADMIN / ANALYST / VIEWER → permissions)
-    api/            # FastAPI: 101 HTTP routes + WebSocket event stream (auth gate)
+    api/            # FastAPI: 102 HTTP routes + WebSocket event stream (auth gate)
     db/             # SQLite layer: 13 migrations, repositories, batched writes, retention
     filters.py      # pure-Python BPF-style filters (no libpcap needed)
     streaming.py    # bounded staged capture runtime (queues, overload policy, telemetry)
@@ -319,8 +319,8 @@ start.ps1           # optional convenience launcher (backend + frontend)
 ## Version
 
 `1.0.0` — PCAP + **live NIC capture** (Npcap 1.88, validated 2026-09-29),
-101-route API + WebSocket, CLI, React console, model registry with integrity
-checks: **940 tests**, **156/156 acceptance checks**, performance at or better
+102-route API + WebSocket, CLI, React console, model registry with integrity
+checks: **953 tests**, **156/156 acceptance checks**, performance at or better
 than the recorded baseline. Evidence:
 [`docs/acceptance-report.md`](./docs/acceptance-report.md),
 [`docs/hardening-report.md`](./docs/hardening-report.md),

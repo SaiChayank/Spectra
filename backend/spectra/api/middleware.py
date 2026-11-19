@@ -19,6 +19,7 @@ the bridge in ``spectra.api.app``.
 
 from __future__ import annotations
 
+import json
 import logging
 import re
 import time
@@ -28,7 +29,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
-from ..observability import REQUEST_ID
+from ..observability import REQUEST_ID, current_request_id
 
 log = logging.getLogger("spectra.api")
 
@@ -55,6 +56,10 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
         finally:
             REQUEST_ID.reset(token)
         response.headers["X-Request-ID"] = request_id
+        if request.url.path.startswith("/api/"):
+            # API bodies are data, never rendered: a browser must not sniff a
+            # JSON or text body into HTML (Cache-Control stays per route)
+            response.headers["X-Content-Type-Options"] = "nosniff"
         self._log(request, status, started, request_id, failed=False)
         return response
 
@@ -77,3 +82,47 @@ class RequestIdMiddleware(BaseHTTPMiddleware):
             log.warning("http request", extra=fields)
         else:
             log.info("http request", extra=fields)
+
+
+class UnhandledErrorMiddleware:
+    """Last-resort handler: an exception no route or handler mapped becomes a
+    fixed JSON 500 that names the request id, and the full traceback goes to
+    the server log under that id.
+
+    Registered inside CORS (so the dashboard can read the 500 instead of
+    reporting the server as unreachable) and inside :class:`RequestIdMiddleware`
+    (so the id is bound and echoed). Without it Starlette answered a plain-text
+    ``Internal Server Error`` with neither. Nothing from the exception reaches
+    the client.
+    """
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+        started = False
+
+        async def tracking_send(message):
+            nonlocal started
+            if message["type"] == "http.response.start":
+                started = True
+            await send(message)
+
+        try:
+            await self.app(scope, receive, tracking_send)
+        except Exception:
+            request_id = current_request_id()
+            log.error("unhandled error", exc_info=True, extra={
+                "event": "unhandled_error", "path": scope.get("path", ""),
+                "request_id": request_id})
+            if started:  # headers already sent: nothing safe left to answer
+                raise
+            body = json.dumps({"detail": "internal server error",
+                               "request_id": request_id}).encode()
+            await send({"type": "http.response.start", "status": 500, "headers": [
+                (b"content-type", b"application/json"),
+                (b"content-length", str(len(body)).encode("ascii"))]})
+            await send({"type": "http.response.body", "body": body})

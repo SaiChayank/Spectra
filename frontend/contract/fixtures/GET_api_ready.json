@@ -1,0 +1,20 @@
+{
+  "body": {
+    "checks": {
+      "data_dir": "ok",
+      "database": "ok",
+      "schema": "current"
+    },
+    "ready": true
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/ready",
+    "query": {}
+  },
+  "status": 200
+}
