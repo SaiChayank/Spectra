@@ -55,6 +55,9 @@
         "title": "Body_captures_import_api_captures_post",
         "type": "object"
       },
+      "Capabilities": {},
+      "CaptureDeleted": {},
+      "CaptureList": {},
       "CaptureRequest": {
         "description": "Live capture only - file processing is ``POST /api/captures/{id}/process``.\n\nThe mode pattern rejects ``pcap`` outright (422): a path-bearing or\npathless pcap start no longer exists, so no client can make the server\nopen an arbitrary filesystem path through this route.",
         "properties": {
@@ -87,6 +90,7 @@
         "title": "CaptureRequest",
         "type": "object"
       },
+      "CaptureResource": {},
       "CertificateRequest": {
         "properties": {
           "bits": {
@@ -277,6 +281,8 @@
         "title": "EvidenceItem",
         "type": "object"
       },
+      "Flow": {},
+      "FlowList": {},
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -342,6 +348,15 @@
         "title": "HardenRequest",
         "type": "object"
       },
+      "Health": {},
+      "HealthSystem": {},
+      "HistoryCapture": {},
+      "HistoryCaptureList": {},
+      "HistoryEvent": {},
+      "HistoryEventList": {},
+      "HistoryFlow": {},
+      "HistoryFlowList": {},
+      "HistoryStats": {},
       "HostEvidence": {
         "properties": {
           "count": {
@@ -611,6 +626,7 @@
         "title": "IncidentNoteCreate",
         "type": "object"
       },
+      "Interfaces": {},
       "InvestigationBundle": {},
       "LoginRequest": {
         "properties": {
@@ -646,6 +662,8 @@
         "title": "LoginRequest",
         "type": "object"
       },
+      "ModelRun": {},
+      "ModelRunList": {},
       "OkResponse": {},
       "PasswordChangeRequest": {
         "properties": {
@@ -904,6 +922,8 @@
         "title": "SimulateRequest",
         "type": "object"
       },
+      "Stats": {},
+      "Status": {},
       "StoredVerdict": {
         "properties": {
           "actor": {
@@ -2389,9 +2409,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Capabilities Api Capabilities Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Capabilities"
                 }
               }
             },
@@ -2420,9 +2438,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Capture Start Api Capture Start Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Status"
                 }
               }
             },
@@ -2450,9 +2466,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Capture Stop Api Capture Stop Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Status"
                 }
               }
             },
@@ -2513,9 +2527,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Captures List Api Captures Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CaptureList"
                 }
               }
             },
@@ -2552,9 +2564,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Captures Import Api Captures Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CaptureResource"
                 }
               }
             },
@@ -2594,9 +2604,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Capture Delete Api Captures  Capture Id  Delete",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CaptureDeleted"
                 }
               }
             },
@@ -2634,9 +2642,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Capture Details Api Captures  Capture Id  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CaptureResource"
                 }
               }
             },
@@ -2676,9 +2682,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Capture Process Api Captures  Capture Id  Process Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CaptureResource"
                 }
               }
             },
@@ -2721,9 +2725,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Detections Api Detections Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/FlowList"
                 }
               }
             },
@@ -2910,9 +2912,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Flows Api Flows Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/FlowList"
                 }
               }
             },
@@ -3214,7 +3214,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
               }
             },
             "description": "Successful Response"
@@ -3232,9 +3234,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response System Health Api Health System Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HealthSystem"
                 }
               }
             },
@@ -3295,9 +3295,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response History Captures Api History Captures Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HistoryCaptureList"
                 }
               }
             },
@@ -3465,9 +3463,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response History Detections Api History Detections Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HistoryFlowList"
                 }
               }
             },
@@ -3569,9 +3565,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response History Events Api History Events Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HistoryEventList"
                 }
               }
             },
@@ -3776,9 +3770,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response History Flows Api History Flows Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HistoryFlowList"
                 }
               }
             },
@@ -3832,9 +3824,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response History Model Runs Api History Model Runs Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ModelRunList"
                 }
               }
             },
@@ -3862,9 +3852,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response History Stats Api History Stats Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HistoryStats"
                 }
               }
             },
@@ -4623,9 +4611,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Interfaces Api Interfaces Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Interfaces"
                 }
               }
             },
@@ -5498,9 +5484,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Stats Api Stats Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Stats"
                 }
               }
             },
@@ -5518,9 +5502,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Status Api Status Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Status"
                 }
               }
             },

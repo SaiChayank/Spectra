@@ -11,9 +11,12 @@ never change it (the contract fixtures are the proof, see
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Union
 
 from pydantic import BaseModel, ConfigDict, model_serializer
+
+#: int stays int, float stays float (a plain ``float`` field would turn 0 into 0.0)
+Num = Union[int, float]
 
 
 class Out(BaseModel):
