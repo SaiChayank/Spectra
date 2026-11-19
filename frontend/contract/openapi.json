@@ -159,6 +159,7 @@
         "title": "CertificateVerifyRequest",
         "type": "object"
       },
+      "Drift": {},
       "EdgeDeployRequest": {
         "properties": {
           "node": {
@@ -214,6 +215,8 @@
         "title": "EdgeSliceRequest",
         "type": "object"
       },
+      "EvalReport": {},
+      "EvalReports": {},
       "EvidenceItem": {
         "properties": {
           "alert_id": {
@@ -662,6 +665,7 @@
         "title": "LoginRequest",
         "type": "object"
       },
+      "ModelInfo": {},
       "ModelRun": {},
       "ModelRunList": {},
       "OkResponse": {},
@@ -788,6 +792,9 @@
         "title": "PlaybookRequest",
         "type": "object"
       },
+      "RegistryCompare": {},
+      "RegistryList": {},
+      "RegistryModel": {},
       "RobustnessRequest": {
         "properties": {
           "capture_id": {
@@ -1230,6 +1237,7 @@
         "title": "TrainRequest",
         "type": "object"
       },
+      "TrainResult": {},
       "User": {},
       "UserCreate": {
         "properties": {
@@ -4717,9 +4725,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Info Api Model Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ModelInfo"
                 }
               }
             },
@@ -4738,9 +4744,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Drift Api Model Drift Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Drift"
                 }
               }
             },
@@ -4759,9 +4763,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Eval List Api Model Eval Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/EvalReports"
                 }
               }
             },
@@ -4791,9 +4793,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Eval Get Api Model Eval  Name  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/EvalReport"
                 }
               }
             },
@@ -4905,9 +4905,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Registry List Api Model Registry Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/RegistryList"
                 }
               }
             },
@@ -4946,9 +4944,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Registry Compare Api Model Registry Compare Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/RegistryCompare"
                 }
               }
             },
@@ -4977,9 +4973,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Registry Rollback Api Model Registry Rollback Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/RegistryModel"
                 }
               }
             },
@@ -5008,9 +5002,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Registry Get Api Model Registry  Model Id  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/RegistryModel"
                 }
               }
             },
@@ -5050,9 +5042,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Registry Activate Api Model Registry  Model Id  Activate Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/RegistryModel"
                 }
               }
             },
@@ -5092,9 +5082,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Registry Retire Api Model Registry  Model Id  Retire Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/RegistryModel"
                 }
               }
             },
@@ -5134,9 +5122,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Registry Validate Api Model Registry  Model Id  Validate Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/RegistryModel"
                 }
               }
             },
@@ -5216,9 +5202,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Train Api Model Train Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/TrainResult"
                 }
               }
             },
