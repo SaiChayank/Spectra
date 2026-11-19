@@ -88,7 +88,19 @@ export default function CapturesPage({ can, capture, model, onChanged }: Props) 
   const process = async (c: CaptureResource) => {
     setBusyId(c.capture_id);
     try {
-      const out = await api.processCapture(c.capture_id);
+      // the backend answers at once and processes in the background: wait for the final state
+      let out = await api.processCapture(c.capture_id);
+      setNotice({ tone: "info", text: `Processing #${c.capture_id}…` });
+      load();
+      for (let i = 0; i < 120 && (out.status === "PROCESSING" || out.status === "UPLOADED" || out.running); i++) {
+        await new Promise((r) => setTimeout(r, 1000));
+        out = await api.captureDetails(c.capture_id);
+      }
+      if (out.status === "FAILED") throw new Error(out.error ?? "processing failed");
+      if (out.status !== "COMPLETED") {
+        after({ tone: "warn", text: `#${c.capture_id} is still processing; the table updates when it finishes.` });
+        return;
+      }
       const unscored = out.unscored_flows ?? 0;
       after(
         unscored > 0

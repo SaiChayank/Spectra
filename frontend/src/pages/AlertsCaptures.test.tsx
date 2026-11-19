@@ -92,6 +92,18 @@ describe("CapturesPage", () => {
     await waitFor(() => expect(onChanged).toHaveBeenCalled());
   });
 
+  it("waits for background processing before reporting counts (real backend answers PROCESSING first)", async () => {
+    let polls = 0;
+    routes({
+      "POST /api/captures/4/process": () => json(200, { ...capturesFixture.body.items[0], status: "PROCESSING", running: true, flows: 0, detections: 0 }),
+      "GET /api/captures/4": () =>
+        json(200, ++polls < 2 ? { ...capturesFixture.body.items[0], status: "PROCESSING", running: true, flows: 5 } : { ...capturesFixture.body.items[0], status: "COMPLETED", running: false, flows: 13, detections: 1 }),
+    });
+    render(<div className="sx"><CapturesPage can={can(["read", "capture:manage"])} capture={undefined} model={model} onChanged={vi.fn()} /></div>);
+    fireEvent.click(await screen.findByRole("button", { name: "Process capture 4" }));
+    expect(await screen.findByText(/Processed #4: 13 flows, 1 above the threshold/, undefined, { timeout: 5000 })).toBeInTheDocument();
+  });
+
   it("shows a live capture error prominently", async () => {
     routes();
     render(
