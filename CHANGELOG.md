@@ -6,6 +6,10 @@ All notable changes to Spectra are documented here. The format follows
 
 ## [Unreleased]
 
+### Security
+- CSRF: state-changing `/api/` requests (POST/PUT/PATCH/DELETE) with a browser `Origin` that is neither a configured dashboard origin nor the API's own host are refused with 403. SameSite=Lax alone let same-site pages (another localhost port, a sibling subdomain) submit forms to the 16 body-less POST routes and the capture upload with the operator's cookie. Clients that send no `Origin` (CLI, scripts) are unaffected.
+- The last-ADMIN guard is now part of the demoting `UPDATE` and the `DELETE` statement, so two concurrent requests can no longer leave the system without an ADMIN.
+
 ### Changed
 - scapy (GPL-2.0-only) is no longer a core dependency (ADR-011): pcap, pcapng and gzip are read by an in-tree `struct` reader and packets are decoded by an in-tree dissector (`spectra.capture.packet`). scapy remains only as the optional `live` extra (live NIC capture) and a dev/test dependency. Interface listing uses `socket.if_nameindex()` and returns names only (no Windows friendly names). The compose `capture` service builds its own image with the `live` extra.
 

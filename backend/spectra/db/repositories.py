@@ -760,6 +760,13 @@ class TotpRepository:
             return cur.rowcount > 0
 
 
+#: Appended to a ``WHERE id = ?`` that removes or demotes an account: the row
+#: matches only if it is not the last ADMIN. Evaluated inside the one
+#: statement, so the check and the write cannot be split by another request.
+_KEEPS_AN_ADMIN = (" AND NOT (role = 'ADMIN' AND "
+                   "(SELECT COUNT(*) FROM users WHERE role = 'ADMIN') <= 1)")
+
+
 class UserRepository:
     """Local accounts: scrypt encodings + one of three RBAC roles.
 
@@ -814,9 +821,13 @@ class UserRepository:
             sets.append("password_hash = ?")
             params.append(password_hash)
         params.append(user_id)
+        where = "id = ?"
+        if role is not None and role != "ADMIN":
+            # demotion: refused in the same statement if it would leave no ADMIN
+            where += _KEEPS_AN_ADMIN
         with self._db.lock:
             cur = self._db.execute(
-                f"UPDATE users SET {', '.join(sets)} WHERE id = ?", tuple(params))
+                f"UPDATE users SET {', '.join(sets)} WHERE {where}", tuple(params))
             self._db.commit()
             return cur.rowcount > 0
 
@@ -829,9 +840,13 @@ class UserRepository:
             self._db.commit()
 
     def delete(self, user_id: int) -> bool:
-        """Remove an account; its session rows go with it (FK cascade)."""
+        """Remove an account; its session rows go with it (FK cascade).
+
+        Never removes the last ADMIN: the guard is part of the statement, so
+        two concurrent deletions cannot both pass a separate count check.
+        """
         with self._db.lock:
-            cur = self._db.execute("DELETE FROM users WHERE id = ?",
+            cur = self._db.execute("DELETE FROM users WHERE id = ?" + _KEEPS_AN_ADMIN,
                                    (user_id,))
             self._db.commit()
             return cur.rowcount > 0

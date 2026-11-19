@@ -61,6 +61,12 @@ on. Code: `backend/spectra/auth/`, `authz.py`, `api/security.py`,
   triggered by a typo. On success every session of the user is revoked (the
   caller's too), the cookie is cleared and `auth.password_changed` is audit-chained
   (username only, never a password). Tests: `test_change_password.py`.
+* **CSRF:** SameSite=Lax does not stop *same-site* pages (another port on the
+  same host, a sibling subdomain), and an HTML form POST needs no CORS
+  preflight. The gate therefore refuses any POST/PUT/PATCH/DELETE under
+  `/api/` whose `Origin` is neither in `SPECTRA_CORS_ORIGINS` nor the API's
+  own host (`403 cross-origin request refused`), login included. Requests
+  without `Origin` (CLI, scripts) are unaffected (`tests/test_csrf_origin.py`).
 
 **Login throttling with escalating backoff** (`LoginThrottle`, checked
 *before* any scrypt work): 10 failures / 60 s per *(ip, username)* or 40 / 60 s
@@ -155,7 +161,9 @@ makes `/api/*` **default-deny** (public: `GET /api/health`,
   FastAPI's own `/docs`, `/redoc`, `/openapi.json` (route *descriptions* — they
   return no data and every `/api/*` call from them still needs a session).
 * Guards: you cannot delete your own account, and the **last ADMIN** cannot be
-  deleted or demoted (`409`) — no self-lockout.
+  deleted or demoted (`409`) — no self-lockout. The guard is part of the
+  `UPDATE`/`DELETE` statement itself, so two concurrent requests cannot both
+  pass it (`tests/test_admin_guard_race.py`).
 * Usernames: `^[A-Za-z0-9][A-Za-z0-9_.-]{2,31}$`.
 * `test_auth.py` sweeps **every** registered route for default-deny behaviour
   and role expectations; the dashboard mirrors the same permissions (server

@@ -605,6 +605,10 @@ class AuthService:
         updated = self.store.update_user(user_id, role=role,
                                          password_hash=password_hash)
         if updated is None:
+            if self.store.get_user(user_id) is not None:
+                # the store's own guard: another request demoted or removed
+                # the other ADMIN between our count check and this write
+                raise UserGuardError("cannot demote the last ADMIN account")
             raise InvalidUser()
         if password_hash is not None:
             revoked = self.store.invalidate_user_sessions(user_id)
@@ -651,7 +655,10 @@ class AuthService:
             raise UserGuardError("you cannot delete your own account")
         if user["role"] == "ADMIN" and self.store.count_admin_users() <= 1:
             raise UserGuardError("cannot delete the last ADMIN account")
-        self.store.delete_user(user_id)
+        if not self.store.delete_user(user_id):
+            if self.store.get_user(user_id) is not None:
+                raise UserGuardError("cannot delete the last ADMIN account")
+            raise InvalidUser()
 
     # -- internals ------------------------------------------------------------
 
