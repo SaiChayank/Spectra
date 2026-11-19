@@ -45,7 +45,13 @@ export interface MockState {
   loginFixture: string | null;
   /** When the session started (ms), for the session-expiry scenario. */
   since: number;
+  /** Mock-only: the signed-in user finished TOTP enrolment in this session. */
+  totp?: boolean;
 }
+
+/** Demo values for routes whose real answers are secrets (redacted in the fixtures). */
+export const MOCK_TOTP_CODE = "123456";
+const DEMO_SECRET = "MOCKDEMOSECRETNOTREAL234";
 
 export interface MockRequest {
   method: string;
@@ -203,8 +209,38 @@ export function resolve(index: FixtureIndex, state: MockState, req: MockRequest,
 
   // --- current user -----------------------------------------------------
   if (method === "GET" && path === "/api/auth/me") {
-    const login = index.named(state.loginFixture ?? "POST_api_auth_login")!;
-    return json(200, { ...(login.body as object) });
+    const login = index.named(state.loginFixture ?? "POST_api_auth_login")!.body as { user: object };
+    return json(200, { ...login, user: { ...login.user, totp_enabled: state.totp ?? false } });
+  }
+
+  // --- own account: unrecorded or PROPOSED routes (labelled x-mock) --------
+  const body = (req.body ?? {}) as Record<string, string | undefined>;
+  if (method === "POST" && path === "/api/auth/password") {
+    // PROPOSED: frontend/contract/proposed/POST_api_auth_password.json
+    const h = { "x-mock": "proposed endpoint" };
+    if (body.current_password === "wrong") return json(401, { detail: "current password is incorrect" }, h);
+    if (!body.new_password || body.new_password.length < 8) {
+      return json(422, { detail: [{ loc: ["body", "new_password"], msg: "String should have at least 8 characters" }] }, h);
+    }
+    return { ...json(200, { ok: true, sessions_revoked: true }, h), next: { role: null, loginFixture: null, totp: false } };
+  }
+  if (method === "POST" && path === "/api/auth/totp/setup") {
+    if (body.password === "wrong") return fromFixture(index.named("POST_api_auth_totp_setup__wrong_password")!);
+    const f = index.named("POST_api_auth_totp_setup")!;
+    // the recording is redacted; serve obviously fake demo values of the same shape
+    return fromFixture(f, {
+      headers: { ...flatHeaders(f.headers, RETRY_AFTER_S), "x-mock": "demo secret" },
+      body: { issuer: "Spectra", secret: DEMO_SECRET, otpauth_uri: `otpauth://totp/Spectra:demo?secret=${DEMO_SECRET}&issuer=Spectra` },
+    });
+  }
+  if (method === "POST" && path === "/api/auth/totp/enable") {
+    if (body.code !== MOCK_TOTP_CODE) return fromFixture(index.named("POST_api_auth_totp_enable__wrong_code")!);
+    const codes = Array.from({ length: 8 }, (_, i) => `demo-${String(i + 1).padStart(2, "0")}-notreal`);
+    return { ...json(200, { recovery_codes: codes }, { "x-mock": "not recorded" }), next: { totp: true } };
+  }
+  if (method === "POST" && path === "/api/auth/totp/disable") {
+    if (body.password === "wrong" || body.code !== MOCK_TOTP_CODE) return json(401, { detail: "invalid code" }, { "x-mock": "not recorded" });
+    return { ...json(200, { totp_enabled: false }, { "x-mock": "not recorded" }), next: { totp: false } };
   }
 
   // --- scenario: storage unavailable -------------------------------------
@@ -240,6 +276,9 @@ export function resolve(index: FixtureIndex, state: MockState, req: MockRequest,
   const hit = pickSuccess(cands, req, prefer);
   if (hit) return fromFixture(hit);
 
+  // only an error was recorded for this exact request (e.g. deleting yourself → 409): serve it
+  const onlyError = cands.find((f) => f.status !== 401 && f.status !== 403 && f.request.path === path);
+  if (onlyError) return fromFixture(onlyError);
   const notFound = cands.find((f) => f.status === 404);
   if (notFound) return fromFixture(notFound);
   return json(404, { detail: `mock: no fixture recorded for ${method} ${path}` }, { "x-mock": "no fixture" });

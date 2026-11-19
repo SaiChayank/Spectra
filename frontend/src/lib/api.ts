@@ -1,6 +1,7 @@
 /** API client for the Spectra backend (dev: http://localhost:8787, built: same origin). */
 
 import { resolveEndpoints } from "./endpoints";
+import type { ManagedUser, PasswordChanged, TotpEnabled, TotpSetup, UserList } from "./types";
 
 const endpoints = resolveEndpoints(import.meta.env, window.location);
 export const API_BASE = endpoints.apiBase;
@@ -1091,7 +1092,10 @@ function notifyUnauthorized(path: string): void {
   // The login route owns its own 401s (bad credentials) — those are a
   // failed form submit, not a session that just died. The startup session
   // check (/api/auth/me) answers 401 when nobody is signed in: also not "ended".
-  if (!path.startsWith("/api/auth/login") && !path.startsWith("/api/auth/me")) {
+  // The TOTP and password routes answer 401 for a wrong code or current
+  // password (fixture POST_api_auth_totp_enable__wrong_code): a typo, not a dead session.
+  const ownsItsOwn401 = ["/api/auth/login", "/api/auth/me", "/api/auth/totp/", "/api/auth/password"];
+  if (!ownsItsOwn401.some((p) => path.startsWith(p))) {
     window.dispatchEvent(new CustomEvent("spectra:unauthorized"));
   }
 }
@@ -1120,6 +1124,24 @@ export class NetworkError extends Error {
     super(message);
     this.name = "NetworkError";
   }
+}
+
+/**
+ * A FastAPI `detail` as one readable line. 422 validation errors arrive as a
+ * list of {loc, msg}; they become "password: String should have at least 8
+ * characters; role: ...". Never includes submitted values.
+ */
+export function formatDetail(detail: unknown): string {
+  if (typeof detail === "string") return detail;
+  if (Array.isArray(detail)) {
+    return detail
+      .map((d: { loc?: unknown[]; msg?: string }) => {
+        const field = Array.isArray(d.loc) ? d.loc.filter((x) => x !== "body").join(".") : "";
+        return field ? `${field}: ${d.msg ?? "invalid"}` : (d.msg ?? "invalid");
+      })
+      .join("; ");
+  }
+  return JSON.stringify(detail);
 }
 
 /** Retry-After in seconds (delta form only; the API never sends a date). */
@@ -1157,7 +1179,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     let detail = res.statusText;
     try {
       const body = await res.json();
-      detail = typeof body.detail === "string" ? body.detail : JSON.stringify(body.detail);
+      detail = formatDetail(body.detail);
     } catch {
       /* non-JSON error body */
     }
@@ -1193,6 +1215,34 @@ export const api = {
       body: JSON.stringify(totpCode ? { username, password, totp_code: totpCode } : { username, password }),
     }),
   logout: () => request<{ ok: boolean }>("/api/auth/logout", { method: "POST" }),
+
+  // -- own account: second factor (any signed-in user) ------------------------
+  totpSetup: (password: string) =>
+    request<TotpSetup>("/api/auth/totp/setup", { method: "POST", body: JSON.stringify({ password }) }),
+  totpEnable: (code: string) =>
+    request<TotpEnabled>("/api/auth/totp/enable", { method: "POST", body: JSON.stringify({ code }) }),
+  totpDisable: (password: string, code: string) =>
+    request<{ totp_enabled: boolean }>("/api/auth/totp/disable", {
+      method: "POST",
+      body: JSON.stringify({ password, code }),
+    }),
+  /** PROPOSED (frontend/contract/proposed/POST_api_auth_password.json): not on the backend yet. */
+  changeOwnPassword: (currentPassword: string, newPassword: string) =>
+    request<PasswordChanged>("/api/auth/password", {
+      method: "POST",
+      body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+    }),
+
+  // -- users admin (users:manage) ------------------------------------------------
+  users: () => request<UserList>("/api/users"),
+  createUser: (username: string, password: string, role: ManagedUser["role"]) =>
+    request<ManagedUser>("/api/users", { method: "POST", body: JSON.stringify({ username, password, role }) }),
+  /** Role and/or password; a password change signs that user out everywhere. */
+  updateUser: (id: number, patch: { role?: ManagedUser["role"]; password?: string }) =>
+    request<ManagedUser>(`/api/users/${id}`, { method: "PATCH", body: JSON.stringify(patch) }),
+  deleteUser: (id: number) => request<{ ok: boolean }>(`/api/users/${id}`, { method: "DELETE" }),
+  resetUserTotp: (id: number) =>
+    request<{ ok: boolean; totp_enabled: boolean; user_id: number }>(`/api/users/${id}/totp`, { method: "DELETE" }),
 
   stats: () => request<Snapshot>("/api/stats"),
   /** Module maturity + live availability — real vs simulated, per module. */

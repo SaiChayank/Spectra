@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Landing from "./components/Landing";
-import { LoginScreen } from "./components/LoginPanel";
-import { Banner, Card, KeyValue, RoleChip, SkewButton, StorageBanner, UntrainedBanner } from "./components/ui";
+import { LoginScreen, type LoginNotice } from "./components/LoginPanel";
+import { Banner, SkewButton, StorageBanner, UntrainedBanner } from "./components/ui";
 import {
   ApiError,
   NetworkError,
@@ -18,6 +18,7 @@ import { useEvents } from "./lib/useEvents";
 import Shell, { type LiveState } from "./shell/Shell";
 import { useConnection } from "./shell/useConnection";
 import AuditPage from "./pages/AuditPage";
+import AccountPage from "./pages/AccountPage";
 import HostsPage from "./pages/HostsPage";
 import IncidentDetailPage from "./pages/IncidentDetailPage";
 import IncidentsPage from "./pages/IncidentsPage";
@@ -58,12 +59,12 @@ export default function App() {
   // A 401 anywhere in the app ends the session: go to sign-in with a message,
   // remembering where the analyst was (in memory only) to return there after.
   const [returnTo, setReturnTo] = useState<string | null>(null);
-  const [sessionEnded, setSessionEnded] = useState(false);
+  const [loginNotice, setLoginNotice] = useState<LoginNotice | null>(null);
   useEffect(() => {
     const onUnauthorized = () => {
       const here = window.location.hash;
       if (here && here !== "#/" && here !== "#/login") setReturnTo(here);
-      setSessionEnded(true);
+      setLoginNotice({ tone: "warn", title: "Your session ended", body: "Sign in again to continue where you left off." });
       setIdentity(null);
       window.location.hash = "#/login";
     };
@@ -177,7 +178,7 @@ export default function App() {
     const finishLogin = (next: Identity) => {
       setError(null);
       setNotice(null);
-      setSessionEnded(false);
+      setLoginNotice(null);
       setIdentity(next);
       setReturnTo(null);
       navigate(pending ?? "#/overview");
@@ -187,11 +188,8 @@ export default function App() {
       <LoginScreen
         onLogin={finishLogin}
         notice={
-          sessionEnded
-            ? { tone: "warn", title: "Your session ended", body: `Sign in again to continue${pending ? " where you left off" : ""}.` }
-            : deepLink
-              ? { tone: "info", title: "Sign in to continue", body: "That page needs a signed-in user." }
-              : null
+          loginNotice ??
+          (deepLink ? { tone: "info", title: "Sign in to continue", body: "That page needs a signed-in user." } : null)
         }
       />
     );
@@ -320,18 +318,18 @@ export default function App() {
       {section === "system" && <SystemPage connected={connected} />}
 
       {section === "account" && (
-        <Card title={identity.user.username} eyebrow="Signed in as" style={{ maxWidth: 640 }}>
-          <KeyValue
-            rows={[
-              ["Role", <RoleChip role={identity.user.role} />],
-              ["Permissions", <span className="sx-mono">{identity.user.permissions.join(", ")}</span>],
-              ["Two-factor", identity.user.totp_enabled ? "Enabled" : "Not enabled"],
-            ]}
-          />
-          <p className="sx-hint" style={{ marginTop: 12 }}>
-            Changing your password and two-factor setup arrive with the Account screen (step 5).
-          </p>
-        </Card>
+        <AccountPage
+          identity={identity}
+          can={can}
+          onSignedOut={(text) => {
+            setLoginNotice({ tone: "info", title: "Signed out", body: text });
+            setIdentity(null);
+            navigate("#/login");
+          }}
+          onIdentityChanged={() => {
+            api.me().then(setIdentity).catch(() => undefined);
+          }}
+        />
       )}
     </Shell>
   );
