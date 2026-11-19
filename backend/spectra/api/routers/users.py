@@ -9,11 +9,14 @@ password hash never appears.
 
 from __future__ import annotations
 
+from typing import Optional
+
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
 from ...services.auth import AuthError
 from ..runtime import engine
+from ..schemas import Out
 from ..security import auth_error, require
 
 router = APIRouter(dependencies=[Depends(require("users:manage"))])
@@ -27,19 +30,44 @@ class UserCreate(BaseModel):
     role: str = Field(pattern=_ROLE_PATTERN)
 
 
+class User(Out):
+    id: int
+    username: str
+    role: str
+    created_at: float
+    updated_at: float
+    last_login_at: Optional[float] = None
+
+
+class UserList(Out):
+    count: int
+    items: list[User]
+
+
+class UserDeleted(Out):
+    ok: bool
+    deleted: int
+
+
+class TotpReset(Out):
+    ok: bool
+    user_id: int
+    totp_enabled: bool
+
+
 class UserUpdate(BaseModel):
     role: str | None = Field(None, pattern=_ROLE_PATTERN)
     password: str | None = Field(None, min_length=8, max_length=1024)
 
 
-@router.get("/api/users")
+@router.get("/api/users", response_model=UserList)
 def users_list() -> dict:
     """Every account (public projection - no hashes)."""
     items = engine.auth.list_users()
     return {"count": len(items), "items": items}
 
 
-@router.get("/api/users/{user_id}")
+@router.get("/api/users/{user_id}", response_model=User)
 def users_get(user_id: int) -> dict:
     try:
         return engine.auth.get_user(user_id)
@@ -47,7 +75,7 @@ def users_get(user_id: int) -> dict:
         raise auth_error(exc) from exc
 
 
-@router.post("/api/users")
+@router.post("/api/users", response_model=User)
 def users_create(req: UserCreate,
                  principal: dict = Depends(require("users:manage"))) -> dict:
     """Create an account (username format + password policy enforced)."""
@@ -62,7 +90,7 @@ def users_create(req: UserCreate,
     return user
 
 
-@router.patch("/api/users/{user_id}")
+@router.patch("/api/users/{user_id}", response_model=User)
 def users_update(user_id: int, req: UserUpdate,
                  principal: dict = Depends(require("users:manage"))) -> dict:
     """Change role and/or password; a password change revokes all sessions."""
@@ -79,7 +107,7 @@ def users_update(user_id: int, req: UserUpdate,
     return user
 
 
-@router.delete("/api/users/{user_id}")
+@router.delete("/api/users/{user_id}", response_model=UserDeleted)
 def users_delete(user_id: int,
                  principal: dict = Depends(require("users:manage"))) -> dict:
     """Delete an account (guards: not yourself, never the last ADMIN)."""
@@ -93,7 +121,7 @@ def users_delete(user_id: int,
     return {"ok": True, "deleted": user_id}
 
 
-@router.delete("/api/users/{user_id}/totp")
+@router.delete("/api/users/{user_id}/totp", response_model=TotpReset)
 def users_totp_reset(user_id: int,
                      principal: dict = Depends(require("users:manage"))) -> dict:
     """Remove a user's second factor (lost device): the recovery path an admin has."""

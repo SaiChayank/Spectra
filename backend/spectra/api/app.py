@@ -29,7 +29,7 @@ from urllib.parse import urlsplit
 
 from fastapi import FastAPI, Request, WebSocket
 from fastapi.encoders import jsonable_encoder
-from fastapi.exceptions import RequestValidationError
+from fastapi.exceptions import RequestValidationError, ResponseValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -394,6 +394,21 @@ async def _os_error(request: Request, exc: OSError) -> JSONResponse:
     if exc.errno != errno.ENOSPC:
         raise exc
     return _unavailable("no_space")
+
+
+@app.exception_handler(ResponseValidationError)
+async def _response_mismatch(request: Request, exc: ResponseValidationError) -> JSONResponse:
+    """Response models describe the API (OpenAPI / frontend types); they must never
+    turn a working route into a 500.  A mismatch is logged (locations and error types
+    only, never values) and the service's data is returned unchanged.  The test suite
+    sets ``app.state.strict_responses`` so a mismatch still fails there."""
+    if getattr(app.state, "strict_responses", False):
+        raise exc
+    log.error("response model mismatch", extra={
+        "event": "response_model_mismatch", "path": request.url.path,
+        "errors": [{"loc": list(e.get("loc", ())), "type": e.get("type")} for e in exc.errors()][:10]})
+    status = getattr(request.scope.get("route"), "status_code", None) or 200
+    return JSONResponse(status_code=status, content=jsonable_encoder(exc.body))
 
 
 # Registered last so every real route wins; serves the compiled dashboard when a

@@ -10,6 +10,7 @@ from __future__ import annotations
 import logging
 import os
 from contextlib import contextmanager
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -19,6 +20,7 @@ from ...services.model import AnalysisBusy
 from ...services.model_registry import RegistryError
 from ...tools import FlowBudgetError
 from ..runtime import engine
+from ..schemas import Num, Out
 from ..security import require
 from . import capture_pcap_path
 
@@ -28,6 +30,98 @@ log = logging.getLogger("spectra.api")
 #: investigation probes (ANALYST+); training and every registry transition
 #: (validate/activate/retire/rollback) are ADMIN (``model:manage``).
 router = APIRouter(dependencies=[Depends(require("read"))])
+
+
+class ModelInfo(Out):
+    trained: bool
+    version: int
+    n_features: int
+    n_train: int
+    n_estimators: int
+    contamination: Num
+    threshold: Optional[Num] = None
+    trained_at: Optional[str] = None
+    feature_names: list[str]
+
+
+class Drift(Out):
+    """Either ``available: false`` + ``reason`` or the PSI report."""
+    available: bool
+    reason: Optional[str] = None
+    level: Optional[str] = None
+    alert_level: Optional[str] = None
+    psi: Optional[Num] = None
+    n: Optional[int] = None
+    window: Optional[int] = None
+    features: Optional[list[dict[str, Any]]] = None
+    psi_vs_recent: Optional[dict[str, Any]] = None
+    psi_vs_train: Optional[dict[str, Any]] = None
+
+
+class RegistryModel(Out):
+    id: int
+    model_id: str
+    model_version: str
+    status: str
+    source: Optional[str] = None
+    artifact: Optional[str] = None
+    artifact_sha256: Optional[str] = None
+    feature_schema: Optional[str] = None
+    n_features: Optional[int] = None
+    n_train: Optional[int] = None
+    contamination: Optional[Num] = None
+    threshold: Optional[Num] = None
+    trained_at: Optional[Num] = None
+    created_at: Optional[Num] = None
+    last_activated_at: Optional[Num] = None
+    retired_at: Optional[Num] = None
+    activated_count: Optional[int] = None
+    error: Optional[str] = None
+    metrics: Optional[dict[str, Any]] = None
+    applied: Optional[bool] = None  # rollback/activate only
+
+
+class RegistryList(Out):
+    enabled: bool
+    count: int
+    offset: int
+    active: Optional[RegistryModel] = None
+    items: list[RegistryModel]
+
+
+class RegistryCompare(Out):
+    a: RegistryModel
+    b: RegistryModel
+    diff: dict[str, Any]
+
+
+class TrainResult(Out):
+    pcap: str
+    model_path: str
+    n_train: int
+    contamination: Num
+    threshold: Num
+    train_score_mean: Optional[Num] = None
+    train_score_p99: Optional[Num] = None
+    augmented: Optional[int] = None
+    bio: Optional[dict[str, Any]] = None
+    edge: Optional[dict[str, Any]] = None
+    registry: Optional[dict[str, Any]] = None  # absent when persistence is off
+
+
+class EvalReports(Out):
+    count: int
+    directory: str
+    reports: list[dict[str, Any]]
+
+
+class EvalReport(Out):
+    """A stored report (written offline by ``spectra eval run``); free-form body."""
+    report_version: Optional[Any] = None
+    created_at: Optional[Any] = None
+    dataset: Optional[dict[str, Any]] = None
+    model: Optional[dict[str, Any]] = None
+    overall: Optional[Any] = None
 
 
 class TrainRequest(BaseModel):
@@ -58,7 +152,7 @@ class HardenRequest(BaseModel):
     max_attack_rows: int = Field(50, ge=1, le=200)
 
 
-@router.get("/api/model")
+@router.get("/api/model", response_model=ModelInfo)
 def model_info() -> dict:
     return engine.model.info()
 
@@ -79,7 +173,7 @@ def model_intel_status() -> dict:
     return intel.status()
 
 
-@router.get("/api/model/eval")
+@router.get("/api/model/eval", response_model=EvalReports)
 def model_eval_list() -> dict:
     """Stored evaluation reports (newest first), summary rows only.
 
@@ -90,7 +184,7 @@ def model_eval_list() -> dict:
     return list_reports()
 
 
-@router.get("/api/model/eval/{name}")
+@router.get("/api/model/eval/{name}", response_model=EvalReport)
 def model_eval_get(name: str) -> dict:
     """One full evaluation report (metrics + caveats) by stored name."""
     from ...eval.store import ReportStoreError, load
@@ -100,7 +194,7 @@ def model_eval_get(name: str) -> dict:
         raise HTTPException(status_code=404, detail=str(exc)) from None
 
 
-@router.post("/api/model/train",
+@router.post("/api/model/train", response_model=TrainResult,
              dependencies=[Depends(require("model:manage"))])
 def model_train(req: TrainRequest,
                 principal: dict = Depends(require("model:manage"))) -> dict:
@@ -129,7 +223,7 @@ def model_train(req: TrainRequest,
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
-@router.get("/api/model/drift",
+@router.get("/api/model/drift", response_model=Drift,
            dependencies=[Depends(require("investigate"))])
 def model_drift() -> dict:
     """PSI of recent traffic against the training baseline (Module 3)."""
@@ -236,7 +330,7 @@ def _registry_call():
                             detail="registry operation failed") from None
 
 
-@router.get("/api/model/registry")
+@router.get("/api/model/registry", response_model=RegistryList)
 def model_registry_list() -> dict:
     """Registry rows (newest first) + the ACTIVE model.
 
@@ -246,20 +340,20 @@ def model_registry_list() -> dict:
     return engine.registry.list()
 
 
-@router.get("/api/model/registry/compare")
+@router.get("/api/model/registry/compare", response_model=RegistryCompare)
 def model_registry_compare(a: str, b: str) -> dict:
     """Field-by-field diff of two registry models (lineage evidence)."""
     with _registry_call():
         return engine.registry.compare(a, b)
 
 
-@router.get("/api/model/registry/{model_id}")
+@router.get("/api/model/registry/{model_id}", response_model=RegistryModel)
 def model_registry_get(model_id: str) -> dict:
     with _registry_call():
         return engine.registry.get(model_id)
 
 
-@router.post("/api/model/registry/{model_id}/validate",
+@router.post("/api/model/registry/{model_id}/validate", response_model=RegistryModel,
              dependencies=[Depends(require("model:manage"))])
 def model_registry_validate(model_id: str,
                             principal: dict = Depends(
@@ -270,7 +364,7 @@ def model_registry_validate(model_id: str,
                                         actor=principal["username"])
 
 
-@router.post("/api/model/registry/{model_id}/activate",
+@router.post("/api/model/registry/{model_id}/activate", response_model=RegistryModel,
              dependencies=[Depends(require("model:manage"))])
 def model_registry_activate(model_id: str,
                             principal: dict = Depends(
@@ -280,7 +374,7 @@ def model_registry_activate(model_id: str,
         return engine.registry.activate(model_id, actor=principal["username"])
 
 
-@router.post("/api/model/registry/{model_id}/retire",
+@router.post("/api/model/registry/{model_id}/retire", response_model=RegistryModel,
              dependencies=[Depends(require("model:manage"))])
 def model_registry_retire(model_id: str,
                           principal: dict = Depends(
@@ -290,7 +384,7 @@ def model_registry_retire(model_id: str,
         return engine.registry.retire(model_id, actor=principal["username"])
 
 
-@router.post("/api/model/registry/rollback",
+@router.post("/api/model/registry/rollback", response_model=RegistryModel,
              dependencies=[Depends(require("model:manage"))])
 def model_registry_rollback(
         principal: dict = Depends(require("model:manage"))) -> dict:

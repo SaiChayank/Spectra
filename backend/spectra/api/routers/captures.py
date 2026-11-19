@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import logging
 from contextlib import contextmanager
+from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 
@@ -22,9 +23,42 @@ from ...services.captures import (
 )
 from ...store import StoreError, StoreUnavailable
 from ..runtime import engine
+from ..schemas import Num, Out
 from ..security import require
 
 log = logging.getLogger("spectra.api")
+
+
+class CaptureResource(Out):
+    capture_id: int
+    original_name: Optional[str] = None
+    stored_name: Optional[str] = None
+    size_bytes: int
+    source_type: str
+    mode: str
+    status: str
+    imported_at: Optional[Num] = None
+    started_at: Optional[Num] = None
+    stopped_at: Optional[Num] = None
+    packets: int
+    flows: int
+    detections: int
+    error: Optional[str] = None
+    running: bool
+    unscored_flows: int
+    warnings: list[str]
+
+
+class CaptureList(Out):
+    count: int
+    offset: int
+    items: list[CaptureResource]
+
+
+class CaptureDeleted(Out):
+    deleted: int
+    file_removed: Any = None
+    original_name: Optional[str] = None
 
 #: Reads are any signed-in role; mutating routes (import/process/delete) are
 #: gated per-route with ``capture:manage`` (ADMIN).
@@ -61,7 +95,7 @@ def _translate():
                             detail="persistence failure") from None
 
 
-@router.post("/api/captures",
+@router.post("/api/captures", response_model=CaptureResource,
              dependencies=[Depends(require("capture:manage"))])
 def captures_import(file: UploadFile = File(...)) -> dict:
     """Import a PCAP/PCAPNG: validate -> store under a generated name -> row.
@@ -75,7 +109,7 @@ def captures_import(file: UploadFile = File(...)) -> dict:
         return engine.capture_resources.import_file(file.filename, chunks)
 
 
-@router.get("/api/captures")
+@router.get("/api/captures", response_model=CaptureList)
 def captures_list(
     limit: int = Query(20, ge=1, le=500),
     offset: int = Query(0, ge=0),
@@ -87,14 +121,14 @@ def captures_list(
             limit=limit, offset=offset, status=status)
 
 
-@router.get("/api/captures/{capture_id}")
+@router.get("/api/captures/{capture_id}", response_model=CaptureResource)
 def capture_details(capture_id: int) -> dict:
     """One capture's persisted metadata and lifecycle state."""
     with _translate():
         return engine.capture_resources.details(capture_id)
 
 
-@router.post("/api/captures/{capture_id}/process",
+@router.post("/api/captures/{capture_id}/process", response_model=CaptureResource,
              dependencies=[Depends(require("capture:manage"))])
 def capture_process(capture_id: int) -> dict:
     """Process (or reprocess) a stored capture through detection.
@@ -106,7 +140,7 @@ def capture_process(capture_id: int) -> dict:
         return engine.capture_resources.process(capture_id)
 
 
-@router.delete("/api/captures/{capture_id}",
+@router.delete("/api/captures/{capture_id}", response_model=CaptureDeleted,
                dependencies=[Depends(require("capture:manage"))])
 def capture_delete(capture_id: int) -> dict:
     """Delete a capture row and its stored file (refused while it runs).

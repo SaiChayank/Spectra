@@ -1,6 +1,17 @@
 {
   "components": {
     "schemas": {
+      "Alert": {},
+      "AlertList": {},
+      "AuditCertificate": {},
+      "AuditCheckpoint": {},
+      "AuditChecks": {},
+      "AuditEntries": {},
+      "AuditEntry": {},
+      "AuditHead": {},
+      "AuditKeyRotation": {},
+      "AuditProof": {},
+      "AuditVerify": {},
       "BioAssessRequest": {
         "properties": {
           "anomaly": {
@@ -53,6 +64,9 @@
         "title": "Body_captures_import_api_captures_post",
         "type": "object"
       },
+      "Capabilities": {},
+      "CaptureDeleted": {},
+      "CaptureList": {},
       "CaptureRequest": {
         "description": "Live capture only - file processing is ``POST /api/captures/{id}/process``.\n\nThe mode pattern rejects ``pcap`` outright (422): a path-bearing or\npathless pcap start no longer exists, so no client can make the server\nopen an arbitrary filesystem path through this route.",
         "properties": {
@@ -85,6 +99,7 @@
         "title": "CaptureRequest",
         "type": "object"
       },
+      "CaptureResource": {},
       "CertificateRequest": {
         "properties": {
           "bits": {
@@ -153,6 +168,7 @@
         "title": "CertificateVerifyRequest",
         "type": "object"
       },
+      "Drift": {},
       "EdgeDeployRequest": {
         "properties": {
           "node": {
@@ -208,6 +224,8 @@
         "title": "EdgeSliceRequest",
         "type": "object"
       },
+      "EvalReport": {},
+      "EvalReports": {},
       "EvidenceItem": {
         "properties": {
           "alert_id": {
@@ -275,6 +293,13 @@
         "title": "EvidenceItem",
         "type": "object"
       },
+      "Flow": {},
+      "FlowList": {},
+      "GraphCascade": {},
+      "GraphNode": {},
+      "GraphPath": {},
+      "GraphSummary": {},
+      "GraphView": {},
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -340,6 +365,15 @@
         "title": "HardenRequest",
         "type": "object"
       },
+      "Health": {},
+      "HealthSystem": {},
+      "HistoryCapture": {},
+      "HistoryCaptureList": {},
+      "HistoryEvent": {},
+      "HistoryEventList": {},
+      "HistoryFlow": {},
+      "HistoryFlowList": {},
+      "HistoryStats": {},
       "HostEvidence": {
         "properties": {
           "count": {
@@ -493,6 +527,9 @@
         "title": "HostVerdict",
         "type": "object"
       },
+      "Identity": {},
+      "IdentityResponse": {},
+      "Incident": {},
       "IncidentAttach": {
         "properties": {
           "alert_ids": {
@@ -533,6 +570,7 @@
         "title": "IncidentCorrelate",
         "type": "object"
       },
+      "IncidentCorrelation": {},
       "IncidentCreate": {
         "properties": {
           "alert_ids": {
@@ -587,6 +625,9 @@
         "title": "IncidentCreate",
         "type": "object"
       },
+      "IncidentDetail": {},
+      "IncidentList": {},
+      "IncidentNote": {},
       "IncidentNoteCreate": {
         "properties": {
           "body": {
@@ -602,6 +643,8 @@
         "title": "IncidentNoteCreate",
         "type": "object"
       },
+      "Interfaces": {},
+      "InvestigationBundle": {},
       "LoginRequest": {
         "properties": {
           "password": {
@@ -636,6 +679,10 @@
         "title": "LoginRequest",
         "type": "object"
       },
+      "ModelInfo": {},
+      "ModelRun": {},
+      "ModelRunList": {},
+      "OkResponse": {},
       "PasswordChangeRequest": {
         "properties": {
           "current_password": {
@@ -670,6 +717,7 @@
         "title": "PasswordChangeRequest",
         "type": "object"
       },
+      "PasswordChanged": {},
       "PlaybookRequest": {
         "properties": {
           "actions": {
@@ -758,6 +806,9 @@
         "title": "PlaybookRequest",
         "type": "object"
       },
+      "RegistryCompare": {},
+      "RegistryList": {},
+      "RegistryModel": {},
       "RobustnessRequest": {
         "properties": {
           "capture_id": {
@@ -790,6 +841,7 @@
         "title": "RobustnessRequest",
         "type": "object"
       },
+      "SearchResponse": {},
       "ShadowRequest": {
         "properties": {
           "capture_id": {
@@ -891,6 +943,8 @@
         "title": "SimulateRequest",
         "type": "object"
       },
+      "Stats": {},
+      "Status": {},
       "StoredVerdict": {
         "properties": {
           "actor": {
@@ -1130,6 +1184,7 @@
         "title": "TotpDisableRequest",
         "type": "object"
       },
+      "TotpDisabled": {},
       "TotpEnableRequest": {
         "properties": {
           "code": {
@@ -1145,6 +1200,9 @@
         "title": "TotpEnableRequest",
         "type": "object"
       },
+      "TotpRecovery": {},
+      "TotpReset": {},
+      "TotpSetup": {},
       "TotpSetupRequest": {
         "properties": {
           "password": {
@@ -1193,6 +1251,8 @@
         "title": "TrainRequest",
         "type": "object"
       },
+      "TrainResult": {},
+      "User": {},
       "UserCreate": {
         "properties": {
           "password": {
@@ -1221,6 +1281,8 @@
         "title": "UserCreate",
         "type": "object"
       },
+      "UserDeleted": {},
+      "UserList": {},
       "UserUpdate": {
         "properties": {
           "password": {
@@ -1538,9 +1600,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Alerts List Api Alerts Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AlertList"
                 }
               }
             },
@@ -1580,9 +1640,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Alerts Get Api Alerts  Alert Id  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Alert"
                 }
               }
             },
@@ -1622,9 +1680,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Alerts Acknowledge Api Alerts  Alert Id  Acknowledge Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Alert"
                 }
               }
             },
@@ -1664,9 +1720,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Alerts Resolve Api Alerts  Alert Id  Resolve Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Alert"
                 }
               }
             },
@@ -1705,9 +1759,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Audit Certificate Api Audit Certificate Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AuditCertificate"
                 }
               }
             },
@@ -1746,9 +1798,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Audit Certificate Verify Api Audit Certificate Verify Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AuditChecks"
                 }
               }
             },
@@ -1777,9 +1827,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Audit Checkpoint Api Audit Checkpoint Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AuditCheckpoint"
                 }
               }
             },
@@ -1816,9 +1864,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Audit Checkpoint Verify Api Audit Checkpoint Verify Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AuditChecks"
                 }
               }
             },
@@ -1936,9 +1982,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Audit Entries Api Audit Entries Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AuditEntries"
                 }
               }
             },
@@ -1966,9 +2010,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Audit Head Api Audit Head Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AuditHead"
                 }
               }
             },
@@ -2009,9 +2051,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Audit Proof Api Audit Proof Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AuditProof"
                 }
               }
             },
@@ -2040,9 +2080,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Audit Rotate Key Api Audit Rotate Key Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AuditKeyRotation"
                 }
               }
             },
@@ -2061,9 +2099,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Audit Verify Api Audit Verify Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AuditVerify"
                 }
               }
             },
@@ -2092,9 +2128,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Auth Login Api Auth Login Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/IdentityResponse"
                 }
               }
             },
@@ -2123,9 +2157,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Auth Logout Api Auth Logout Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/OkResponse"
                 }
               }
             },
@@ -2144,9 +2176,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Auth Me Api Auth Me Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/IdentityResponse"
                 }
               }
             },
@@ -2175,9 +2205,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Auth Password Api Auth Password Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/PasswordChanged"
                 }
               }
             },
@@ -2216,9 +2244,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Totp Disable Api Auth Totp Disable Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/TotpDisabled"
                 }
               }
             },
@@ -2257,9 +2283,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Totp Enable Api Auth Totp Enable Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/TotpRecovery"
                 }
               }
             },
@@ -2298,9 +2322,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Totp Setup Api Auth Totp Setup Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/TotpSetup"
                 }
               }
             },
@@ -2391,9 +2413,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Capabilities Api Capabilities Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Capabilities"
                 }
               }
             },
@@ -2422,9 +2442,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Capture Start Api Capture Start Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Status"
                 }
               }
             },
@@ -2452,9 +2470,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Capture Stop Api Capture Stop Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Status"
                 }
               }
             },
@@ -2515,9 +2531,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Captures List Api Captures Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CaptureList"
                 }
               }
             },
@@ -2554,9 +2568,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Captures Import Api Captures Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CaptureResource"
                 }
               }
             },
@@ -2596,9 +2608,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Capture Delete Api Captures  Capture Id  Delete",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CaptureDeleted"
                 }
               }
             },
@@ -2636,9 +2646,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Capture Details Api Captures  Capture Id  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CaptureResource"
                 }
               }
             },
@@ -2678,9 +2686,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Capture Process Api Captures  Capture Id  Process Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CaptureResource"
                 }
               }
             },
@@ -2723,9 +2729,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Detections Api Detections Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/FlowList"
                 }
               }
             },
@@ -2912,9 +2916,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Flows Api Flows Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/FlowList"
                 }
               }
             },
@@ -2989,9 +2991,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Graph View Api Graph Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/GraphView"
                 }
               }
             },
@@ -3059,9 +3059,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Graph Cascade Api Graph Cascade Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/GraphCascade"
                 }
               }
             },
@@ -3100,9 +3098,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Graph Node Api Graph Node Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/GraphNode"
                 }
               }
             },
@@ -3166,9 +3162,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Graph Path Api Graph Path Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/GraphPath"
                 }
               }
             },
@@ -3196,9 +3190,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Graph Summary Api Graph Summary Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/GraphSummary"
                 }
               }
             },
@@ -3216,7 +3208,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
               }
             },
             "description": "Successful Response"
@@ -3234,9 +3228,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response System Health Api Health System Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HealthSystem"
                 }
               }
             },
@@ -3297,9 +3289,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response History Captures Api History Captures Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HistoryCaptureList"
                 }
               }
             },
@@ -3467,9 +3457,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response History Detections Api History Detections Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HistoryFlowList"
                 }
               }
             },
@@ -3571,9 +3559,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response History Events Api History Events Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HistoryEventList"
                 }
               }
             },
@@ -3778,9 +3764,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response History Flows Api History Flows Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HistoryFlowList"
                 }
               }
             },
@@ -3834,9 +3818,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response History Model Runs Api History Model Runs Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ModelRunList"
                 }
               }
             },
@@ -3864,9 +3846,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response History Stats Api History Stats Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HistoryStats"
                 }
               }
             },
@@ -4173,9 +4153,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incidents List Api Incidents Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/IncidentList"
                 }
               }
             },
@@ -4212,9 +4190,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incidents Create Api Incidents Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Incident"
                 }
               }
             },
@@ -4260,9 +4236,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incidents Correlate Api Incidents Correlate Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/IncidentCorrelation"
                 }
               }
             },
@@ -4302,9 +4276,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incidents Get Api Incidents  Incident Id  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/IncidentDetail"
                 }
               }
             },
@@ -4344,9 +4316,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incidents Acknowledge Api Incidents  Incident Id  Acknowledge Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Incident"
                 }
               }
             },
@@ -4396,9 +4366,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incidents Attach Api Incidents  Incident Id  Alerts Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/IncidentDetail"
                 }
               }
             },
@@ -4438,9 +4406,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incidents False Positive Api Incidents  Incident Id  False Positive Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Incident"
                 }
               }
             },
@@ -4480,9 +4446,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incidents Investigate Api Incidents  Incident Id  Investigate Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Incident"
                 }
               }
             },
@@ -4532,9 +4496,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incidents Add Note Api Incidents  Incident Id  Notes Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/IncidentNote"
                 }
               }
             },
@@ -4574,9 +4536,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incidents Reopen Api Incidents  Incident Id  Reopen Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Incident"
                 }
               }
             },
@@ -4616,9 +4576,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incidents Resolve Api Incidents  Incident Id  Resolve Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Incident"
                 }
               }
             },
@@ -4647,9 +4605,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Interfaces Api Interfaces Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Interfaces"
                 }
               }
             },
@@ -4708,9 +4664,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Investigation Bundle Api Investigations  Incident Id  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/InvestigationBundle"
                 }
               }
             },
@@ -4757,9 +4711,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Info Api Model Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ModelInfo"
                 }
               }
             },
@@ -4778,9 +4730,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Drift Api Model Drift Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Drift"
                 }
               }
             },
@@ -4799,9 +4749,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Eval List Api Model Eval Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/EvalReports"
                 }
               }
             },
@@ -4831,9 +4779,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Eval Get Api Model Eval  Name  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/EvalReport"
                 }
               }
             },
@@ -4945,9 +4891,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Registry List Api Model Registry Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/RegistryList"
                 }
               }
             },
@@ -4986,9 +4930,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Registry Compare Api Model Registry Compare Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/RegistryCompare"
                 }
               }
             },
@@ -5017,9 +4959,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Registry Rollback Api Model Registry Rollback Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/RegistryModel"
                 }
               }
             },
@@ -5048,9 +4988,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Registry Get Api Model Registry  Model Id  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/RegistryModel"
                 }
               }
             },
@@ -5090,9 +5028,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Registry Activate Api Model Registry  Model Id  Activate Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/RegistryModel"
                 }
               }
             },
@@ -5132,9 +5068,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Registry Retire Api Model Registry  Model Id  Retire Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/RegistryModel"
                 }
               }
             },
@@ -5174,9 +5108,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Registry Validate Api Model Registry  Model Id  Validate Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/RegistryModel"
                 }
               }
             },
@@ -5256,9 +5188,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Train Api Model Train Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/TrainResult"
                 }
               }
             },
@@ -5496,9 +5426,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Investigation Search Api Search Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/SearchResponse"
                 }
               }
             },
@@ -5526,9 +5454,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Stats Api Stats Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Stats"
                 }
               }
             },
@@ -5546,9 +5472,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Status Api Status Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Status"
                 }
               }
             },
@@ -6001,9 +5925,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Users List Api Users Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/UserList"
                 }
               }
             },
@@ -6030,9 +5952,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Users Create Api Users Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/User"
                 }
               }
             },
@@ -6072,9 +5992,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Users Delete Api Users  User Id  Delete",
-                  "type": "object"
+                  "$ref": "#/components/schemas/UserDeleted"
                 }
               }
             },
@@ -6111,9 +6029,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Users Get Api Users  User Id  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/User"
                 }
               }
             },
@@ -6161,9 +6077,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Users Update Api Users  User Id  Patch",
-                  "type": "object"
+                  "$ref": "#/components/schemas/User"
                 }
               }
             },
@@ -6203,9 +6117,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Users Totp Reset Api Users  User Id  Totp Delete",
-                  "type": "object"
+                  "$ref": "#/components/schemas/TotpReset"
                 }
               }
             },
