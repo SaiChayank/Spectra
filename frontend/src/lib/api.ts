@@ -1089,18 +1089,70 @@ export interface Identity {
 /** Tell the app the session ended (drops back to the login screen). */
 function notifyUnauthorized(path: string): void {
   // The login route owns its own 401s (bad credentials) — those are a
-  // failed form submit, not a session that just died.
-  if (!path.startsWith("/api/auth/login")) {
+  // failed form submit, not a session that just died. The startup session
+  // check (/api/auth/me) answers 401 when nobody is signed in: also not "ended".
+  if (!path.startsWith("/api/auth/login") && !path.startsWith("/api/auth/me")) {
     window.dispatchEvent(new CustomEvent("spectra:unauthorized"));
   }
 }
 
+/**
+ * Any non-2xx answer other than 401. Still an `Error` with the server's
+ * `detail` as its message, so existing `err.message` handling keeps working;
+ * `status` and `retryAfter` (seconds, from the Retry-After header) let the UI
+ * show a permission message (403), a countdown (429/503) or a conflict (409).
+ */
+export class ApiError extends Error {
+  readonly status: number;
+  readonly retryAfter: number | null;
+
+  constructor(message: string, status: number, retryAfter: number | null) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.retryAfter = retryAfter;
+  }
+}
+
+/** The server could not be reached at all (fetch rejected: down, DNS, CORS). */
+export class NetworkError extends Error {
+  constructor(message = "Cannot reach the Spectra server") {
+    super(message);
+    this.name = "NetworkError";
+  }
+}
+
+/** Retry-After in seconds (delta form only; the API never sends a date). */
+export function parseRetryAfter(value: string | null): number | null {
+  if (!value) return null;
+  const n = Number(value.trim());
+  return Number.isFinite(n) && n >= 0 ? Math.ceil(n) : null;
+}
+
+/**
+ * App-wide connection signals, dispatched on `window` so the shell can show
+ * one banner instead of every page reporting the same outage:
+ * `spectra:storage` (503, detail = seconds to wait), `spectra:offline`
+ * (network failure) and `spectra:online` (any answer from the server).
+ */
+function signal(name: "spectra:storage" | "spectra:offline" | "spectra:online", detail?: unknown) {
+  window.dispatchEvent(new CustomEvent(name, { detail }));
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    headers: { "Content-Type": "application/json" },
-    credentials: "include", // the session lives in an HttpOnly cookie
-    ...init,
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      headers: { "Content-Type": "application/json" },
+      credentials: "include", // the session lives in an HttpOnly cookie
+      ...init,
+    });
+  } catch (cause) {
+    signal("spectra:offline");
+    // keep the browser's own message for callers that show it; the shell banner says "Cannot reach"
+    throw new NetworkError(cause instanceof Error && cause.message ? cause.message : undefined);
+  }
+  signal("spectra:online");
   if (!res.ok) {
     let detail = res.statusText;
     try {
@@ -1113,7 +1165,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       notifyUnauthorized(path);
       throw new AuthError(detail, res.status);
     }
-    throw new Error(detail);
+    const retryAfter = parseRetryAfter(res.headers.get("retry-after"));
+    if (res.status === 503) signal("spectra:storage", retryAfter ?? 10);
+    throw new ApiError(detail, res.status, retryAfter);
   }
   return res.json() as Promise<T>;
 }

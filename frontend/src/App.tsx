@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import Landing from "./components/Landing";
 import LoginPanel from "./components/LoginPanel";
+import { Banner, Card, KeyValue, RoleChip, SkewButton, StorageBanner, UntrainedBanner } from "./components/ui";
 import {
+  ApiError,
+  NetworkError,
   api,
   type Detection,
   type FlowRecord,
@@ -10,9 +13,12 @@ import {
   type ThreatAlert,
   type WsEvent,
 } from "./lib/api";
-import { SECTIONS, SECTION_LABELS, useRoute, type Section } from "./lib/router";
+import { EXPERIMENTAL_LABELS, SECTION_LABELS, useRoute, type Section } from "./lib/router";
 import { useEvents } from "./lib/useEvents";
+import Shell, { type LiveState } from "./shell/Shell";
+import { useConnection } from "./shell/useConnection";
 import AuditPage from "./pages/AuditPage";
+import HostsPage from "./pages/HostsPage";
 import IncidentDetailPage from "./pages/IncidentDetailPage";
 import IncidentsPage from "./pages/IncidentsPage";
 import ModelsPage from "./pages/ModelsPage";
@@ -22,9 +28,6 @@ import NetworkPage from "./pages/NetworkPage";
 import OverviewPage from "./pages/OverviewPage";
 import SystemPage from "./pages/SystemPage";
 import TrafficPage from "./pages/TrafficPage";
-
-/** Sections the server gates behind `investigate` (shown, but restricted). */
-const INVESTIGATE_ONLY: Section[] = ["incidents", "network", "audit"];
 
 export default function App() {
   // -- session --------------------------------------------------------------
@@ -52,12 +55,23 @@ export default function App() {
       .finally(() => setAuthChecked(true));
   }, []);
 
-  // A 401 anywhere in the app ends the session: drop back to the landing page.
+  // A 401 anywhere in the app ends the session: go to sign-in with a message,
+  // remembering where the analyst was (in memory only) to return there after.
+  const [returnTo, setReturnTo] = useState<string | null>(null);
+  const [sessionEnded, setSessionEnded] = useState(false);
   useEffect(() => {
-    const onUnauthorized = () => setIdentity(null);
+    const onUnauthorized = () => {
+      const here = window.location.hash;
+      if (here && here !== "#/" && here !== "#/login") setReturnTo(here);
+      setSessionEnded(true);
+      setIdentity(null);
+      window.location.hash = "#/login";
+    };
     window.addEventListener("spectra:unauthorized", onUnauthorized);
     return () => window.removeEventListener("spectra:unauthorized", onUnauthorized);
   }, []);
+
+  const [connection, clearStorage] = useConnection();
 
   // Promise chain (not async/await) so state is set in callbacks, not
   // synchronously in the polling effect.
@@ -71,11 +85,11 @@ export default function App() {
         setError(null);
       })
       .catch((err: unknown) => {
-        setError(
-          `Backend unreachable (http://localhost:8787) — ${
-            err instanceof Error ? err.message : String(err)
-          }`,
-        );
+        // outages have their own banners (offline / storage); 401 ends the session
+        if (err instanceof NetworkError) return;
+        if (err instanceof ApiError && err.status === 503) return;
+        if (err instanceof Error && err.name === "AuthError") return;
+        setError(`Could not refresh the dashboard: ${err instanceof Error ? err.message : String(err)}`);
       });
   }, []);
 
@@ -145,48 +159,42 @@ export default function App() {
   };
 
   const status = snapshot?.status;
-  const running = status?.running ?? false;
-
-  const brand = (
-    <div className="brand">
-      <h1>SPECTRA</h1>
-      <span className="tagline">encrypted traffic threat detection · metadata only</span>
-    </div>
-  );
+  const live: LiveState = connected ? "live" : connection.offline ? "offline" : "reconnecting";
 
   if (!authChecked) {
     return (
-      <div className="app">
-        <header className="topbar">
-          {brand}
-          <div className="spacer" />
-        </header>
-        <p className="note">Restoring session…</p>
+      <div className="sx" style={{ minHeight: "100vh", display: "grid", placeItems: "center" }}>
+        <p role="status">Restoring session…</p>
       </div>
     );
   }
 
-  // -- not signed in: landing at #/, sign-in at #/login, deep links → landing --
+  // -- not signed in: landing at #/, sign-in at #/login; a console deep link
+  //    goes to sign-in and comes back after (the landing/login redesign is step 4)
   if (!identity) {
+    const deepLink = route.kind === "console";
+    const pending = returnTo ?? (deepLink ? window.location.hash : null);
+    const finishLogin = (next: Identity) => {
+      setError(null);
+      setNotice(null);
+      setSessionEnded(false);
+      setIdentity(next);
+      setReturnTo(null);
+      navigate(pending ?? "#/overview");
+    };
     return (
       <div className="app">
-        <header className="topbar">
-          {brand}
-          <div className="spacer" />
-          <span className="pill">
-            <span className="dot" />
-            signed out
-          </span>
-        </header>
-        {route.kind === "login" ? (
-          <LoginPanel
-            onLogin={(next) => {
-              setError(null);
-              setNotice(null);
-              setIdentity(next);
-              navigate("#/overview");
-            }}
-          />
+        {route.kind === "login" || deepLink ? (
+          <div className="sx" style={{ background: "transparent", display: "grid", gap: 16 }}>
+            {sessionEnded ? (
+              <Banner tone="warn" title="Your session ended">
+                Sign in again to continue{pending ? " where you left off" : ""}.
+              </Banner>
+            ) : deepLink ? (
+              <Banner title="Sign in to continue">That page needs a signed-in user.</Banner>
+            ) : null}
+            <LoginPanel onLogin={finishLogin} />
+          </div>
         ) : (
           <Landing />
         )}
@@ -197,64 +205,81 @@ export default function App() {
   // -- signed in: console routes (any other hash lands on Overview) ----------
   const section: Section = route.kind === "console" ? route.section : "overview";
   const incidentId = route.kind === "console" ? route.incidentId : null;
+  const module = route.kind === "console" ? route.module : null;
+  const title =
+    section === "incidents" && incidentId != null
+      ? `Incident #${incidentId}`
+      : section === "experimental" && module
+        ? EXPERIMENTAL_LABELS[module]
+        : SECTION_LABELS[section];
+
+  const banners = (
+    <>
+      {connection.offline ? (
+        <Banner tone="error" title="Cannot reach the Spectra server">
+          Check that the backend is running. The console keeps retrying every few seconds; what you see may be out of date.
+        </Banner>
+      ) : null}
+      {connection.storage ? (
+        <StorageBanner
+          key={connection.storage.key}
+          retryAfter={connection.storage.retryAfter}
+          onRetry={() => {
+            clearStorage();
+            refresh();
+          }}
+        />
+      ) : null}
+      {snapshot && !snapshot.model.trained ? (
+        <UntrainedBanner canTrain={can("model:manage")} onTrain={() => navigate("#/models")} />
+      ) : null}
+      {status?.error ? (
+        <Banner tone="error" title="Capture error">
+          {status.error}
+        </Banner>
+      ) : null}
+      {error ? (
+        <Banner
+          tone="error"
+          title="Something went wrong"
+          action={
+            <SkewButton variant="ghost" size="sm" onClick={() => setError(null)}>
+              Dismiss
+            </SkewButton>
+          }
+        >
+          {error}
+        </Banner>
+      ) : null}
+      {notice ? (
+        <Banner
+          title="Done"
+          action={
+            <SkewButton variant="ghost" size="sm" onClick={() => setNotice(null)}>
+              Dismiss
+            </SkewButton>
+          }
+        >
+          {notice}
+        </Banner>
+      ) : null}
+    </>
+  );
 
   return (
-    <div className="app">
-      <header className="topbar">
-        {brand}
-        <div className="spacer" />
-        <span className={`pill ${status?.error ? "err" : running ? "live" : ""}`}>
-          <span className="dot" />
-          {status?.error ? "capture error" : running ? "capturing" : "idle"}
-        </span>
-        <span className={`pill ${connected ? "ws" : ""}`}>
-          <span className="dot" />
-          {connected ? "live events" : "reconnecting"}
-        </span>
-        <span className={`pill ${snapshot?.model.trained ? "ws" : ""}`}>
-          <span className="dot" />
-          {snapshot?.model.trained ? "model ready" : "untrained"}
-        </span>
-        <span className="pill" title={identity.user.permissions.join(", ")}>
-          {identity.user.username} · {identity.user.role}
-        </span>
-        <button className="ghost" onClick={signOut} title="End this session">
-          Sign out
-        </button>
-      </header>
-
-      {error && <div className="error-banner">{error}</div>}
-      {notice && (
-        <div className="success-banner" onClick={() => setNotice(null)}>
-          {notice}
-        </div>
-      )}
-      {status?.error && <div className="error-banner">Capture error: {status.error}</div>}
-
-      <nav className="tabs" aria-label="Sections">
-        {SECTIONS.map((id) => {
-          const gated = !can("investigate") && INVESTIGATE_ONLY.includes(id);
-          return (
-            <button
-              key={id}
-              className={`tab ${section === id ? "active" : ""}${gated ? " gated" : ""}`}
-              onClick={() => navigate(`#/${id}`)}
-              aria-current={section === id}
-              title={
-                gated
-                  ? `${SECTION_LABELS[id]} requires the investigate permission — opens in a restricted state`
-                  : undefined
-              }
-            >
-              {SECTION_LABELS[id]}
-            </button>
-          );
-        })}
-      </nav>
-
-      {section === "overview" && (
-        <OverviewPage snapshot={snapshot} alerts={alerts} can={can} />
-      )}
+    <Shell
+      identity={identity}
+      section={section}
+      module={module}
+      title={title}
+      can={can}
+      capture={status}
+      model={snapshot?.model}
+      live={live}
+      onSignOut={signOut}
+      banners={banners}
+    >
+      {section === "overview" && <OverviewPage snapshot={snapshot} alerts={alerts} can={can} />}
 
       {section === "monitor" && (
         <MonitorPage
@@ -271,34 +296,48 @@ export default function App() {
         />
       )}
 
-      {section === "incidents" && (
-        incidentId != null ? (
-          <IncidentDetailPage
-            incidentId={incidentId}
-            can={can}
-            onError={setError}
-            onNotice={setNotice}
-          />
+      {section === "incidents" &&
+        (incidentId != null ? (
+          <IncidentDetailPage incidentId={incidentId} can={can} onError={setError} onNotice={setNotice} />
         ) : (
           <IncidentsPage can={can} onError={setError} onNotice={setNotice} />
-        )
-      )}
+        ))}
+
+      {section === "hosts" && <HostsPage />}
 
       {section === "traffic" && <TrafficPage can={can} />}
 
       {section === "network" && <NetworkPage can={can} />}
 
-      {section === "models" && (
-        <ModelsPage can={can} onError={setError} onNotice={setNotice} />
-      )}
+      {section === "models" && <ModelsPage can={can} onError={setError} onNotice={setNotice} />}
 
       {section === "audit" && <AuditPage can={can} />}
 
-      {section === "modules" && (
-        <ModulesPage can={can} onError={setError} onNotice={setNotice} />
+      {section === "experimental" && (
+        <div style={{ display: "grid", gap: 16 }}>
+          <Banner tone="warn" title="Experimental · simulated or frozen">
+            These modules are software simulations or frozen by the owner's decision. They are not production security controls.
+          </Banner>
+          <ModulesPage can={can} onError={setError} onNotice={setNotice} />
+        </div>
       )}
 
       {section === "system" && <SystemPage connected={connected} />}
-    </div>
+
+      {section === "account" && (
+        <Card title={identity.user.username} eyebrow="Signed in as" style={{ maxWidth: 640 }}>
+          <KeyValue
+            rows={[
+              ["Role", <RoleChip role={identity.user.role} />],
+              ["Permissions", <span className="sx-mono">{identity.user.permissions.join(", ")}</span>],
+              ["Two-factor", identity.user.totp_enabled ? "Enabled" : "Not enabled"],
+            ]}
+          />
+          <p className="sx-hint" style={{ marginTop: 12 }}>
+            Changing your password and two-factor setup arrive with the Account screen (step 5).
+          </p>
+        </Card>
+      )}
+    </Shell>
   );
 }

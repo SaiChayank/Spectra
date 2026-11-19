@@ -70,6 +70,23 @@ viewfinder brackets. Motion: 200 ms hovers, 500 ms entrances, everything off und
 | Console page titles are 26 px sentence case; caps display type only on landing, login and empty-state headings | density |
 | Score meter always prints the threshold and "unusual for this network, not proof" | rule 2 |
 
+## Step 3: shell and global behaviour (2026-11-19)
+
+* `src/shell/Shell.tsx`: sidebar (skewed items, current page with the active-tab look, "restricted" for sections that need
+  `investigate`, "planned" for Hosts, an Experimental group marked "simulated"), collapsible on desktop (remembered as a UI
+  preference), a menu drawer below 860 px; top bar with page title, global search (`GET /api/search`, results in a drawer), capture
+  state, live-events state (live / reconnecting / offline, each as text), model state, user + role chip, sign out; skip link.
+* `src/lib/api.ts`: non-401 errors are `ApiError` (status + Retry-After), unreachable server is `NetworkError`; both still carry the
+  message existing pages show. The client signals `spectra:storage` / `spectra:offline` / `spectra:online`; `useConnection` turns
+  them into banners.
+* Global banners: "Cannot reach the Spectra server"; "Storage temporarily unavailable, retrying in N s" (one countdown per outage,
+  then a refresh); "No trained model" on every page with "Train a baseline" only for `model:manage`; capture error.
+* 401 mid-session → sign-in with "Your session ended", then back to the page the analyst was on. A deep link while signed out →
+  sign-in, then that page. (Sign-in itself is restyled in step 4; 429 countdown there.)
+* Existing pages render inside the shell and pick up the new palette through a variable bridge in `shell.css`; each is fully
+  restyled in steps 5–7. Hosts is a "planned" page; Account shows the profile until step 5.
+* Mock: the switcher is now bottom-left, with a "Demo data, no trained model" scenario.
+
 ## Not done yet / known gaps
 
 * **`THIRD_PARTY_NOTICES.md`** is not regenerated: the generator resolves Python packages for the Linux container (it needs

@@ -1,0 +1,310 @@
+/* Console shell: sidebar, top bar, banners, content. Tokens: src/styles/tokens.css. */
+
+.sx-shell {
+  /*
+   * Bridge: the existing pages (src/pages, src/components) read these
+   * variables from index.css. Inside the shell they resolve to the new
+   * tokens, so old pages take the new palette until each is restyled.
+   */
+  --bg: var(--bg-1);
+  --bg-panel: var(--surface-1);
+  --bg-panel-2: var(--surface-2);
+  --border: rgba(255, 255, 255, 0.1);
+  --text: var(--text-1);
+  --text-dim: var(--text-3);
+  --accent: var(--blue-400);
+  --accent-2: var(--blue-300);
+  --danger: var(--sev-critical);
+  --warn: var(--sev-medium);
+
+  --sidebar-w: 232px;
+  display: grid;
+  grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+  min-height: 100vh;
+  background: var(--bg-1);
+}
+.sx-shell[data-collapsed="true"] {
+  --sidebar-w: 64px;
+}
+
+.sx-skip {
+  position: absolute;
+  left: 8px;
+  top: -48px;
+  z-index: 300;
+  padding: 8px 12px;
+  background: var(--btn-light);
+  color: var(--text-on-light) !important;
+  border-radius: var(--radius-s);
+}
+.sx-skip:focus {
+  top: 8px;
+}
+
+/* -- sidebar ------------------------------------------------------------- */
+.sx-sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 12px 12px;
+  background: var(--bg-0);
+  border-right: 1px solid var(--line);
+  overflow-y: auto;
+}
+.sx-sidebar-head {
+  padding: 2px 8px 10px;
+  min-height: 40px;
+}
+.sx-brand {
+  text-decoration: none;
+}
+.sx-nav {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 4px;
+}
+.sx-nav ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 3px;
+}
+.sx-nav-group {
+  margin: 14px 8px 4px !important;
+  min-height: 14px;
+}
+.sx-shell[data-collapsed="true"] .sx-nav-group::before {
+  display: none;
+}
+.sx-nav-bottom {
+  margin-top: auto !important;
+  padding-top: 12px !important;
+  border-top: 1px solid var(--line);
+}
+/* sidebar items: skewed tabs (reduced skew), grey glass, blue edge when current */
+.sx-nav-item {
+  --k: var(--skew-s);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 36px;
+  padding: 0 calc(10px + var(--k));
+  clip-path: polygon(var(--k) 0, 100% 0, calc(100% - var(--k)) 100%, 0 100%);
+  color: var(--text-2) !important;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  transition:
+    background var(--t-hover) var(--ease),
+    color var(--t-hover) var(--ease);
+}
+.sx-nav-item:hover {
+  background: var(--surface-2);
+  color: var(--text-1) !important;
+}
+.sx-nav-item[aria-current="page"] {
+  color: var(--text-1) !important;
+  background: linear-gradient(180deg, rgba(42, 102, 204, 0.28) 0%, var(--tab-active-fill) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(93, 162, 247, 0.9),
+    inset 0 0 0 1px var(--tab-active-edge);
+}
+.sx .sx-nav-item:focus-visible {
+  outline: none;
+  box-shadow:
+    inset 0 0 0 2px var(--text-1),
+    inset 0 0 0 3px var(--blue-400);
+}
+.sx-nav-icon {
+  display: inline-flex;
+  flex: none;
+  color: var(--text-3);
+}
+.sx-nav-item[aria-current="page"] .sx-nav-icon,
+.sx-nav-item:hover .sx-nav-icon {
+  color: var(--blue-400);
+}
+.sx-nav-label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sx-nav-note {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: var(--track-ui);
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+.sx-shell[data-collapsed="true"] .sx-nav-label,
+.sx-shell[data-collapsed="true"] .sx-nav-note {
+  display: none;
+}
+.sx-shell[data-collapsed="true"] .sx-nav-item {
+  justify-content: center;
+  padding: 0;
+}
+.sx-collapse {
+  align-self: flex-end;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  color: var(--text-2);
+  cursor: pointer;
+}
+.sx-collapse:hover {
+  color: var(--text-1);
+  border-color: var(--line-strong);
+}
+
+/* -- top bar ----------------------------------------------------------------- */
+.sx-main-col {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.sx-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 12px clamp(16px, 2.4vw, 28px);
+  background: rgba(10, 11, 13, 0.92);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+.sx-topbar-title {
+  font-size: 20px !important;
+  font-weight: 300 !important;
+  white-space: nowrap;
+}
+.sx-search {
+  position: relative;
+  flex: 1 1 220px;
+  max-width: 420px;
+}
+.sx-search .sx-input {
+  padding-left: 34px;
+  min-height: 34px;
+  background: var(--surface-1);
+}
+.sx-search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-3);
+  display: inline-flex;
+  pointer-events: none;
+}
+.sx-topbar-status {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.sx-topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+.sx-user {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-1) !important;
+  text-decoration: none;
+  font-size: 13px;
+}
+.sx-user:hover .sx-user-name {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.sx-menu-btn {
+  display: none;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+  color: var(--text-1);
+  cursor: pointer;
+}
+
+/* -- banners + content -------------------------------------------------------- */
+.sx-banners {
+  display: grid;
+  gap: 8px;
+  padding: 12px clamp(16px, 2.4vw, 28px) 0;
+}
+.sx-content {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  outline: none;
+}
+.sx-content-inner {
+  position: relative;
+  max-width: 1480px;
+  padding: 20px clamp(16px, 2.4vw, 28px) 64px;
+}
+
+/* -- search drawer ----------------------------------------------------------------- */
+.sx-search-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.sx-search-row {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-s);
+}
+
+/* -- narrow screens: no sidebar, menu drawer, stacked top bar ------------------------ */
+@media (max-width: 860px) {
+  .sx-shell,
+  .sx-shell[data-collapsed="true"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sx-sidebar {
+    display: none;
+  }
+  .sx-menu-btn {
+    display: grid;
+  }
+  .sx-topbar {
+    gap: 10px;
+  }
+  .sx-search {
+    order: 5;
+    flex-basis: 100%;
+    max-width: none;
+  }
+  .sx-topbar-status {
+    order: 6;
+  }
+  .sx-user-name {
+    display: none;
+  }
+}

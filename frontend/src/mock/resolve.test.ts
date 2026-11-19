@@ -67,6 +67,14 @@ describe("mock resolver", () => {
     expect(resolve(index, s, req("GET", "/api/model"), 1).body).toEqual(index.named("GET_api_model__empty")!.body);
   });
 
+  it("keeps demo data but reports an untrained model in the no-model scenario", () => {
+    const s = signIn("admin", "no-model");
+    const stats = resolve(index, s, req("GET", "/api/stats"), 1).body as { model: { trained: boolean }; totals: { flows: number } };
+    expect(stats.model.trained).toBe(false);
+    expect(stats.totals.flows).toBeGreaterThan(0);
+    expect(resolve(index, s, req("GET", "/api/model"), 1).body).toEqual(index.named("GET_api_model__empty")!.body);
+  });
+
   it("fails writes with 503 + Retry-After and reports a busy database in the storage scenario", () => {
     const s = signIn("admin", "storage-503");
     const w = resolve(index, s, req("POST", "/api/incidents"), 1);

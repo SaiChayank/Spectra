@@ -90,7 +90,7 @@ function MockPanel() {
 
   const box: React.CSSProperties = {
     position: "fixed",
-    right: 12,
+    left: 12,
     bottom: 12,
     zIndex: 9999,
     font: "12px system-ui, sans-serif",

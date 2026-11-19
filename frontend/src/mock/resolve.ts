@@ -20,6 +20,7 @@ export type Role = "ADMIN" | "ANALYST" | "VIEWER";
 export type Scenario =
   | "normal"
   | "empty" // no data, no model
+  | "no-model" // demo data, but no trained model
   | "storage-503" // writes fail with 503 + Retry-After, health shows busy
   | "login-429" // login throttled with Retry-After
   | "session-expiry"; // the session dies after SESSION_TTL_MS
@@ -27,6 +28,7 @@ export type Scenario =
 export const SCENARIOS: { id: Scenario; label: string }[] = [
   { id: "normal", label: "Demo data (normal)" },
   { id: "empty", label: "Empty database, no model" },
+  { id: "no-model", label: "Demo data, no trained model" },
   { id: "storage-503", label: "Storage unavailable (503 on writes)" },
   { id: "login-429", label: "Login throttled (429)" },
   { id: "session-expiry", label: "Session expires after 60 s" },
@@ -220,6 +222,17 @@ export function resolve(index: FixtureIndex, state: MockState, req: MockRequest,
     const recorded = cands.find((f) => f.status === 403 && variantOf(f).endsWith(role.toLowerCase()));
     if (recorded) return fromFixture(recorded);
     return json(403, { detail: `role ${role} lacks the '${perm}' permission` }, { "x-mock": "generic 403" });
+  }
+
+  // --- scenario: data but no trained model ------------------------------
+  if (state.scenario === "no-model" && method === "GET") {
+    if (path === "/api/model") return fromFixture(index.named("GET_api_model__empty")!);
+    if (path === "/api/stats") {
+      // recorded demo stats with the model block from the untrained recording
+      const stats = index.named("GET_api_stats")!;
+      const untrained = (index.named("GET_api_stats__empty")!.body as { model: unknown }).model;
+      return fromFixture(stats, { body: { ...(stats.body as object), model: untrained } });
+    }
   }
 
   // --- data -------------------------------------------------------------
