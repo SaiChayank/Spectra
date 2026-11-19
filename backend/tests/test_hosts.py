@@ -40,7 +40,7 @@ def seeded():
 
 
 def _mine(res) -> list[dict]:
-    return [h for h in res.json()["items"] if h["host"].startswith("10.77.")]
+    return [h for h in res.json()["items"] if h["host"] in (HI, MID, LOW)]  # other tests share 10.77/16
 
 
 def test_ranking_order_and_shape():
