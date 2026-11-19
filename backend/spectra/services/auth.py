@@ -164,10 +164,11 @@ class _Meter:
             return block["until"] - now
         return None
 
-    def fail(self, key, now: float) -> None:
+    def fail(self, key, now: float) -> dict | None:
+        """Count a failure; returns the new block when this one starts it."""
         block = self.blocks.get(key)
         if block is not None and block["until"] > now:
-            return                      # already blocked: attempts do not extend it
+            return None                 # already blocked: attempts do not extend it
         if block is not None and now - block["until"] > self.strike_ttl:
             del self.blocks[key]        # quiet long enough: forgiven
             block = None
@@ -177,12 +178,14 @@ class _Meter:
             strikes = (block["strikes"] if block else 0) + 1
             length = min(self.window * 2 ** (strikes - 1), self.max_block)
             self.blocks.pop(key, None)  # re-insert last: dict order = recency
-            self.blocks[key] = {"until": now + length, "strikes": strikes}
+            started = self.blocks[key] = {"until": now + length, "strikes": strikes}
             self.events.pop(key, None)
         else:
+            started = None
             self.events[key] = times
         if len(self.events) > self.MAX_KEYS or len(self.blocks) > self.MAX_KEYS:
             self._shrink(now)
+        return started
 
     def success(self, key) -> None:
         self.events.pop(key, None)
@@ -243,6 +246,8 @@ class LoginThrottle:
         self.clock = clock
         self._pair = _Meter(limit, window, max_block, strike_ttl, clock)
         self._ip = _Meter(ip_limit, window, max_block, strike_ttl, clock)
+        #: blocks started since boot (``spectra_login_blocks_total``)
+        self.blocks_started = 0
 
     def retry_after(self, ip: str, username: str) -> float | None:
         """Seconds to wait when blocked, else ``None`` (allowed to try)."""
@@ -253,8 +258,15 @@ class LoginThrottle:
 
     def record_failure(self, ip: str, username: str) -> None:
         now = self.clock()
-        self._pair.fail((ip, username.casefold()), now)
-        self._ip.fail(ip, now)
+        for scope, meter, key in (("ip_user", self._pair, (ip, username.casefold())),
+                                  ("ip", self._ip, ip)):
+            block = meter.fail(key, now)
+            if block is not None:
+                self.blocks_started += 1
+                # one line per block episode; no username or address (personal data)
+                log.warning("login throttled", extra={
+                    "event": "login_throttled", "scope": scope,
+                    "block_s": round(block["until"] - now), "strikes": block["strikes"]})
 
     def record_success(self, ip: str, username: str) -> None:
         self._pair.success((ip, username.casefold()))

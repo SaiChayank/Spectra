@@ -21,6 +21,7 @@ import numpy as np
 
 from .. import __version__
 from ..config import Config
+from ..db.migrations import MIGRATIONS
 from ..health import (
     DB_WRITE_P95_MS,
     FLOW_SATURATION,
@@ -46,6 +47,9 @@ from .model import ModelService
 from .resilience import FailureTracker
 
 log = logging.getLogger("spectra.engine")
+
+#: Schema version this code migrates a database to (readiness compares to it).
+_SCHEMA_HEAD = max(m.version for m in MIGRATIONS)
 
 
 class _HealthInputs(TypedDict):
@@ -149,7 +153,8 @@ class SystemService:
     def __init__(self, status: dict, config: Config, store: Store | None,
                  model: ModelService, detection: DetectionService,
                  failures: FailureTracker, boot_ts: float | None = None,
-                 *, events=None, capability_provider=None, audit=None) -> None:
+                 *, events=None, capability_provider=None, audit=None,
+                 login_blocks=None) -> None:
         self.status = status
         self.config = config
         self.store = store
@@ -163,6 +168,8 @@ class SystemService:
         self._capability_provider = capability_provider
         #: AuditService (head sequence for the metrics scrape); optional
         self._audit = audit
+        #: () -> login-throttle blocks started (metrics); optional
+        self._login_blocks = login_blocks
         # Health-report bookkeeping: windowed-delta baseline (the first
         # report establishes it, so "since the previous check" never counts
         # process-start history) and the last state per subsystem for
@@ -222,6 +229,25 @@ class SystemService:
             "schema_version": getattr(store, "schema_version", None),
             "uptime_s": round(time.time() - self.boot_ts, 1),
         }
+
+    def readiness(self) -> dict:
+        """Ready to serve traffic: data dir and database writable (a busy
+        database is transient and still ready) and the schema exactly at the
+        version this code migrates to. Fixed strings only, no paths."""
+        writable = self._writability()
+        schema = "unknown"
+        if self.store is not None:
+            try:
+                current = int(self.store.schema_version)
+                schema = ("current" if current == _SCHEMA_HEAD
+                          else "behind" if current < _SCHEMA_HEAD else "ahead")
+            except Exception:  # noqa: BLE001 - a probe must answer, not raise
+                log.warning("readiness: schema version unreadable", exc_info=True)
+        checks = {"data_dir": writable["data_dir"], "database": writable["database"],
+                  "schema": schema}
+        ready = (checks["data_dir"] == "ok" and checks["database"] in ("ok", "busy")
+                 and schema == "current")
+        return {"ready": ready, "checks": checks}
 
     # -- operational health (GET /api/health/system) ---------------------------
 
@@ -875,6 +901,12 @@ class SystemService:
             lines.append('spectra_bio_assessments_total{response="%s"} %d'
                          % (response, int(bio.level_hist.get(level_no, 0))))
 
+        if self._login_blocks is not None:
+            try:
+                lines += ["# TYPE spectra_login_blocks_total counter",
+                          f"spectra_login_blocks_total {int(self._login_blocks())}"]
+            except Exception:  # noqa: BLE001 - metrics must never raise
+                pass
         if self._audit is not None:
             try:
                 head = int(self._audit.head().get("seq", 0))

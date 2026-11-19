@@ -48,7 +48,12 @@ on. Code: `backend/spectra/auth/`, `authz.py`, `api/security.py`,
 * Logout deletes the row by hash; changing a password revokes **all** of that
   user's sessions; deleting a user cascades their sessions. Role changes take
   effect on the next request (role is re-read, not cached in the token).
-* `/api/auth/*` responses carry `Cache-Control: no-store`.
+* `/api/auth/*` responses carry `Cache-Control: no-store`; every `/api/`
+  response carries `X-Content-Type-Options: nosniff`.
+* An exception no route maps becomes a fixed JSON 500
+  (`{"detail": "internal server error", "request_id": ...}`, CORS headers
+  kept); the traceback is logged under that request id
+  (`event=unhandled_error`), never returned.
 * **Changing your own password:** `POST /api/auth/password` (`current_password`,
   `new_password`, plus `totp_code` when the account has a second factor). Any
   signed-in role may use it. The current password is verified with the same
@@ -144,7 +149,7 @@ Later starts never reset or overwrite accounts. Setup details:
 
 Permissions are data (`authz.py`); routes declare which they need; middleware
 makes `/api/*` **default-deny** (public: `GET /api/health`,
-`POST /api/auth/login`).
+`GET /api/ready`, `POST /api/auth/login`).
 
 | Permission | VIEWER | ANALYST | ADMIN |
 |---|:---:|:---:|:---:|
@@ -157,7 +162,8 @@ makes `/api/*` **default-deny** (public: `GET /api/health`,
 | `users:manage` (user CRUD) | — | — | ✅ |
 
 * Violations return `403` with the missing permission named; no session → `401`.
-* The public surface is exactly `GET /api/health`, `POST /api/auth/login`, and
+* The public surface is exactly `GET /api/health`, `GET /api/ready` (booleans
+  and fixed strings only), `POST /api/auth/login`, and
   FastAPI's own `/docs`, `/redoc`, `/openapi.json` (route *descriptions* — they
   return no data and every `/api/*` call from them still needs a session).
 * Guards: you cannot delete your own account, and the **last ADMIN** cannot be

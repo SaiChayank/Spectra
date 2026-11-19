@@ -54,7 +54,7 @@ from .routers import (
     users,
 )
 from ..store import StoreUnavailable
-from .middleware import RequestIdMiddleware
+from .middleware import RequestIdMiddleware, UnhandledErrorMiddleware
 from .runtime import cfg, engine  # noqa: F401  (re-exported for tests/tools)
 from .security import (
     auth_gate,
@@ -199,6 +199,10 @@ app.middleware("http")(auth_gate)
 # responses still get CORS headers, and the body cap covers public routes
 # (login) before any session work happens.
 app.add_middleware(_BodyLimit)
+
+# Inside CORS, outside the body cap and the gate: any exception nothing else
+# mapped becomes a JSON 500 carrying the request id (see middleware module).
+app.add_middleware(UnhandledErrorMiddleware)
 
 app.add_middleware(
     CORSMiddleware,

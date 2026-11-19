@@ -43,6 +43,7 @@ A scrape config and alert rules are in `deploy/prometheus/` (`prometheus.example
 | `spectra_drift_psi{baseline="train"\|"recent"}`, `spectra_drift_level` | gauge | newest drift check (`0` stable, `1` moderate, `2` significant); **absent until a check has run** |
 | `spectra_bio_assessments_total{response}` | counter | flows per bio response: `ignore` / `monitor` / `alert` / `isolate` |
 | `spectra_audit_head_seq` | gauge | sequence number of the audit-chain head |
+| `spectra_login_blocks_total` | counter | login-throttle blocks started since boot (one per block episode, per ip+user and per ip); each also logs `event=login_throttled` with scope and length, never the username or address |
 
 Notes that matter when reading the numbers:
 

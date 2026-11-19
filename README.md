@@ -212,8 +212,8 @@ shadow all address captures by this generated id.
 ## Authentication & access control
 
 Local accounts only — no external OAuth/identity provider. A middleware makes
-`/api/*` **default-deny** (public: `GET /api/health`, `POST /api/auth/login`,
-`/docs`); every other request must resolve to a live session, and each protected
+`/api/*` **default-deny** (public: `GET /api/health`, `GET /api/ready`,
+`POST /api/auth/login`, `/docs`); every other request must resolve to a live session, and each protected
 route checks a permission from `spectra/authz.py`.
 
 | Role | Permissions |

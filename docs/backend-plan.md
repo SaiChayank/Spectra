@@ -1,6 +1,6 @@
 # Backend plan: the owner's generic backend brief mapped onto Spectra
 
-Status: **review round 1, 2026-11-19**, branch `backend/review-fixes`. The owner pasted a general backend brief (layered architecture,
+Status: **rounds 1-2, 2026-11-19**, branch `backend/review-fixes`. The owner pasted a general backend brief (layered architecture,
 auth, CRUD, files, notifications, jobs, payments, admin, integrations, security, performance, tests, observability, docs). This file
 checks every part of that brief against the code as it is, says what already exists (with the file that does it), what does not apply
 to a single-node, metadata-only detection tool, what needs an owner decision, and what is next. It does not replace `HANDOFF.md`,
@@ -17,7 +17,7 @@ to a single-node, metadata-only detection tool, what needs an owner decision, an
 | Auth | local accounts, scrypt, hashed session tokens, HttpOnly cookie or bearer, default-deny gate (`api/security.py`), RBAC ADMIN/ANALYST/VIEWER with permissions (`authz.py`), optional TOTP + recovery codes, escalating login throttle |
 | Audit | hash-chained, signed audit log with key epochs (`modules/audit`), every admin action appended |
 | Ops | request IDs + JSON access log (`api/middleware.py`), Prometheus `/api/metrics`, `/api/health` with a write probe, 503 + Retry-After on DB busy/disk full, backup/restore with a drill, Docker image, CI (tests, ruff, SAST, SCA, gitleaks, trivy) |
-| Tests | 925 before this round (count from `scripts/check_readme_counts.py`, enforced in CI) |
+| Tests | 925 before round 1, 953 after round 2 (count from `scripts/check_readme_counts.py`, enforced in CI) |
 
 ## 2. The brief, item by item
 
@@ -29,9 +29,9 @@ Legend: **Exists** (built and tested), **Partial**, **Gap** (worth doing), **N/A
 | Env-based config, secrets outside the repo | Exists | `config.py` (`SPECTRA_*`), `.env.example`, bootstrap password via env or a 0600 file |
 | dev / staging / prod profiles | Partial | `SPECTRA_PROFILE=hardened` vs local default; no separate staging profile (single node) |
 | Migrations | Exists | numbered, idempotent, atomic |
-| Centralised error handling | Exists | handlers for 422 (never echoes input), 413, OverflowError, StoreUnavailable/ENOSPC → 503 |
+| Centralised error handling | Exists | handlers for 422 (never echoes input), 413, OverflowError, StoreUnavailable/ENOSPC → 503; round 2: a JSON 500 with the request id for anything unmapped (was plain text, no id, no CORS) |
 | Request IDs + logging | Exists | `X-Request-ID` honoured or generated, path-only access log |
-| `GET /health`, `GET /ready` | Partial | `/api/health` is liveness + write probe; no separate readiness. Only needed for an orchestrator; add when one is used |
+| `GET /health`, `GET /ready` | Exists (round 2) | `/api/health` liveness + write probe; `/api/ready` readiness (storage writable, schema current). Kept under `/api/` like every other route; a root alias is a one-line change if a platform requires it |
 | `/api/v1/` versioning | **Decision** | renaming 101 routes breaks the dashboard and the contract check. Option: add `/api/v1` as an alias later and freeze `/api` |
 | `{success, data, message}` envelope | **Decision** | the API returns plain JSON and `{"detail": ...}` errors (FastAPI standard) across 101 routes and the frontend contract. Recommendation: keep it; if a machine-readable error code is wanted, add a `code` field next to `detail` without changing the shape |
 
@@ -56,7 +56,7 @@ Legend: **Exists** (built and tested), **Partial**, **Gap** (worth doing), **N/A
 | List / revoke own sessions | Gap (P2) | today only a password change revokes all sessions |
 | Account deactivation (disable without delete) | Gap (P2) | needs a migration (`users.disabled_at`) |
 | Brute-force protection | Exists | per ip+user and per-ip throttle, escalating blocks, no enumeration (`tests/test_login_backoff.py`) |
-| Log suspicious login activity | Partial (P2) | failed logins are deliberately not audited (unbounded writes); a throttle trip is not logged or counted either. Add a metric + one structured log line per block episode, without the attempted username |
+| Log suspicious login activity | Exists (round 2) | failed logins are deliberately not audited (unbounded writes); each throttle block now logs one `login_throttled` line (scope, length, strikes; no username or address) and counts in `spectra_login_blocks_total` |
 | Object-level authorisation | Exists for this model | single-tenant: every analyst sees every incident by design; per-user objects (sessions, TOTP) are keyed to the principal |
 | CSRF | **Fixed this round** | see §3, B-1 |
 
@@ -76,7 +76,7 @@ Legend: **Exists** (built and tested), **Partial**, **Gap** (worth doing), **N/A
 | Brief item | Status | Notes |
 |---|---|---|
 | Input validation, size limits | Exists | Pydantic bounds on every body/query, 4 MB JSON cap, capture cap |
-| Security headers | Partial (P2) | full set on the served dashboard (`api/webui.py`); JSON API responses lack `X-Content-Type-Options: nosniff` and `Cache-Control` outside `/api/auth/*` |
+| Security headers | Exists (round 2) | full set on the served dashboard (`api/webui.py`); every `/api/` response now has `nosniff`. `no-store` stays on `/api/auth/*` only: `tests/test_hardening.py` pins that scope, and JSON responses carry no validators, so browsers do not cache them heuristically |
 | CORS | Exists | explicit origin list, credentials only for those |
 | Never expose stack traces/secrets | Exists | generic bodies; 422 never echoes input; log scrubbing test |
 | Dependency scanning | Exists | pip-audit, npm audit, trivy, licence policy in CI |
@@ -103,7 +103,7 @@ Legend: **Exists** (built and tested), **Partial**, **Gap** (worth doing), **N/A
   present and is neither a configured dashboard origin nor the API's own host (403 `cross-origin request refused`). It runs before the
   public-route branch, so login CSRF is refused too. Requests without `Origin` (curl, scripts, CLI) are unchanged: browsers always send
   `Origin` on a POST, so a forged form cannot omit it. The WebSocket and HTTP checks now share one `origin_allowed()`.
-* **Tests.** `tests/test_csrf_origin.py` (10): foreign, `null` and other-host origins refused on a body-less POST, a multipart upload,
+* **Tests.** `tests/test_csrf_origin.py` (11): foreign, `null` and other-host origins refused on a body-less POST, a multipart upload,
   logout and login; dashboard origins, same-origin, no-Origin requests and reads still pass. All refusal cases failed before the fix.
 * **Review.** Access-control code: needs the owner's security review before merge (project rules §6).
 
@@ -119,13 +119,28 @@ Legend: **Exists** (built and tested), **Partial**, **Gap** (worth doing), **N/A
 * **Tests.** `tests/test_admin_guard_race.py` (4): replays the interleaving by pinning the count both racers read; demote/demote,
   delete/delete and demote/delete each keep one ADMIN; ordinary changes still work. The three race tests failed before the fix.
 
+### Round 2 (foundation)
+
+| Change | Why | Tests |
+|---|---|---|
+| `UnhandledErrorMiddleware` (`api/middleware.py`) | an unmapped exception answered Starlette's plain-text 500: no request id to quote, and no CORS headers, so the dashboard showed "cannot reach the server" instead of an error | `test_api_foundation.py`: JSON body, `X-Request-ID`, CORS kept, traceback logged under the id, no exception text in the body |
+| `GET /api/ready` (`services/system.py::readiness`) | the brief's readiness probe; liveness alone cannot tell an orchestrator that the schema is behind | 200 when ready; 503 on unwritable storage or a schema behind; a busy database stays ready |
+| `X-Content-Type-Options: nosniff` on `/api/` | API bodies must never be sniffed into HTML | four routes, metrics and a 401 |
+| throttle log + `spectra_login_blocks_total` | brute force was invisible to operators | one line per block, no username/address, metric present |
+
+All 13 tests failed on the round-1 code and pass now. The contract export gained `/api/ready` (openapi + one fixture).
+
+Found, not changed: on this machine (WSL, Python 3.12.3, numpy 2.5.4, scikit-learn 1.9.1, the locked versions) the
+contract export records `snn_score` 63.41 where the committed fixtures have 65.85 (three flow fixtures), on unmodified `main`
+too, so `test_frontend_contract_is_current` fails here. The bio SNN score is not reproducible across machines; see
+`HANDOFF_FINDINGS.md`.
+
 ## 4. Next tasks (proposed order, each a small reviewable change)
 
 | # | Task | Implementation tasks | Needs |
 |---|---|---|---|
 | P1-1 | `POST /api/auth/password` (self-service change) | route + service using `_credentials` re-entry, policy check, throttle like TOTP routes, revoke the caller's *other* sessions and keep the current one, audit entry; allow/deny tests per role; export the contract fixture; README route count | owner OK to promote the proposed contract (auth code: review) |
-| P2-1 | Throttle visibility | `spectra_login_throttled_total` counter, one structured warning per block episode (no username, no password), runbook line | none |
-| P2-2 | JSON API headers | `X-Content-Type-Options: nosniff` on every `/api/` response, `Cache-Control: no-store` on identity and user routes; header test | none |
+| P2-2 | SNN score reproducibility | find why `snn_score` differs across machines (seeding, float order) and make it deterministic, or exclude it from the contract recording | none |
 | P2-3 | Own sessions | `GET /api/auth/sessions`, `DELETE /api/auth/sessions/{id}` (own only, object-level test with two users) | review |
 | P2-4 | Deactivate accounts | migration v14 `users.disabled_at`, login + validate refuse disabled users, last-ADMIN guard counts only active admins | review |
 | D-1 | `/api/v1` and response envelope | see §2 | owner decision |
@@ -133,6 +148,9 @@ Legend: **Exists** (built and tested), **Partial**, **Gap** (worth doing), **N/A
 
 ## 5. Running list
 
-* **Completed this round:** backend review against the brief (this file); B-1 fixed and tested; B-2 fixed and tested.
-* **Pending:** §4. Owner security review of B-1 and B-2 before merge. Nothing pushed.
-* **Bugs found:** 2 · **fixed:** 2 · **open from earlier rounds:** see `HANDOFF_FINDINGS.md` (unchanged).
+* **Completed:** round 1 - review against the brief (this file), B-1 CSRF, B-2 last-ADMIN race. Round 2 - JSON 500 with
+  request id, `/api/ready`, API `nosniff`, throttle log + metric.
+* **Pending:** §4. Owner security review of B-1, B-2 and the throttle change before merge. Not pushed.
+* **Bugs found:** 4 (B-1, B-2, plain-text 500 without id/CORS, `snn_score` not reproducible) · **fixed:** 3 · **open:** the
+  `snn_score` finding, plus earlier rounds in `HANDOFF_FINDINGS.md`.
+* **Tests added:** 28 (`test_csrf_origin.py` 11, `test_admin_guard_race.py` 4, `test_api_foundation.py` 13).
