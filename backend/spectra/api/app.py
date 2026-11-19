@@ -45,6 +45,7 @@ from .routers import (
     edge,
     graph,
     history,
+    hosts,
     incidents,
     investigation,
     model,
@@ -216,7 +217,7 @@ for _router in (core.router, captures.router, model.router, history.router,
                 graph.router, pqc.router, audit.router, twin.router,
                 bio.router, tee.router, edge.router, auth.router,
                 users.router, incidents.router, alerts.router,
-                investigation.router):
+                investigation.router, hosts.router):
     app.include_router(_router)
 
 try:

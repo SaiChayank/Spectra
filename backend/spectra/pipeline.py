@@ -68,6 +68,7 @@ from .services import (
     ThreatAlertService,
     TrainingService,
 )
+from .services.hosts import HostTriageService
 from .store import Store
 from .streaming import initial_stream_status
 
@@ -229,6 +230,8 @@ class SpectraEngine:
             model_info=lambda: {"id": os.path.basename(self.model_path),
                                 **self.model.info()},
         )
+        self.hosts = HostTriageService(self.threat_alerts, self._store,
+                                       self.config)
         self.detection = DetectionService(
             self.status, self.config, self._store, self.model, self.events,
             self.correlation, self.alerts, self.threat_alerts, session,

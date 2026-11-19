@@ -60,6 +60,8 @@ models           table (v10) - the model registry: one row per artifact
                  RETIRED/FAILED lifecycle, a partial unique index enforcing
                  a single ACTIVE, and ``last_activated_at`` as the rollback
                  cursor; ``model_runs`` stays the training-lineage feed
+host verdicts    table (v14) - append-only analyst verdicts per host
+                 (true/expected/false); latest wins; stored, not yet used
 settings         deferred: configuration is env-driven (``SPECTRA_*``); a
                  settings table needs a settings API nobody consumes yet
 ===============  =========================================================
@@ -640,6 +642,27 @@ def _user_totp(db: Database) -> None:
                "ON user_recovery_codes(user_id, code_hash)")
 
 
+def _host_verdicts(db: Database) -> None:
+    """v14: analyst verdicts on hosts (host triage, append-only history).
+
+    One row per verdict; the latest row for a host wins.  Stored only - nothing
+    suppresses alerts from it yet (plan E6).  ``note`` is bounded free text
+    written by the analyst, never traffic content.  Additive.
+    """
+    db.execute(
+        """CREATE TABLE IF NOT EXISTS host_verdicts (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            host       TEXT NOT NULL,
+            verdict    TEXT NOT NULL CHECK (verdict IN ('true','expected','false')),
+            note       TEXT,
+            actor      TEXT NOT NULL,
+            created_at REAL NOT NULL
+        )"""
+    )
+    db.execute("CREATE INDEX IF NOT EXISTS idx_host_verdicts_host "
+               "ON host_verdicts(host, id)")
+
+
 MIGRATIONS: tuple[Migration, ...] = (
     Migration(1, "baseline_schema", _baseline),
     Migration(2, "flows_capture_foreign_key", _flows_capture_foreign_key),
@@ -654,6 +677,7 @@ MIGRATIONS: tuple[Migration, ...] = (
     Migration(11, "lookup_indexes", _lookup_indexes),
     Migration(12, "audit_key_epochs", _audit_key_epochs),
     Migration(13, "user_totp", _user_totp),
+    Migration(14, "host_verdicts", _host_verdicts),
 )
 
 
