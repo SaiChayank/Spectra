@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, lazy, useCallback, useEffect, useState } from "react";
 import Landing from "./components/Landing";
 import { LoginScreen, type LoginNotice } from "./components/LoginPanel";
-import { Banner, SkewButton, SkewTabs, StorageBanner, UntrainedBanner } from "./components/ui";
+import { Banner, Loading, SkewButton, SkewTabs, StorageBanner, UntrainedBanner } from "./components/ui";
 import {
   ApiError,
   NetworkError,
@@ -17,20 +17,22 @@ import { EXPERIMENTAL_LABELS, SECTION_LABELS, useRoute, type Section } from "./l
 import { useEvents } from "./lib/useEvents";
 import Shell, { type LiveState } from "./shell/Shell";
 import { useConnection } from "./shell/useConnection";
-import AuditPage from "./pages/AuditPage";
-import AccountPage from "./pages/AccountPage";
 import AlertsPage from "./pages/AlertsPage";
 import CapturesPage from "./pages/CapturesPage";
-import HostsPage from "./pages/HostsPage";
-import IncidentDetailPage from "./pages/IncidentDetailPage";
-import IncidentsPage from "./pages/IncidentsPage";
-import ModelsPage from "./pages/ModelsPage";
-import MonitorPage from "./pages/MonitorPage";
-import ModulesPage from "./pages/ModulesPage";
-import NetworkPage from "./pages/NetworkPage";
-import OverviewPage from "./pages/OverviewPage";
-import SystemPage from "./pages/SystemPage";
-import TrafficPage from "./pages/TrafficPage";
+
+// heavier pages load on first visit (smaller first bundle)
+const OverviewPage = lazy(() => import("./pages/OverviewPage"));
+const AuditPage = lazy(() => import("./pages/AuditPage"));
+const IncidentDetailPage = lazy(() => import("./pages/IncidentDetailPage"));
+const ModelsPage = lazy(() => import("./pages/ModelsPage"));
+const ModulesPage = lazy(() => import("./pages/ModulesPage"));
+const NetworkPage = lazy(() => import("./pages/NetworkPage"));
+const TrafficPage = lazy(() => import("./pages/TrafficPage"));
+const SystemPage = lazy(() => import("./pages/SystemPage"));
+const MonitorPage = lazy(() => import("./pages/MonitorPage"));
+const IncidentsPage = lazy(() => import("./pages/IncidentsPage"));
+const AccountPage = lazy(() => import("./pages/AccountPage"));
+const HostsPage = lazy(() => import("./pages/HostsPage"));
 
 export default function App() {
   // -- session --------------------------------------------------------------
@@ -286,6 +288,7 @@ export default function App() {
       onSignOut={signOut}
       banners={banners}
     >
+      <Suspense fallback={<Loading label="Loading page" />}>
       {section === "overview" && <OverviewPage snapshot={snapshot} alerts={alerts} can={can} />}
 
       {section === "monitor" && (
@@ -362,6 +365,7 @@ export default function App() {
           }}
         />
       )}
+      </Suspense>
     </Shell>
   );
 }
