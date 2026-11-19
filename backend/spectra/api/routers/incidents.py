@@ -8,16 +8,74 @@ the incident timeline - the router only translates domain errors to HTTP.
 
 from __future__ import annotations
 
+from typing import Any, Optional
+
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 
 from ...services.incidents import IncidentError
 from ..runtime import engine
+from ..schemas import Out
+from .alerts import Alert
 from ..security import auth_error, require
 
 router = APIRouter(dependencies=[Depends(require("investigate"))])
 
 _STATUS_PATTERN = "^(OPEN|INVESTIGATING|ACKNOWLEDGED|RESOLVED|FALSE_POSITIVE)$"
+
+
+class Incident(Out):
+    id: int
+    title: str
+    status: str
+    created_at: Optional[float] = None
+    created_by: Optional[str] = None
+    updated_at: Optional[float] = None
+    updated_by: Optional[str] = None
+    acknowledged_at: Optional[float] = None
+    acknowledged_by: Optional[str] = None
+    resolved_at: Optional[float] = None
+    resolved_by: Optional[str] = None
+    detection_id: Optional[int] = None
+    severity: Optional[str] = None
+    confidence: Optional[float] = None
+    summary: Optional[str] = None
+    evidence_summary: Optional[str] = None
+    primary_threat_class: Optional[str] = None
+    first_seen: Optional[float] = None
+    last_seen: Optional[float] = None
+    alert_count: Optional[int] = None
+    note_count: Optional[int] = None  # absent on state-change responses
+    affected_entities: list[str] = []
+    model_versions: list[str] = []
+    related_graph_nodes: list[str] = []
+
+
+class IncidentList(Out):
+    count: int
+    offset: int
+    items: list[Incident]
+
+
+class IncidentNote(Out):
+    id: int
+    incident_id: int
+    author: str
+    body: str
+    created_at: float
+
+
+class IncidentDetail(Incident):
+    notes: list[IncidentNote] = []
+    alerts: list[Alert] = []
+    timeline: list[dict[str, Any]] = []
+
+
+class IncidentCorrelation(Out):
+    clusters: int
+    considered: int
+    created: list[dict[str, Any]]
+    ungrouped: list[str]
 
 
 class IncidentCreate(BaseModel):
@@ -41,7 +99,7 @@ class IncidentNoteCreate(BaseModel):
     body: str = Field(min_length=1, max_length=2000)
 
 
-@router.get("/api/incidents")
+@router.get("/api/incidents", response_model=IncidentList)
 def incidents_list(
     status: str | None = Query(None, pattern=_STATUS_PATTERN),
     severity: str | None = Query(None, pattern="^(LOW|MEDIUM|HIGH|CRITICAL)$"),
@@ -64,7 +122,7 @@ def incidents_list(
         raise auth_error(exc) from exc
 
 
-@router.get("/api/incidents/{incident_id}")
+@router.get("/api/incidents/{incident_id}", response_model=IncidentDetail)
 def incidents_get(incident_id: int) -> dict:
     """One incident with its notes, member alerts, and timeline."""
     try:
@@ -73,7 +131,7 @@ def incidents_get(incident_id: int) -> dict:
         raise auth_error(exc) from exc
 
 
-@router.post("/api/incidents")
+@router.post("/api/incidents", response_model=Incident)
 def incidents_create(
     req: IncidentCreate,
     principal: dict = Depends(require("incidents:manage")),
@@ -89,7 +147,7 @@ def incidents_create(
     return incident
 
 
-@router.post("/api/incidents/correlate")
+@router.post("/api/incidents/correlate", response_model=IncidentCorrelation)
 def incidents_correlate(
     req: IncidentCorrelate | None = None,
     principal: dict = Depends(require("incidents:manage")),
@@ -108,7 +166,7 @@ def incidents_correlate(
         raise auth_error(exc) from exc
 
 
-@router.post("/api/incidents/{incident_id}/investigate")
+@router.post("/api/incidents/{incident_id}/investigate", response_model=Incident)
 def incidents_investigate(
     incident_id: int,
     principal: dict = Depends(require("incidents:manage")),
@@ -121,7 +179,7 @@ def incidents_investigate(
         raise auth_error(exc) from exc
 
 
-@router.post("/api/incidents/{incident_id}/reopen")
+@router.post("/api/incidents/{incident_id}/reopen", response_model=Incident)
 def incidents_reopen(
     incident_id: int,
     principal: dict = Depends(require("incidents:manage")),
@@ -133,7 +191,7 @@ def incidents_reopen(
         raise auth_error(exc) from exc
 
 
-@router.post("/api/incidents/{incident_id}/false-positive")
+@router.post("/api/incidents/{incident_id}/false-positive", response_model=Incident)
 def incidents_false_positive(
     incident_id: int,
     principal: dict = Depends(require("incidents:manage")),
@@ -146,7 +204,7 @@ def incidents_false_positive(
         raise auth_error(exc) from exc
 
 
-@router.post("/api/incidents/{incident_id}/alerts")
+@router.post("/api/incidents/{incident_id}/alerts", response_model=IncidentDetail)
 def incidents_attach(
     incident_id: int,
     req: IncidentAttach,
@@ -160,7 +218,7 @@ def incidents_attach(
         raise auth_error(exc) from exc
 
 
-@router.post("/api/incidents/{incident_id}/acknowledge")
+@router.post("/api/incidents/{incident_id}/acknowledge", response_model=Incident)
 def incidents_acknowledge(
     incident_id: int,
     principal: dict = Depends(require("incidents:manage")),
@@ -174,7 +232,7 @@ def incidents_acknowledge(
     return incident
 
 
-@router.post("/api/incidents/{incident_id}/resolve")
+@router.post("/api/incidents/{incident_id}/resolve", response_model=Incident)
 def incidents_resolve(
     incident_id: int,
     principal: dict = Depends(require("incidents:manage")),
@@ -188,7 +246,7 @@ def incidents_resolve(
     return incident
 
 
-@router.post("/api/incidents/{incident_id}/notes")
+@router.post("/api/incidents/{incident_id}/notes", response_model=IncidentNote)
 def incidents_add_note(
     incident_id: int,
     req: IncidentNoteCreate,

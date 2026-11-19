@@ -11,16 +11,52 @@ validates input and translates domain errors to HTTP.
 
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi import APIRouter, Depends, Query
 
 from ...services.investigation import InvestigationError
 from ..runtime import engine
+from ..schemas import Out
 from ..security import auth_error, require
 
 router = APIRouter(dependencies=[Depends(require("investigate"))])
 
 
-@router.get("/api/investigations/{incident_id}")
+class InvestigationBundle(Out):
+    """Sections are bounded, evolving projections: typed by name, free inside."""
+
+    # declared in the service's key order (the contract export numbers
+    # digests by first appearance, so order is observable)
+    incident: dict[str, Any]
+    notes: list[dict[str, Any]]
+    note_count: int
+    timeline: list[dict[str, Any]]
+    alerts: dict[str, Any]
+    flows: dict[str, Any]
+    window: dict[str, Any]
+    tls: dict[str, Any]
+    evidence: dict[str, Any]
+    hosts: list[dict[str, Any]]
+    domains: list[dict[str, Any]]
+    annotations: dict[str, Any]
+    graph: dict[str, Any]
+    twin: dict[str, Any]
+    audit: dict[str, Any]
+    models: dict[str, Any]
+    modules: dict[str, Any]
+    generated_at: float
+
+
+class SearchResponse(Out):
+    query: str
+    limit: int
+    count: int
+    kinds: list[str]
+    results: dict[str, Any]
+
+
+@router.get("/api/investigations/{incident_id}", response_model=InvestigationBundle)
 def investigation_bundle(
     incident_id: int,
     flow_limit: int | None = Query(None, ge=1, le=500),
@@ -39,7 +75,7 @@ def investigation_bundle(
         raise auth_error(exc) from exc
 
 
-@router.get("/api/search")
+@router.get("/api/search", response_model=SearchResponse)
 def investigation_search(
     q: str = Query(..., min_length=1, max_length=255),
     limit: int | None = Query(None, ge=1, le=50),

@@ -1,6 +1,8 @@
 {
   "components": {
     "schemas": {
+      "Alert": {},
+      "AlertList": {},
       "BioAssessRequest": {
         "properties": {
           "anomaly": {
@@ -493,61 +495,9 @@
         "title": "HostVerdict",
         "type": "object"
       },
-      "Identity": {
-        "additionalProperties": true,
-        "properties": {
-          "id": {
-            "title": "Id",
-            "type": "integer"
-          },
-          "permissions": {
-            "items": {
-              "type": "string"
-            },
-            "title": "Permissions",
-            "type": "array"
-          },
-          "role": {
-            "title": "Role",
-            "type": "string"
-          },
-          "totp_enabled": {
-            "title": "Totp Enabled",
-            "type": "boolean"
-          },
-          "username": {
-            "title": "Username",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "username",
-          "role",
-          "permissions",
-          "totp_enabled"
-        ],
-        "title": "Identity",
-        "type": "object"
-      },
-      "IdentityResponse": {
-        "additionalProperties": true,
-        "properties": {
-          "expires_at": {
-            "title": "Expires At",
-            "type": "number"
-          },
-          "user": {
-            "$ref": "#/components/schemas/Identity"
-          }
-        },
-        "required": [
-          "user",
-          "expires_at"
-        ],
-        "title": "IdentityResponse",
-        "type": "object"
-      },
+      "Identity": {},
+      "IdentityResponse": {},
+      "Incident": {},
       "IncidentAttach": {
         "properties": {
           "alert_ids": {
@@ -588,6 +538,7 @@
         "title": "IncidentCorrelate",
         "type": "object"
       },
+      "IncidentCorrelation": {},
       "IncidentCreate": {
         "properties": {
           "alert_ids": {
@@ -642,6 +593,9 @@
         "title": "IncidentCreate",
         "type": "object"
       },
+      "IncidentDetail": {},
+      "IncidentList": {},
+      "IncidentNote": {},
       "IncidentNoteCreate": {
         "properties": {
           "body": {
@@ -657,6 +611,7 @@
         "title": "IncidentNoteCreate",
         "type": "object"
       },
+      "InvestigationBundle": {},
       "LoginRequest": {
         "properties": {
           "password": {
@@ -691,20 +646,7 @@
         "title": "LoginRequest",
         "type": "object"
       },
-      "OkResponse": {
-        "additionalProperties": true,
-        "properties": {
-          "ok": {
-            "title": "Ok",
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "ok"
-        ],
-        "title": "OkResponse",
-        "type": "object"
-      },
+      "OkResponse": {},
       "PasswordChangeRequest": {
         "properties": {
           "current_password": {
@@ -739,25 +681,7 @@
         "title": "PasswordChangeRequest",
         "type": "object"
       },
-      "PasswordChanged": {
-        "additionalProperties": true,
-        "properties": {
-          "ok": {
-            "title": "Ok",
-            "type": "boolean"
-          },
-          "sign_in_required": {
-            "title": "Sign In Required",
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "ok",
-          "sign_in_required"
-        ],
-        "title": "PasswordChanged",
-        "type": "object"
-      },
+      "PasswordChanged": {},
       "PlaybookRequest": {
         "properties": {
           "actions": {
@@ -878,6 +802,7 @@
         "title": "RobustnessRequest",
         "type": "object"
       },
+      "SearchResponse": {},
       "ShadowRequest": {
         "properties": {
           "capture_id": {
@@ -1218,20 +1143,7 @@
         "title": "TotpDisableRequest",
         "type": "object"
       },
-      "TotpDisabled": {
-        "additionalProperties": true,
-        "properties": {
-          "totp_enabled": {
-            "title": "Totp Enabled",
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "totp_enabled"
-        ],
-        "title": "TotpDisabled",
-        "type": "object"
-      },
+      "TotpDisabled": {},
       "TotpEnableRequest": {
         "properties": {
           "code": {
@@ -1247,71 +1159,9 @@
         "title": "TotpEnableRequest",
         "type": "object"
       },
-      "TotpRecovery": {
-        "additionalProperties": true,
-        "properties": {
-          "recovery_codes": {
-            "items": {
-              "type": "string"
-            },
-            "title": "Recovery Codes",
-            "type": "array"
-          }
-        },
-        "required": [
-          "recovery_codes"
-        ],
-        "title": "TotpRecovery",
-        "type": "object"
-      },
-      "TotpReset": {
-        "additionalProperties": true,
-        "properties": {
-          "ok": {
-            "title": "Ok",
-            "type": "boolean"
-          },
-          "totp_enabled": {
-            "title": "Totp Enabled",
-            "type": "boolean"
-          },
-          "user_id": {
-            "title": "User Id",
-            "type": "integer"
-          }
-        },
-        "required": [
-          "ok",
-          "user_id",
-          "totp_enabled"
-        ],
-        "title": "TotpReset",
-        "type": "object"
-      },
-      "TotpSetup": {
-        "additionalProperties": true,
-        "properties": {
-          "issuer": {
-            "title": "Issuer",
-            "type": "string"
-          },
-          "otpauth_uri": {
-            "title": "Otpauth Uri",
-            "type": "string"
-          },
-          "secret": {
-            "title": "Secret",
-            "type": "string"
-          }
-        },
-        "required": [
-          "secret",
-          "issuer",
-          "otpauth_uri"
-        ],
-        "title": "TotpSetup",
-        "type": "object"
-      },
+      "TotpRecovery": {},
+      "TotpReset": {},
+      "TotpSetup": {},
       "TotpSetupRequest": {
         "properties": {
           "password": {
@@ -1360,51 +1210,7 @@
         "title": "TrainRequest",
         "type": "object"
       },
-      "User": {
-        "additionalProperties": true,
-        "properties": {
-          "created_at": {
-            "title": "Created At",
-            "type": "number"
-          },
-          "id": {
-            "title": "Id",
-            "type": "integer"
-          },
-          "last_login_at": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Last Login At"
-          },
-          "role": {
-            "title": "Role",
-            "type": "string"
-          },
-          "updated_at": {
-            "title": "Updated At",
-            "type": "number"
-          },
-          "username": {
-            "title": "Username",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "username",
-          "role",
-          "created_at",
-          "updated_at"
-        ],
-        "title": "User",
-        "type": "object"
-      },
+      "User": {},
       "UserCreate": {
         "properties": {
           "password": {
@@ -1433,47 +1239,8 @@
         "title": "UserCreate",
         "type": "object"
       },
-      "UserDeleted": {
-        "additionalProperties": true,
-        "properties": {
-          "deleted": {
-            "title": "Deleted",
-            "type": "integer"
-          },
-          "ok": {
-            "title": "Ok",
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "ok",
-          "deleted"
-        ],
-        "title": "UserDeleted",
-        "type": "object"
-      },
-      "UserList": {
-        "additionalProperties": true,
-        "properties": {
-          "count": {
-            "title": "Count",
-            "type": "integer"
-          },
-          "items": {
-            "items": {
-              "$ref": "#/components/schemas/User"
-            },
-            "title": "Items",
-            "type": "array"
-          }
-        },
-        "required": [
-          "count",
-          "items"
-        ],
-        "title": "UserList",
-        "type": "object"
-      },
+      "UserDeleted": {},
+      "UserList": {},
       "UserUpdate": {
         "properties": {
           "password": {
@@ -1791,9 +1558,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Alerts List Api Alerts Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AlertList"
                 }
               }
             },
@@ -1833,9 +1598,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Alerts Get Api Alerts  Alert Id  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Alert"
                 }
               }
             },
@@ -1875,9 +1638,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Alerts Acknowledge Api Alerts  Alert Id  Acknowledge Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Alert"
                 }
               }
             },
@@ -1917,9 +1678,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Alerts Resolve Api Alerts  Alert Id  Resolve Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Alert"
                 }
               }
             },
@@ -4412,9 +4171,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incidents List Api Incidents Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/IncidentList"
                 }
               }
             },
@@ -4451,9 +4208,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incidents Create Api Incidents Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Incident"
                 }
               }
             },
@@ -4499,9 +4254,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incidents Correlate Api Incidents Correlate Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/IncidentCorrelation"
                 }
               }
             },
@@ -4541,9 +4294,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incidents Get Api Incidents  Incident Id  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/IncidentDetail"
                 }
               }
             },
@@ -4583,9 +4334,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incidents Acknowledge Api Incidents  Incident Id  Acknowledge Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Incident"
                 }
               }
             },
@@ -4635,9 +4384,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incidents Attach Api Incidents  Incident Id  Alerts Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/IncidentDetail"
                 }
               }
             },
@@ -4677,9 +4424,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incidents False Positive Api Incidents  Incident Id  False Positive Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Incident"
                 }
               }
             },
@@ -4719,9 +4464,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incidents Investigate Api Incidents  Incident Id  Investigate Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Incident"
                 }
               }
             },
@@ -4771,9 +4514,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incidents Add Note Api Incidents  Incident Id  Notes Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/IncidentNote"
                 }
               }
             },
@@ -4813,9 +4554,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incidents Reopen Api Incidents  Incident Id  Reopen Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Incident"
                 }
               }
             },
@@ -4855,9 +4594,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incidents Resolve Api Incidents  Incident Id  Resolve Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Incident"
                 }
               }
             },
@@ -4947,9 +4684,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Investigation Bundle Api Investigations  Incident Id  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/InvestigationBundle"
                 }
               }
             },
@@ -5735,9 +5470,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Investigation Search Api Search Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/SearchResponse"
                 }
               }
             },
