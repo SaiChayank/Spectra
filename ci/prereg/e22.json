@@ -1,0 +1,76 @@
+{
+  "name": "E22 rare destination / first seen (preregistration)",
+  "status": "DRAFT - not frozen until the owner approves; no E22 scoring code exists or has been run on any data",
+  "frozen": null,
+  "plan_ref": "docs/35_threat_engine_plan.md section 5, E2.2 (T1071, T1583); output is evidence for E4 fusion, not a stand-alone verdict",
+  "note": "Design, constants and gate fixed before any rarity score is computed on data. Every constant below is chosen a priori and stated with its reason; nothing is fitted. Any change after a held-out run needs a committed amendment with its reason and must be reported next to the original result.",
+
+  "detector": {
+    "entities": {
+      "host": "internal source IP; internal = config beaconing_internal_nets (default RFC1918 + fc00::/7), per dataset overridden only by the documented capture network, fixed by amendment BEFORE that set is scored",
+      "destination": "lower-cased TLS SNI when the flow has one, else the destination IP (the same key as E21, so evidence joins in E4)",
+      "direction": "internal source to external destination only; internal-to-internal is E2.5, not here"
+    },
+    "window": "one evaluation window = one capture day (at most 24 h of capture clock, never wall clock); prevalence is computed over the whole window, so this run is retrospective; the streaming version is a later step and must reproduce these numbers on the same data",
+    "quantities": {
+      "N": "number of distinct internal hosts with at least one external flow in the window",
+      "prevalence(d)": "number of distinct internal hosts with at least one flow to destination d in the window",
+      "hours(h,d)": "number of distinct whole capture-clock hours in which host h had a flow to d; a flow spanning several hours counts in each (as in E21)"
+    },
+    "pair_score": "s(h,d) = R * P, where R = 1 / prevalence(d) and P = min(1, hours(h,d) / 3)",
+    "constants_and_reasons": {
+      "P_hours_3": "a single visit to a rare site is the normal case for browsing (the main false-positive source named in docs/35); command-and-control persists. 3 h is the same minimum span E21 uses for its persistence evidence; not tuned",
+      "R_1_over_prevalence": "the simplest monotone rarity measure: 1.0 for a destination only this host talks to, 0.5 for two hosts, and so on; no smoothing constant to tune"
+    },
+    "host_score": "max over the host's external destinations of s(h,d); the evidence carries the top 3 destinations with prevalence, hours and flow count",
+    "minimum_evidence": {
+      "network": "N >= 10, else no verdict for the window (rarity is meaningless on a handful of hosts); reported, not scored",
+      "pair": ">= 2 flows from h to d"
+    },
+    "alert_threshold": "host_score >= 0.5 (reported, not part of the ranking gate): at threshold this means a destination shared by at most 2 hosts and contacted in >= 3 distinct hours, or unique to the host and seen in >= 2 hours",
+    "allow_list": "EMPTY for every gate run (same rule as E21)",
+    "known_consequences": [
+      "a C2 destination shared by many infected hosts (a worm outbreak) is NOT rare and is missed by design; E21 and fusion must cover it",
+      "a new SaaS rollout to one pilot host looks exactly like a positive until a second host adopts it",
+      "sampling hosts (see sets) lowers N and makes more destinations look rare: this can only add false positives, so it is conservative for the gate",
+      "CDN-fronted C2 under a popular SNI is invisible to rarity; that is a stated limit, not a bug"
+    ],
+    "metadata_only": "uses flow 5-tuples, timestamps and the SNI already parsed today; no payload bytes, nothing new is parsed"
+  },
+
+  "baselines": {
+    "B1_trivial": "host is flagged if it has any external destination with prevalence == 1 and >= 2 flows; host score = count of such destinations (ties broken by flow count)",
+    "B2_rita": "real RITA v5.1.2 on Zeek 7.0.5 logs of the same captures: host score = max over its external destinations of RITA's own threat score for that destination; which RITA output fields carry prevalence/first-seen is recorded by amendment after reading RITA's output schema on the DEV set and BEFORE any held-out set is scored (lesson of evaluation-report section 17: check how the tool keys its output first)",
+    "B3_suricata": "Suricata 7.0.8 with the ET Open ruleset version recorded per run: host score = number of distinct alert signatures with the host as source; a different kind of detector, reported so the comparison is honest about what signatures already catch"
+  },
+
+  "evaluation": {
+    "unit": "host-window (one internal host in one capture day); positives = hosts the dataset documents as compromised and calling out to attacker infrastructure in that window; negatives = every other internal host with N-eligible traffic in that window",
+    "dev_only": {
+      "set": "CSE-CIC-IDS2018 Friday-02-03-2018 (Bot day) captures already on disk",
+      "status": "ALREADY SEEN (used for E21 smoke and section 17): may be used to debug the code and to record the RITA field mapping; its numbers are reported in their own row and never in the gate; NOTHING in this file may change because of it except via amendment with the reason"
+    },
+    "held_out": {
+      "set_A": "CSE-CIC-IDS2018 infiltration days (Wednesday-28-02-2018 and Thursday-01-03-2018): the documented infiltration victim hosts plus a SEEDED random sample of other internal hosts from the same days (seed 1337, sample size fixed by amendment from the archive's member list BEFORE download, target 40 hosts per day, whole per-host captures only); victims and attacker addresses taken from the dataset page and written into an amendment BEFORE scoring; fetched by HTTP range requests like the Bot day; licence already approved (redistribution with citation)",
+      "set_B": "CIC-IDS2017 Friday (Ares botnet, documented victim hosts and C2 address) with the full internal network as recorded; Monday of the same week as a benign-only day for false-alert counting; needs the owner to register and download; dataset hashes added by amendment",
+      "set_C_benign": "the owner's own network 72 h capture (docs/evaluation-report.md section 20): benign only, so it measures false alerts per day at the fixed threshold; it was seen for E21 but no rarity quantity has been computed on it; reported, not gated, unless N >= 10 (else reported as 'too few hosts for rarity')"
+    },
+    "metrics": [
+      "host-level recall at the best operating point with <= 10 false hosts per 1,000 negative hosts per window (zero false hosts when a set has fewer than 100 negative hosts)",
+      "the rank of every positive host among all hosts of its window (the honest number when positives are few)",
+      "ROC-AUC and PR-AUC over host-windows",
+      "recall and false hosts at the fixed 0.5 threshold",
+      "for set_C: false hosts per day at the fixed threshold"
+    ],
+    "gate": {
+      "needs": "set_A and set_B both scored",
+      "beats_baselines": "recall at the budget higher than the best of B1, B2, B3 on BOTH sets",
+      "uncertainty": "bootstrap over host-windows (1000 resamples, seed 1337), 95 % intervals reported; the docs/35 rule 'non-overlapping 95 % CIs vs the best baseline' applies only when a set has >= 10 positive hosts",
+      "small_positive_sets": "if a set has fewer than 10 positive hosts the result on that set is labelled ANECDOTAL; the detector cannot pass the gate on anecdotal sets and stays off by default whatever the numbers, until a set with >= 10 positive hosts exists",
+      "on_failure": "report 'evidence for fusion, not a detector'; flag stays off; numbers published with the baselines; no retuning in the same session"
+    },
+    "reporting": "one Spectra-Bench JSON per set with manifest hashes, Spectra commit, RITA/Suricata/ET versions, every number above, and the positive hosts' ranks; summarised in docs/evaluation-report.md"
+  },
+
+  "amendments": []
+}
