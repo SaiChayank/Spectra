@@ -72,5 +72,130 @@
     "reporting": "one Spectra-Bench JSON per set with manifest hashes, Spectra commit, RITA/Suricata/ET versions, every number above, and the positive hosts' ranks; summarised in docs/evaluation-report.md"
   },
 
-  "amendments": []
+  "amendments": [
+    {
+      "id": "A1",
+      "date": "2026-11-20",
+      "before": "any set_A download or scoring",
+      "what": "fixes set_A: victims, attacker, internal network, sample size and the sampled hosts",
+      "source_of_labels": "https://www.unb.ca/cic/datasets/ids-2018.html Table 2 (read 2026-11-20): Infiltration, attacker 13.58.225.34; Wed-28-02-2018 victim 172.31.69.24 (10:50-12:05, 13:42-14:40); Thu-01-03-2018 victim 172.31.69.13 (9:57-10:55, 14:00-15:37). Attack as described: malicious document, backdoor, then Nmap sweep/portscan from the victim",
+      "positives": {
+          "Wednesday-28-02-2018": [
+              "172.31.69.24"
+          ],
+          "Thursday-01-03-2018": [
+              "172.31.69.13"
+          ]
+      },
+      "attacker_external": [
+          "13.58.225.34"
+      ],
+      "internal_nets": "172.31.0.0/16 (the dataset's AWS VPC; already inside the RFC1918 default, so no override)",
+      "consequence": "set_A has 2 positive host-windows (< 10), so by evaluation.gate.small_positive_sets it is ANECDOTAL: reported with ranks, cannot pass the gate. Known from the dataset page before any data was read; recorded here, the rule is not changed",
+      "sampling": {
+          "member_lists": "central directory of Original Network Traffic and Log data/<day>/pcap.zip in the AWS bucket cse-cic-ids2018, read by range request 2026-11-20 (Wed: 438 members, 63.7 GB; Thu: 444 members, 63.3 GB)",
+          "member_list_sha256": {
+              "Wednesday-28-02-2018": "73076137529d7f598b77e1489fa4e634eebcaf9451d03611a99061e1fba1cca0",
+              "Thursday-01-03-2018": "43c5359b8a65ae902638838e0befebad0ca164b808de7535c267e2c103b246a6"
+          },
+          "method": "pool = distinct IPv4 addresses in member names minus that day's victim, sorted numerically; random.Random(1337).sample(pool, 40); every member of a chosen host is downloaded (whole per-host captures)",
+          "size_per_day": 40,
+          "pool_size": {
+              "Wednesday-28-02-2018": 434,
+              "Thursday-01-03-2018": 439
+          },
+          "sampled_negatives": {
+              "Wednesday-28-02-2018": [
+                  "172.31.64.18",
+                  "172.31.64.46",
+                  "172.31.64.75",
+                  "172.31.64.108",
+                  "172.31.65.6",
+                  "172.31.65.70",
+                  "172.31.65.72",
+                  "172.31.65.84",
+                  "172.31.65.93",
+                  "172.31.65.98",
+                  "172.31.65.104",
+                  "172.31.65.107",
+                  "172.31.65.108",
+                  "172.31.65.119",
+                  "172.31.65.124",
+                  "172.31.66.7",
+                  "172.31.66.9",
+                  "172.31.66.24",
+                  "172.31.66.79",
+                  "172.31.66.96",
+                  "172.31.66.120",
+                  "172.31.67.7",
+                  "172.31.67.27",
+                  "172.31.67.37",
+                  "172.31.67.54",
+                  "172.31.67.59",
+                  "172.31.67.62",
+                  "172.31.67.82",
+                  "172.31.67.83",
+                  "172.31.67.94",
+                  "172.31.67.107",
+                  "172.31.67.111",
+                  "172.31.67.123",
+                  "172.31.68.8",
+                  "172.31.68.18",
+                  "172.31.68.25",
+                  "172.31.68.26",
+                  "172.31.69.13",
+                  "172.31.69.15",
+                  "172.31.69.21"
+              ],
+              "Thursday-01-03-2018": [
+                  "172.31.64.18",
+                  "172.31.64.46",
+                  "172.31.64.75",
+                  "172.31.64.109",
+                  "172.31.65.8",
+                  "172.31.65.71",
+                  "172.31.65.73",
+                  "172.31.65.85",
+                  "172.31.65.96",
+                  "172.31.65.99",
+                  "172.31.65.105",
+                  "172.31.65.108",
+                  "172.31.65.109",
+                  "172.31.65.121",
+                  "172.31.65.125",
+                  "172.31.66.8",
+                  "172.31.66.10",
+                  "172.31.66.24",
+                  "172.31.66.79",
+                  "172.31.66.96",
+                  "172.31.66.118",
+                  "172.31.67.4",
+                  "172.31.67.23",
+                  "172.31.67.34",
+                  "172.31.67.52",
+                  "172.31.67.56",
+                  "172.31.67.59",
+                  "172.31.67.77",
+                  "172.31.67.78",
+                  "172.31.67.89",
+                  "172.31.67.101",
+                  "172.31.67.105",
+                  "172.31.67.119",
+                  "172.31.67.126",
+                  "172.31.68.13",
+                  "172.31.68.20",
+                  "172.31.68.21",
+                  "172.31.69.9",
+                  "172.31.69.12",
+                  "172.31.69.17"
+              ]
+          },
+          "note": "172.31.69.13 is sampled on Wednesday, the day before its documented infection; it counts as a negative on Wednesday as the unit rule says, and its Wednesday rank is reported separately",
+          "download_bytes": {
+              "Wednesday-28-02-2018": 7002369844,
+              "Thursday-01-03-2018": 5279403801
+          }
+      }
+  }
+  ]
 }
