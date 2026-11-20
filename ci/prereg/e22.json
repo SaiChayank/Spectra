@@ -1,7 +1,7 @@
 {
   "name": "E22 rare destination / first seen (preregistration)",
-  "status": "DRAFT - not frozen until the owner approves; no E22 scoring code exists or has been run on any data",
-  "frozen": null,
+  "status": "FROZEN - approved by the owner in chat 2026-11-20; at freeze time no E22 scoring code existed and no rarity quantity had been computed on any data",
+  "frozen": "2026-11-20",
   "plan_ref": "docs/35_threat_engine_plan.md section 5, E2.2 (T1071, T1583); output is evidence for E4 fusion, not a stand-alone verdict",
   "note": "Design, constants and gate fixed before any rarity score is computed on data. Every constant below is chosen a priori and stated with its reason; nothing is fitted. Any change after a held-out run needs a committed amendment with its reason and must be reported next to the original result.",
 
