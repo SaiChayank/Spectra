@@ -4,10 +4,12 @@ import {
   Card,
   Checkbox,
   CodeValue,
+  ErrorState,
   Input,
   KeyValue,
   PasswordInput,
   RoleChip,
+  Skeleton,
   SkewButton,
   SkewTabs,
   StatusPill,
@@ -15,6 +17,7 @@ import {
 } from "../components/ui";
 import { ApiError, api, type Identity } from "../lib/api";
 import type { TotpSetup } from "../lib/types";
+import { useFetch } from "../lib/useFetch";
 import UsersAdmin from "./UsersAdmin";
 
 const MIN_PASSWORD = 8; // backend UserCreate/UserUpdate policy
@@ -294,6 +297,59 @@ function TwoFactor({ identity, onIdentityChanged }: Pick<Props, "identity" | "on
   );
 }
 
+/* -- my sessions ------------------------------------------------------------------------------ */
+
+function MySessions({ onSignedOut }: Pick<Props, "onSignedOut">) {
+  const list = useFetch(() => api.mySessions(), []);
+  const [busy, setBusy] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const end = async (id: number, current: boolean) => {
+    setBusy(id);
+    setError(null);
+    try {
+      await api.endMySession(id);
+      if (current) onSignedOut("You signed out this browser.");
+      else list.reload();
+    } catch (err) {
+      // 404: it already ended (expired, or signed out elsewhere) - refresh instead of alarming
+      if (err instanceof ApiError && err.status === 404) list.reload();
+      else setError(message(err));
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  return (
+    <Card title="Where you are signed in" eyebrow="Sessions">
+      {list.loading ? (
+        <Skeleton lines={2} />
+      ) : list.error ? (
+        <ErrorState detail={list.error} onRetry={list.reload} />
+      ) : (
+        <ul style={{ display: "grid", gap: 10, listStyle: "none", margin: 0, padding: 0 }} aria-label="Your sessions">
+          {(list.data?.items ?? []).map((s) => (
+            <li key={s.id} style={{ display: "flex", gap: 12, alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" }}>
+              <div>
+                <div>{s.current ? <StatusPill status="ok">This browser</StatusPill> : `Session ${s.id}`}</div>
+                <div className="sx-hint">
+                  signed in <TimeValue ts={s.created_at} /> · last active <TimeValue ts={s.last_seen_at} />
+                </div>
+              </div>
+              <SkewButton variant={s.current ? "ghost" : "secondary"} size="sm" loading={busy === s.id}
+                onClick={() => end(s.id, s.current)} aria-label={s.current ? "Sign out this browser" : `Sign out session ${s.id}`}>
+                Sign out
+              </SkewButton>
+            </li>
+          ))}
+        </ul>
+      )}
+      {error ? <Banner tone="error" title="Could not sign that session out">{error}</Banner> : null}
+      <p className="sx-hint">Sign out any session you do not recognise, then change your password.</p>
+    </Card>
+  );
+}
+
 /* -- page ----------------------------------------------------------------------------------- */
 
 export default function AccountPage({ identity, can, onSignedOut, onIdentityChanged }: Props) {
@@ -328,6 +384,7 @@ export default function AccountPage({ identity, can, onSignedOut, onIdentityChan
             />
           </Card>
           <ChangePassword identity={identity} onSignedOut={onSignedOut} />
+          <MySessions onSignedOut={onSignedOut} />
           <TwoFactor identity={identity} onIdentityChanged={onIdentityChanged} />
         </div>
       )}

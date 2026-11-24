@@ -222,6 +222,14 @@ export function resolve(index: FixtureIndex, state: MockState, req: MockRequest,
     if (body.new_password === body.current_password) return fromFixture(index.named("POST_api_auth_password__422_same_password")!);
     return { ...fromFixture(index.named("POST_api_auth_password")!), next: { role: null, loginFixture: null, totp: false } };
   }
+  const endSession = method === "DELETE" ? /^\/api\/auth\/sessions\/(\d+)$/.exec(path) : null;
+  if (endSession) {
+    // recorded: only the 404; success follows the route's response model (labelled x-mock)
+    const id = Number(endSession[1]);
+    if (id !== 1 && id !== 4) return fromFixture(index.named("DELETE_api_auth_sessions_999999999__404_not_found")!);
+    const current = id === 4;
+    return { ...json(200, { ok: true, revoked: id, current }, { "x-mock": "not recorded" }), ...(current ? { next: { role: null, loginFixture: null } } : {}) };
+  }
   if (method === "POST" && path === "/api/auth/totp/setup") {
     if (body.password === "wrong") return fromFixture(index.named("POST_api_auth_totp_setup__wrong_password")!);
     const f = index.named("POST_api_auth_totp_setup")!;

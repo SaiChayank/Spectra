@@ -70,7 +70,7 @@ describe("change own password", () => {
     fillPassword("old-pass-1", "new-pass-123");
     fireEvent.click(screen.getByRole("button", { name: "Change password" }));
     await waitFor(() => expect(onSignedOut).toHaveBeenCalled());
-    expect(calls[0].body).toEqual({ current_password: "old-pass-1", new_password: "new-pass-123" });
+    expect(calls.find((c) => c.key === "POST /api/auth/password")!.body).toEqual({ current_password: "old-pass-1", new_password: "new-pass-123" });
   });
 
   it("blocks short or mismatched passwords before sending", () => {
@@ -81,7 +81,7 @@ describe("change own password", () => {
     fillPassword("old", "long-enough-1", "long-enough-2");
     expect(screen.getByText("The two passwords differ.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Change password" })).toBeDisabled();
-    expect(calls).toHaveLength(0);
+    expect(calls.filter((c) => c.key !== "GET /api/auth/sessions")).toHaveLength(0);
   });
 
   it("a wrong current password (403) is a form error, not a dead session", async () => {
@@ -116,7 +116,7 @@ describe("change own password", () => {
     fireEvent.change(screen.getByLabelText("Two-factor code"), { target: { value: " 123456 " } });
     fireEvent.click(screen.getByRole("button", { name: "Change password" }));
     await waitFor(() => expect(onSignedOut).toHaveBeenCalled());
-    expect(calls[0].body).toEqual({ current_password: "old-pass-1", new_password: "new-pass-123", totp_code: "123456" });
+    expect(calls.find((c) => c.key === "POST /api/auth/password")!.body).toEqual({ current_password: "old-pass-1", new_password: "new-pass-123", totp_code: "123456" });
   });
 
   it("shows a countdown when throttled (429)", async () => {
@@ -125,6 +125,49 @@ describe("change own password", () => {
     fillPassword("old-pass-1", "new-pass-123");
     fireEvent.click(screen.getByRole("button", { name: "Change password" }));
     expect(await screen.findByText(/Try again in 30 s/)).toBeInTheDocument();
+  });
+});
+
+describe("my sessions", () => {
+  const two = () => json(200, {
+    count: 2,
+    items: [
+      { id: 1, created_at: 1800000000, last_seen_at: 1800000000, expires_at: 1800043200, current: false },
+      { id: 4, created_at: 1800000000, last_seen_at: 1800000000, expires_at: 1800043200, current: true },
+    ],
+  });
+
+  it("lists sessions with this browser marked; ending another one refreshes the list", async () => {
+    let listed = 0;
+    const calls = stubFetch({
+      "GET /api/auth/sessions": () => (++listed === 1 ? two() : json(200, { count: 1, items: [] })),
+      "DELETE /api/auth/sessions/1": () => json(200, { ok: true, revoked: 1, current: false }),
+    });
+    const { onSignedOut } = renderPage(viewer);
+    expect(await screen.findByText("This browser")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Sign out session 1" }));
+    await waitFor(() => expect(listed).toBe(2));
+    expect(calls.map((c) => c.key)).toContain("DELETE /api/auth/sessions/1");
+    expect(onSignedOut).not.toHaveBeenCalled();
+  });
+
+  it("ending this browser's session returns to sign-in", async () => {
+    stubFetch({ "GET /api/auth/sessions": two, "DELETE /api/auth/sessions/4": () => json(200, { ok: true, revoked: 4, current: true }) });
+    const { onSignedOut } = renderPage(viewer);
+    fireEvent.click(await screen.findByRole("button", { name: "Sign out this browser" }));
+    await waitFor(() => expect(onSignedOut).toHaveBeenCalledWith("You signed out this browser."));
+  });
+
+  it("a session that already ended (404) just refreshes, without an error", async () => {
+    let listed = 0;
+    stubFetch({
+      "GET /api/auth/sessions": () => (++listed, two()),
+      "DELETE /api/auth/sessions/1": () => json(404, { detail: "session not found" }),
+    });
+    renderPage(viewer);
+    fireEvent.click(await screen.findByRole("button", { name: "Sign out session 1" }));
+    await waitFor(() => expect(listed).toBe(2));
+    expect(screen.queryByText("Could not sign that session out")).not.toBeInTheDocument();
   });
 });
 
@@ -173,7 +216,7 @@ describe("two-factor", () => {
     fireEvent.change(screen.getByLabelText("Authenticator or recovery code"), { target: { value: "123456" } });
     fireEvent.click(screen.getByRole("button", { name: "Turn off two-factor" }));
     await waitFor(() => expect(onIdentityChanged).toHaveBeenCalled());
-    expect(calls[0].body).toEqual({ password: "pw", code: "123456" });
+    expect(calls.find((c) => c.key === "POST /api/auth/totp/disable")!.body).toEqual({ password: "pw", code: "123456" });
   });
 });
 

@@ -85,3 +85,25 @@ export interface HostEvidence {
   items: HostEvidenceItem[];
   verdict: HostVerdict | null;
 }
+
+/* -- own sessions (GET /api/auth/sessions, DELETE /api/auth/sessions/{id}) -- */
+
+export interface SessionInfo {
+  id: number;
+  created_at: number;
+  last_seen_at: number;
+  expires_at: number;
+  /** The session this browser is using. */
+  current: boolean;
+}
+
+export interface SessionList {
+  count: number;
+  items: SessionInfo[];
+}
+
+export interface SessionRevoked {
+  ok: boolean;
+  revoked: number;
+  current: boolean;
+}

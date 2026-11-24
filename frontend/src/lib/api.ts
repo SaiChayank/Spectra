@@ -8,6 +8,8 @@ import type {
   HostVerdictValue,
   ManagedUser,
   PasswordChanged,
+  SessionList,
+  SessionRevoked,
   TotpEnabled,
   TotpSetup,
   UserList,
@@ -1247,6 +1249,10 @@ export const api = {
         ...(totpCode ? { totp_code: totpCode } : {}),
       }),
     }),
+
+  /** The caller's own live sessions; another user's id answers 404 like a missing one. */
+  mySessions: () => request<SessionList>("/api/auth/sessions"),
+  endMySession: (id: number) => request<SessionRevoked>(`/api/auth/sessions/${id}`, { method: "DELETE" }),
 
   // -- host triage (read; a verdict needs incidents:manage) --------------------------
   hosts: (sort: "risk" | "last_seen" = "risk", limit = 200) =>

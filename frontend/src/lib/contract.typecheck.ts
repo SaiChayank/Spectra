@@ -13,11 +13,12 @@ import me from "../../contract/fixtures/GET_api_auth_me.json";
 import hostEvidence from "../../contract/fixtures/GET_api_hosts_10.0.0.7_evidence.json";
 import hosts from "../../contract/fixtures/GET_api_hosts.json";
 import users from "../../contract/fixtures/GET_api_users.json";
+import sessions from "../../contract/fixtures/GET_api_auth_sessions__2.json";
 import password from "../../contract/fixtures/POST_api_auth_password.json";
 import totpSetup from "../../contract/fixtures/POST_api_auth_totp_setup.json";
 import verdict from "../../contract/fixtures/POST_api_hosts_10.0.0.7_verdict.json";
 import type { Identity, ThreatAlert } from "./api";
-import type { HostEvidence, HostEvidenceItem, HostList, HostSummary, HostVerdict, ManagedUser, PasswordChanged, TotpSetup, UserList } from "./types";
+import type { HostEvidence, HostEvidenceItem, HostList, HostSummary, HostVerdict, ManagedUser, PasswordChanged, SessionInfo, SessionList, TotpSetup, UserList } from "./types";
 
 /** true when A and B have exactly the same keys (optional keys count), else a readable error type. */
 type SameKeys<A, B> = [Exclude<keyof A, keyof B>, Exclude<keyof B, keyof A>] extends [never, never]
@@ -36,6 +37,7 @@ export const contract = [
   ok<HostList>(hosts.body as HostList),
   ok<HostEvidence>(hostEvidence.body as HostEvidence),
   ok<TotpSetup>(totpSetup.body),
+  ok<SessionList>(sessions.body),
   ok<UserList>(users.body as UserList), // JSON imports widen the role literal to string; keys are checked below
   ok<Omit<Identity, "user">>({ expires_at: me.body.expires_at }),
 ] as const;
@@ -52,4 +54,6 @@ export const keys = [
   same<Item<typeof users.body>, ManagedUser>(true),
   same<typeof me.body, Identity>(true),
   same<Item<typeof alerts.body>, ThreatAlert>(true),
+  same<typeof sessions.body, SessionList>(true),
+  same<Item<typeof sessions.body>, SessionInfo>(true),
 ] as const;
