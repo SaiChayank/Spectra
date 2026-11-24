@@ -1,0 +1,72 @@
+{
+ "name": "E22 corroborated beaconing v3 (preregistration)",
+ "frozen": "2026-11-24",
+ "note": "Written and committed BEFORE any v3 code exists or runs on data. Nothing is fitted to evaluation labels. Every constant below is fixed here; the only value computed later is tau_I, by the rule in 'signals.I', from dev benign data only, and it goes into a data-only amendment before any gate scoring. Any other change after a gate run needs a committed amendment with its reason and does not count for this gate. Human-readable copy: docs/plan-beaconing-detector.md section v3.",
+ "owner_target": "Owner-set 2026-11-24: >= 30 % of botnet/C2 pairs caught at <= 1 % false-alert rate on at least two of {CTU-13, HIKARI, CIC-2018}, 95 % bootstrap CIs (1000 resamples, seed 1337), AND a false-alert budget on fresh own-network data.",
+ "owner_decisions_2026_11_24": {
+  "datasets": "download here (WSL), SHA-256 checked",
+  "gate_data": "fresh data only: CIC-2018 Bot day and CTU-13 set A (scenarios 1, 2, 3, 5 + the six CTU-Normal 2017 captures) are spent and are dev/regression rows only",
+  "own_network": "owner records a new 72 h capture (task 14 in docs/human-benchmark-tasks.md)",
+  "simulator": "approved: new multi-host run (set C)"
+ },
+ "unit": "pair = (internal source host, destination key = SNI if the flow has one else destination IP), exactly as e21 v2a1. Host-level results (a host alerts if any of its pairs alerts) are reported next to every pair-level result.",
+ "eligibility": "a pair is evaluated when it has >= 20 flows that START at or after the end of the learning window L; flows inside L still feed the scorer state. A labelled positive pair below 20 such flows, or absent, counts as a MISS (score 0), as e21 amendment 4.",
+ "verdict_time": "the pair's state after the last flow of the evaluation stream (as e21 scripts: last verdict reached after L)",
+ "signals": {
+  "B": "beacon scorer v2a1 exactly as frozen in ci/prereg/e21.json (G, S, D, H; verdict needs G and D; unweighted mean); fires at score >= 0.8. Unchanged code.",
+  "P": "learned periodicity (E6-lite). During L, a destination key is learned as 'expected periodic' when ANY internal host's pair to it has >= 12 unique whole-second start times inside L and G (v2a1 formula, on those L-only start times) >= 0.8. At most 4096 learned keys (oldest learned dropped first). An entry expires 7 days after the end of L. While an entry is live, B is ignored for every pair with that destination key. No hand-written list.",
+  "R": "rare destination (E2.2). novel = the destination key was not seen from any internal host during L. prevalence = number of distinct internal hosts that contacted the key at or after L end. R fires when novel AND prevalence <= max(1, ceil(0.1 * H)), H = distinct internal hosts seen at or after L end. On single-host data prevalence cannot be measured; R then reduces to 'novel' and the report says so.",
+  "F": "rare fingerprint (E2.6, metadata only). fingerprint = JA4 of the client hello if present, else JA3. A fingerprint is novel when no internal host used it during L. F fires when the pair has >= 1 flow at or after L end with a novel fingerprint whose user count (distinct internal hosts at or after L end) <= max(1, ceil(0.1 * H)). Pairs without TLS cannot fire F.",
+  "I": "isolation-forest corroboration. I fires when the share of the pair's flows (at or after L end) flagged by the shipped detector's own threshold is >= tau_I. tau_I = the 0.99 quantile of that share over dev benign pairs (>= 20 flows) of CTU-Normal 2017-05-01 and 2017-05-02, with the detector trained (contamination 0.02, random_state 42) on CTU-Normal 2017-04-18, 04-19, 04-28, 04-30 (the section 10 split). Computed once by scripts/calibrate_e22.py and written into a data-only amendment before any gate run. No positive label is used.",
+  "host_context_reported_not_used": "per host per 1 h window: flow count, distinct destinations, distinct SNIs, new-destination rate; destination first-seen age. Computed and reported (E2.2) but NOT part of the fusion rule."
+ },
+ "fusion": {
+  "rule": "pair alert = B AND NOT P AND (R OR F OR I). A beacon verdict alone never alerts. Fixed rule, no weights.",
+  "ranking_score_for_curves": "fused = B score when (NOT P AND (R OR F OR I)) else 0; used only for ROC / recall-at-FPR reporting",
+  "flag": "config corroboration_enabled, default OFF; beaconing_enabled stays OFF"
+ },
+ "learning_window_L": {
+  "ctu13_fresh_and_ctu_normal_fresh": "first 1 h of each capture (no earlier history of these networks exists); known consequence: C2 active from the first hour is not 'novel' and may be learned as periodic",
+  "hikari": "the 2021-04-11 and 2021-04-12 captures (the section 11 training slice) are L; later captures are evaluated",
+  "sim_set_c": "first 4 h of the run (no beacon starts before 4 h)",
+  "own_network_2": "first 24 h"
+ },
+ "inside_networks": {
+  "ctu13_fresh": "default RFC1918 + fc00::/7 + 147.32.0.0/16 (the documented capture network, as e21 set A)",
+  "ctu_normal_fresh": "defaults",
+  "hikari": "defaults (stated before seeing the data; attack pairs outside the internal->external scope are counted as misses, not dropped)",
+  "sim_set_c": "203.0.113.128/25 (clients)",
+  "own_network_2": "defaults"
+ },
+ "datasets": {
+  "dev_only_spent": ["CIC-2018 Bot day", "set A: CTU-13 scenarios 1, 2, 3, 5 + CTU-Normal 2017-04-18, 04-19, 04-28, 04-30, 05-01, 05-02", "set B: setb-20261112T1217Z", "own network 72 h of 2026-11-14"],
+  "G1_ctu13_fresh": {
+   "positives": "CTU-13 scenarios 4, 6, 7, 8, 9, 10, 11, 12, 13 (Botnet-45, 47-54), public pcaps; pairs (inside 147.32.0.0/16 host -> other end) whose flows the dataset's own binetflow labels mark with 'CC' (e21 amendment 2 rule, text-only parsing)",
+   "negatives": "every pair of CTU-Normal captures NOT in set A, selected by this rule before download: each CTU-Normal-N pcap on the Stratosphere dataset pages with N not in {20, 21, 23, 24, 26, 28} and size <= 1 GB; names and SHA-256 go into a data-only amendment before scoring",
+   "note": "the public CTU-13 pcaps hold botnet-host traffic only; the botnet hosts' non-C2 pairs are reported outside the gate. Era mismatch (2011 botnet vs 2017 benign) remains."
+  },
+  "G2_hikari": {
+   "positives": "pairs whose 4-tuple-labelled flows are majority attack (Bruteforce, Bruteforce-XML, XMRig), as the v1 protocol",
+   "negatives": "pairs with zero attack-labelled flows in the evaluated (post-L) captures",
+   "known_consequence": "the attack captures last about 150 s; v2a1 needs a 3 h span for a verdict, so B cannot fire on them and recall on HIKARI is expected to be about 0 BY CONSTRUCTION. Stated now so a zero is not read as a surprise. It still counts in the gate."
+  },
+  "CIC2018": "spent (dev row only); it cannot count towards the owner's 'two of three'",
+  "H1_sim_set_c": {
+   "status": "secondary preregistered hold-out (not part of the owner's gate); generated AFTER this file is committed; pcap hashes added by a data-only amendment",
+   "design": "harmless simulator (backend/scripts/lab/beacon_sim, profile 'setc'), seed 2211, 16 h, 16 client hosts on the internal-only Docker network. Beacons: 16 cells (interval {10, 60, 300, 1800} s x jitter {0, 25, 50, 75} %), each cell on exactly 2 hosts (32 positive pairs; 24 gated at jitter <= 50 %), each beacon starting at U(4 h, 6 h). Benign: B1 browsing on shared SNIs all run; B1n: after 4 h each host browses 2 new SNIs of its own (novel and rare benign); B2 chat long-poll; B3 app polling windows anywhere in the run; B4 telemetry 300 s, B5 time-sync 64 s, B6 update check 3600 s on every host from t=0 (learnable); B7 a NEW periodic service (300 s +-10 %) starting at U(6 h, 8 h) on 3 hosts (novel, not rare); B8 a NEW periodic service (120 s +-10 %) starting at U(6 h, 8 h) on 1 host (novel AND rare AND periodic: the honest hard negative). All B classes are negatives in this set.",
+   "gate": "fused recall >= 0.30 on the 24 gated beacon pairs with false-alert rate <= 1 % over all benign pairs (B1-B8, >= 20 post-L flows)"
+  },
+  "H2_own_network_2": {
+   "status": "human task 14; a NEW 72 h capture recorded after this file is committed",
+   "budget": "mean fused pair alerts per test day (days 2 and 3) <= 1.0 on the one laptop; the frozen v2a1 alone is reported beside it (it had 13-16 per day on the spent capture)"
+  }
+ },
+ "gate": {
+  "owner_gate_pass_if": ["fused binary recall >= 0.30 AND fused false-alert rate <= 0.01 (point estimates) on at least two of {G1 CTU-13 fresh, G2 HIKARI} (CIC-2018 is spent and cannot count)", "AND H2 budget met"],
+  "reported_with_every_number": "95 % bootstrap CI, 1000 resamples, seed 1337, pairs resampled within positives and within negatives (spectra.eval.metrics)",
+  "on_failure": "report 'ranking aid, not a detector' with the reason; corroboration_enabled and beaconing_enabled stay off; no retuning in this session",
+  "not_run_rule": "a set that cannot be obtained (download blocked, human task not done) is NOT RUN and the gate cannot pass"
+ },
+ "also_rerun_for_regression": ["bench_ctu", "bench_hikari", "bench_cic2018", "bench_beacon_v2_{ctu,setb,own}", "bench_own_network", "spectra_bench.py --prereg ci/prereg/e0.json"],
+ "amendments": []
+}

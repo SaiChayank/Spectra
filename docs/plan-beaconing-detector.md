@@ -122,3 +122,30 @@ Stricter reading: a slow beacon that cannot reach 20 flows in 10 h is a miss, no
 count; a labelled beacon pair with fewer than 20 flows, or absent from the pcap, is included with score 0 for both Spectra and RITA and flagged `below_min_flows` /
 `absent` in the per-pair table (the manifest must list exactly 36 gated beacons). B1-B3 negatives and the periodic-benign class keep the >= 20 flows rule; their
 below-20 counts are reported. Machine-readable copy in `ci/prereg/e21.json`.
+
+## v3: corroborated beaconing (preregistered 2026-11-24, before any v3 code exists; machine-readable copy: `ci/prereg/e22.json`)
+Why: v2a1 failed set A (§18) and set B (§19), and on the owner's 72 h capture about a third of eligible pairs alert every day (§20). Timing,
+size, persistence and flatness cannot separate a beacon from a periodic service. v3 keeps v2a1 **unchanged** and adds context that must
+corroborate it. Nothing is fitted to evaluation labels; the JSON file is authoritative where the two differ.
+* **Unit:** the v2a1 pair (internal host, SNI-or-destination-IP); host-level numbers reported beside it. A pair is evaluated with >= 20 flows
+  after the learning window L; a labelled positive below that, or absent, is a miss.
+* **Signals.** **B** = v2a1 score >= 0.8 (frozen). **P** = learned periodicity: a destination becomes "expected periodic" when, inside L,
+  any host's pair to it has >= 12 unique seconds and G >= 0.8; at most 4,096 keys; expiry 7 days after L; while live, B is ignored for that
+  destination. **R** = rare destination: not seen from any host in L, and contacted by <= max(1, ceil(10 % of hosts)) hosts after L
+  (single-host data: "novel" only, prevalence reported as unmeasurable). **F** = rare fingerprint: a JA4 (else JA3) not used in L and used by
+  <= max(1, ceil(10 % of hosts)) hosts. **I** = the share of the pair's flows flagged by the shipped isolation forest is >= tau_I, where tau_I
+  is the 0.99 quantile of that share over dev benign CTU-Normal 2017 pairs (the §10 split), computed once and written into a data-only amendment
+  before any gate run. Per-host window context (flow count, distinct destinations / SNIs, new-destination rate, destination age) is computed
+  and reported, not fused.
+* **Fusion (fixed):** pair alert = B and not P and (R or F or I). A beacon verdict alone never alerts. Flag `corroboration_enabled`, off.
+* **Learning window L:** CTU captures: their first hour (no earlier history exists); HIKARI: the 2021-04-11/12 training captures; set C: first
+  4 h; own network #2: first 24 h.
+* **Data.** Spent (dev and regression only): CIC-2018 Bot day, set A, set B, the 2026-11-14 own-network capture. **Gate (fresh):** G1 =
+  CTU-13 scenarios 4, 6-13 (C2 pairs from the dataset's labels) vs CTU-Normal captures not in set A (selection rule in the JSON, hashes by
+  data amendment); G2 = HIKARI (never used for beacon work). **Known before running:** HIKARI's attack captures are ~150 s and v2a1 needs 3 h,
+  so recall on HIKARI is about 0 by construction; with CIC-2018 spent, the owner's "two of three" can then not be met. Stated here so the
+  result is not read as a surprise. **Secondary hold-out H1:** simulator set C (seed 2211, 16 h, 16 hosts, beacons start after 4 h, new benign
+  periodic services after 6 h including one on a single host: novel, rare and periodic, the honest hard negative). **H2:** a new 72 h
+  own-network capture (task 14) with a budget of <= 1 fused pair alert per test day.
+* **Gate (owner, 2026-11-24):** fused recall >= 0.30 at a false-alert rate <= 1 % on at least two of {G1, G2} and the H2 budget met; every
+  number with a 95 % bootstrap CI (1000 resamples, seed 1337). On failure: "ranking aid, not a detector", flags stay off, no retuning here.
