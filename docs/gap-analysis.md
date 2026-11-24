@@ -49,7 +49,7 @@ Every row below was checked against code, tests or a recorded run on 2026-11-24/
 |---|---|---|
 | E22 set C (H1) | In progress | run `setc-20261124T1950Z` (first run voided: VM shut down at 0.95 h) |
 | E22 own network #2 (H2) | Blocked | owner task 14 |
-| G-02 integration branch | Completed (local) | `frontend/integration` = `frontend/cyntra-design` + `origin/main` + `backend/review-fixes`; not pushed; merging to `main` waits for G-08 |
+| G-02 integration branch | Completed (local) | `frontend/integration` = `frontend/cyntra-design` + `origin/main` + `backend/review-fixes` + `detection/accuracy-v3`; clean clone: 1018 backend tests passed, 98 frontend tests, lint and counts clean; not pushed; merging to `main` waits for G-08 |
 | G-03 password contract | Completed | `ac506db`: real contract, 403 handling, two-factor code field; 89 -> tests green |
 | G-04 Hosts page | Completed (needs review) | ranked list, evidence timeline, verdict form gated by `incidents:manage`; 6 tests on the recorded fixtures; not checked in a browser (port 5173 held by another process) |
 | G-06 contract-vs-types check | Completed | `src/lib/contract.typecheck.ts`: tsc compares recorded fixtures with the UI types both ways; reintroducing the G-03 bug fails the build; found and removed a phantom `ManagedUser.totp_enabled` |
@@ -64,3 +64,11 @@ Every row below was checked against code, tests or a recorded run on 2026-11-24/
 |---|---|---|---|
 | Integrate on a local branch, do not merge to `main` or push | the repo rules require the owner's word for pushes and the owner's review of auth code | merging to `main` directly | none; reversible |
 | Follow the backend contract (403 on a wrong current password), not the old proposal | the backend is merged on `main` and its tests pin 403 | change the backend to 401 | none |
+
+## 6. Progress, 2026-11-25
+
+Completed this pass: G-02 (local integration of all branches), G-03 (password contract + two-factor field), G-04 (Hosts page),
+G-05 (sessions UI), G-06 (compile-time contract check, which also found a phantom `ManagedUser.totp_enabled`).
+In progress: G-01 set C (`setc-20261124T1950Z`, about 16 h). Waiting on the owner: G-08 security review (gates the merge to `main`),
+task 14 capture (G-01 H2), G-10 password-policy decision. Not checked in a browser: the Hosts and sessions screens (port 5173 was held by a
+process this session did not start); they are covered by tests driven by the recorded backend responses.
