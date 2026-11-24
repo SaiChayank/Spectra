@@ -261,6 +261,13 @@
      "sha256": "f9909c2c08b6c1203a5bc7be12c95a67ddad814e5fc92c8749aaee4f8619e069"
     }
    }
+  },
+  {
+   "id": 5,
+   "date": "2026-11-25",
+   "kind": "data only: set C run voided and restarted; nothing scored",
+   "voided": "setc-20261124T1143Z: every host stopped at 0.95 h with no end record and all containers exited 255 (the WSL VM shut down); never scored, kept on disk",
+   "restarted": "setc-20261124T1950Z (WSL clock; same commit and design), with a keep-alive holding the WSL VM up"
   }
  ]
 }
