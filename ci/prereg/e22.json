@@ -150,6 +150,14 @@
    "reason": "the first calibration run (docs/evidence/2026-11-24/e22/calibrate-tau-i.json, commit 1223ae6) found 0 eligible pairs: the two calibration captures last 0.79 h (2017-05-01) and 0.31 h (2017-05-02), shorter than the 1 h learning window, so the rule as written leaves tau_I undefined",
    "change": "for tau_I only, the per-pair flag share is computed over ALL flows of the two calibration captures (no learning window), pairs with >= 20 flows, then the 0.99 quantile. The detector, its training captures and the evaluation-time definition of I (share over flows after L) are unchanged.",
    "first_run_kept": "the empty first run stays in the evidence directory as calibrate-tau-i.json; the amended run is calibrate-tau-i-a2.json"
+  },
+  {
+   "id": 3,
+   "date": "2026-11-24",
+   "kind": "data only (the value the 'signals.I' rule computes); before any gate data was scored",
+   "tau_I": 0.6403181818181819,
+   "from": "docs/evidence/2026-11-24/e22/calibrate-tau-i-a2.json (commit 75cf7c1): 72 dev benign pairs, 0.99 quantile of the per-pair flag share; median share 0.034, 0.9 quantile 0.38",
+   "dev_hashes_checked": "the six set-A CTU-Normal captures match the SHA-256 in docs/datasets.md"
   }
  ]
 }

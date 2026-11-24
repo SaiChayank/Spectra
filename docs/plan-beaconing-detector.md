@@ -160,3 +160,7 @@ publishes no checksums, so the SHA-256 recorded at download are first-seen hashe
 The first tau_I run found no eligible pairs: the two calibration captures last 0.79 h and 0.31 h, shorter than the 1 h learning window. For tau_I
 only, the per-pair flag share now uses every flow of those captures (pairs with >= 20 flows, 0.99 quantile). The detector, its training data and
 the evaluation-time definition of I are unchanged. The empty first run is kept as evidence.
+
+### v3 amendment 3 (2026-11-24; data only, before any gate data was scored)
+tau_I = 0.6403 (0.99 quantile of the per-pair isolation-forest flag share over 72 dev benign CTU-Normal pairs; evidence
+`docs/evidence/2026-11-24/e22/calibrate-tau-i-a2.json`, commit 75cf7c1). The dev captures match the hashes in `docs/datasets.md`.
