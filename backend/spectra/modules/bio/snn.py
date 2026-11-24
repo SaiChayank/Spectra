@@ -37,6 +37,7 @@ THETA = 1.2          # hidden membrane threshold (spike)
 OUT_THETA = 1.5      # readout membrane threshold (spike)
 DEV_SCALE = 3.0      # robust deviation counted as "fully deviant"
 SEED = 1337
+WEIGHT_GRID = 2.0 ** 20   # weights are multiples of 1 / WEIGHT_GRID (see __init__)
 DEFAULT_THRESHOLD_PCT = 98.0   # score percentile that flags a timing anomaly
 
 
@@ -47,8 +48,11 @@ class TimingSNN:
         rng = np.random.default_rng(SEED)
         # excitatory-only pool: more coincident input -> strictly more drive,
         # so the "deviation -> spiking" mapping is monotone and testable
-        self.w_in = np.abs(rng.normal(size=(len(IDX), HIDDEN)))
-        self.w_out = np.abs(rng.normal(size=HIDDEN))
+        # Weights on an exact binary grid (multiples of 2**-20): every partial sum of a few of them is exact in float64,
+        # so ``@`` gives the same bits whatever order a CPU's BLAS kernel adds the terms in, and no threshold comparison
+        # can flip between machines (HANDOFF_FINDINGS 2026-11-19, tests/test_snn_reproducible.py).
+        self.w_in = np.round(np.abs(rng.normal(size=(len(IDX), HIDDEN))) * WEIGHT_GRID) / WEIGHT_GRID
+        self.w_out = np.round(np.abs(rng.normal(size=HIDDEN)) * WEIGHT_GRID) / WEIGHT_GRID
         self.med: np.ndarray | None = None
         self.mad: np.ndarray | None = None
         self.baseline: np.ndarray | None = None   # benign metric values, sorted
