@@ -43,6 +43,12 @@ class Health(Out):
     uptime_s: Num
 
 
+class Ready(Out):
+    """Public readiness probe (documented only: the route answers 200 or 503)."""
+    ready: bool
+    checks: dict[str, str]
+
+
 class HealthSystem(Out):
     ts: Num
     uptime_s: Num
@@ -140,7 +146,7 @@ def health() -> JSONResponse:
     return JSONResponse(body, status_code=200 if body["ok"] else 503)
 
 
-@router.get("/api/ready")
+@router.get("/api/ready", response_model=Ready)
 def ready() -> JSONResponse:
     """Readiness for a load balancer or orchestrator (public, like health):
     200 only when storage is writable and the schema is current, else 503.
