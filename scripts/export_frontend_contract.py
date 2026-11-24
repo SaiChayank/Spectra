@@ -453,6 +453,8 @@ def run_scenario(work: Path, rec: Recorder, app, engine, TestClient) -> None:
     # -- logout (fresh session) ---------------------------------------------------------------------------------
     out = TestClient(app)
     login(out, ADMIN_USER, ADMIN_PW, variant="second_session", expect=200)
+    rec.call(out, "GET", "/api/auth/sessions", expect=200)
+    rec.call(out, "DELETE", "/api/auth/sessions/999999999", variant="404_not_found", expect=404)
     rec.call(out, "POST", "/api/auth/logout", expect=200)
     rec.call(out, "GET", "/api/auth/me", variant="401_after_logout", expect=401)
 

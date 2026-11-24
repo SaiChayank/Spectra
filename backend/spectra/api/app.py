@@ -25,7 +25,6 @@ import errno
 import logging
 import time
 from contextlib import asynccontextmanager
-from urllib.parse import urlsplit
 
 from fastapi import FastAPI, Request, WebSocket
 from fastapi.encoders import jsonable_encoder
@@ -55,10 +54,11 @@ from .routers import (
     users,
 )
 from ..store import StoreUnavailable
-from .middleware import RequestIdMiddleware
+from .middleware import RequestIdMiddleware, UnhandledErrorMiddleware
 from .runtime import cfg, engine  # noqa: F401  (re-exported for tests/tools)
 from .security import (
     auth_gate,
+    origin_allowed,
     resolve_ws_principal,
 )
 
@@ -200,6 +200,10 @@ app.middleware("http")(auth_gate)
 # (login) before any session work happens.
 app.add_middleware(_BodyLimit)
 
+# Inside CORS, outside the body cap and the gate: any exception nothing else
+# mapped becomes a JSON 500 carrying the request id (see middleware module).
+app.add_middleware(UnhandledErrorMiddleware)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cfg.cors_origins,
@@ -234,22 +238,6 @@ except Exception:  # noqa: BLE001 - adoption is opportunistic
     log.exception("model registry adoption failed")
 
 
-def _origin_allowed(origin: str, host: str | None) -> bool:
-    """True when a browser may open the event WebSocket from ``origin``.
-
-    Allowed: the configured CORS origins (the dashboard at :5173) and the
-    API's own host (same-origin, e.g. the docs page).  Anything else - a
-    foreign site attempting a cross-site WebSocket hijack - is refused.
-    """
-    if origin in cfg.cors_origins:
-        return True
-    try:
-        netloc = urlsplit(origin).netloc
-    except ValueError:  # pragma: no cover - urlsplit is tolerant
-        return False
-    return bool(host) and netloc == host
-
-
 @app.websocket("/ws/events")
 async def ws_events(ws: WebSocket) -> None:
     """Authenticated event stream (cookie or ``?token=``; any role with read).
@@ -262,7 +250,7 @@ async def ws_events(ws: WebSocket) -> None:
     Origin and are unaffected.
     """
     origin = ws.headers.get("origin")
-    if origin is not None and not _origin_allowed(origin, ws.headers.get("host")):
+    if origin is not None and not origin_allowed(origin, ws.headers.get("host")):
         await ws.close(code=4403)
         return
     cookies = dict(ws.cookies)

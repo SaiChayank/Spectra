@@ -83,3 +83,12 @@ can be opened, never on Spectra capturing packets. Fix: the Npcap check runs onl
 `tests/test_integrity.py::test_live_capture_on_linux_does_not_demand_npcap` (fails on the old code, checked). Not yet verified
 end to end: the sizing rig must be re-run by the owner with sudo. `scripts/bench_perf.sh` was also changed to stop with the status
 and server log when the capture is not running or receives nothing (its first run printed a table of zeros).
+
+## 2026-11-19: bio `snn_score` is not reproducible across machines (found by the contract drift check)
+
+`scripts/export_frontend_contract.py --check` fails on unmodified `main` (e411644) in WSL Ubuntu (Python 3.12.3, numpy 2.5.4,
+scikit-learn 1.9.1, matching `backend/requirements.lock`): three fixtures (`GET_api_flows`, `GET_api_history_flows`,
+`GET_api_investigations_1`) record `snn_score` 63.41 where the committed files have 65.85. Nothing else differs. So
+`tests/test_frontend_contract.py::test_frontend_contract_is_current` fails on this machine; CI (where the fixtures were recorded)
+may still pass. Cause not investigated (candidates: unseeded or platform-dependent RNG in the SNN layer, float summation order).
+Not changed: fixing it alters bio scores. Backlog P2-2 in `docs/backend-plan.md`.

@@ -806,6 +806,7 @@
         "title": "PlaybookRequest",
         "type": "object"
       },
+      "Ready": {},
       "RegistryCompare": {},
       "RegistryList": {},
       "RegistryModel": {},
@@ -842,6 +843,9 @@
         "type": "object"
       },
       "SearchResponse": {},
+      "SessionInfo": {},
+      "SessionList": {},
+      "SessionRevoked": {},
       "ShadowRequest": {
         "properties": {
           "capture_id": {
@@ -2223,6 +2227,67 @@
           }
         },
         "summary": "Auth Password"
+      }
+    },
+    "/api/auth/sessions": {
+      "get": {
+        "description": "The caller's own live sessions (ids and times; the current one marked).  Never a token or its hash.",
+        "operationId": "auth_sessions_api_auth_sessions_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Auth Sessions"
+      }
+    },
+    "/api/auth/sessions/{session_id}": {
+      "delete": {
+        "description": "End one of the caller's own sessions.  Another user's session id answers 404 exactly like a missing one.\nEnding the current session clears the cookie (the same as logout).",
+        "operationId": "auth_session_revoke_api_auth_sessions__session_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "session_id",
+            "required": true,
+            "schema": {
+              "maximum": 4611686018427387904,
+              "minimum": 1,
+              "title": "Session Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionRevoked"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Auth Session Revoke"
       }
     },
     "/api/auth/totp/disable": {
@@ -5384,6 +5449,25 @@
           }
         },
         "summary": "Pqc Scan"
+      }
+    },
+    "/api/ready": {
+      "get": {
+        "description": "Readiness for a load balancer or orchestrator (public, like health):\n200 only when storage is writable and the schema is current, else 503.\nLiveness stays ``/api/health``.",
+        "operationId": "ready_api_ready_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Ready"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Ready"
       }
     },
     "/api/search": {

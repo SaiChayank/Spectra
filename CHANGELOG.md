@@ -6,6 +6,20 @@ All notable changes to Spectra are documented here. The format follows
 
 ## [Unreleased]
 
+### Security
+- CSRF: state-changing `/api/` requests (POST/PUT/PATCH/DELETE) with a browser `Origin` that is neither a configured dashboard origin nor the API's own host are refused with 403. SameSite=Lax alone let same-site pages (another localhost port, a sibling subdomain) submit forms to the 16 body-less POST routes and the capture upload with the operator's cookie. Clients that send no `Origin` (CLI, scripts) are unaffected.
+- The last-ADMIN guard is now part of the demoting `UPDATE` and the `DELETE` statement, so two concurrent requests can no longer leave the system without an ADMIN.
+- A login that verified the password just before an admin reset it can no longer open a session: the session insert is conditional on the password hash it verified, so the reset's revocation cannot be outrun. The in-place hash upgrade at login is conditional the same way.
+- A password change (admin reset or `POST /api/auth/password`) now writes the new hash and revokes the sessions in one transaction (they were two commits; a failure between them left every old session alive), and the self-service write is a compare-and-swap, so two racing changes cannot both win.
+- Every `/api/` response carries `X-Content-Type-Options: nosniff`. Login-throttle blocks are logged (`event=login_throttled`, no username or address) and counted in `spectra_login_blocks_total`.
+
+### Added
+- `GET /api/auth/sessions` and `DELETE /api/auth/sessions/{id}`: any signed-in user lists their own live sessions (ids and times, the current one marked; never a token) and ends one; another user's session id answers 404 exactly like a missing one, the delete checks ownership in the same statement, ending the current session clears the cookie, and each revocation is audited (`auth.session_revoked`).
+- `GET /api/ready` (public readiness probe): 200 only when the data dir and database are writable and the schema is current, else 503. `/api/health` stays the liveness probe.
+
+### Fixed
+- An exception no handler maps now answers a JSON 500 with the request id (`{"detail": "internal server error", "request_id": ...}`) and keeps CORS headers; it used to be Starlette's plain-text 500, which the dashboard could not read. The traceback is logged under the same id.
+
 ### Changed
 - scapy (GPL-2.0-only) is no longer a core dependency (ADR-011): pcap, pcapng and gzip are read by an in-tree `struct` reader and packets are decoded by an in-tree dissector (`spectra.capture.packet`). scapy remains only as the optional `live` extra (live NIC capture) and a dev/test dependency. Interface listing uses `socket.if_nameindex()` and returns names only (no Windows friendly names). The compose `capture` service builds its own image with the `live` extra.
 

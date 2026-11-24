@@ -760,6 +760,13 @@ class TotpRepository:
             return cur.rowcount > 0
 
 
+#: Appended to a ``WHERE id = ?`` that removes or demotes an account: the row
+#: matches only if it is not the last ADMIN. Evaluated inside the one
+#: statement, so the check and the write cannot be split by another request.
+_KEEPS_AN_ADMIN = (" AND NOT (role = 'ADMIN' AND "
+                   "(SELECT COUNT(*) FROM users WHERE role = 'ADMIN') <= 1)")
+
+
 class UserRepository:
     """Local accounts: scrypt encodings + one of three RBAC roles.
 
@@ -814,9 +821,57 @@ class UserRepository:
             sets.append("password_hash = ?")
             params.append(password_hash)
         params.append(user_id)
+        where = "id = ?"
+        if role is not None and role != "ADMIN":
+            # demotion: refused in the same statement if it would leave no ADMIN
+            where += _KEEPS_AN_ADMIN
         with self._db.lock:
             cur = self._db.execute(
-                f"UPDATE users SET {', '.join(sets)} WHERE id = ?", tuple(params))
+                f"UPDATE users SET {', '.join(sets)} WHERE {where}", tuple(params))
+            self._db.commit()
+            return cur.rowcount > 0
+
+    def change_password(self, user_id: int, password_hash: str, now: float, *,
+                        role: str | None = None, expected_hash: str | None = None,
+                        keep_token_hash: str | None = None) -> int | None:
+        """Set a new password and revoke sessions in **one** transaction.
+
+        Returns the number of sessions revoked, or ``None`` when no row
+        matched (unknown id, the last-ADMIN guard refused a demotion, or the
+        stored hash is no longer ``expected_hash`` because another request
+        changed the password first). ``keep_token_hash`` spares the caller's
+        own session on a self-service change.
+        """
+        sets, params = ["updated_at = ?", "password_hash = ?"], [now, password_hash]
+        if role is not None:
+            sets.append("role = ?")
+            params.append(role)
+        where, wparams = "id = ?", [user_id]
+        if expected_hash is not None:
+            # compare-and-swap: only the hash the caller just verified may be replaced
+            where += " AND password_hash = ?"
+            wparams.append(expected_hash)
+        if role is not None and role != "ADMIN":
+            where += _KEEPS_AN_ADMIN
+        revoke, rparams = "DELETE FROM sessions WHERE user_id = ?", [user_id]
+        if keep_token_hash is not None:
+            revoke += " AND token_hash != ?"
+            rparams.append(keep_token_hash)
+        with self._db.transaction():
+            cur = self._db.execute(
+                f"UPDATE users SET {', '.join(sets)} WHERE {where}",
+                tuple(params + wparams))
+            if cur.rowcount == 0:
+                return None
+            return self._db.execute(revoke, tuple(rparams)).rowcount
+
+    def rehash(self, user_id: int, old_hash: str, new_hash: str, now: float) -> bool:
+        """Upgrade the stored encoding of the *same* password (login only)."""
+        with self._db.lock:
+            cur = self._db.execute(
+                "UPDATE users SET password_hash = ?, updated_at = ? "
+                "WHERE id = ? AND password_hash = ?",
+                (new_hash, now, user_id, old_hash))
             self._db.commit()
             return cur.rowcount > 0
 
@@ -829,9 +884,13 @@ class UserRepository:
             self._db.commit()
 
     def delete(self, user_id: int) -> bool:
-        """Remove an account; its session rows go with it (FK cascade)."""
+        """Remove an account; its session rows go with it (FK cascade).
+
+        Never removes the last ADMIN: the guard is part of the statement, so
+        two concurrent deletions cannot both pass a separate count check.
+        """
         with self._db.lock:
-            cur = self._db.execute("DELETE FROM users WHERE id = ?",
+            cur = self._db.execute("DELETE FROM users WHERE id = ?" + _KEEPS_AN_ADMIN,
                                    (user_id,))
             self._db.commit()
             return cur.rowcount > 0
@@ -858,6 +917,28 @@ class SessionRepository:
             )
             self._db.commit()
             return int(cur.lastrowid)
+
+    def create_if_password(self, user_id: int, token_hash: str, created_at: float,
+                           expires_at: float, password_hash: str) -> bool:
+        """Open a session only while ``password_hash`` is still the account's.
+
+        Login verifies the password, then inserts the session. A password
+        reset that lands in between revokes every existing session but could
+        not see this one yet; tying the insert to the verified hash makes the
+        check and the write one statement, so that login simply fails.
+        """
+        with self._db.lock:
+            cur = self._db.execute(
+                """INSERT INTO sessions
+                   (user_id, token_hash, created_at, expires_at, last_seen_at)
+                   SELECT ?, ?, ?, ?, ?
+                   WHERE EXISTS (SELECT 1 FROM users
+                                 WHERE id = ? AND password_hash = ?)""",
+                (user_id, token_hash, created_at, expires_at, created_at,
+                 user_id, password_hash),
+            )
+            self._db.commit()
+            return cur.rowcount > 0
 
     def by_token_hash(self, token_hash: str) -> dict | None:
         rows = self._db.query(
@@ -886,6 +967,20 @@ class SessionRepository:
                 "DELETE FROM sessions WHERE user_id = ?", (user_id,))
             self._db.commit()
             return cur.rowcount
+
+    def list_for_user(self, user_id: int, now: float) -> list[dict]:
+        """One user's live sessions, oldest first (callers must not expose ``token_hash``)."""
+        return self._db.query(
+            "SELECT id, token_hash, created_at, last_seen_at, expires_at FROM sessions "
+            "WHERE user_id = ? AND expires_at > ? ORDER BY created_at, id", (user_id, now))
+
+    def delete_own(self, session_id: int, user_id: int) -> bool:
+        """End one session only if it belongs to ``user_id``: ownership is part of the statement."""
+        with self._db.lock:
+            cur = self._db.execute(
+                "DELETE FROM sessions WHERE id = ? AND user_id = ?", (session_id, user_id))
+            self._db.commit()
+            return cur.rowcount > 0
 
     def purge_expired(self, now: float) -> int:
         """Drop expired rows (opportunistic housekeeping on login)."""

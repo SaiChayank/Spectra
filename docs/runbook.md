@@ -4,7 +4,7 @@ Status of each procedure is stated per section: **Rehearsed** = executed on a pr
 `docs/evidence/`. Limits of each rehearsal are stated where they apply.
 
 Paths: `~/.local/share/spectra/{data,models}` for an installed copy (override with `SPECTRA_DATA_DIR`, `SPECTRA_MODEL_PATH`).
-Health: `GET /api/health`; metrics: `GET /api/metrics` (see `docs/monitoring.md`).
+Health (liveness): `GET /api/health`; readiness: `GET /api/ready` (503 unless storage is writable and the schema is current); metrics: `GET /api/metrics` (see `docs/monitoring.md`).
 
 ## Backup (rehearsed)
 

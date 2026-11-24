@@ -48,7 +48,12 @@ on. Code: `backend/spectra/auth/`, `authz.py`, `api/security.py`,
 * Logout deletes the row by hash; changing a password revokes **all** of that
   user's sessions; deleting a user cascades their sessions. Role changes take
   effect on the next request (role is re-read, not cached in the token).
-* `/api/auth/*` responses carry `Cache-Control: no-store`.
+* `/api/auth/*` responses carry `Cache-Control: no-store`; every `/api/`
+  response carries `X-Content-Type-Options: nosniff`.
+* An exception no route maps becomes a fixed JSON 500
+  (`{"detail": "internal server error", "request_id": ...}`, CORS headers
+  kept); the traceback is logged under that request id
+  (`event=unhandled_error`), never returned.
 * **Changing your own password:** `POST /api/auth/password` (`current_password`,
   `new_password`, plus `totp_code` when the account has a second factor). Any
   signed-in role may use it. The current password is verified with the same
@@ -61,6 +66,12 @@ on. Code: `backend/spectra/auth/`, `authz.py`, `api/security.py`,
   triggered by a typo. On success every session of the user is revoked (the
   caller's too), the cookie is cleared and `auth.password_changed` is audit-chained
   (username only, never a password). Tests: `test_change_password.py`.
+* **CSRF:** SameSite=Lax does not stop *same-site* pages (another port on the
+  same host, a sibling subdomain), and an HTML form POST needs no CORS
+  preflight. The gate therefore refuses any POST/PUT/PATCH/DELETE under
+  `/api/` whose `Origin` is neither in `SPECTRA_CORS_ORIGINS` nor the API's
+  own host (`403 cross-origin request refused`), login included. Requests
+  without `Origin` (CLI, scripts) are unaffected (`tests/test_csrf_origin.py`).
 
 **Login throttling with escalating backoff** (`LoginThrottle`, checked
 *before* any scrypt work): 10 failures / 60 s per *(ip, username)* or 40 / 60 s
@@ -138,7 +149,7 @@ Later starts never reset or overwrite accounts. Setup details:
 
 Permissions are data (`authz.py`); routes declare which they need; middleware
 makes `/api/*` **default-deny** (public: `GET /api/health`,
-`POST /api/auth/login`).
+`GET /api/ready`, `POST /api/auth/login`).
 
 | Permission | VIEWER | ANALYST | ADMIN |
 |---|:---:|:---:|:---:|
@@ -151,11 +162,25 @@ makes `/api/*` **default-deny** (public: `GET /api/health`,
 | `users:manage` (user CRUD) | — | — | ✅ |
 
 * Violations return `403` with the missing permission named; no session → `401`.
-* The public surface is exactly `GET /api/health`, `POST /api/auth/login`, and
+* The public surface is exactly `GET /api/health`, `GET /api/ready` (booleans
+  and fixed strings only), `POST /api/auth/login`, and
   FastAPI's own `/docs`, `/redoc`, `/openapi.json` (route *descriptions* — they
   return no data and every `/api/*` call from them still needs a session).
+* Password changes (an ADMIN reset or the user's own change) write the new
+  hash and the revocation of every session in one transaction, and the
+  self-service write is a compare-and-swap on the hash that was verified, so
+  two racing changes cannot both win. Login only inserts its session while the hash it
+  verified is still current, so a login racing a reset gets no session
+  (`tests/test_password_change.py`).
+* Own sessions: `GET /api/auth/sessions` lists only the caller's live sessions (ids and
+  times, never a token or hash); `DELETE /api/auth/sessions/{id}` ends one. Ownership is
+  part of the `DELETE` statement, and another user's id answers the same 404 as a missing
+  one, so there is no way to probe or touch other users' sessions
+  (`tests/test_own_sessions.py`).
 * Guards: you cannot delete your own account, and the **last ADMIN** cannot be
-  deleted or demoted (`409`) — no self-lockout.
+  deleted or demoted (`409`) — no self-lockout. The guard is part of the
+  `UPDATE`/`DELETE` statement itself, so two concurrent requests cannot both
+  pass it (`tests/test_admin_guard_race.py`).
 * Usernames: `^[A-Za-z0-9][A-Za-z0-9_.-]{2,31}$`.
 * `test_auth.py` sweeps **every** registered route for default-deny behaviour
   and role expectations; the dashboard mirrors the same permissions (server

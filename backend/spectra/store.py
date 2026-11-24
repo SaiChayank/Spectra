@@ -289,6 +289,25 @@ class Store:
             return None
         return _public_user(self._users.get(user_id))
 
+    def rehash_password(self, user_id: int, old_hash: str, new_hash: str) -> bool:
+        """Same password, stronger encoding; only if ``old_hash`` is still current."""
+        return self._users.rehash(user_id, old_hash, new_hash, time.time())
+
+    def change_password(self, user_id: int, password_hash: str, *,
+                        role: str | None = None, expected_hash: str | None = None,
+                        keep_token_hash: str | None = None) -> tuple[dict, int] | None:
+        """New password + session revocation, atomically (see the repository).
+
+        Returns ``(public_user, sessions_revoked)`` or ``None`` when the write
+        was refused (unknown id, last-ADMIN guard, hash changed underneath).
+        """
+        revoked = self._users.change_password(
+            user_id, password_hash, time.time(), role=role,
+            expected_hash=expected_hash, keep_token_hash=keep_token_hash)
+        if revoked is None:
+            return None
+        return _public_user(self._users.get(user_id)), revoked
+
     # -- optional TOTP second factor (v13) ------------------------------------------
 
     def totp_get(self, user_id: int) -> dict | None:
@@ -320,9 +339,14 @@ class Store:
         return self._users.delete(user_id)
 
     def create_session(self, user_id: int, token_hash: str,
-                       expires_at: float) -> int:
+                       expires_at: float, *, password_hash: str | None = None) -> int:
+        """Insert a session row. With ``password_hash`` the insert only happens
+        while that is still the account's hash (login); returns 0 if refused."""
         now = time.time()
-        return self._sessions.create(user_id, token_hash, now, expires_at)
+        if password_hash is None:
+            return self._sessions.create(user_id, token_hash, now, expires_at)
+        return int(self._sessions.create_if_password(
+            user_id, token_hash, now, expires_at, password_hash))
 
     def get_session(self, token_hash: str) -> dict | None:
         return self._sessions.by_token_hash(token_hash)
@@ -336,6 +360,12 @@ class Store:
     def invalidate_user_sessions(self, user_id: int) -> int:
         """Revoke every session of one user (password change / deletion)."""
         return self._sessions.delete_for_user(user_id)
+
+    def list_user_sessions(self, user_id: int, now: float | None = None) -> list[dict]:
+        return self._sessions.list_for_user(user_id, time.time() if now is None else now)
+
+    def delete_own_session(self, session_id: int, user_id: int) -> bool:
+        return self._sessions.delete_own(session_id, user_id)
 
     def purge_expired_sessions(self, now: float | None = None) -> int:
         return self._sessions.purge_expired(

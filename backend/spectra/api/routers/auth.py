@@ -8,7 +8,7 @@ hash that storage keeps.
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Path, Request, Response
 from pydantic import BaseModel, Field
 
 from ...services.auth import AuthError, CredentialsError
@@ -76,6 +76,25 @@ class OkResponse(Out):
 class PasswordChanged(Out):
     ok: bool
     sign_in_required: bool
+
+
+class SessionInfo(Out):
+    id: int
+    created_at: float
+    last_seen_at: float
+    expires_at: float
+    current: bool
+
+
+class SessionList(Out):
+    count: int
+    items: list[SessionInfo]
+
+
+class SessionRevoked(Out):
+    ok: bool
+    revoked: int
+    current: bool
 
 
 class TotpSetup(Out):
@@ -237,3 +256,32 @@ def totp_disable(req: TotpDisableRequest, request: Request,
         "auth.totp_disabled", {"username": out["username"]},
         actor=principal["username"])
     return {"totp_enabled": False}
+
+
+# -- own sessions (list / end one) ------------------------------------------------------------------------------------
+
+@router.get("/api/auth/sessions", response_model=SessionList)
+def auth_sessions(principal: dict = Depends(require("read"))) -> dict:
+    """The caller's own live sessions (ids and times; the current one marked).  Never a token or its hash."""
+    try:
+        items = engine.auth.list_own_sessions(principal["user_id"], principal["session"]["token_hash"])
+    except AuthError as exc:
+        raise auth_error(exc) from exc
+    return {"count": len(items), "items": items}
+
+
+@router.delete("/api/auth/sessions/{session_id}", response_model=SessionRevoked)
+def auth_session_revoke(response: Response, session_id: int = Path(ge=1, le=2**62),
+                        principal: dict = Depends(require("read"))) -> dict:
+    """End one of the caller's own sessions.  Another user's session id answers 404 exactly like a missing one.
+    Ending the current session clears the cookie (the same as logout)."""
+    try:
+        out = engine.auth.revoke_own_session(principal["user_id"], principal["session"]["token_hash"], session_id)
+    except AuthError as exc:
+        raise auth_error(exc) from exc
+    if out["current"]:
+        clear_session_cookie(response)
+    engine.audit_service.append(
+        "auth.session_revoked", {"username": principal["username"], "session_id": out["revoked"], "current": out["current"]},
+        actor=principal["username"])
+    return {"ok": True, **out}

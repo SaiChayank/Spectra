@@ -127,6 +127,13 @@ class UserPolicyError(AuthError):
     status_code = 422
 
 
+class SessionNotFound(AuthError):
+    """No such session for this user (another user's session answers the same, 404)."""
+
+    status_code = 404
+    default_detail = "session not found"
+
+
 class UserGuardError(AuthError):
     """Structural guard: self-deletion or removing the last admin (409)."""
 
@@ -164,10 +171,11 @@ class _Meter:
             return block["until"] - now
         return None
 
-    def fail(self, key, now: float) -> None:
+    def fail(self, key, now: float) -> dict | None:
+        """Count a failure; returns the new block when this one starts it."""
         block = self.blocks.get(key)
         if block is not None and block["until"] > now:
-            return                      # already blocked: attempts do not extend it
+            return None                 # already blocked: attempts do not extend it
         if block is not None and now - block["until"] > self.strike_ttl:
             del self.blocks[key]        # quiet long enough: forgiven
             block = None
@@ -177,12 +185,14 @@ class _Meter:
             strikes = (block["strikes"] if block else 0) + 1
             length = min(self.window * 2 ** (strikes - 1), self.max_block)
             self.blocks.pop(key, None)  # re-insert last: dict order = recency
-            self.blocks[key] = {"until": now + length, "strikes": strikes}
+            started = self.blocks[key] = {"until": now + length, "strikes": strikes}
             self.events.pop(key, None)
         else:
+            started = None
             self.events[key] = times
         if len(self.events) > self.MAX_KEYS or len(self.blocks) > self.MAX_KEYS:
             self._shrink(now)
+        return started
 
     def success(self, key) -> None:
         self.events.pop(key, None)
@@ -243,6 +253,8 @@ class LoginThrottle:
         self.clock = clock
         self._pair = _Meter(limit, window, max_block, strike_ttl, clock)
         self._ip = _Meter(ip_limit, window, max_block, strike_ttl, clock)
+        #: blocks started since boot (``spectra_login_blocks_total``)
+        self.blocks_started = 0
 
     def retry_after(self, ip: str, username: str) -> float | None:
         """Seconds to wait when blocked, else ``None`` (allowed to try)."""
@@ -253,8 +265,15 @@ class LoginThrottle:
 
     def record_failure(self, ip: str, username: str) -> None:
         now = self.clock()
-        self._pair.fail((ip, username.casefold()), now)
-        self._ip.fail(ip, now)
+        for scope, meter, key in (("ip_user", self._pair, (ip, username.casefold())),
+                                  ("ip", self._ip, ip)):
+            block = meter.fail(key, now)
+            if block is not None:
+                self.blocks_started += 1
+                # one line per block episode; no username or address (personal data)
+                log.warning("login throttled", extra={
+                    "event": "login_throttled", "scope": scope,
+                    "block_s": round(block["until"] - now), "strikes": block["strikes"]})
 
     def record_success(self, ip: str, username: str) -> None:
         self._pair.success((ip, username.casefold()))
@@ -369,16 +388,19 @@ class AuthService:
         if not verify_password(password, creds["password_hash"]):
             raise CredentialsError()
         self._check_second_factor(creds["id"], totp_code)
-        if password_needs_rehash(creds["password_hash"]):
+        verified_hash = creds["password_hash"]
+        if password_needs_rehash(verified_hash):
             # Store-level write (no session revocation): the row is upgraded
             # in place to the current work factor right after its own proof,
             # so pre-hardening accounts reach the stronger parameters on the
-            # first successful login instead of never.
+            # first successful login instead of never.  Conditional on the
+            # verified hash, so it can never undo a concurrent reset.
+            upgraded = hash_password(password)
             try:
-                self.store.update_user(
-                    creds["id"], password_hash=hash_password(password))
-                log.info("upgraded password hash parameters for '%s'",
-                         creds["username"])
+                if self.store.rehash_password(creds["id"], verified_hash, upgraded):
+                    verified_hash = upgraded
+                    log.info("upgraded password hash parameters for '%s'",
+                             creds["username"])
             except StoreError:  # pragma: no cover - login must not fail here
                 log.warning("password rehash failed for '%s'",
                             creds["username"], exc_info=True)
@@ -386,7 +408,11 @@ class AuthService:
         self.store.purge_expired_sessions(now)  # opportunistic housekeeping
         token = secrets.token_urlsafe(32)
         expires_at = now + self.ttl_seconds
-        self.store.create_session(creds["id"], hash_token(token), expires_at)
+        # Only while the password just verified is still current: a reset that
+        # landed during the scrypt check has already revoked every session.
+        if not self.store.create_session(creds["id"], hash_token(token), expires_at,
+                                         password_hash=verified_hash):
+            raise CredentialsError()
         self.store.set_user_login_time(creds["id"])
         user = self.store.get_user(creds["id"])
         if user is None:  # pragma: no cover - row was read moments ago
@@ -525,6 +551,22 @@ class AuthService:
             },
         }
 
+    def list_own_sessions(self, user_id: int, current_hash: str) -> list[dict]:
+        """The caller's live sessions: ids and times only, the current one marked; never a token or hash."""
+        self._require_store()
+        return [{"id": int(s["id"]), "created_at": float(s["created_at"]), "last_seen_at": float(s["last_seen_at"]),
+                 "expires_at": float(s["expires_at"]), "current": s["token_hash"] == current_hash}
+                for s in self.store.list_user_sessions(user_id)]
+
+    def revoke_own_session(self, user_id: int, current_hash: str, session_id: int) -> dict:
+        """End one of the caller's sessions.  Another user's session id and a missing id raise the same
+        :class:`SessionNotFound` (404), and the delete itself checks ownership, so nothing else can be touched."""
+        self._require_store()
+        cur = self.store.get_session(current_hash) if current_hash else None
+        if not self.store.delete_own_session(int(session_id), user_id):
+            raise SessionNotFound()
+        return {"revoked": int(session_id), "current": bool(cur) and int(cur["id"]) == int(session_id)}
+
     def logout(self, token_hash: str) -> None:
         """Delete the session row behind ``token_hash`` (idempotent).
 
@@ -595,19 +637,25 @@ class AuthService:
                 and user["role"] == "ADMIN"
                 and self.store.count_admin_users() <= 1):
             raise UserGuardError("cannot demote the last ADMIN account")
-        password_hash = None
+        revoked = None
         if password is not None:
             try:
                 check_password_policy(password)
             except ValueError as exc:
                 raise UserPolicyError(str(exc)) from exc
-            password_hash = hash_password(password)
-        updated = self.store.update_user(user_id, role=role,
-                                         password_hash=password_hash)
+            # the new hash and the revocation of every session: one transaction
+            result = self.store.change_password(user_id, hash_password(password),
+                                                role=role)
+            updated, revoked = result if result is not None else (None, None)
+        else:
+            updated = self.store.update_user(user_id, role=role)
         if updated is None:
+            if self.store.get_user(user_id) is not None:
+                # the store's own guard: another request demoted or removed
+                # the other ADMIN between our count check and this write
+                raise UserGuardError("cannot demote the last ADMIN account")
             raise InvalidUser()
-        if password_hash is not None:
-            revoked = self.store.invalidate_user_sessions(user_id)
+        if revoked is not None:
             log.info("password changed for '%s'; revoked %d session(s)",
                      updated["username"], revoked)
         return updated
@@ -621,12 +669,18 @@ class AuthService:
         that has one - raises :class:`CredentialsError` (the router maps it to
         403 and feeds the login throttle).  The new password goes through the
         same policy as create/PATCH and must differ from the current one.
+
+        The write is a compare-and-swap on the hash that was verified, done in
+        the same transaction as the session revocation: two racing changes
+        cannot both win, and a failure cannot leave old sessions alive.
         """
         self._require_store()
         user = self.store.get_user(user_id)
         if user is None:
             raise InvalidUser()
         creds = self._credentials(user["username"], current)
+        if creds["id"] != user_id:  # pragma: no cover - usernames are unique
+            raise CredentialsError()
         self._check_second_factor(creds["id"], totp_code)
         try:
             check_password_policy(new)
@@ -635,8 +689,12 @@ class AuthService:
         if hmac.compare_digest(new.encode(), current.encode()):
             raise UserPolicyError(
                 "new password must differ from the current password")
-        self.store.update_user(user_id, password_hash=hash_password(new))
-        revoked = self.store.invalidate_user_sessions(user_id)
+        result = self.store.change_password(
+            user_id, hash_password(new), expected_hash=creds["password_hash"])
+        if result is None:
+            # another request changed the password between our check and this write
+            raise CredentialsError()
+        _, revoked = result
         log.info("password changed for '%s'; revoked %d session(s)",
                  user["username"], revoked)
         return user
@@ -651,7 +709,10 @@ class AuthService:
             raise UserGuardError("you cannot delete your own account")
         if user["role"] == "ADMIN" and self.store.count_admin_users() <= 1:
             raise UserGuardError("cannot delete the last ADMIN account")
-        self.store.delete_user(user_id)
+        if not self.store.delete_user(user_id):
+            if self.store.get_user(user_id) is not None:
+                raise UserGuardError("cannot delete the last ADMIN account")
+            raise InvalidUser()
 
     # -- internals ------------------------------------------------------------
 
