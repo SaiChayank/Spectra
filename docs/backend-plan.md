@@ -13,11 +13,11 @@ to a single-node, metadata-only detection tool, what needs an owner decision, an
 | Stack | Python 3.11-3.13, FastAPI, SQLite (WAL), scikit-learn IsolationForest, own pcap reader (ADR-011 branch) / scapy |
 | Layers | `api/routers/*` (HTTP only) → `services/*` (business logic) → `store.py` facade → `db/repositories.py` (SQL) → `db/connection.py` |
 | Schema | 13 numbered migrations in `db/migrations.py`, forward-only, upgrade-tested (`tests/test_migrations.py`) |
-| API | 103 HTTP routes + 1 WebSocket (101 before this review); OpenAPI exported to `frontend/contract/openapi.json` with a drift check |
+| API | 106 HTTP routes + 1 WebSocket after the rebase onto `main` (101 before this review); OpenAPI exported to `frontend/contract/openapi.json` with a drift check |
 | Auth | local accounts, scrypt, hashed session tokens, HttpOnly cookie or bearer, default-deny gate (`api/security.py`), RBAC ADMIN/ANALYST/VIEWER with permissions (`authz.py`), optional TOTP + recovery codes, escalating login throttle |
 | Audit | hash-chained, signed audit log with key epochs (`modules/audit`), every admin action appended |
 | Ops | request IDs + JSON access log (`api/middleware.py`), Prometheus `/api/metrics`, `/api/health` with a write probe, 503 + Retry-After on DB busy/disk full, backup/restore with a drill, Docker image, CI (tests, ruff, SAST, SCA, gitleaks, trivy) |
-| Tests | 925 before round 1, 953 after round 2, 971 after round 3 (count from `scripts/check_readme_counts.py`, enforced in CI) |
+| Tests | 925 before round 1, 953 after round 2; 982 after the rebase onto `main` (948 on `main` + 34 from this branch) (count from `scripts/check_readme_counts.py`, enforced in CI) |
 
 ## 2. The brief, item by item
 
@@ -52,7 +52,7 @@ Legend: **Exists** (built and tested), **Partial**, **Gap** (worth doing), **N/A
 | Login, logout, sessions, RBAC + permissions | Exists | see §1 |
 | Self-registration, email verification, password reset by email | N/A | no mail server; accounts are created by an ADMIN; a forgotten password is reset by an ADMIN or `spectra auth` CLI |
 | Refresh tokens | N/A | server-side sessions with a fixed TTL, revocable at once; JWT refresh tokens would add risk without benefit here |
-| Self-service password change | Exists (round 3) | `POST /api/auth/password`, see §6 |
+| Self-service password change | Exists | `POST /api/auth/password` (built on `main`); race fixes here, see §6 |
 | List / revoke own sessions | Gap (P2) | today only a password change revokes all sessions |
 | Account deactivation (disable without delete) | Gap (P2) | needs a migration (`users.disabled_at`) |
 | Brute-force protection | Exists | per ip+user and per-ip throttle, escalating blocks, no enumeration (`tests/test_login_backoff.py`) |
@@ -153,7 +153,7 @@ all present, with no known bug. It does not mean the owner's security review has
 | Feature | Status | Missing before "done" |
 |---|---|---|
 | Login / logout / `me` | COMPLETE (round 3 fixed B-5) | owner review |
-| Own password change | COMPLETE (new, round 3) | owner review; frontend form |
+| Own password change | COMPLETE (`main`'s route; B-5/B-6 fixed here) | owner review; frontend form |
 | TOTP second factor + recovery codes | COMPLETE | owner review (already open from Phase 10) |
 | Login throttle | COMPLETE | |
 | User management (ADMIN) | COMPLETE (B-2, B-6 fixed) | `/api/users` is unpaginated (tens of rows; fine) |
@@ -167,12 +167,12 @@ all present, with no known bug. It does not mean the owner's security review has
 | Investigation | COMPLETE | not re-read line by line this round |
 | Model registry | COMPLETE | writes serialised by a process lock (single node) |
 | Audit log (chain, checkpoints, key epochs) | COMPLETE | owner review of key epochs (open from Phase 9F) |
-| Bio / SNN score | HAS BUGS | score differs across machines (P2-2) |
+| Bio / SNN score | HAS BUGS | score differs across CPUs; `main` made it a constant in the contract fixtures (e586f2b), so the contract check passes, but the score itself is still not reproducible (P2-2) |
 | Twin, graph, edge, TEE, PQC | maturity as reported by `GET /api/capabilities` | not re-assessed this round |
 | Health, ready, metrics | COMPLETE | |
 | CSRF / origin check | COMPLETE (round 1) | owner review |
 
-## 6. Round 3: bugs found and the new endpoint
+## 6. Round 3: bugs found
 
 ### B-5 · A login could outrun a password reset (Medium)
 
@@ -194,27 +194,25 @@ all present, with no known bug. It does not mean the owner's security review has
 * **Description.** The new hash was committed, then sessions were deleted in a second statement. A failure in between (disk full,
   locked database, crash) left the new password in place and every old session alive, though the API promises revocation.
 * **Fix.** `UserRepository.change_password` runs the `UPDATE` and the `DELETE FROM sessions` inside `Database.transaction()`.
-* **Tests.** `test_password_change_and_revocation_are_one_transaction` injects a failure into the `DELETE` and checks that neither
+* **Tests.** `test_admin_reset_and_revocation_are_one_transaction` and `test_own_change_and_revocation_are_one_transaction` inject a failure into the `DELETE` and checks that neither
   half landed (failed before).
 
-### New: `POST /api/auth/password`
+### `POST /api/auth/password` (built on `main` in parallel)
 
-| | |
+While this branch was open, `main` gained its own `POST /api/auth/password` (commit b7aa6e3): a wrong current password answers
+403 (so the dashboard does not read it as "signed out"), and a successful change revokes every session, the caller's included.
+The rebase (2026-11-24) kept `main`'s route, contract and tests (`test_change_password.py`) unchanged and dropped this branch's
+duplicate route. What this branch adds underneath it: the change is a compare-and-swap on the verified hash and runs in the same
+transaction as the revocation (B-6), and login cannot outrun it (B-5).
+
+| Tests (`tests/test_password_change.py`, 6) | what they pin |
 |---|---|
-| Description | the signed-in account changes its own password |
-| Authentication | session required (default-deny gate) |
-| Authorisation | permission `read`, i.e. every role; acts only on the caller's own account (the user id comes from the session, never the body) |
-| Body | `current_password` (1-1024), `new_password` (1-1024; policy 8-1024 enforced by the service), `totp_code` (optional, ≤ 32; required when the account has two-factor) |
-| Success | `200 {"ok": true, "revoked_sessions": n}`, `Cache-Control: no-store` |
-| Errors | 401 wrong current password or code (fed to the login throttle) · 401 no session · 403 foreign `Origin` · 422 policy (too short, same as current) or schema · 429 throttled with `Retry-After` · 503 storage unavailable |
-| Database | one transaction: `UPDATE users SET password_hash … WHERE id = ? AND password_hash = <verified>`, then `DELETE FROM sessions WHERE user_id = ? AND token_hash != <current>` |
-| Side effects | audit `auth.password_changed` `{username, revoked_sessions}`; no password in logs, audit or response |
-| Security | re-authentication stops a stolen session from taking the account; the compare-and-swap stops two tabs from both "winning"; the current session survives so the user is not signed out |
-| Performance | one scrypt verify + one scrypt hash (by design), two indexed statements |
-| Tests | `tests/test_password_change.py` (18): every role, other sessions end, old password refused, wrong current → 401 then 429, policy and schema 422s, missing fields, foreign origin 403, audit without the password, two-factor required, racing changes, and both bugs above. 15 failed before the change; the 3 that passed check guards that already existed (no session, foreign origin, rehash login) |
-
-Contract: four new fixtures (`POST_api_auth_password*.json`, `GET_api_auth_me__after_own_password_change.json`), `openapi.json`;
-two audit fixtures shift by one sequence number because the export now writes one more audit entry before the key rotation.
+| `test_login_racing_a_password_reset_opens_no_session` | B-5 |
+| `test_login_still_works_after_an_in_place_rehash` | the B-5 guard does not break the login rehash |
+| `test_admin_reset_and_revocation_are_one_transaction` | B-6, admin path |
+| `test_own_change_and_revocation_are_one_transaction` | B-6, self-service path |
+| `test_own_change_revokes_every_session` | `main`'s semantics kept |
+| `test_two_racing_self_changes_cannot_both_win` | compare-and-swap |
 
 Checked, no change needed: alert and incident state changes are single conditional `UPDATE`s; model registry writes are
 serialised by a process lock; no CLI path sets a password (the only password writers are the service methods above and the
@@ -235,8 +233,8 @@ login rehash).
 ## 8. Running list
 
 * **Completed:** round 1 - review, B-1 CSRF, B-2 last-ADMIN race. Round 2 - JSON 500 with request id, `/api/ready`, `nosniff`,
-  throttle log + metric. Round 3 - B-5, B-6, `POST /api/auth/password`, status re-assessment (§5).
-* **Pending:** §7. Owner security review of B-1, B-2, B-5, B-6, the throttle change and the new route before merge.
+  throttle log + metric. Round 3 - B-5, B-6, status re-assessment (§5); rebased onto `main` 2026-11-24.
+* **Pending:** §7. Owner security review of B-1, B-2, B-5, B-6, and the throttle change before merge.
 * **Bugs found:** 6 (B-1, B-2, plain-text 500, `snn_score`, B-5, B-6) · **fixed:** 5 · **open:** `snn_score`.
-* **Tests added:** 46 (`test_csrf_origin.py` 11, `test_admin_guard_race.py` 4, `test_api_foundation.py` 13,
-  `test_password_change.py` 18).
+* **Tests added:** 34 (`test_csrf_origin.py` 11, `test_admin_guard_race.py` 4, `test_api_foundation.py` 13,
+  `test_password_change.py` 6).

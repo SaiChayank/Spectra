@@ -10,11 +10,10 @@ All notable changes to Spectra are documented here. The format follows
 - CSRF: state-changing `/api/` requests (POST/PUT/PATCH/DELETE) with a browser `Origin` that is neither a configured dashboard origin nor the API's own host are refused with 403. SameSite=Lax alone let same-site pages (another localhost port, a sibling subdomain) submit forms to the 16 body-less POST routes and the capture upload with the operator's cookie. Clients that send no `Origin` (CLI, scripts) are unaffected.
 - The last-ADMIN guard is now part of the demoting `UPDATE` and the `DELETE` statement, so two concurrent requests can no longer leave the system without an ADMIN.
 - A login that verified the password just before an admin reset it can no longer open a session: the session insert is conditional on the password hash it verified, so the reset's revocation cannot be outrun. The in-place hash upgrade at login is conditional the same way.
-- A password change now writes the new hash and revokes the sessions in one transaction (they were two commits; a failure between them left every old session alive).
+- A password change (admin reset or `POST /api/auth/password`) now writes the new hash and revokes the sessions in one transaction (they were two commits; a failure between them left every old session alive), and the self-service write is a compare-and-swap, so two racing changes cannot both win.
 - Every `/api/` response carries `X-Content-Type-Options: nosniff`. Login-throttle blocks are logged (`event=login_throttled`, no username or address) and counted in `spectra_login_blocks_total`.
 
 ### Added
-- `POST /api/auth/password`: any signed-in user changes their own password (current password, plus a second-factor code when enabled). Wrong credentials feed the login throttle; every other session of the account ends, the current one stays; audited as `auth.password_changed` without the password.
 - `GET /api/ready` (public readiness probe): 200 only when the data dir and database are writable and the schema is current, else 503. `/api/health` stays the liveness probe.
 
 ### Fixed
