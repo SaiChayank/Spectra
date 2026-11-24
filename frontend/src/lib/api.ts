@@ -1,7 +1,17 @@
 /** API client for the Spectra backend (dev: http://localhost:8787, built: same origin). */
 
 import { resolveEndpoints } from "./endpoints";
-import type { ManagedUser, PasswordChanged, TotpEnabled, TotpSetup, UserList } from "./types";
+import type {
+  HostEvidence,
+  HostList,
+  HostVerdict,
+  HostVerdictValue,
+  ManagedUser,
+  PasswordChanged,
+  TotpEnabled,
+  TotpSetup,
+  UserList,
+} from "./types";
 
 const endpoints = resolveEndpoints(import.meta.env, window.location);
 export const API_BASE = endpoints.apiBase;
@@ -1236,6 +1246,16 @@ export const api = {
         new_password: newPassword,
         ...(totpCode ? { totp_code: totpCode } : {}),
       }),
+    }),
+
+  // -- host triage (read; a verdict needs incidents:manage) --------------------------
+  hosts: (sort: "risk" | "last_seen" = "risk", limit = 200) =>
+    request<HostList>(`/api/hosts?sort=${sort}&limit=${limit}`),
+  hostEvidence: (host: string) => request<HostEvidence>(`/api/hosts/${encodeURIComponent(host)}/evidence`),
+  setHostVerdict: (host: string, verdict: HostVerdictValue, note?: string) =>
+    request<HostVerdict & { host: string }>(`/api/hosts/${encodeURIComponent(host)}/verdict`, {
+      method: "POST",
+      body: JSON.stringify({ verdict, ...(note ? { note } : {}) }),
     }),
 
   // -- users admin (users:manage) ------------------------------------------------

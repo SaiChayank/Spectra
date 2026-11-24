@@ -340,7 +340,7 @@ export default function App() {
 
       {section === "captures" && <CapturesPage can={can} capture={status} model={snapshot?.model} onChanged={refresh} />}
 
-      {section === "hosts" && <HostsPage />}
+      {section === "hosts" && <HostsPage canTriage={canTriage} />}
 
       {section === "traffic" && <TrafficPage can={can} />}
 

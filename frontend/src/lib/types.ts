@@ -37,3 +37,52 @@ export interface PasswordChanged {
   ok: boolean;
   sign_in_required: boolean;
 }
+
+/* -- host triage (GET /api/hosts, GET /api/hosts/{host}/evidence, POST /api/hosts/{host}/verdict) -- */
+
+export type HostVerdictValue = "true" | "expected" | "false";
+
+export interface HostVerdict {
+  verdict: HostVerdictValue;
+  note: string | null;
+  actor: string;
+  created_at: number;
+}
+
+export interface HostSummary {
+  host: string;
+  rank: number;
+  /** Ranking confidence 0-1. NOT a calibrated probability (backend services.hosts). */
+  confidence: number;
+  evidence_count: number;
+  top_evidence: { detector: string; technique: string | null; destination: string; strength: number };
+  first_seen: number;
+  last_seen: number;
+  verdict: HostVerdict | null;
+}
+
+export interface HostList {
+  count: number;
+  offset: number;
+  items: HostSummary[];
+}
+
+export interface HostEvidenceItem {
+  detector: string;
+  threat_type: string;
+  technique: string | null;
+  first_seen: number;
+  time: number;
+  destination: string;
+  strength: number;
+  occurrences: number;
+  alert_id: string;
+  flow_ids: number[];
+}
+
+export interface HostEvidence {
+  host: string;
+  count: number;
+  items: HostEvidenceItem[];
+  verdict: HostVerdict | null;
+}

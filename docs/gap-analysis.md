@@ -50,8 +50,8 @@ Every row below was checked against code, tests or a recorded run on 2026-11-24/
 | E22 set C (H1) | In progress | run `setc-20261124T1950Z` (first run voided: VM shut down at 0.95 h) |
 | E22 own network #2 (H2) | Blocked | owner task 14 |
 | G-02 integration branch | Completed (local) | `frontend/integration` = `frontend/cyntra-design` + `origin/main`; not pushed |
-| G-03 password contract | In progress | `frontend/integration` |
-| G-04 Hosts page | Not started | |
+| G-03 password contract | Completed | `ac506db`: real contract, 403 handling, two-factor code field; 89 -> tests green |
+| G-04 Hosts page | Completed (needs review) | ranked list, evidence timeline, verdict form gated by `incidents:manage`; 6 tests on the recorded fixtures; not checked in a browser (port 5173 held by another process) |
 | G-06 contract-vs-types check | Not started | |
 | G-05 sessions UI | Blocked | needs `backend/review-fixes` merged (G-08) |
 | G-08 owner security review | Needs review | owner |
