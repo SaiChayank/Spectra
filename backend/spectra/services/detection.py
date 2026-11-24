@@ -24,6 +24,7 @@ from ..features.extractor import extract_features
 from ..intel import IntelService
 from ..modules.audit.log import MAX_LEAVES as AUDIT_MAX_LEAVES
 from ..modules.bio import RESPONSES, BioSystem
+from ..modules.corr import hostctx
 from ..modules.corr.beacon import BeaconTracker, as_threat
 from ..modules.edge import SLICES, EdgeSystem, apply_slice_policy, classify_slice
 from ..modules.pqc import PQCInventory, assess_handshake, screen_flows
@@ -68,9 +69,12 @@ class DetectionService:
             "intel", lambda: IntelService(config.intel_dir), default=None)
 
         # C2_BEACONING pair detector: absent unless the operator turned it on
-        self._beacons = (BeaconTracker(config.beaconing_threshold, config.beaconing_min_flows,
-                                       allowlist=config.beaconing_allowlist,
-                                       internal_nets=config.beaconing_internal_nets)
+        # With corroboration on (v3, off by default), a beacon verdict needs a second signal before it alerts.
+        self._corroborated = bool(config.beaconing_enabled and config.corroboration_enabled)
+        self._beacons = (hostctx.LiveCorroboration(config) if self._corroborated
+                         else BeaconTracker(config.beaconing_threshold, config.beaconing_min_flows,
+                                            allowlist=config.beaconing_allowlist,
+                                            internal_nets=config.beaconing_internal_nets)
                          if config.beaconing_enabled else None)
 
         # Module 6: bio-inspired layer (immune + SNN + swarm)
@@ -297,12 +301,18 @@ class DetectionService:
         if self._beacons is not None and self.threat_alerts is not None:
             # Pair beaconing is independent of the forest: it may alert on a flow the model
             # called normal.  The record keeps the first alert id if it already has one.
-            verdict = self.failures.guard("beaconing", lambda: self._beacons.observe(record),
-                                          default=None)
+            if self._corroborated:
+                verdict = self.failures.guard("beaconing", lambda: self._beacons.observe(record, anomaly),
+                                              default=None)
+                to_threat = hostctx.as_threat
+            else:
+                verdict = self.failures.guard("beaconing", lambda: self._beacons.observe(record),
+                                              default=None)
+                to_threat = as_threat
             if verdict is not None:
                 alert = self.failures.guard(
                     "threat_alerts",
-                    lambda: self.threat_alerts.observe(record, as_threat(verdict), score=None,
+                    lambda: self.threat_alerts.observe(record, to_threat(verdict), score=None,
                                                        capture_id=self.session.capture_id),
                     default=None)
                 if alert is not None and not record.get("alert_id"):
