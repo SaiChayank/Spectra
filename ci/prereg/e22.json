@@ -158,6 +158,109 @@
    "tau_I": 0.6403181818181819,
    "from": "docs/evidence/2026-11-24/e22/calibrate-tau-i-a2.json (commit 75cf7c1): 72 dev benign pairs, 0.99 quantile of the per-pair flag share; median share 0.034, 0.9 quantile 0.38",
    "dev_hashes_checked": "the six set-A CTU-Normal captures match the SHA-256 in docs/datasets.md"
+  },
+  {
+   "id": 4,
+   "date": "2026-11-24",
+   "kind": "data only: first-seen SHA-256 of the G1 files, recorded before G1 was scored",
+   "files": {
+    "ctu13/Botnet-45/botnet-capture-20110815-rbot-dos-icmp.pcap": {
+     "bytes": 30672708,
+     "sha256": "2617578aed17045e6491fbe5ab7c02d338cabaab21e7ee9ebfb7853046b6e295"
+    },
+    "ctu13/Botnet-45/botnet-capture-20110815-rbot-dos.pcap": {
+     "bytes": 222379082,
+     "sha256": "6cdc582e723ef70eff0717d890e3ff62d96e21418cf934b14ad0a9b182781ee8"
+    },
+    "ctu13/Botnet-45/capture20110815.binetflow.2format": {
+     "bytes": 277264553,
+     "sha256": "a8c9c83720ef70e4538bbf42ccee065e580b990215e9bee58866666cbfaf8d83"
+    },
+    "ctu13/Botnet-47/botnet-capture-20110816-donbot.pcap": {
+     "bytes": 5284095,
+     "sha256": "28b49ca3e483a37c445474451b0cbe71cfa5a366cab67371031782b7a628d580"
+    },
+    "ctu13/Botnet-47/capture20110816.binetflow.2format": {
+     "bytes": 138477291,
+     "sha256": "8110530e87e80d996b7e922b04ceec72e7f8589af91a28662a6a767c90fb5163"
+    },
+    "ctu13/Botnet-48/botnet-capture-20110816-sogou.pcap": {
+     "bytes": 18868213,
+     "sha256": "ff5c18adaa6a4681df1db43d0eac10d05e65d51931d5380ca54ceff0d005d2c5"
+    },
+    "ctu13/Botnet-48/capture20110816-2.binetflow.2format": {
+     "bytes": 28202650,
+     "sha256": "8cc97aaea02190817675ba55eb924eeb7958986790f09f46650d8a360f5723cb"
+    },
+    "ctu13/Botnet-49/botnet-capture-20110816-qvod.pcap": {
+     "bytes": 21366192,
+     "sha256": "cd84cb3737d5f33a27ca92388575ac674b6c95154b75d773127a52e0bb8ee996"
+    },
+    "ctu13/Botnet-49/capture20110816-3.binetflow.2format": {
+     "bytes": 729089155,
+     "sha256": "f54d2c91da93faf6395777c40cd9b974f52a6e62db470b05583ca41ab04c0147"
+    },
+    "ctu13/Botnet-53/botnet-capture-20110819-bot.pcap": {
+     "bytes": 294902378,
+     "sha256": "4c66deefb4530435c0c90de186c9350fa8b1ab8c3b8e6606c493e971796eaa9c"
+    },
+    "ctu13/Botnet-53/capture20110819.binetflow.2format": {
+     "bytes": 80506787,
+     "sha256": "d669dbef76f4f45d9e69aab1be1c623d7327c1c765657c60e587df4a36913e21"
+    },
+    "ctu13/Botnet-54/botnet-capture-20110815-fast-flux-2.pcap": {
+     "bytes": 114572014,
+     "sha256": "b04dfbdcb5735e64f64ea28ba801912c55395efca1c69ab0ac5c2672ebfd372a"
+    },
+    "ctu13/Botnet-54/capture20110815-3.binetflow.2format": {
+     "bytes": 474193869,
+     "sha256": "10448d328d0b59a60d2ba4c06c26a947bfe6e43d0bdddbcf9b75235d8fb4153a"
+    },
+    "ctu13/Botnet-50/botnet-capture-20110817-bot.pcap": {
+     "bytes": 1126596020,
+     "sha256": "9f9cfb7313e4ef69a21be6500dff2dc1883bc7799e245e898b47bb8839a4da70"
+    },
+    "ctu13/Botnet-50/capture20110817.binetflow.2format": {
+     "bytes": 514764997,
+     "sha256": "306ce0e7ec541012017a879223f8c3b970132767d6cddca60b2f7c465d3f3d9c"
+    },
+    "ctu_normal/CTU-Normal-7/2013-12-17_capture1.pcap": {
+     "bytes": 417195191,
+     "sha256": "9daf9c1746dae37a234bac32090e8bc925e837af78cfffc3b4cc7c46d901542b"
+    },
+    "ctu_normal/CTU-Normal-9/2016-09-13_win16.pcap": {
+     "bytes": 568035,
+     "sha256": "39fae2c5c731abf860f41c157faeaddf69d88f97d379c03056c172b56c7055c9"
+    },
+    "ctu_normal/CTU-Normal-13/2017-07-03_capture-win2.pcap": {
+     "bytes": 506351,
+     "sha256": "ebd495484e66dea49a7ff95f9ae7415b6a51a963713014ac0e822d2828afb2c7"
+    },
+    "ctu_normal/CTU-Normal-14/2017-07-23_capture-winFull.pcap": {
+     "bytes": 422654303,
+     "sha256": "76317977dd5eeea4af1f9cc1ebf2fa6887d241e03cf7c8eeffd3bbcdea9db7f9"
+    },
+    "ctu_normal/CTU-Normal-18/2017-09-05_capture-win4.pcap": {
+     "bytes": 16753738,
+     "sha256": "e09df1ac62d9753ed2360373915427432292192dc06e20572e45716a2932c8ce"
+    },
+    "ctu_normal/CTU-Normal-25/2017-04-25_win-normal.pcap": {
+     "bytes": 505548690,
+     "sha256": "03b39436d513efc305286eb18b01001778ffac28a9b6d5207104bdd87b000912"
+    },
+    "ctu_normal/CTU-Normal-27/2017_04_30-normal.pcap": {
+     "bytes": 444866158,
+     "sha256": "41573eaf8775540e059e79bac4a683df02755f051646b54d368bdc5ea2390823"
+    },
+    "ctu_normal/CTU-Normal-29/2017-05-01_normal.pcap": {
+     "bytes": 457410237,
+     "sha256": "a7bbffb88a952a010edef3cef5fae9d87c5c45ec0ac4c272c156f4aa253ffe4e"
+    },
+    "ctu_normal/CTU-Normal-33/capture-new-Windows-7-Full.pcap": {
+     "bytes": 294017692,
+     "sha256": "f9909c2c08b6c1203a5bc7be12c95a67ddad814e5fc92c8749aaee4f8619e069"
+    }
+   }
   }
  ]
 }
