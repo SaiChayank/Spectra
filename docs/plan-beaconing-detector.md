@@ -155,3 +155,8 @@ The listings were larger than estimated; the owner chose the ~6.5 GB option. G1 
 7, 8, 9, 12, 13 with their binetflow labels; scenarios 10 (66 GB) and 11 (4.0 GB) are not scored. G1 negatives: CTU-Normal 7, 9, 13, 14, 18, 25, 27,
 29, 33 (pcaps <= 500 MB, derived only-dns / 1000-packet subsets excluded). Exact file names in `ci/prereg/e22.json` amendment 1. The CTU site
 publishes no checksums, so the SHA-256 recorded at download are first-seen hashes.
+
+### v3 amendment 2 (2026-11-24; calibration method only, before any gate data was scored)
+The first tau_I run found no eligible pairs: the two calibration captures last 0.79 h and 0.31 h, shorter than the 1 h learning window. For tau_I
+only, the per-pair flag share now uses every flow of those captures (pairs with >= 20 flows, 0.99 quantile). The detector, its training data and
+the evaluation-time definition of I are unchanged. The empty first run is kept as evidence.

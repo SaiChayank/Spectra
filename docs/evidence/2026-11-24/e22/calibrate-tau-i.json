@@ -1,0 +1,22 @@
+{
+ "prereg": "ci/prereg/e22.json",
+ "git_commit": "1223ae6a17b38fdeed4ae6ecad1da57e8d3de2f5",
+ "min_flows": 20,
+ "bootstrap": 1000,
+ "seed": 1337,
+ "benchmark": "e22 tau_I calibration (dev benign only, no positive label)",
+ "rule": "0.99 quantile of the per-pair IF flag share",
+ "detector_train": {
+  "ctu_normal--2017-04-18_win-normal.pcap": "50ccaa483200a73c87be73ce3cae95c16afe0941021ff6d5e8e1cacf5a90807b",
+  "ctu_normal--2017-04-19_win-normal.pcap": "31a9a2a88b0d24283288058f7c2dbad057e3d7d7bb2ad2427302dc954c7e1471",
+  "ctu_normal--2017-04-28_normal.pcap": "b66103fd89c8f0fc53b76e718f53320f3af27edd302c58695fc1870ede3663c5",
+  "ctu_normal--2017-04-30_win-normal.pcap": "c78a00728f115ab8fc495fd395894c43fd90cb61054eb9ef4f2d024658d5ffc5"
+ },
+ "calibration_captures": {
+  "ctu_normal--2017-05-01_normal.pcap": "a2f3e60fa0eb2a924a3795644ac09a0f1ea48c45c30ebcc663af9641580b9a5c",
+  "ctu_normal--2017-05-02_kali-normal.pcap": "53acb10b26ca6446b5bba2efd9d957a9faa15209029d58c10a8c1d1bd299c42b"
+ },
+ "pairs": 0,
+ "share_quantiles": null,
+ "tau_I": null
+}

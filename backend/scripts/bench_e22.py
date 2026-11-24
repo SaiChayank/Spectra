@@ -187,13 +187,14 @@ def cmd_calibrate(a) -> dict:
         cal_hashes[n] = c["sha256"]
         flags = det.predict(c["X"]) if len(c["X"]) else []
         t0 = min(r["start_ts"] for r in c["recs"])
-        cb = run(list(zip(c["recs"], [bool(f) for f in flags], strict=True)), t0 + 3600.0, None, INTERNAL_NETS)
+        # e22 amendment 2: the calibration captures are shorter than 1 h, so tau_I uses every flow (no learning window)
+        cb = run(list(zip(c["recs"], [bool(f) for f in flags], strict=True)), t0, None, INTERNAL_NETS)
         for pair in [e["pair"] for e in cb.results(MIN_FLOWS)]:
             s = cb.ctx.if_share(pair)
             if s is not None:
                 shares.append(s)
     tau = float(np.quantile(shares, 0.99)) if shares else None
-    return {"benchmark": "e22 tau_I calibration (dev benign only, no positive label)", "rule": "0.99 quantile of the per-pair IF flag share",
+    return {"benchmark": "e22 tau_I calibration (dev benign only, no positive label)", "rule": "0.99 quantile of the per-pair IF flag share over all flows of the calibration captures (e22 amendment 2)",
             "detector_train": train_hashes, "calibration_captures": cal_hashes, "pairs": len(shares),
             "share_quantiles": {q: float(np.quantile(shares, q)) for q in (0.5, 0.9, 0.95, 0.99)} if shares else None,
             "tau_I": tau}

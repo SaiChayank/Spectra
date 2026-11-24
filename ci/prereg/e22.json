@@ -142,6 +142,14 @@
     "excluded": "CTU-Normal-12, 22, 30, 31, 32 full captures (> 500 MB); only-dns and 1000-packet subsets"
    },
    "hashes": "SHA-256 of every file is recorded at download and copied into the next data-only amendment before scoring; the CTU site publishes no checksums, so they are first-seen hashes"
+  },
+  {
+   "id": 2,
+   "date": "2026-11-24",
+   "kind": "calibration method only; before any gate (G1, G2, H1, H2) data was scored; no positive label seen",
+   "reason": "the first calibration run (docs/evidence/2026-11-24/e22/calibrate-tau-i.json, commit 1223ae6) found 0 eligible pairs: the two calibration captures last 0.79 h (2017-05-01) and 0.31 h (2017-05-02), shorter than the 1 h learning window, so the rule as written leaves tau_I undefined",
+   "change": "for tau_I only, the per-pair flag share is computed over ALL flows of the two calibration captures (no learning window), pairs with >= 20 flows, then the 0.99 quantile. The detector, its training captures and the evaluation-time definition of I (share over flows after L) are unchanged.",
+   "first_run_kept": "the empty first run stays in the evidence directory as calibrate-tau-i.json; the amended run is calibrate-tau-i-a2.json"
   }
  ]
 }
