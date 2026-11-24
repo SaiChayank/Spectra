@@ -39,7 +39,12 @@
   "own_network_2": "defaults"
  },
  "datasets": {
-  "dev_only_spent": ["CIC-2018 Bot day", "set A: CTU-13 scenarios 1, 2, 3, 5 + CTU-Normal 2017-04-18, 04-19, 04-28, 04-30, 05-01, 05-02", "set B: setb-20261112T1217Z", "own network 72 h of 2026-11-14"],
+  "dev_only_spent": [
+   "CIC-2018 Bot day",
+   "set A: CTU-13 scenarios 1, 2, 3, 5 + CTU-Normal 2017-04-18, 04-19, 04-28, 04-30, 05-01, 05-02",
+   "set B: setb-20261112T1217Z",
+   "own network 72 h of 2026-11-14"
+  ],
   "G1_ctu13_fresh": {
    "positives": "CTU-13 scenarios 4, 6, 7, 8, 9, 10, 11, 12, 13 (Botnet-45, 47-54), public pcaps; pairs (inside 147.32.0.0/16 host -> other end) whose flows the dataset's own binetflow labels mark with 'CC' (e21 amendment 2 rule, text-only parsing)",
    "negatives": "every pair of CTU-Normal captures NOT in set A, selected by this rule before download: each CTU-Normal-N pcap on the Stratosphere dataset pages with N not in {20, 21, 23, 24, 26, 28} and size <= 1 GB; names and SHA-256 go into a data-only amendment before scoring",
@@ -62,11 +67,81 @@
   }
  },
  "gate": {
-  "owner_gate_pass_if": ["fused binary recall >= 0.30 AND fused false-alert rate <= 0.01 (point estimates) on at least two of {G1 CTU-13 fresh, G2 HIKARI} (CIC-2018 is spent and cannot count)", "AND H2 budget met"],
+  "owner_gate_pass_if": [
+   "fused binary recall >= 0.30 AND fused false-alert rate <= 0.01 (point estimates) on at least two of {G1 CTU-13 fresh, G2 HIKARI} (CIC-2018 is spent and cannot count)",
+   "AND H2 budget met"
+  ],
   "reported_with_every_number": "95 % bootstrap CI, 1000 resamples, seed 1337, pairs resampled within positives and within negatives (spectra.eval.metrics)",
   "on_failure": "report 'ranking aid, not a detector' with the reason; corroboration_enabled and beaconing_enabled stay off; no retuning in this session",
   "not_run_rule": "a set that cannot be obtained (download blocked, human task not done) is NOT RUN and the gate cannot pass"
  },
- "also_rerun_for_regression": ["bench_ctu", "bench_hikari", "bench_cic2018", "bench_beacon_v2_{ctu,setb,own}", "bench_own_network", "spectra_bench.py --prereg ci/prereg/e0.json"],
- "amendments": []
+ "also_rerun_for_regression": [
+  "bench_ctu",
+  "bench_hikari",
+  "bench_cic2018",
+  "bench_beacon_v2_{ctu,setb,own}",
+  "bench_own_network",
+  "spectra_bench.py --prereg ci/prereg/e0.json"
+ ],
+ "amendments": [
+  {
+   "id": 1,
+   "date": "2026-11-24",
+   "kind": "data selection only; written before any G1 file was downloaded or scored; no design, signal, threshold or gate change",
+   "reason": "the directory listings showed sizes far above the estimate; the owner chose the ~6.5 GB option on 2026-11-24",
+   "G1_positive_pcaps": {
+    "rule": "per fresh scenario, the botnet-capture-*.pcap files <= 1.0 GB as listed; scenario directories' other pcaps (normal-capture-*, *.truncated.pcap.bz2) are not botnet-host captures and are excluded",
+    "files": {
+     "CTU-Malware-Capture-Botnet-45 (scenario 4)": [
+      "botnet-capture-20110815-rbot-dos-icmp.pcap",
+      "botnet-capture-20110815-rbot-dos.pcap"
+     ],
+     "CTU-Malware-Capture-Botnet-47 (scenario 6)": [
+      "botnet-capture-20110816-donbot.pcap"
+     ],
+     "CTU-Malware-Capture-Botnet-48 (scenario 7)": [
+      "botnet-capture-20110816-sogou.pcap"
+     ],
+     "CTU-Malware-Capture-Botnet-49 (scenario 8)": [
+      "botnet-capture-20110816-qvod.pcap"
+     ],
+     "CTU-Malware-Capture-Botnet-50 (scenario 9)": [
+      "botnet-capture-20110817-bot.pcap"
+     ],
+     "CTU-Malware-Capture-Botnet-53 (scenario 12)": [
+      "botnet-capture-20110819-bot.pcap"
+     ],
+     "CTU-Malware-Capture-Botnet-54 (scenario 13)": [
+      "botnet-capture-20110815-fast-flux-2.pcap"
+     ]
+    },
+    "label_files": [
+     "capture20110815.binetflow.2format (45)",
+     "capture20110816.binetflow.2format (47)",
+     "capture20110816-2.binetflow.2format (48)",
+     "capture20110816-3.binetflow.2format (49)",
+     "capture20110817.binetflow.2format (50)",
+     "capture20110819.binetflow.2format (53)",
+     "capture20110815-3.binetflow.2format (54)"
+    ],
+    "excluded_not_scored": "scenario 10 (Botnet-51, 66 GB pcap) and scenario 11 (Botnet-52, 4.0 GB): too large for the approved budget; their C2 pairs are neither hits nor misses and are reported as not scored"
+   },
+   "G1_negative_pcaps": {
+    "rule": "CTU-Normal-N with N not in {20, 21, 23, 24, 26, 28}, pcap size <= 500 MB (owner budget; tightens the 1 GB in the original text), excluding derived subsets of other captures (names containing 'only-dns' or '.1000p')",
+    "files": {
+     "CTU-Normal-7": "2013-12-17_capture1.pcap",
+     "CTU-Normal-9": "2016-09-13_win16.pcap",
+     "CTU-Normal-13": "2017-07-03_capture-win2.pcap",
+     "CTU-Normal-14": "2017-07-23_capture-winFull.pcap",
+     "CTU-Normal-18": "2017-09-05_capture-win4.pcap",
+     "CTU-Normal-25": "2017-04-25_win-normal.pcap",
+     "CTU-Normal-27": "2017_04_30-normal.pcap",
+     "CTU-Normal-29": "2017-05-01_normal.pcap",
+     "CTU-Normal-33": "capture-new-Windows-7-Full.pcap"
+    },
+    "excluded": "CTU-Normal-12, 22, 30, 31, 32 full captures (> 500 MB); only-dns and 1000-packet subsets"
+   },
+   "hashes": "SHA-256 of every file is recorded at download and copied into the next data-only amendment before scoring; the CTU site publishes no checksums, so they are first-seen hashes"
+  }
+ ]
 }

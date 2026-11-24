@@ -149,3 +149,9 @@ corroborate it. Nothing is fitted to evaluation labels; the JSON file is authori
   own-network capture (task 14) with a budget of <= 1 fused pair alert per test day.
 * **Gate (owner, 2026-11-24):** fused recall >= 0.30 at a false-alert rate <= 1 % on at least two of {G1, G2} and the H2 budget met; every
   number with a 95 % bootstrap CI (1000 resamples, seed 1337). On failure: "ranking aid, not a detector", flags stay off, no retuning here.
+
+### v3 amendment 1 (2026-11-24; data selection only, before any G1 file was downloaded or scored)
+The listings were larger than estimated; the owner chose the ~6.5 GB option. G1 positives: botnet-capture pcaps <= 1.0 GB from scenarios 4, 6,
+7, 8, 9, 12, 13 with their binetflow labels; scenarios 10 (66 GB) and 11 (4.0 GB) are not scored. G1 negatives: CTU-Normal 7, 9, 13, 14, 18, 25, 27,
+29, 33 (pcaps <= 500 MB, derived only-dns / 1000-packet subsets excluded). Exact file names in `ci/prereg/e22.json` amendment 1. The CTU site
+publishes no checksums, so the SHA-256 recorded at download are first-seen hashes.
