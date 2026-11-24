@@ -127,6 +127,13 @@ class UserPolicyError(AuthError):
     status_code = 422
 
 
+class SessionNotFound(AuthError):
+    """No such session for this user (another user's session answers the same, 404)."""
+
+    status_code = 404
+    default_detail = "session not found"
+
+
 class UserGuardError(AuthError):
     """Structural guard: self-deletion or removing the last admin (409)."""
 
@@ -543,6 +550,22 @@ class AuthService:
                 "token_hash": token_hash,
             },
         }
+
+    def list_own_sessions(self, user_id: int, current_hash: str) -> list[dict]:
+        """The caller's live sessions: ids and times only, the current one marked; never a token or hash."""
+        self._require_store()
+        return [{"id": int(s["id"]), "created_at": float(s["created_at"]), "last_seen_at": float(s["last_seen_at"]),
+                 "expires_at": float(s["expires_at"]), "current": s["token_hash"] == current_hash}
+                for s in self.store.list_user_sessions(user_id)]
+
+    def revoke_own_session(self, user_id: int, current_hash: str, session_id: int) -> dict:
+        """End one of the caller's sessions.  Another user's session id and a missing id raise the same
+        :class:`SessionNotFound` (404), and the delete itself checks ownership, so nothing else can be touched."""
+        self._require_store()
+        cur = self.store.get_session(current_hash) if current_hash else None
+        if not self.store.delete_own_session(int(session_id), user_id):
+            raise SessionNotFound()
+        return {"revoked": int(session_id), "current": bool(cur) and int(cur["id"]) == int(session_id)}
 
     def logout(self, token_hash: str) -> None:
         """Delete the session row behind ``token_hash`` (idempotent).

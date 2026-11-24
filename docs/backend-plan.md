@@ -157,7 +157,7 @@ all present, with no known bug. It does not mean the owner's security review has
 | TOTP second factor + recovery codes | COMPLETE | owner review (already open from Phase 10) |
 | Login throttle | COMPLETE | |
 | User management (ADMIN) | COMPLETE (B-2, B-6 fixed) | `/api/users` is unpaginated (tens of rows; fine) |
-| Own sessions list / revoke | NOT STARTED | P2-3 |
+| Own sessions list / revoke | COMPLETE (round 4) | owner review |
 | Account deactivation | NOT STARTED | P2-4 (migration v14) |
 | Password policy | NEEDS IMPROVEMENT | length only (8-1024); no common/breached-password list. Decision D-3 |
 | Captures (upload, process, delete) | COMPLETE | |
@@ -222,7 +222,6 @@ login rehash).
 
 | # | Task | Needs |
 |---|---|---|
-| P2-3 | `GET /api/auth/sessions`, `DELETE /api/auth/sessions/{id}` (own only; object-level test with two users) | review |
 | P2-4 | Account deactivation: migration v14 `users.disabled_at`; login, validate and the last-ADMIN guard ignore disabled accounts | review |
 | P2-2 | SNN score reproducibility | none |
 | FE-1 | Frontend: "Change password" form on the account menu using the new route | frontend branch |
@@ -233,7 +232,7 @@ login rehash).
 ## 8. Running list
 
 * **Completed:** round 1 - review, B-1 CSRF, B-2 last-ADMIN race. Round 2 - JSON 500 with request id, `/api/ready`, `nosniff`,
-  throttle log + metric. Round 3 - B-5, B-6, status re-assessment (§5); rebased onto `main` 2026-11-24.
+  throttle log + metric. Round 3 - B-5, B-6, status re-assessment (§5); rebased onto `main` 2026-11-24. Round 4 - own sessions list / end (`tests/test_own_sessions.py`, 11 tests).
 * **Pending:** §7. Owner security review of B-1, B-2, B-5, B-6, and the throttle change before merge.
 * **Bugs found:** 6 (B-1, B-2, plain-text 500, `snn_score`, B-5, B-6) · **fixed:** 5 · **open:** `snn_score`.
 * **Tests added:** 34 (`test_csrf_origin.py` 11, `test_admin_guard_race.py` 4, `test_api_foundation.py` 13,

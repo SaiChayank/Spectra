@@ -968,6 +968,20 @@ class SessionRepository:
             self._db.commit()
             return cur.rowcount
 
+    def list_for_user(self, user_id: int, now: float) -> list[dict]:
+        """One user's live sessions, oldest first (callers must not expose ``token_hash``)."""
+        return self._db.query(
+            "SELECT id, token_hash, created_at, last_seen_at, expires_at FROM sessions "
+            "WHERE user_id = ? AND expires_at > ? ORDER BY created_at, id", (user_id, now))
+
+    def delete_own(self, session_id: int, user_id: int) -> bool:
+        """End one session only if it belongs to ``user_id``: ownership is part of the statement."""
+        with self._db.lock:
+            cur = self._db.execute(
+                "DELETE FROM sessions WHERE id = ? AND user_id = ?", (session_id, user_id))
+            self._db.commit()
+            return cur.rowcount > 0
+
     def purge_expired(self, now: float) -> int:
         """Drop expired rows (opportunistic housekeeping on login)."""
         with self._db.lock:

@@ -361,6 +361,12 @@ class Store:
         """Revoke every session of one user (password change / deletion)."""
         return self._sessions.delete_for_user(user_id)
 
+    def list_user_sessions(self, user_id: int, now: float | None = None) -> list[dict]:
+        return self._sessions.list_for_user(user_id, time.time() if now is None else now)
+
+    def delete_own_session(self, session_id: int, user_id: int) -> bool:
+        return self._sessions.delete_own(session_id, user_id)
+
     def purge_expired_sessions(self, now: float | None = None) -> int:
         return self._sessions.purge_expired(
             time.time() if now is None else now)

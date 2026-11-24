@@ -1,0 +1,31 @@
+{
+  "body": {
+    "count": 2,
+    "items": [
+      {
+        "created_at": 1800000000.0,
+        "current": false,
+        "expires_at": 1800043200.0,
+        "id": 1,
+        "last_seen_at": 1800000000.0
+      },
+      {
+        "created_at": 1800000000.0,
+        "current": true,
+        "expires_at": 1800043200.0,
+        "id": 4,
+        "last_seen_at": 1800000000.0
+      }
+    ]
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/auth/sessions",
+    "query": {}
+  },
+  "status": 200
+}

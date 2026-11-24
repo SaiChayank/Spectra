@@ -172,6 +172,11 @@ makes `/api/*` **default-deny** (public: `GET /api/health`,
   two racing changes cannot both win. Login only inserts its session while the hash it
   verified is still current, so a login racing a reset gets no session
   (`tests/test_password_change.py`).
+* Own sessions: `GET /api/auth/sessions` lists only the caller's live sessions (ids and
+  times, never a token or hash); `DELETE /api/auth/sessions/{id}` ends one. Ownership is
+  part of the `DELETE` statement, and another user's id answers the same 404 as a missing
+  one, so there is no way to probe or touch other users' sessions
+  (`tests/test_own_sessions.py`).
 * Guards: you cannot delete your own account, and the **last ADMIN** cannot be
   deleted or demoted (`409`) — no self-lockout. The guard is part of the
   `UPDATE`/`DELETE` statement itself, so two concurrent requests cannot both

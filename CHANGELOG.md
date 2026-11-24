@@ -14,6 +14,7 @@ All notable changes to Spectra are documented here. The format follows
 - Every `/api/` response carries `X-Content-Type-Options: nosniff`. Login-throttle blocks are logged (`event=login_throttled`, no username or address) and counted in `spectra_login_blocks_total`.
 
 ### Added
+- `GET /api/auth/sessions` and `DELETE /api/auth/sessions/{id}`: any signed-in user lists their own live sessions (ids and times, the current one marked; never a token) and ends one; another user's session id answers 404 exactly like a missing one, the delete checks ownership in the same statement, ending the current session clears the cookie, and each revocation is audited (`auth.session_revoked`).
 - `GET /api/ready` (public readiness probe): 200 only when the data dir and database are writable and the schema is current, else 503. `/api/health` stays the liveness probe.
 
 ### Fixed

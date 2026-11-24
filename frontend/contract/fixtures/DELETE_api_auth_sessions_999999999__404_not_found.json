@@ -1,0 +1,15 @@
+{
+  "body": {
+    "detail": "session not found"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "DELETE",
+    "path": "/api/auth/sessions/999999999",
+    "query": {}
+  },
+  "status": 404
+}
