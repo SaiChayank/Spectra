@@ -151,11 +151,11 @@ def evaluate(pos_rows: list[dict | None], neg_rows: list[dict], pos_hosts: dict,
     res["fused_v3"]["pair"]["ranking"] = score_metrics(fused_pos, [r["fused_score"] for r in neg_rows], BOOT, SEED)
     res["v2a1_alone"]["pair"]["ranking"] = score_metrics([r["B_score"] if r else 0.0 for r in pos_rows],
                                                          [r["B_score"] for r in neg_rows], BOOT, SEED)
-    sig = {}
-    for s in ("P", "R", "F", "I"):
-        pick = (lambda r, s=s: r[s] if isinstance(r[s], bool) else r[s]["fires"])
-        sig[s] = {"positives_firing": sum(1 for r in pos_rows if r and pick(r)),
-                  "negatives_firing": sum(1 for r in neg_rows if pick(r))}
+    def fires(r, s):
+        return r[s] if isinstance(r[s], bool) else r[s]["fires"]
+
+    sig = {s: {"positives_firing": sum(1 for r in pos_rows if r and fires(r, s)),
+               "negatives_firing": sum(1 for r in neg_rows if fires(r, s))} for s in ("P", "R", "F", "I")}
     res["signals_fire_counts"] = sig
     return res
 
@@ -375,7 +375,7 @@ def cmd_setc(a) -> dict:
     pos_keys = {(ip, p["sni"]) for ip, p in beacons}
     neg_rows = [r for k, r in rows.items() if k not in pos_keys]
     pos_hosts, neg_hosts = defaultdict(list), defaultdict(list)
-    for (ip, p), r in zip(gated, pos_rows, strict=True):
+    for (ip, _p), r in zip(gated, pos_rows, strict=True):
         pos_hosts[ip].append(r)
     for r in neg_rows:
         neg_hosts[r["pair"][0]].append(r)
