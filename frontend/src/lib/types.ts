@@ -12,7 +12,6 @@ export interface ManagedUser {
   created_at: number;
   updated_at: number;
   last_login_at: number | null;
-  totp_enabled?: boolean;
 }
 
 export interface UserList {
