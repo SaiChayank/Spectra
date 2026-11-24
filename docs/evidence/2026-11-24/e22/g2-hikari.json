@@ -1,0 +1,161 @@
+{
+ "prereg": "ci/prereg/e22.json",
+ "git_commit": "35ef0305d1f73c092174d3ed699738efad4b0580",
+ "min_flows": 20,
+ "bootstrap": 1000,
+ "seed": 1337,
+ "benchmark": "e22 G2: HIKARI-2021/2022 (pair and host level)",
+ "tau_I": 0.6403181818181819,
+ "file_sha256": {
+  "Sunday_2021-04-11_2154.pcap": "30520b12ce52c33604df4b6f5182723e1db2ecb04eef7c41c7c351a5ea933d4f",
+  "Monday_2021-04-12_0611.pcap": "c2d16c3a3b17f4e2f6ce82c6dbc952af9f67ac1e864e12a02e8731a274fc7ab1",
+  "Saturday_2021-04-17_0357.pcap": "9a8000c232b69316ea43ec657489e792db10af9894dc53b4fe28a3fd84115f80",
+  "Sunday_2022-04-10_2335_BRUTEFORCE_HTTPS_150s.pcap": "efeee340ff4b150fac3f0d538839192bf2de27c5c6c87207b20666e3280e82a2",
+  "Monday_2022-04-11_0622_BRUTEFORCE_XML_150s.pcap": "139e14e922b25f3ceadce6c1d6a26209317d42d49bb02d66dec27b757194306f"
+ },
+ "learn_until": 1618189879.6986089,
+ "labelled_pairs": 2489,
+ "attack_pairs_ge_20": 2,
+ "attack_pairs_without_eligible_row": 2,
+ "mixed_pairs_dropped": 0,
+ "eligible_pairs": 0,
+ "results": {
+  "v2a1_alone": {
+   "pair": {
+    "recall": 0.0,
+    "recall_ci95": [
+     0.0,
+     0.0
+    ],
+    "n_pos": 2,
+    "false_alert_rate": null,
+    "false_alert_rate_ci95": null,
+    "n_neg": 0,
+    "false_alerts": 0,
+    "ranking": null
+   },
+   "host": {
+    "recall": 0.0,
+    "recall_ci95": [
+     0.0,
+     0.0
+    ],
+    "n_pos": 2,
+    "false_alert_rate": null,
+    "false_alert_rate_ci95": null,
+    "n_neg": 0,
+    "false_alerts": 0
+   }
+  },
+  "B_and_not_P": {
+   "pair": {
+    "recall": 0.0,
+    "recall_ci95": [
+     0.0,
+     0.0
+    ],
+    "n_pos": 2,
+    "false_alert_rate": null,
+    "false_alert_rate_ci95": null,
+    "n_neg": 0,
+    "false_alerts": 0
+   },
+   "host": {
+    "recall": 0.0,
+    "recall_ci95": [
+     0.0,
+     0.0
+    ],
+    "n_pos": 2,
+    "false_alert_rate": null,
+    "false_alert_rate_ci95": null,
+    "n_neg": 0,
+    "false_alerts": 0
+   }
+  },
+  "B_and_corroboration": {
+   "pair": {
+    "recall": 0.0,
+    "recall_ci95": [
+     0.0,
+     0.0
+    ],
+    "n_pos": 2,
+    "false_alert_rate": null,
+    "false_alert_rate_ci95": null,
+    "n_neg": 0,
+    "false_alerts": 0
+   },
+   "host": {
+    "recall": 0.0,
+    "recall_ci95": [
+     0.0,
+     0.0
+    ],
+    "n_pos": 2,
+    "false_alert_rate": null,
+    "false_alert_rate_ci95": null,
+    "n_neg": 0,
+    "false_alerts": 0
+   }
+  },
+  "fused_v3": {
+   "pair": {
+    "recall": 0.0,
+    "recall_ci95": [
+     0.0,
+     0.0
+    ],
+    "n_pos": 2,
+    "false_alert_rate": null,
+    "false_alert_rate_ci95": null,
+    "n_neg": 0,
+    "false_alerts": 0,
+    "ranking": null
+   },
+   "host": {
+    "recall": 0.0,
+    "recall_ci95": [
+     0.0,
+     0.0
+    ],
+    "n_pos": 2,
+    "false_alert_rate": null,
+    "false_alert_rate_ci95": null,
+    "n_neg": 0,
+    "false_alerts": 0
+   }
+  },
+  "signals_fire_counts": {
+   "P": {
+    "positives_firing": 0,
+    "negatives_firing": 0
+   },
+   "R": {
+    "positives_firing": 0,
+    "negatives_firing": 0
+   },
+   "F": {
+    "positives_firing": 0,
+    "negatives_firing": 0
+   },
+   "I": {
+    "positives_firing": 0,
+    "negatives_firing": 0
+   }
+  }
+ },
+ "gate_G2": {
+  "fused_recall": 0.0,
+  "fused_false_alert_rate": null,
+  "recall_ge_0.30_at_far_le_0.01": false
+ },
+ "positives": [
+  {
+   "missing": true
+  },
+  {
+   "missing": true
+  }
+ ]
+}

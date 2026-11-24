@@ -146,6 +146,13 @@ class Config:
     # "Inside" networks: only internal-source -> external-destination pairs are scored.
     beaconing_internal_nets: list[str] = field(
         default_factory=lambda: ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "fc00::/7"])
+    # Corroborated beaconing v3 (spectra.modules.corr.hostctx, ci/prereg/e22.json): with beaconing on, a pair
+    # alerts only when a second signal agrees (rare destination, rare TLS fingerprint, or anomaly-model flags on
+    # the same pair) and the destination was not learned as periodic during the first learn_hours of traffic.
+    # OFF until validated.  tau_i < 0 leaves the anomaly-model signal out until it is calibrated.
+    corroboration_enabled: bool = False
+    corroboration_learn_hours: float = 24.0
+    corroboration_tau_i: float = -1.0
 
     # 9B adversarial-retraining harness: hours between report-only runs on the
     # live window; 0 (default) = off, manual POST /api/model/harden only.

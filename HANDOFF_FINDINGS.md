@@ -92,3 +92,12 @@ scikit-learn 1.9.1, matching `backend/requirements.lock`): three fixtures (`GET_
 `tests/test_frontend_contract.py::test_frontend_contract_is_current` fails on this machine; CI (where the fixtures were recorded)
 may still pass. Cause not investigated (candidates: unseeded or platform-dependent RNG in the SNN layer, float summation order).
 Not changed: fixing it alters bio scores. Backlog P2-2 in `docs/backend-plan.md`.
+## 2026-11-24 (E22 session)
+* **snn_score CPU dependence: cause found and fixed** (`1223ae6`): the LIF update summed float weights with `@`, and BLAS adds in a CPU-specific
+  order, so rounding flipped `>=` threshold comparisons. Weights now sit on an exact 2^-20 grid; `tests/test_snn_reproducible.py` shows
+  forward/reversed/looped sums were different before and are bit-identical now. Not yet confirmed on a second CPU; once CI agrees, the contract
+  fixtures could record real snn scores again instead of the constant 0.0 (e586f2b).
+* **Unintended package execution (agent error):** while checking the frontend merge I ran `npx tsc` from a directory without the project's
+  node_modules; npx fetched and ran the public npm package `tsc@2.0.4` (a deprecated stub that only prints a warning). Nothing in the repo
+  changed. Lesson: never use `npx <name>` for project tools; use `npm run` scripts.
+* e22 prereg defect: the tau_I rule could not be computed (calibration captures shorter than the learning window); fixed by amendment 2 before gate scoring.

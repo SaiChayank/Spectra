@@ -1,0 +1,273 @@
+{
+ "name": "E22 corroborated beaconing v3 (preregistration)",
+ "frozen": "2026-11-24",
+ "note": "Written and committed BEFORE any v3 code exists or runs on data. Nothing is fitted to evaluation labels. Every constant below is fixed here; the only value computed later is tau_I, by the rule in 'signals.I', from dev benign data only, and it goes into a data-only amendment before any gate scoring. Any other change after a gate run needs a committed amendment with its reason and does not count for this gate. Human-readable copy: docs/plan-beaconing-detector.md section v3.",
+ "owner_target": "Owner-set 2026-11-24: >= 30 % of botnet/C2 pairs caught at <= 1 % false-alert rate on at least two of {CTU-13, HIKARI, CIC-2018}, 95 % bootstrap CIs (1000 resamples, seed 1337), AND a false-alert budget on fresh own-network data.",
+ "owner_decisions_2026_11_24": {
+  "datasets": "download here (WSL), SHA-256 checked",
+  "gate_data": "fresh data only: CIC-2018 Bot day and CTU-13 set A (scenarios 1, 2, 3, 5 + the six CTU-Normal 2017 captures) are spent and are dev/regression rows only",
+  "own_network": "owner records a new 72 h capture (task 14 in docs/human-benchmark-tasks.md)",
+  "simulator": "approved: new multi-host run (set C)"
+ },
+ "unit": "pair = (internal source host, destination key = SNI if the flow has one else destination IP), exactly as e21 v2a1. Host-level results (a host alerts if any of its pairs alerts) are reported next to every pair-level result.",
+ "eligibility": "a pair is evaluated when it has >= 20 flows that START at or after the end of the learning window L; flows inside L still feed the scorer state. A labelled positive pair below 20 such flows, or absent, counts as a MISS (score 0), as e21 amendment 4.",
+ "verdict_time": "the pair's state after the last flow of the evaluation stream (as e21 scripts: last verdict reached after L)",
+ "signals": {
+  "B": "beacon scorer v2a1 exactly as frozen in ci/prereg/e21.json (G, S, D, H; verdict needs G and D; unweighted mean); fires at score >= 0.8. Unchanged code.",
+  "P": "learned periodicity (E6-lite). During L, a destination key is learned as 'expected periodic' when ANY internal host's pair to it has >= 12 unique whole-second start times inside L and G (v2a1 formula, on those L-only start times) >= 0.8. At most 4096 learned keys (oldest learned dropped first). An entry expires 7 days after the end of L. While an entry is live, B is ignored for every pair with that destination key. No hand-written list.",
+  "R": "rare destination (E2.2). novel = the destination key was not seen from any internal host during L. prevalence = number of distinct internal hosts that contacted the key at or after L end. R fires when novel AND prevalence <= max(1, ceil(0.1 * H)), H = distinct internal hosts seen at or after L end. On single-host data prevalence cannot be measured; R then reduces to 'novel' and the report says so.",
+  "F": "rare fingerprint (E2.6, metadata only). fingerprint = JA4 of the client hello if present, else JA3. A fingerprint is novel when no internal host used it during L. F fires when the pair has >= 1 flow at or after L end with a novel fingerprint whose user count (distinct internal hosts at or after L end) <= max(1, ceil(0.1 * H)). Pairs without TLS cannot fire F.",
+  "I": "isolation-forest corroboration. I fires when the share of the pair's flows (at or after L end) flagged by the shipped detector's own threshold is >= tau_I. tau_I = the 0.99 quantile of that share over dev benign pairs (>= 20 flows) of CTU-Normal 2017-05-01 and 2017-05-02, with the detector trained (contamination 0.02, random_state 42) on CTU-Normal 2017-04-18, 04-19, 04-28, 04-30 (the section 10 split). Computed once by scripts/calibrate_e22.py and written into a data-only amendment before any gate run. No positive label is used.",
+  "host_context_reported_not_used": "per host per 1 h window: flow count, distinct destinations, distinct SNIs, new-destination rate; destination first-seen age. Computed and reported (E2.2) but NOT part of the fusion rule."
+ },
+ "fusion": {
+  "rule": "pair alert = B AND NOT P AND (R OR F OR I). A beacon verdict alone never alerts. Fixed rule, no weights.",
+  "ranking_score_for_curves": "fused = B score when (NOT P AND (R OR F OR I)) else 0; used only for ROC / recall-at-FPR reporting",
+  "flag": "config corroboration_enabled, default OFF; beaconing_enabled stays OFF"
+ },
+ "learning_window_L": {
+  "ctu13_fresh_and_ctu_normal_fresh": "first 1 h of each capture (no earlier history of these networks exists); known consequence: C2 active from the first hour is not 'novel' and may be learned as periodic",
+  "hikari": "the 2021-04-11 and 2021-04-12 captures (the section 11 training slice) are L; later captures are evaluated",
+  "sim_set_c": "first 4 h of the run (no beacon starts before 4 h)",
+  "own_network_2": "first 24 h"
+ },
+ "inside_networks": {
+  "ctu13_fresh": "default RFC1918 + fc00::/7 + 147.32.0.0/16 (the documented capture network, as e21 set A)",
+  "ctu_normal_fresh": "defaults",
+  "hikari": "defaults (stated before seeing the data; attack pairs outside the internal->external scope are counted as misses, not dropped)",
+  "sim_set_c": "203.0.113.128/25 (clients)",
+  "own_network_2": "defaults"
+ },
+ "datasets": {
+  "dev_only_spent": [
+   "CIC-2018 Bot day",
+   "set A: CTU-13 scenarios 1, 2, 3, 5 + CTU-Normal 2017-04-18, 04-19, 04-28, 04-30, 05-01, 05-02",
+   "set B: setb-20261112T1217Z",
+   "own network 72 h of 2026-11-14"
+  ],
+  "G1_ctu13_fresh": {
+   "positives": "CTU-13 scenarios 4, 6, 7, 8, 9, 10, 11, 12, 13 (Botnet-45, 47-54), public pcaps; pairs (inside 147.32.0.0/16 host -> other end) whose flows the dataset's own binetflow labels mark with 'CC' (e21 amendment 2 rule, text-only parsing)",
+   "negatives": "every pair of CTU-Normal captures NOT in set A, selected by this rule before download: each CTU-Normal-N pcap on the Stratosphere dataset pages with N not in {20, 21, 23, 24, 26, 28} and size <= 1 GB; names and SHA-256 go into a data-only amendment before scoring",
+   "note": "the public CTU-13 pcaps hold botnet-host traffic only; the botnet hosts' non-C2 pairs are reported outside the gate. Era mismatch (2011 botnet vs 2017 benign) remains."
+  },
+  "G2_hikari": {
+   "positives": "pairs whose 4-tuple-labelled flows are majority attack (Bruteforce, Bruteforce-XML, XMRig), as the v1 protocol",
+   "negatives": "pairs with zero attack-labelled flows in the evaluated (post-L) captures",
+   "known_consequence": "the attack captures last about 150 s; v2a1 needs a 3 h span for a verdict, so B cannot fire on them and recall on HIKARI is expected to be about 0 BY CONSTRUCTION. Stated now so a zero is not read as a surprise. It still counts in the gate."
+  },
+  "CIC2018": "spent (dev row only); it cannot count towards the owner's 'two of three'",
+  "H1_sim_set_c": {
+   "status": "secondary preregistered hold-out (not part of the owner's gate); generated AFTER this file is committed; pcap hashes added by a data-only amendment",
+   "design": "harmless simulator (backend/scripts/lab/beacon_sim, profile 'setc'), seed 2211, 16 h, 16 client hosts on the internal-only Docker network. Beacons: 16 cells (interval {10, 60, 300, 1800} s x jitter {0, 25, 50, 75} %), each cell on exactly 2 hosts (32 positive pairs; 24 gated at jitter <= 50 %), each beacon starting at U(4 h, 6 h). Benign: B1 browsing on shared SNIs all run; B1n: after 4 h each host browses 2 new SNIs of its own (novel and rare benign); B2 chat long-poll; B3 app polling windows anywhere in the run; B4 telemetry 300 s, B5 time-sync 64 s, B6 update check 3600 s on every host from t=0 (learnable); B7 a NEW periodic service (300 s +-10 %) starting at U(6 h, 8 h) on 3 hosts (novel, not rare); B8 a NEW periodic service (120 s +-10 %) starting at U(6 h, 8 h) on 1 host (novel AND rare AND periodic: the honest hard negative). All B classes are negatives in this set.",
+   "gate": "fused recall >= 0.30 on the 24 gated beacon pairs with false-alert rate <= 1 % over all benign pairs (B1-B8, >= 20 post-L flows)"
+  },
+  "H2_own_network_2": {
+   "status": "human task 14; a NEW 72 h capture recorded after this file is committed",
+   "budget": "mean fused pair alerts per test day (days 2 and 3) <= 1.0 on the one laptop; the frozen v2a1 alone is reported beside it (it had 13-16 per day on the spent capture)"
+  }
+ },
+ "gate": {
+  "owner_gate_pass_if": [
+   "fused binary recall >= 0.30 AND fused false-alert rate <= 0.01 (point estimates) on at least two of {G1 CTU-13 fresh, G2 HIKARI} (CIC-2018 is spent and cannot count)",
+   "AND H2 budget met"
+  ],
+  "reported_with_every_number": "95 % bootstrap CI, 1000 resamples, seed 1337, pairs resampled within positives and within negatives (spectra.eval.metrics)",
+  "on_failure": "report 'ranking aid, not a detector' with the reason; corroboration_enabled and beaconing_enabled stay off; no retuning in this session",
+  "not_run_rule": "a set that cannot be obtained (download blocked, human task not done) is NOT RUN and the gate cannot pass"
+ },
+ "also_rerun_for_regression": [
+  "bench_ctu",
+  "bench_hikari",
+  "bench_cic2018",
+  "bench_beacon_v2_{ctu,setb,own}",
+  "bench_own_network",
+  "spectra_bench.py --prereg ci/prereg/e0.json"
+ ],
+ "amendments": [
+  {
+   "id": 1,
+   "date": "2026-11-24",
+   "kind": "data selection only; written before any G1 file was downloaded or scored; no design, signal, threshold or gate change",
+   "reason": "the directory listings showed sizes far above the estimate; the owner chose the ~6.5 GB option on 2026-11-24",
+   "G1_positive_pcaps": {
+    "rule": "per fresh scenario, the botnet-capture-*.pcap files <= 1.0 GB as listed; scenario directories' other pcaps (normal-capture-*, *.truncated.pcap.bz2) are not botnet-host captures and are excluded",
+    "files": {
+     "CTU-Malware-Capture-Botnet-45 (scenario 4)": [
+      "botnet-capture-20110815-rbot-dos-icmp.pcap",
+      "botnet-capture-20110815-rbot-dos.pcap"
+     ],
+     "CTU-Malware-Capture-Botnet-47 (scenario 6)": [
+      "botnet-capture-20110816-donbot.pcap"
+     ],
+     "CTU-Malware-Capture-Botnet-48 (scenario 7)": [
+      "botnet-capture-20110816-sogou.pcap"
+     ],
+     "CTU-Malware-Capture-Botnet-49 (scenario 8)": [
+      "botnet-capture-20110816-qvod.pcap"
+     ],
+     "CTU-Malware-Capture-Botnet-50 (scenario 9)": [
+      "botnet-capture-20110817-bot.pcap"
+     ],
+     "CTU-Malware-Capture-Botnet-53 (scenario 12)": [
+      "botnet-capture-20110819-bot.pcap"
+     ],
+     "CTU-Malware-Capture-Botnet-54 (scenario 13)": [
+      "botnet-capture-20110815-fast-flux-2.pcap"
+     ]
+    },
+    "label_files": [
+     "capture20110815.binetflow.2format (45)",
+     "capture20110816.binetflow.2format (47)",
+     "capture20110816-2.binetflow.2format (48)",
+     "capture20110816-3.binetflow.2format (49)",
+     "capture20110817.binetflow.2format (50)",
+     "capture20110819.binetflow.2format (53)",
+     "capture20110815-3.binetflow.2format (54)"
+    ],
+    "excluded_not_scored": "scenario 10 (Botnet-51, 66 GB pcap) and scenario 11 (Botnet-52, 4.0 GB): too large for the approved budget; their C2 pairs are neither hits nor misses and are reported as not scored"
+   },
+   "G1_negative_pcaps": {
+    "rule": "CTU-Normal-N with N not in {20, 21, 23, 24, 26, 28}, pcap size <= 500 MB (owner budget; tightens the 1 GB in the original text), excluding derived subsets of other captures (names containing 'only-dns' or '.1000p')",
+    "files": {
+     "CTU-Normal-7": "2013-12-17_capture1.pcap",
+     "CTU-Normal-9": "2016-09-13_win16.pcap",
+     "CTU-Normal-13": "2017-07-03_capture-win2.pcap",
+     "CTU-Normal-14": "2017-07-23_capture-winFull.pcap",
+     "CTU-Normal-18": "2017-09-05_capture-win4.pcap",
+     "CTU-Normal-25": "2017-04-25_win-normal.pcap",
+     "CTU-Normal-27": "2017_04_30-normal.pcap",
+     "CTU-Normal-29": "2017-05-01_normal.pcap",
+     "CTU-Normal-33": "capture-new-Windows-7-Full.pcap"
+    },
+    "excluded": "CTU-Normal-12, 22, 30, 31, 32 full captures (> 500 MB); only-dns and 1000-packet subsets"
+   },
+   "hashes": "SHA-256 of every file is recorded at download and copied into the next data-only amendment before scoring; the CTU site publishes no checksums, so they are first-seen hashes"
+  },
+  {
+   "id": 2,
+   "date": "2026-11-24",
+   "kind": "calibration method only; before any gate (G1, G2, H1, H2) data was scored; no positive label seen",
+   "reason": "the first calibration run (docs/evidence/2026-11-24/e22/calibrate-tau-i.json, commit 1223ae6) found 0 eligible pairs: the two calibration captures last 0.79 h (2017-05-01) and 0.31 h (2017-05-02), shorter than the 1 h learning window, so the rule as written leaves tau_I undefined",
+   "change": "for tau_I only, the per-pair flag share is computed over ALL flows of the two calibration captures (no learning window), pairs with >= 20 flows, then the 0.99 quantile. The detector, its training captures and the evaluation-time definition of I (share over flows after L) are unchanged.",
+   "first_run_kept": "the empty first run stays in the evidence directory as calibrate-tau-i.json; the amended run is calibrate-tau-i-a2.json"
+  },
+  {
+   "id": 3,
+   "date": "2026-11-24",
+   "kind": "data only (the value the 'signals.I' rule computes); before any gate data was scored",
+   "tau_I": 0.6403181818181819,
+   "from": "docs/evidence/2026-11-24/e22/calibrate-tau-i-a2.json (commit 75cf7c1): 72 dev benign pairs, 0.99 quantile of the per-pair flag share; median share 0.034, 0.9 quantile 0.38",
+   "dev_hashes_checked": "the six set-A CTU-Normal captures match the SHA-256 in docs/datasets.md"
+  },
+  {
+   "id": 4,
+   "date": "2026-11-24",
+   "kind": "data only: first-seen SHA-256 of the G1 files, recorded before G1 was scored",
+   "files": {
+    "ctu13/Botnet-45/botnet-capture-20110815-rbot-dos-icmp.pcap": {
+     "bytes": 30672708,
+     "sha256": "2617578aed17045e6491fbe5ab7c02d338cabaab21e7ee9ebfb7853046b6e295"
+    },
+    "ctu13/Botnet-45/botnet-capture-20110815-rbot-dos.pcap": {
+     "bytes": 222379082,
+     "sha256": "6cdc582e723ef70eff0717d890e3ff62d96e21418cf934b14ad0a9b182781ee8"
+    },
+    "ctu13/Botnet-45/capture20110815.binetflow.2format": {
+     "bytes": 277264553,
+     "sha256": "a8c9c83720ef70e4538bbf42ccee065e580b990215e9bee58866666cbfaf8d83"
+    },
+    "ctu13/Botnet-47/botnet-capture-20110816-donbot.pcap": {
+     "bytes": 5284095,
+     "sha256": "28b49ca3e483a37c445474451b0cbe71cfa5a366cab67371031782b7a628d580"
+    },
+    "ctu13/Botnet-47/capture20110816.binetflow.2format": {
+     "bytes": 138477291,
+     "sha256": "8110530e87e80d996b7e922b04ceec72e7f8589af91a28662a6a767c90fb5163"
+    },
+    "ctu13/Botnet-48/botnet-capture-20110816-sogou.pcap": {
+     "bytes": 18868213,
+     "sha256": "ff5c18adaa6a4681df1db43d0eac10d05e65d51931d5380ca54ceff0d005d2c5"
+    },
+    "ctu13/Botnet-48/capture20110816-2.binetflow.2format": {
+     "bytes": 28202650,
+     "sha256": "8cc97aaea02190817675ba55eb924eeb7958986790f09f46650d8a360f5723cb"
+    },
+    "ctu13/Botnet-49/botnet-capture-20110816-qvod.pcap": {
+     "bytes": 21366192,
+     "sha256": "cd84cb3737d5f33a27ca92388575ac674b6c95154b75d773127a52e0bb8ee996"
+    },
+    "ctu13/Botnet-49/capture20110816-3.binetflow.2format": {
+     "bytes": 729089155,
+     "sha256": "f54d2c91da93faf6395777c40cd9b974f52a6e62db470b05583ca41ab04c0147"
+    },
+    "ctu13/Botnet-53/botnet-capture-20110819-bot.pcap": {
+     "bytes": 294902378,
+     "sha256": "4c66deefb4530435c0c90de186c9350fa8b1ab8c3b8e6606c493e971796eaa9c"
+    },
+    "ctu13/Botnet-53/capture20110819.binetflow.2format": {
+     "bytes": 80506787,
+     "sha256": "d669dbef76f4f45d9e69aab1be1c623d7327c1c765657c60e587df4a36913e21"
+    },
+    "ctu13/Botnet-54/botnet-capture-20110815-fast-flux-2.pcap": {
+     "bytes": 114572014,
+     "sha256": "b04dfbdcb5735e64f64ea28ba801912c55395efca1c69ab0ac5c2672ebfd372a"
+    },
+    "ctu13/Botnet-54/capture20110815-3.binetflow.2format": {
+     "bytes": 474193869,
+     "sha256": "10448d328d0b59a60d2ba4c06c26a947bfe6e43d0bdddbcf9b75235d8fb4153a"
+    },
+    "ctu13/Botnet-50/botnet-capture-20110817-bot.pcap": {
+     "bytes": 1126596020,
+     "sha256": "9f9cfb7313e4ef69a21be6500dff2dc1883bc7799e245e898b47bb8839a4da70"
+    },
+    "ctu13/Botnet-50/capture20110817.binetflow.2format": {
+     "bytes": 514764997,
+     "sha256": "306ce0e7ec541012017a879223f8c3b970132767d6cddca60b2f7c465d3f3d9c"
+    },
+    "ctu_normal/CTU-Normal-7/2013-12-17_capture1.pcap": {
+     "bytes": 417195191,
+     "sha256": "9daf9c1746dae37a234bac32090e8bc925e837af78cfffc3b4cc7c46d901542b"
+    },
+    "ctu_normal/CTU-Normal-9/2016-09-13_win16.pcap": {
+     "bytes": 568035,
+     "sha256": "39fae2c5c731abf860f41c157faeaddf69d88f97d379c03056c172b56c7055c9"
+    },
+    "ctu_normal/CTU-Normal-13/2017-07-03_capture-win2.pcap": {
+     "bytes": 506351,
+     "sha256": "ebd495484e66dea49a7ff95f9ae7415b6a51a963713014ac0e822d2828afb2c7"
+    },
+    "ctu_normal/CTU-Normal-14/2017-07-23_capture-winFull.pcap": {
+     "bytes": 422654303,
+     "sha256": "76317977dd5eeea4af1f9cc1ebf2fa6887d241e03cf7c8eeffd3bbcdea9db7f9"
+    },
+    "ctu_normal/CTU-Normal-18/2017-09-05_capture-win4.pcap": {
+     "bytes": 16753738,
+     "sha256": "e09df1ac62d9753ed2360373915427432292192dc06e20572e45716a2932c8ce"
+    },
+    "ctu_normal/CTU-Normal-25/2017-04-25_win-normal.pcap": {
+     "bytes": 505548690,
+     "sha256": "03b39436d513efc305286eb18b01001778ffac28a9b6d5207104bdd87b000912"
+    },
+    "ctu_normal/CTU-Normal-27/2017_04_30-normal.pcap": {
+     "bytes": 444866158,
+     "sha256": "41573eaf8775540e059e79bac4a683df02755f051646b54d368bdc5ea2390823"
+    },
+    "ctu_normal/CTU-Normal-29/2017-05-01_normal.pcap": {
+     "bytes": 457410237,
+     "sha256": "a7bbffb88a952a010edef3cef5fae9d87c5c45ec0ac4c272c156f4aa253ffe4e"
+    },
+    "ctu_normal/CTU-Normal-33/capture-new-Windows-7-Full.pcap": {
+     "bytes": 294017692,
+     "sha256": "f9909c2c08b6c1203a5bc7be12c95a67ddad814e5fc92c8749aaee4f8619e069"
+    }
+   }
+  },
+  {
+   "id": 5,
+   "date": "2026-11-25",
+   "kind": "data only: set C run voided and restarted; nothing scored",
+   "voided": "setc-20261124T1143Z: every host stopped at 0.95 h with no end record and all containers exited 255 (the WSL VM shut down); never scored, kept on disk",
+   "restarted": "setc-20261124T1950Z (WSL clock; same commit and design), with a keep-alive holding the WSL VM up"
+  }
+ ]
+}

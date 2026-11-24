@@ -1,0 +1,1636 @@
+{
+ "prereg": "ci/prereg/e22.json",
+ "git_commit": "a9749a34b7dd7b47a207aa2c6cf7f6662ddf827c",
+ "min_flows": 20,
+ "bootstrap": 1000,
+ "seed": 1337,
+ "benchmark": "e22 G1: CTU-13 fresh scenarios vs fresh CTU-Normal (pair and host level)",
+ "tau_I": 0.6403181818181819,
+ "detector_train": {
+  "ctu_normal--2017-04-18_win-normal.pcap": "50ccaa483200a73c87be73ce3cae95c16afe0941021ff6d5e8e1cacf5a90807b",
+  "ctu_normal--2017-04-19_win-normal.pcap": "31a9a2a88b0d24283288058f7c2dbad057e3d7d7bb2ad2427302dc954c7e1471",
+  "ctu_normal--2017-04-28_normal.pcap": "b66103fd89c8f0fc53b76e718f53320f3af27edd302c58695fc1870ede3663c5",
+  "ctu_normal--2017-04-30_win-normal.pcap": "c78a00728f115ab8fc495fd395894c43fd90cb61054eb9ef4f2d024658d5ffc5"
+ },
+ "file_sha256": {
+  "Botnet-45/capture20110815.binetflow.2format": "a8c9c83720ef70e4538bbf42ccee065e580b990215e9bee58866666cbfaf8d83",
+  "Botnet-45/botnet-capture-20110815-rbot-dos-icmp.pcap": "2617578aed17045e6491fbe5ab7c02d338cabaab21e7ee9ebfb7853046b6e295",
+  "Botnet-45/botnet-capture-20110815-rbot-dos.pcap": "6cdc582e723ef70eff0717d890e3ff62d96e21418cf934b14ad0a9b182781ee8",
+  "Botnet-47/capture20110816.binetflow.2format": "8110530e87e80d996b7e922b04ceec72e7f8589af91a28662a6a767c90fb5163",
+  "Botnet-47/botnet-capture-20110816-donbot.pcap": "28b49ca3e483a37c445474451b0cbe71cfa5a366cab67371031782b7a628d580",
+  "Botnet-48/capture20110816-2.binetflow.2format": "8cc97aaea02190817675ba55eb924eeb7958986790f09f46650d8a360f5723cb",
+  "Botnet-48/botnet-capture-20110816-sogou.pcap": "ff5c18adaa6a4681df1db43d0eac10d05e65d51931d5380ca54ceff0d005d2c5",
+  "Botnet-49/capture20110816-3.binetflow.2format": "f54d2c91da93faf6395777c40cd9b974f52a6e62db470b05583ca41ab04c0147",
+  "Botnet-49/botnet-capture-20110816-qvod.pcap": "cd84cb3737d5f33a27ca92388575ac674b6c95154b75d773127a52e0bb8ee996",
+  "Botnet-50/capture20110817.binetflow.2format": "306ce0e7ec541012017a879223f8c3b970132767d6cddca60b2f7c465d3f3d9c",
+  "Botnet-50/botnet-capture-20110817-bot.pcap": "9f9cfb7313e4ef69a21be6500dff2dc1883bc7799e245e898b47bb8839a4da70",
+  "Botnet-53/capture20110819.binetflow.2format": "d669dbef76f4f45d9e69aab1be1c623d7327c1c765657c60e587df4a36913e21",
+  "Botnet-53/botnet-capture-20110819-bot.pcap": "4c66deefb4530435c0c90de186c9350fa8b1ab8c3b8e6606c493e971796eaa9c",
+  "Botnet-54/capture20110815-3.binetflow.2format": "10448d328d0b59a60d2ba4c06c26a947bfe6e43d0bdddbcf9b75235d8fb4153a",
+  "Botnet-54/botnet-capture-20110815-fast-flux-2.pcap": "b04dfbdcb5735e64f64ea28ba801912c55395efca1c69ab0ac5c2672ebfd372a",
+  "CTU-Normal-7/2013-12-17_capture1.pcap": "9daf9c1746dae37a234bac32090e8bc925e837af78cfffc3b4cc7c46d901542b",
+  "CTU-Normal-9/2016-09-13_win16.pcap": "39fae2c5c731abf860f41c157faeaddf69d88f97d379c03056c172b56c7055c9",
+  "CTU-Normal-13/2017-07-03_capture-win2.pcap": "ebd495484e66dea49a7ff95f9ae7415b6a51a963713014ac0e822d2828afb2c7",
+  "CTU-Normal-14/2017-07-23_capture-winFull.pcap": "76317977dd5eeea4af1f9cc1ebf2fa6887d241e03cf7c8eeffd3bbcdea9db7f9",
+  "CTU-Normal-18/2017-09-05_capture-win4.pcap": "e09df1ac62d9753ed2360373915427432292192dc06e20572e45716a2932c8ce",
+  "CTU-Normal-25/2017-04-25_win-normal.pcap": "03b39436d513efc305286eb18b01001778ffac28a9b6d5207104bdd87b000912",
+  "CTU-Normal-27/2017_04_30-normal.pcap": "41573eaf8775540e059e79bac4a683df02755f051646b54d368bdc5ea2390823",
+  "CTU-Normal-29/2017-05-01_normal.pcap": "a7bbffb88a952a010edef3cef5fae9d87c5c45ec0ac4c272c156f4aa253ffe4e",
+  "CTU-Normal-33/capture-new-Windows-7-Full.pcap": "f9909c2c08b6c1203a5bc7be12c95a67ddad814e5fc92c8749aaee4f8619e069"
+ },
+ "captures": {
+  "Botnet-45/botnet-capture-20110815-rbot-dos-icmp.pcap": {
+   "flows": 156,
+   "eligible_pairs": 0,
+   "c2_pairs_ge_20": 0,
+   "c2_pairs_without_eligible_row": 0,
+   "learned_periodic": 0,
+   "label_counts": {
+    "rows": 1121076,
+    "cc_rows": 52
+   }
+  },
+  "Botnet-45/botnet-capture-20110815-rbot-dos.pcap": {
+   "flows": 167,
+   "eligible_pairs": 0,
+   "c2_pairs_ge_20": 0,
+   "c2_pairs_without_eligible_row": 0,
+   "learned_periodic": 0,
+   "label_counts": {
+    "rows": 1121076,
+    "cc_rows": 52
+   }
+  },
+  "Botnet-47/botnet-capture-20110816-donbot.pcap": {
+   "flows": 4555,
+   "eligible_pairs": 22,
+   "c2_pairs_ge_20": 1,
+   "c2_pairs_without_eligible_row": 0,
+   "learned_periodic": 2,
+   "label_counts": {
+    "rows": 558919,
+    "cc_rows": 199
+   }
+  },
+  "Botnet-48/botnet-capture-20110816-sogou.pcap": {
+   "flows": 46,
+   "eligible_pairs": 0,
+   "c2_pairs_ge_20": 0,
+   "c2_pairs_without_eligible_row": 0,
+   "learned_periodic": 0,
+   "label_counts": {
+    "rows": 114077,
+    "cc_rows": 26
+   }
+  },
+  "Botnet-49/botnet-capture-20110816-qvod.pcap": {
+   "flows": 8813,
+   "eligible_pairs": 6,
+   "c2_pairs_ge_20": 1,
+   "c2_pairs_without_eligible_row": 0,
+   "learned_periodic": 1,
+   "label_counts": {
+    "rows": 2954230,
+    "cc_rows": 1074
+   }
+  },
+  "Botnet-50/botnet-capture-20110817-bot.pcap": {
+   "flows": 94866,
+   "eligible_pairs": 345,
+   "c2_pairs_ge_20": 28,
+   "c2_pairs_without_eligible_row": 0,
+   "learned_periodic": 8,
+   "label_counts": {
+    "rows": 2087508,
+    "cc_rows": 2973
+   }
+  },
+  "Botnet-53/botnet-capture-20110819-bot.pcap": {
+   "flows": 6070,
+   "eligible_pairs": 0,
+   "c2_pairs_ge_20": 0,
+   "c2_pairs_without_eligible_row": 0,
+   "learned_periodic": 0,
+   "label_counts": {
+    "rows": 325471,
+    "cc_rows": 25
+   }
+  },
+  "Botnet-54/botnet-capture-20110815-fast-flux-2.pcap": {
+   "flows": 35595,
+   "eligible_pairs": 73,
+   "c2_pairs_ge_20": 3,
+   "c2_pairs_without_eligible_row": 0,
+   "learned_periodic": 2,
+   "label_counts": {
+    "rows": 1925149,
+    "cc_rows": 536
+   }
+  },
+  "CTU-Normal-7/2013-12-17_capture1.pcap": {
+   "flows": 2452,
+   "eligible_pairs": 0,
+   "learned_periodic": 6
+  },
+  "CTU-Normal-9/2016-09-13_win16.pcap": {
+   "flows": 37,
+   "eligible_pairs": 0,
+   "learned_periodic": 0
+  },
+  "CTU-Normal-13/2017-07-03_capture-win2.pcap": {
+   "flows": 44,
+   "eligible_pairs": 0,
+   "learned_periodic": 0
+  },
+  "CTU-Normal-14/2017-07-23_capture-winFull.pcap": {
+   "flows": 5431,
+   "eligible_pairs": 2,
+   "learned_periodic": 1
+  },
+  "CTU-Normal-18/2017-09-05_capture-win4.pcap": {
+   "flows": 1856,
+   "eligible_pairs": 8,
+   "learned_periodic": 1
+  },
+  "CTU-Normal-25/2017-04-25_win-normal.pcap": {
+   "flows": 6289,
+   "eligible_pairs": 0,
+   "learned_periodic": 0
+  },
+  "CTU-Normal-27/2017_04_30-normal.pcap": {
+   "flows": 22329,
+   "eligible_pairs": 42,
+   "learned_periodic": 0
+  },
+  "CTU-Normal-29/2017-05-01_normal.pcap": {
+   "flows": 21265,
+   "eligible_pairs": 22,
+   "learned_periodic": 0
+  },
+  "CTU-Normal-33/capture-new-Windows-7-Full.pcap": {
+   "flows": 4427,
+   "eligible_pairs": 7,
+   "learned_periodic": 4
+  }
+ },
+ "results": {
+  "v2a1_alone": {
+   "pair": {
+    "recall": 0.030303030303030304,
+    "recall_ci95": [
+     0.0,
+     0.09090909090909091
+    ],
+    "n_pos": 33,
+    "false_alert_rate": 0.012345679012345678,
+    "false_alert_rate_ci95": [
+     0.0,
+     0.037037037037037035
+    ],
+    "n_neg": 81,
+    "false_alerts": 1,
+    "ranking": {
+     "n_pos": 33,
+     "n_neg": 81,
+     "bootstrap": 1000,
+     "seed": 1337,
+     "roc_auc": 0.4075944631500187,
+     "roc_auc_ci95": [
+      0.3273475495697718,
+      0.4900860456416012
+     ],
+     "pr_auc": 0.31250284802916384,
+     "pr_auc_ci95": [
+      0.275839892987601,
+      0.39352254603450776
+     ],
+     "recall_at_fpr_1pct": 0.030303030303030304,
+     "recall_at_fpr_1pct_fpr_reached": 0.0,
+     "recall_at_fpr_1pct_ci95": [
+      0.0,
+      0.12121212121212122
+     ],
+     "recall_at_fpr_0_1pct": 0.030303030303030304,
+     "recall_at_fpr_0_1pct_fpr_reached": 0.0,
+     "recall_at_fpr_0_1pct_ci95": [
+      0.0,
+      0.12121212121212122
+     ]
+    }
+   },
+   "host": {
+    "recall": 0.07692307692307693,
+    "recall_ci95": [
+     0.0,
+     0.23076923076923078
+    ],
+    "n_pos": 13,
+    "false_alert_rate": 0.125,
+    "false_alert_rate_ci95": [
+     0.0,
+     0.375
+    ],
+    "n_neg": 8,
+    "false_alerts": 1
+   }
+  },
+  "B_and_not_P": {
+   "pair": {
+    "recall": 0.0,
+    "recall_ci95": [
+     0.0,
+     0.0
+    ],
+    "n_pos": 33,
+    "false_alert_rate": 0.0,
+    "false_alert_rate_ci95": [
+     0.0,
+     0.0
+    ],
+    "n_neg": 81,
+    "false_alerts": 0
+   },
+   "host": {
+    "recall": 0.0,
+    "recall_ci95": [
+     0.0,
+     0.0
+    ],
+    "n_pos": 13,
+    "false_alert_rate": 0.0,
+    "false_alert_rate_ci95": [
+     0.0,
+     0.0
+    ],
+    "n_neg": 8,
+    "false_alerts": 0
+   }
+  },
+  "B_and_corroboration": {
+   "pair": {
+    "recall": 0.0,
+    "recall_ci95": [
+     0.0,
+     0.0
+    ],
+    "n_pos": 33,
+    "false_alert_rate": 0.0,
+    "false_alert_rate_ci95": [
+     0.0,
+     0.0
+    ],
+    "n_neg": 81,
+    "false_alerts": 0
+   },
+   "host": {
+    "recall": 0.0,
+    "recall_ci95": [
+     0.0,
+     0.0
+    ],
+    "n_pos": 13,
+    "false_alert_rate": 0.0,
+    "false_alert_rate_ci95": [
+     0.0,
+     0.0
+    ],
+    "n_neg": 8,
+    "false_alerts": 0
+   }
+  },
+  "fused_v3": {
+   "pair": {
+    "recall": 0.0,
+    "recall_ci95": [
+     0.0,
+     0.0
+    ],
+    "n_pos": 33,
+    "false_alert_rate": 0.0,
+    "false_alert_rate_ci95": [
+     0.0,
+     0.0
+    ],
+    "n_neg": 81,
+    "false_alerts": 0,
+    "ranking": {
+     "n_pos": 33,
+     "n_neg": 81,
+     "bootstrap": 1000,
+     "seed": 1337,
+     "roc_auc": 0.5091657313879536,
+     "roc_auc_ci95": [
+      0.48148148148148145,
+      0.5454545454545454
+     ],
+     "pr_auc": 0.31100478468899523,
+     "pr_auc_ci95": [
+      0.2894736842105263,
+      0.35406698564593303
+     ],
+     "recall_at_fpr_1pct": 0.030303030303030304,
+     "recall_at_fpr_1pct_fpr_reached": 0.0,
+     "recall_at_fpr_1pct_ci95": [
+      0.0,
+      0.09090909090909091
+     ],
+     "recall_at_fpr_0_1pct": 0.030303030303030304,
+     "recall_at_fpr_0_1pct_fpr_reached": 0.0,
+     "recall_at_fpr_0_1pct_ci95": [
+      0.0,
+      0.09090909090909091
+     ]
+    }
+   },
+   "host": {
+    "recall": 0.0,
+    "recall_ci95": [
+     0.0,
+     0.0
+    ],
+    "n_pos": 13,
+    "false_alert_rate": 0.0,
+    "false_alert_rate_ci95": [
+     0.0,
+     0.0
+    ],
+    "n_neg": 8,
+    "false_alerts": 0
+   }
+  },
+  "signals_fire_counts": {
+   "P": {
+    "positives_firing": 22,
+    "negatives_firing": 3
+   },
+   "R": {
+    "positives_firing": 1,
+    "negatives_firing": 31
+   },
+   "F": {
+    "positives_firing": 0,
+    "negatives_firing": 1
+   },
+   "I": {
+    "positives_firing": 0,
+    "negatives_firing": 2
+   }
+  }
+ },
+ "gate_G1": {
+  "fused_recall": 0.0,
+  "fused_false_alert_rate": 0.0,
+  "recall_ge_0.30_at_far_le_0.01": false
+ },
+ "botnet_non_c2_pairs": {
+  "v2a1_alone": 15,
+  "B_and_not_P": 14,
+  "B_and_corroboration": 3,
+  "fused_v3": 3,
+  "n": 413
+ },
+ "positives": [
+  {
+   "set": "Botnet-47/botnet-capture-20110816-donbot.pcap",
+   "pair": [
+    "147.32.84.165",
+    "91.212.135.158"
+   ],
+   "flows_after_window": 96,
+   "dst_ips": [
+    "91.212.135.158"
+   ],
+   "B": false,
+   "B_score": 0.0,
+   "components": null,
+   "P": false,
+   "R": {
+    "fires": false,
+    "novel": false,
+    "prevalence": 1,
+    "limit": 1,
+    "prevalence_measurable": true,
+    "age_s": 7217.54
+   },
+   "F": {
+    "fires": false,
+    "rare_fingerprints": 0,
+    "limit": 1,
+    "has_fingerprint": false
+   },
+   "I": {
+    "fires": false,
+    "share": 0.0,
+    "tau": 0.6403181818181819
+   },
+   "corroborated": false,
+   "alert": false,
+   "fused_score": 0.0
+  },
+  {
+   "set": "Botnet-49/botnet-capture-20110816-qvod.pcap",
+   "pair": [
+    "147.32.84.165",
+    "222.189.228.111"
+   ],
+   "flows_after_window": 1006,
+   "dst_ips": [
+    "222.189.228.111"
+   ],
+   "B": true,
+   "B_score": 0.9957,
+   "components": {
+    "G": 1.0,
+    "S": 1.0,
+    "D": 1.0,
+    "H": 0.9829
+   },
+   "P": true,
+   "R": {
+    "fires": false,
+    "novel": false,
+    "prevalence": 1,
+    "limit": 1,
+    "prevalence_measurable": true,
+    "age_s": 69479.525
+   },
+   "F": {
+    "fires": false,
+    "rare_fingerprints": 0,
+    "limit": 1,
+    "has_fingerprint": false
+   },
+   "I": {
+    "fires": false,
+    "share": 0.001,
+    "tau": 0.6403181818181819
+   },
+   "corroborated": false,
+   "alert": false,
+   "fused_score": 0.0
+  },
+  {
+   "set": "Botnet-50/botnet-capture-20110817-bot.pcap",
+   "pair": [
+    "147.32.84.165",
+    "173.192.170.88"
+   ],
+   "flows_after_window": 106,
+   "dst_ips": [
+    "173.192.170.88"
+   ],
+   "B": false,
+   "B_score": 0.0,
+   "components": null,
+   "P": true,
+   "R": {
+    "fires": false,
+    "novel": false,
+    "prevalence": 10,
+    "limit": 2,
+    "prevalence_measurable": true,
+    "age_s": 9727.114
+   },
+   "F": {
+    "fires": false,
+    "rare_fingerprints": 0,
+    "limit": 2,
+    "has_fingerprint": false
+   },
+   "I": {
+    "fires": false,
+    "share": 0.0,
+    "tau": 0.6403181818181819
+   },
+   "corroborated": false,
+   "alert": false,
+   "fused_score": 0.0
+  },
+  {
+   "set": "Botnet-50/botnet-capture-20110817-bot.pcap",
+   "pair": [
+    "147.32.84.165",
+    "195.190.13.78"
+   ],
+   "flows_after_window": 52,
+   "dst_ips": [
+    "195.190.13.78"
+   ],
+   "B": false,
+   "B_score": 0.0,
+   "components": null,
+   "P": true,
+   "R": {
+    "fires": false,
+    "novel": false,
+    "prevalence": 3,
+    "limit": 2,
+    "prevalence_measurable": true,
+    "age_s": 9369.158
+   },
+   "F": {
+    "fires": false,
+    "rare_fingerprints": 0,
+    "limit": 2,
+    "has_fingerprint": false
+   },
+   "I": {
+    "fires": false,
+    "share": 0.0,
+    "tau": 0.6403181818181819
+   },
+   "corroborated": false,
+   "alert": false,
+   "fused_score": 0.0
+  },
+  {
+   "set": "Botnet-50/botnet-capture-20110817-bot.pcap",
+   "pair": [
+    "147.32.84.191",
+    "173.192.170.88"
+   ],
+   "flows_after_window": 104,
+   "dst_ips": [
+    "173.192.170.88"
+   ],
+   "B": false,
+   "B_score": 0.0,
+   "components": null,
+   "P": true,
+   "R": {
+    "fires": false,
+    "novel": false,
+    "prevalence": 10,
+    "limit": 2,
+    "prevalence_measurable": true,
+    "age_s": 9727.114
+   },
+   "F": {
+    "fires": false,
+    "rare_fingerprints": 0,
+    "limit": 2,
+    "has_fingerprint": false
+   },
+   "I": {
+    "fires": false,
+    "share": 0.0,
+    "tau": 0.6403181818181819
+   },
+   "corroborated": false,
+   "alert": false,
+   "fused_score": 0.0
+  },
+  {
+   "set": "Botnet-50/botnet-capture-20110817-bot.pcap",
+   "pair": [
+    "147.32.84.191",
+    "195.190.13.78"
+   ],
+   "flows_after_window": 51,
+   "dst_ips": [
+    "195.190.13.78"
+   ],
+   "B": false,
+   "B_score": 0.0,
+   "components": null,
+   "P": true,
+   "R": {
+    "fires": false,
+    "novel": false,
+    "prevalence": 3,
+    "limit": 2,
+    "prevalence_measurable": true,
+    "age_s": 9369.158
+   },
+   "F": {
+    "fires": false,
+    "rare_fingerprints": 0,
+    "limit": 2,
+    "has_fingerprint": false
+   },
+   "I": {
+    "fires": false,
+    "share": 0.0,
+    "tau": 0.6403181818181819
+   },
+   "corroborated": false,
+   "alert": false,
+   "fused_score": 0.0
+  },
+  {
+   "set": "Botnet-50/botnet-capture-20110817-bot.pcap",
+   "pair": [
+    "147.32.84.191",
+    "91.220.0.52"
+   ],
+   "flows_after_window": 34,
+   "dst_ips": [
+    "91.220.0.52"
+   ],
+   "B": false,
+   "B_score": 0.0,
+   "components": null,
+   "P": true,
+   "R": {
+    "fires": false,
+    "novel": false,
+    "prevalence": 10,
+    "limit": 2,
+    "prevalence_measurable": true,
+    "age_s": 9880.818
+   },
+   "F": {
+    "fires": false,
+    "rare_fingerprints": 0,
+    "limit": 2,
+    "has_fingerprint": false
+   },
+   "I": {
+    "fires": false,
+    "share": 0.0588,
+    "tau": 0.6403181818181819
+   },
+   "corroborated": false,
+   "alert": false,
+   "fused_score": 0.0
+  },
+  {
+   "set": "Botnet-50/botnet-capture-20110817-bot.pcap",
+   "pair": [
+    "147.32.84.192",
+    "173.192.170.88"
+   ],
+   "flows_after_window": 110,
+   "dst_ips": [
+    "173.192.170.88"
+   ],
+   "B": false,
+   "B_score": 0.0,
+   "components": null,
+   "P": true,
+   "R": {
+    "fires": false,
+    "novel": false,
+    "prevalence": 10,
+    "limit": 2,
+    "prevalence_measurable": true,
+    "age_s": 9727.114
+   },
+   "F": {
+    "fires": false,
+    "rare_fingerprints": 0,
+    "limit": 2,
+    "has_fingerprint": false
+   },
+   "I": {
+    "fires": false,
+    "share": 0.0,
+    "tau": 0.6403181818181819
+   },
+   "corroborated": false,
+   "alert": false,
+   "fused_score": 0.0
+  },
+  {
+   "set": "Botnet-50/botnet-capture-20110817-bot.pcap",
+   "pair": [
+    "147.32.84.192",
+    "195.190.13.78"
+   ],
+   "flows_after_window": 52,
+   "dst_ips": [
+    "195.190.13.78"
+   ],
+   "B": false,
+   "B_score": 0.0,
+   "components": null,
+   "P": true,
+   "R": {
+    "fires": false,
+    "novel": false,
+    "prevalence": 3,
+    "limit": 2,
+    "prevalence_measurable": true,
+    "age_s": 9369.158
+   },
+   "F": {
+    "fires": false,
+    "rare_fingerprints": 0,
+    "limit": 2,
+    "has_fingerprint": false
+   },
+   "I": {
+    "fires": false,
+    "share": 0.0,
+    "tau": 0.6403181818181819
+   },
+   "corroborated": false,
+   "alert": false,
+   "fused_score": 0.0
+  },
+  {
+   "set": "Botnet-50/botnet-capture-20110817-bot.pcap",
+   "pair": [
+    "147.32.84.192",
+    "91.220.0.52"
+   ],
+   "flows_after_window": 35,
+   "dst_ips": [
+    "91.220.0.52"
+   ],
+   "B": false,
+   "B_score": 0.0,
+   "components": null,
+   "P": true,
+   "R": {
+    "fires": false,
+    "novel": false,
+    "prevalence": 10,
+    "limit": 2,
+    "prevalence_measurable": true,
+    "age_s": 9880.818
+   },
+   "F": {
+    "fires": false,
+    "rare_fingerprints": 0,
+    "limit": 2,
+    "has_fingerprint": false
+   },
+   "I": {
+    "fires": false,
+    "share": 0.0571,
+    "tau": 0.6403181818181819
+   },
+   "corroborated": false,
+   "alert": false,
+   "fused_score": 0.0
+  },
+  {
+   "set": "Botnet-50/botnet-capture-20110817-bot.pcap",
+   "pair": [
+    "147.32.84.193",
+    "173.192.170.88"
+   ],
+   "flows_after_window": 108,
+   "dst_ips": [
+    "173.192.170.88"
+   ],
+   "B": false,
+   "B_score": 0.0,
+   "components": null,
+   "P": true,
+   "R": {
+    "fires": false,
+    "novel": false,
+    "prevalence": 10,
+    "limit": 2,
+    "prevalence_measurable": true,
+    "age_s": 9727.114
+   },
+   "F": {
+    "fires": false,
+    "rare_fingerprints": 0,
+    "limit": 2,
+    "has_fingerprint": false
+   },
+   "I": {
+    "fires": false,
+    "share": 0.0,
+    "tau": 0.6403181818181819
+   },
+   "corroborated": false,
+   "alert": false,
+   "fused_score": 0.0
+  },
+  {
+   "set": "Botnet-50/botnet-capture-20110817-bot.pcap",
+   "pair": [
+    "147.32.84.193",
+    "195.190.13.70"
+   ],
+   "flows_after_window": 57,
+   "dst_ips": [
+    "195.190.13.70"
+   ],
+   "B": false,
+   "B_score": 0.0,
+   "components": null,
+   "P": false,
+   "R": {
+    "fires": false,
+    "novel": false,
+    "prevalence": 7,
+    "limit": 2,
+    "prevalence_measurable": true,
+    "age_s": 7451.802
+   },
+   "F": {
+    "fires": false,
+    "rare_fingerprints": 0,
+    "limit": 2,
+    "has_fingerprint": false
+   },
+   "I": {
+    "fires": false,
+    "share": 0.0,
+    "tau": 0.6403181818181819
+   },
+   "corroborated": false,
+   "alert": false,
+   "fused_score": 0.0
+  },
+  {
+   "set": "Botnet-50/botnet-capture-20110817-bot.pcap",
+   "pair": [
+    "147.32.84.193",
+    "91.220.0.52"
+   ],
+   "flows_after_window": 35,
+   "dst_ips": [
+    "91.220.0.52"
+   ],
+   "B": false,
+   "B_score": 0.0,
+   "components": null,
+   "P": true,
+   "R": {
+    "fires": false,
+    "novel": false,
+    "prevalence": 10,
+    "limit": 2,
+    "prevalence_measurable": true,
+    "age_s": 9880.818
+   },
+   "F": {
+    "fires": false,
+    "rare_fingerprints": 0,
+    "limit": 2,
+    "has_fingerprint": false
+   },
+   "I": {
+    "fires": false,
+    "share": 0.2,
+    "tau": 0.6403181818181819
+   },
+   "corroborated": false,
+   "alert": false,
+   "fused_score": 0.0
+  },
+  {
+   "set": "Botnet-50/botnet-capture-20110817-bot.pcap",
+   "pair": [
+    "147.32.84.204",
+    "173.192.170.88"
+   ],
+   "flows_after_window": 98,
+   "dst_ips": [
+    "173.192.170.88"
+   ],
+   "B": false,
+   "B_score": 0.0,
+   "components": null,
+   "P": true,
+   "R": {
+    "fires": false,
+    "novel": false,
+    "prevalence": 10,
+    "limit": 2,
+    "prevalence_measurable": true,
+    "age_s": 9727.114
+   },
+   "F": {
+    "fires": false,
+    "rare_fingerprints": 0,
+    "limit": 2,
+    "has_fingerprint": false
+   },
+   "I": {
+    "fires": false,
+    "share": 0.0,
+    "tau": 0.6403181818181819
+   },
+   "corroborated": false,
+   "alert": false,
+   "fused_score": 0.0
+  },
+  {
+   "set": "Botnet-50/botnet-capture-20110817-bot.pcap",
+   "pair": [
+    "147.32.84.204",
+    "195.190.13.70"
+   ],
+   "flows_after_window": 56,
+   "dst_ips": [
+    "195.190.13.70"
+   ],
+   "B": false,
+   "B_score": 0.0,
+   "components": null,
+   "P": false,
+   "R": {
+    "fires": false,
+    "novel": false,
+    "prevalence": 7,
+    "limit": 2,
+    "prevalence_measurable": true,
+    "age_s": 7451.802
+   },
+   "F": {
+    "fires": false,
+    "rare_fingerprints": 0,
+    "limit": 2,
+    "has_fingerprint": false
+   },
+   "I": {
+    "fires": false,
+    "share": 0.0,
+    "tau": 0.6403181818181819
+   },
+   "corroborated": false,
+   "alert": false,
+   "fused_score": 0.0
+  },
+  {
+   "set": "Botnet-50/botnet-capture-20110817-bot.pcap",
+   "pair": [
+    "147.32.84.204",
+    "91.220.0.52"
+   ],
+   "flows_after_window": 33,
+   "dst_ips": [
+    "91.220.0.52"
+   ],
+   "B": false,
+   "B_score": 0.0,
+   "components": null,
+   "P": true,
+   "R": {
+    "fires": false,
+    "novel": false,
+    "prevalence": 10,
+    "limit": 2,
+    "prevalence_measurable": true,
+    "age_s": 9880.818
+   },
+   "F": {
+    "fires": false,
+    "rare_fingerprints": 0,
+    "limit": 2,
+    "has_fingerprint": false
+   },
+   "I": {
+    "fires": false,
+    "share": 0.1818,
+    "tau": 0.6403181818181819
+   },
+   "corroborated": false,
+   "alert": false,
+   "fused_score": 0.0
+  },
+  {
+   "set": "Botnet-50/botnet-capture-20110817-bot.pcap",
+   "pair": [
+    "147.32.84.205",
+    "173.192.170.88"
+   ],
+   "flows_after_window": 115,
+   "dst_ips": [
+    "173.192.170.88"
+   ],
+   "B": false,
+   "B_score": 0.0,
+   "components": null,
+   "P": true,
+   "R": {
+    "fires": false,
+    "novel": false,
+    "prevalence": 10,
+    "limit": 2,
+    "prevalence_measurable": true,
+    "age_s": 9727.114
+   },
+   "F": {
+    "fires": false,
+    "rare_fingerprints": 0,
+    "limit": 2,
+    "has_fingerprint": false
+   },
+   "I": {
+    "fires": false,
+    "share": 0.0,
+    "tau": 0.6403181818181819
+   },
+   "corroborated": false,
+   "alert": false,
+   "fused_score": 0.0
+  },
+  {
+   "set": "Botnet-50/botnet-capture-20110817-bot.pcap",
+   "pair": [
+    "147.32.84.205",
+    "195.190.13.70"
+   ],
+   "flows_after_window": 56,
+   "dst_ips": [
+    "195.190.13.70"
+   ],
+   "B": false,
+   "B_score": 0.0,
+   "components": null,
+   "P": false,
+   "R": {
+    "fires": false,
+    "novel": false,
+    "prevalence": 7,
+    "limit": 2,
+    "prevalence_measurable": true,
+    "age_s": 7451.802
+   },
+   "F": {
+    "fires": false,
+    "rare_fingerprints": 0,
+    "limit": 2,
+    "has_fingerprint": false
+   },
+   "I": {
+    "fires": false,
+    "share": 0.0,
+    "tau": 0.6403181818181819
+   },
+   "corroborated": false,
+   "alert": false,
+   "fused_score": 0.0
+  },
+  {
+   "set": "Botnet-50/botnet-capture-20110817-bot.pcap",
+   "pair": [
+    "147.32.84.205",
+    "91.220.0.52"
+   ],
+   "flows_after_window": 25,
+   "dst_ips": [
+    "91.220.0.52"
+   ],
+   "B": false,
+   "B_score": 0.0,
+   "components": null,
+   "P": true,
+   "R": {
+    "fires": false,
+    "novel": false,
+    "prevalence": 10,
+    "limit": 2,
+    "prevalence_measurable": true,
+    "age_s": 9880.818
+   },
+   "F": {
+    "fires": false,
+    "rare_fingerprints": 0,
+    "limit": 2,
+    "has_fingerprint": false
+   },
+   "I": {
+    "fires": false,
+    "share": 0.16,
+    "tau": 0.6403181818181819
+   },
+   "corroborated": false,
+   "alert": false,
+   "fused_score": 0.0
+  },
+  {
+   "set": "Botnet-50/botnet-capture-20110817-bot.pcap",
+   "pair": [
+    "147.32.84.206",
+    "173.192.170.88"
+   ],
+   "flows_after_window": 103,
+   "dst_ips": [
+    "173.192.170.88"
+   ],
+   "B": false,
+   "B_score": 0.0,
+   "components": null,
+   "P": true,
+   "R": {
+    "fires": false,
+    "novel": false,
+    "prevalence": 10,
+    "limit": 2,
+    "prevalence_measurable": true,
+    "age_s": 9727.114
+   },
+   "F": {
+    "fires": false,
+    "rare_fingerprints": 0,
+    "limit": 2,
+    "has_fingerprint": false
+   },
+   "I": {
+    "fires": false,
+    "share": 0.0,
+    "tau": 0.6403181818181819
+   },
+   "corroborated": false,
+   "alert": false,
+   "fused_score": 0.0
+  },
+  {
+   "set": "Botnet-50/botnet-capture-20110817-bot.pcap",
+   "pair": [
+    "147.32.84.206",
+    "195.190.13.70"
+   ],
+   "flows_after_window": 56,
+   "dst_ips": [
+    "195.190.13.70"
+   ],
+   "B": false,
+   "B_score": 0.0,
+   "components": null,
+   "P": false,
+   "R": {
+    "fires": false,
+    "novel": false,
+    "prevalence": 7,
+    "limit": 2,
+    "prevalence_measurable": true,
+    "age_s": 7451.802
+   },
+   "F": {
+    "fires": false,
+    "rare_fingerprints": 0,
+    "limit": 2,
+    "has_fingerprint": false
+   },
+   "I": {
+    "fires": false,
+    "share": 0.0,
+    "tau": 0.6403181818181819
+   },
+   "corroborated": false,
+   "alert": false,
+   "fused_score": 0.0
+  },
+  {
+   "set": "Botnet-50/botnet-capture-20110817-bot.pcap",
+   "pair": [
+    "147.32.84.207",
+    "173.192.170.88"
+   ],
+   "flows_after_window": 93,
+   "dst_ips": [
+    "173.192.170.88"
+   ],
+   "B": false,
+   "B_score": 0.0,
+   "components": null,
+   "P": true,
+   "R": {
+    "fires": false,
+    "novel": false,
+    "prevalence": 10,
+    "limit": 2,
+    "prevalence_measurable": true,
+    "age_s": 9727.114
+   },
+   "F": {
+    "fires": false,
+    "rare_fingerprints": 0,
+    "limit": 2,
+    "has_fingerprint": false
+   },
+   "I": {
+    "fires": false,
+    "share": 0.0,
+    "tau": 0.6403181818181819
+   },
+   "corroborated": false,
+   "alert": false,
+   "fused_score": 0.0
+  },
+  {
+   "set": "Botnet-50/botnet-capture-20110817-bot.pcap",
+   "pair": [
+    "147.32.84.207",
+    "195.190.13.70"
+   ],
+   "flows_after_window": 52,
+   "dst_ips": [
+    "195.190.13.70"
+   ],
+   "B": false,
+   "B_score": 0.0,
+   "components": null,
+   "P": false,
+   "R": {
+    "fires": false,
+    "novel": false,
+    "prevalence": 7,
+    "limit": 2,
+    "prevalence_measurable": true,
+    "age_s": 7451.802
+   },
+   "F": {
+    "fires": false,
+    "rare_fingerprints": 0,
+    "limit": 2,
+    "has_fingerprint": false
+   },
+   "I": {
+    "fires": false,
+    "share": 0.0,
+    "tau": 0.6403181818181819
+   },
+   "corroborated": false,
+   "alert": false,
+   "fused_score": 0.0
+  },
+  {
+   "set": "Botnet-50/botnet-capture-20110817-bot.pcap",
+   "pair": [
+    "147.32.84.207",
+    "91.220.0.52"
+   ],
+   "flows_after_window": 41,
+   "dst_ips": [
+    "91.220.0.52"
+   ],
+   "B": false,
+   "B_score": 0.0,
+   "components": null,
+   "P": true,
+   "R": {
+    "fires": false,
+    "novel": false,
+    "prevalence": 10,
+    "limit": 2,
+    "prevalence_measurable": true,
+    "age_s": 9880.818
+   },
+   "F": {
+    "fires": false,
+    "rare_fingerprints": 0,
+    "limit": 2,
+    "has_fingerprint": false
+   },
+   "I": {
+    "fires": false,
+    "share": 0.122,
+    "tau": 0.6403181818181819
+   },
+   "corroborated": false,
+   "alert": false,
+   "fused_score": 0.0
+  },
+  {
+   "set": "Botnet-50/botnet-capture-20110817-bot.pcap",
+   "pair": [
+    "147.32.84.208",
+    "173.192.170.88"
+   ],
+   "flows_after_window": 94,
+   "dst_ips": [
+    "173.192.170.88"
+   ],
+   "B": false,
+   "B_score": 0.0,
+   "components": null,
+   "P": true,
+   "R": {
+    "fires": false,
+    "novel": false,
+    "prevalence": 10,
+    "limit": 2,
+    "prevalence_measurable": true,
+    "age_s": 9727.114
+   },
+   "F": {
+    "fires": false,
+    "rare_fingerprints": 0,
+    "limit": 2,
+    "has_fingerprint": false
+   },
+   "I": {
+    "fires": false,
+    "share": 0.0,
+    "tau": 0.6403181818181819
+   },
+   "corroborated": false,
+   "alert": false,
+   "fused_score": 0.0
+  },
+  {
+   "set": "Botnet-50/botnet-capture-20110817-bot.pcap",
+   "pair": [
+    "147.32.84.208",
+    "195.190.13.70"
+   ],
+   "flows_after_window": 56,
+   "dst_ips": [
+    "195.190.13.70"
+   ],
+   "B": false,
+   "B_score": 0.0,
+   "components": null,
+   "P": false,
+   "R": {
+    "fires": false,
+    "novel": false,
+    "prevalence": 7,
+    "limit": 2,
+    "prevalence_measurable": true,
+    "age_s": 7451.802
+   },
+   "F": {
+    "fires": false,
+    "rare_fingerprints": 0,
+    "limit": 2,
+    "has_fingerprint": false
+   },
+   "I": {
+    "fires": false,
+    "share": 0.0,
+    "tau": 0.6403181818181819
+   },
+   "corroborated": false,
+   "alert": false,
+   "fused_score": 0.0
+  },
+  {
+   "set": "Botnet-50/botnet-capture-20110817-bot.pcap",
+   "pair": [
+    "147.32.84.208",
+    "91.220.0.52"
+   ],
+   "flows_after_window": 29,
+   "dst_ips": [
+    "91.220.0.52"
+   ],
+   "B": false,
+   "B_score": 0.0,
+   "components": null,
+   "P": true,
+   "R": {
+    "fires": false,
+    "novel": false,
+    "prevalence": 10,
+    "limit": 2,
+    "prevalence_measurable": true,
+    "age_s": 9880.818
+   },
+   "F": {
+    "fires": false,
+    "rare_fingerprints": 0,
+    "limit": 2,
+    "has_fingerprint": false
+   },
+   "I": {
+    "fires": false,
+    "share": 0.0345,
+    "tau": 0.6403181818181819
+   },
+   "corroborated": false,
+   "alert": false,
+   "fused_score": 0.0
+  },
+  {
+   "set": "Botnet-50/botnet-capture-20110817-bot.pcap",
+   "pair": [
+    "147.32.84.209",
+    "173.192.170.88"
+   ],
+   "flows_after_window": 107,
+   "dst_ips": [
+    "173.192.170.88"
+   ],
+   "B": false,
+   "B_score": 0.0,
+   "components": null,
+   "P": true,
+   "R": {
+    "fires": false,
+    "novel": false,
+    "prevalence": 10,
+    "limit": 2,
+    "prevalence_measurable": true,
+    "age_s": 9727.114
+   },
+   "F": {
+    "fires": false,
+    "rare_fingerprints": 0,
+    "limit": 2,
+    "has_fingerprint": false
+   },
+   "I": {
+    "fires": false,
+    "share": 0.0,
+    "tau": 0.6403181818181819
+   },
+   "corroborated": false,
+   "alert": false,
+   "fused_score": 0.0
+  },
+  {
+   "set": "Botnet-50/botnet-capture-20110817-bot.pcap",
+   "pair": [
+    "147.32.84.209",
+    "195.190.13.70"
+   ],
+   "flows_after_window": 56,
+   "dst_ips": [
+    "195.190.13.70"
+   ],
+   "B": false,
+   "B_score": 0.0,
+   "components": null,
+   "P": false,
+   "R": {
+    "fires": false,
+    "novel": false,
+    "prevalence": 7,
+    "limit": 2,
+    "prevalence_measurable": true,
+    "age_s": 7451.802
+   },
+   "F": {
+    "fires": false,
+    "rare_fingerprints": 0,
+    "limit": 2,
+    "has_fingerprint": false
+   },
+   "I": {
+    "fires": false,
+    "share": 0.0,
+    "tau": 0.6403181818181819
+   },
+   "corroborated": false,
+   "alert": false,
+   "fused_score": 0.0
+  },
+  {
+   "set": "Botnet-50/botnet-capture-20110817-bot.pcap",
+   "pair": [
+    "147.32.84.209",
+    "91.220.0.52"
+   ],
+   "flows_after_window": 127,
+   "dst_ips": [
+    "91.220.0.52"
+   ],
+   "B": false,
+   "B_score": 0.0,
+   "components": null,
+   "P": true,
+   "R": {
+    "fires": false,
+    "novel": false,
+    "prevalence": 10,
+    "limit": 2,
+    "prevalence_measurable": true,
+    "age_s": 9880.818
+   },
+   "F": {
+    "fires": false,
+    "rare_fingerprints": 0,
+    "limit": 2,
+    "has_fingerprint": false
+   },
+   "I": {
+    "fires": false,
+    "share": 0.0551,
+    "tau": 0.6403181818181819
+   },
+   "corroborated": false,
+   "alert": false,
+   "fused_score": 0.0
+  },
+  {
+   "set": "Botnet-54/botnet-capture-20110815-fast-flux-2.pcap",
+   "pair": [
+    "147.32.84.165",
+    "173.192.170.88"
+   ],
+   "flows_after_window": 443,
+   "dst_ips": [
+    "173.192.170.88"
+   ],
+   "B": false,
+   "B_score": 0.7297,
+   "components": {
+    "G": 0.304,
+    "S": 0.7218,
+    "D": 1.0,
+    "H": 0.8929
+   },
+   "P": false,
+   "R": {
+    "fires": true,
+    "novel": true,
+    "prevalence": 1,
+    "limit": 1,
+    "prevalence_measurable": true,
+    "age_s": 49563.663
+   },
+   "F": {
+    "fires": false,
+    "rare_fingerprints": 0,
+    "limit": 1,
+    "has_fingerprint": false
+   },
+   "I": {
+    "fires": false,
+    "share": 0.0,
+    "tau": 0.6403181818181819
+   },
+   "corroborated": true,
+   "alert": false,
+   "fused_score": 0.7297
+  },
+  {
+   "set": "Botnet-54/botnet-capture-20110815-fast-flux-2.pcap",
+   "pair": [
+    "147.32.84.165",
+    "60.190.223.75"
+   ],
+   "flows_after_window": 33,
+   "dst_ips": [
+    "60.190.223.75"
+   ],
+   "B": false,
+   "B_score": 0.3473,
+   "components": {
+    "G": 0.3139,
+    "S": 0.7002,
+    "D": 0.375,
+    "H": 0.0
+   },
+   "P": false,
+   "R": {
+    "fires": false,
+    "novel": false,
+    "prevalence": 1,
+    "limit": 1,
+    "prevalence_measurable": true,
+    "age_s": 58494.854
+   },
+   "F": {
+    "fires": false,
+    "rare_fingerprints": 0,
+    "limit": 1,
+    "has_fingerprint": false
+   },
+   "I": {
+    "fires": false,
+    "share": 0.1212,
+    "tau": 0.6403181818181819
+   },
+   "corroborated": false,
+   "alert": false,
+   "fused_score": 0.0
+  },
+  {
+   "set": "Botnet-54/botnet-capture-20110815-fast-flux-2.pcap",
+   "pair": [
+    "147.32.84.165",
+    "91.220.0.52"
+   ],
+   "flows_after_window": 40,
+   "dst_ips": [
+    "91.220.0.52"
+   ],
+   "B": false,
+   "B_score": 0.6806,
+   "components": {
+    "G": 0.5,
+    "S": 1.0,
+    "D": 1.0,
+    "H": 0.2222
+   },
+   "P": false,
+   "R": {
+    "fires": false,
+    "novel": false,
+    "prevalence": 1,
+    "limit": 1,
+    "prevalence_measurable": true,
+    "age_s": 58402.371
+   },
+   "F": {
+    "fires": false,
+    "rare_fingerprints": 0,
+    "limit": 1,
+    "has_fingerprint": false
+   },
+   "I": {
+    "fires": false,
+    "share": 0.075,
+    "tau": 0.6403181818181819
+   },
+   "corroborated": false,
+   "alert": false,
+   "fused_score": 0.0
+  }
+ ],
+ "negatives_alerting": []
+}

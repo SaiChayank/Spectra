@@ -60,3 +60,26 @@ non-zero `dropped` is the sensor's limit on that machine. If you have a Raspberr
 already in use (`PORT=8898 sudo ...`), or no raw-socket permission (it must be `sudo`).
 
 Not yet run by anyone. Treat its first output as the first measurement, and expect to fix a script issue or two.
+
+## Task 14 - a second 72-hour own-network capture (fresh hold-out for E22)
+
+**Why.** The 2026-11-14 capture is spent: it was used to see where the beacon scorer fails (evaluation report §20). The v3 design
+(`ci/prereg/e22.json`) needs a capture recorded **after** that design was committed, to measure false alerts per day honestly.
+
+**Steps.** Same as task 12, on the same laptop, for 72 hours, starting no earlier than 2026-11-24:
+
+```bash
+sudo mkdir -p /var/spectra-baseline-2 && cd /var/spectra-baseline-2
+sudo tcpdump -i <wifi-interface> -s 1600 -n -G 3600 -w 'base-%Y%m%d-%H%M.pcap' 'not port 22'
+```
+
+Keep the laptop awake (no suspend) and note any reboot. Do not change the e22 code between the start of the capture and the scoring run.
+
+**Analyse** (on the laptop; the counts file may be shared, the detail file must stay private):
+
+```bash
+cd backend
+python scripts/bench_e22_own.py --pcap-dir /var/spectra-baseline-2 --out ~/e22-own-network.json --detail ~/e22-own-private.json
+```
+
+**Send back** `~/e22-own-network.json` only (counts per day, no addresses).

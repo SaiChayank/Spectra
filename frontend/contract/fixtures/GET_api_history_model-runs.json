@@ -5,7 +5,7 @@
       {
         "contamination": 0.05,
         "id": 2,
-        "metrics": "{\"augmented\": 0, \"bio\": {\"n_train\": 42, \"self_trained\": true, \"snn_threshold\": 26.313318, \"snn_trained\": true}, \"contamination\": 0.05, \"edge\": {\"latency_ms\": {\"available\": true, \"budget_ms\": 0, \"n\": 0, \"p50_ms\": 0, \"p95_ms\": 0, \"within_budget\": true}, \"link\": \"terrestrial\", \"n_features\": 12, \"n_train\": 42, \"threshold\": 0.230375}, \"model_path\": \"<DATA_DIR>/spectra_model.joblib\", \"n_train\": 42, \"pcap\": \"<DATA_DIR>/captures/cap_342559062c5caa2055adf3fa7dd1ea42.pcap\", \"registry\": {\"activated\": false, \"model_id\": \"mdl_337d2fdc600b\", \"status\": \"CANDIDATE\"}, \"threshold\": 0.057092, \"train_score_mean\": -0.025937, \"train_score_p99\": 0.198806}",
+        "metrics": "{\"augmented\": 0, \"bio\": {\"n_train\": 42, \"self_trained\": true, \"snn_threshold\": 26.313314, \"snn_trained\": true}, \"contamination\": 0.05, \"edge\": {\"latency_ms\": {\"available\": true, \"budget_ms\": 0, \"n\": 0, \"p50_ms\": 0, \"p95_ms\": 0, \"within_budget\": true}, \"link\": \"terrestrial\", \"n_features\": 12, \"n_train\": 42, \"threshold\": 0.230375}, \"model_path\": \"<DATA_DIR>/spectra_model.joblib\", \"n_train\": 42, \"pcap\": \"<DATA_DIR>/captures/cap_342559062c5caa2055adf3fa7dd1ea42.pcap\", \"registry\": {\"activated\": false, \"model_id\": \"mdl_337d2fdc600b\", \"status\": \"CANDIDATE\"}, \"threshold\": 0.057092, \"train_score_mean\": -0.025937, \"train_score_p99\": 0.198806}",
         "n_train": 42,
         "pcap": "<DATA_DIR>/captures/cap_342559062c5caa2055adf3fa7dd1ea42.pcap",
         "trained_at": 1800000000.0
@@ -13,7 +13,7 @@
       {
         "contamination": 0.02,
         "id": 1,
-        "metrics": "{\"augmented\": 0, \"bio\": {\"n_train\": 42, \"self_trained\": true, \"snn_threshold\": 26.313318, \"snn_trained\": true}, \"contamination\": 0.02, \"edge\": {\"latency_ms\": {\"available\": true, \"budget_ms\": 0, \"n\": 0, \"p50_ms\": 0, \"p95_ms\": 0, \"within_budget\": true}, \"link\": \"terrestrial\", \"n_features\": 12, \"n_train\": 42, \"threshold\": 0.230375}, \"model_path\": \"<DATA_DIR>/spectra_model.joblib\", \"n_train\": 42, \"pcap\": \"<DATA_DIR>/captures/cap_342559062c5caa2055adf3fa7dd1ea42.pcap\", \"registry\": {\"activated\": true, \"model_id\": \"mdl_fdb71cbd5b6c\", \"status\": \"ACTIVE\"}, \"threshold\": 0.194095, \"train_score_mean\": -0.025937, \"train_score_p99\": 0.198806}",
+        "metrics": "{\"augmented\": 0, \"bio\": {\"n_train\": 42, \"self_trained\": true, \"snn_threshold\": 26.313314, \"snn_trained\": true}, \"contamination\": 0.02, \"edge\": {\"latency_ms\": {\"available\": true, \"budget_ms\": 0, \"n\": 0, \"p50_ms\": 0, \"p95_ms\": 0, \"within_budget\": true}, \"link\": \"terrestrial\", \"n_features\": 12, \"n_train\": 42, \"threshold\": 0.230375}, \"model_path\": \"<DATA_DIR>/spectra_model.joblib\", \"n_train\": 42, \"pcap\": \"<DATA_DIR>/captures/cap_342559062c5caa2055adf3fa7dd1ea42.pcap\", \"registry\": {\"activated\": true, \"model_id\": \"mdl_fdb71cbd5b6c\", \"status\": \"ACTIVE\"}, \"threshold\": 0.194095, \"train_score_mean\": -0.025937, \"train_score_p99\": 0.198806}",
         "n_train": 42,
         "pcap": "<DATA_DIR>/captures/cap_342559062c5caa2055adf3fa7dd1ea42.pcap",
         "trained_at": 1800000000.0
