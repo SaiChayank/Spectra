@@ -83,3 +83,13 @@ can be opened, never on Spectra capturing packets. Fix: the Npcap check runs onl
 `tests/test_integrity.py::test_live_capture_on_linux_does_not_demand_npcap` (fails on the old code, checked). Not yet verified
 end to end: the sizing rig must be re-run by the owner with sudo. `scripts/bench_perf.sh` was also changed to stop with the status
 and server log when the capture is not running or receives nothing (its first run printed a table of zeros).
+
+## 2026-11-24 (E22 session)
+* **snn_score CPU dependence: cause found and fixed** (`1223ae6`): the LIF update summed float weights with `@`, and BLAS adds in a CPU-specific
+  order, so rounding flipped `>=` threshold comparisons. Weights now sit on an exact 2^-20 grid; `tests/test_snn_reproducible.py` shows
+  forward/reversed/looped sums were different before and are bit-identical now. Not yet confirmed on a second CPU; once CI agrees, the contract
+  fixtures could record real snn scores again instead of the constant 0.0 (e586f2b).
+* **Unintended package execution (agent error):** while checking the frontend merge I ran `npx tsc` from a directory without the project's
+  node_modules; npx fetched and ran the public npm package `tsc@2.0.4` (a deprecated stub that only prints a warning). Nothing in the repo
+  changed. Lesson: never use `npx <name>` for project tools; use `npm run` scripts.
+* e22 prereg defect: the tau_I rule could not be computed (calibration captures shorter than the learning window); fixed by amendment 2 before gate scoring.

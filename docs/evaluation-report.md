@@ -309,3 +309,38 @@ Capture: one Linux laptop's own traffic on its Wi-Fi interface (a client, not a 
 **Beacon scorer v2a1, frozen** (`scripts/bench_beacon_v2_own.py` -> `docs/evidence/2026-11-18/own-network/beacon-v2a1-own-72h.json`): pairs with >= 20 flows per day 49 / 45 / 39, of which **16 / 13 / 14 score >= 0.8**, i.e. about a third of the eligible pairs are false alerts every day, and **8 destinations alert on all three days**. By the private detail, about 30 of the 43 alerting pair-days are destinations without a server name (keyed by IP), the rest are periodic application services such as weather widgets, update checks and assistant/IDE back ends.
 
 What it shows: the same ceiling as set B (§19), now on real traffic. Periodic benign services fire the timing scorer daily, and they are stable from day to day (8 of them every day). That stability is the opening for the next step: learning per site which destinations are periodic and expected (docs/35 E6), and corroborating timing with other evidence before alerting (E2.2, E4). Any such design is to be preregistered and judged on data not used here; this capture is spent for tuning that step and stays a measurement.
+
+## 21. Corroborated beaconing v3 (E22), 2026-11-24: owner gate NOT MET (interim: set C and own network #2 pending)
+
+Protocol `ci/prereg/e22.json` (+ `docs/plan-beaconing-detector.md` v3), committed before any v3 code (0dd19a4); amendments 1-4 are data or
+calibration only, all before gate scoring. Code `backend/spectra/modules/corr/hostctx.py` (flag `corroboration_enabled`, off), script
+`backend/scripts/bench_e22.py`. Rule: pair alert = B (v2a1 >= 0.8) and not P (learned periodic) and (R rare destination or F rare fingerprint or
+I isolation-forest share >= tau_I). tau_I = 0.6403 from 72 dev benign CTU-Normal pairs (`docs/evidence/2026-11-24/e22/calibrate-tau-i-a2.json`;
+the first calibration run found no pairs because both captures are shorter than the 1 h learning window, amendment 2).
+
+| Set (fresh) | Variant | Pair recall [95 % CI] | Pair false-alert rate [95 % CI] | Host recall | Host false-alert rate |
+|---|---|---|---|---|---|
+| G1 CTU-13 sc. 4, 6, 7, 8, 9, 12, 13 vs 9 fresh CTU-Normal (33 C2 / 81 benign pairs) | v2a1 alone (before) | 0.030 [0.00, 0.09] | 0.012 [0.00, 0.037] | 1/13 | 1/8 |
+| | B and not P | 0.000 | 0.000 | 0/13 | 0/8 |
+| | B and (R or F or I) | 0.000 | 0.000 | 0/13 | 0/8 |
+| | **fused v3 (after)** | **0.000** [0.00, 0.00] | **0.000** [0.00, 0.00] | 0/13 | 0/8 |
+| G2 HIKARI (2 attack pairs; 0 eligible outbound pairs) | all variants | 0.000 | n/a (no benign pair in scope) | 0/2 | n/a |
+
+Evidence: `docs/evidence/2026-11-24/e22/g1-ctu.json`, `g2-hikari.json`. **Owner gate: FAIL** (needs recall >= 0.30 at <= 1 % on two of {G1, G2};
+CIC-2018 is spent). Outcome as preregistered: **ranking aid, not a detector**; `corroboration_enabled` and `beaconing_enabled` stay off.
+
+What it shows:
+* The fused rule removes false alerts (1/81 -> 0/81 on CTU) but also every hit. On CTU the learned-periodicity rule P suppressed **22 of 33 C2 pairs**:
+  in these captures the bot is already beaconing in the first hour, so it is learned as "expected periodic". The prereg named this consequence.
+  Per-site learning only helps when the learning window is clean, i.e. when the sensor is installed before the infection.
+* R (rare destination) fired on 1 C2 pair and 31 benign pairs: on single-host captures "novel after the first hour" is mostly new web sites.
+  F fired almost never (old captures carry little TLS). I fired on 0 positives.
+* HIKARI cannot test this design at all: no pair is internal-to-external, and the attack captures are ~150 s, too short for a v2a1 verdict
+  (predicted in the prereg). Botnet hosts' non-C2 pairs: v2a1 alerts on 15 of 413, fused on 3.
+* **Regression:** `bench_ctu` (§10) rerun on the same hashed inputs equals the 2026-11-07 evidence in all 243 numeric values
+  (`regression-ctu-bench.json`): the isolation forest is unchanged.
+
+Still to run (preregistered, not optional): H1 simulator set C (run `setc-20261124T1143Z`, 16 h, started 11:43 UTC) and H2, the owner's new 72 h
+capture (task 14). The owner gate has already failed on G1 and G2; H1/H2 will show whether v3 helps where a clean learning window exists.
+Not rerun here: `bench_cic2018`, `bench_beacon_v2_{ctu,setb}` and the RITA comparisons (Zeek, RITA and the Suricata outputs are not installed
+on this machine), `bench_own_network` / `bench_beacon_v2_own` (the capture is on the owner's laptop).
