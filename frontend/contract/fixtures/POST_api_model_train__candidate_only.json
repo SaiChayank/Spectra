@@ -4,7 +4,7 @@
     "bio": {
       "n_train": 42,
       "self_trained": true,
-      "snn_threshold": 26.313318,
+      "snn_threshold": 26.313314,
       "snn_trained": true
     },
     "contamination": 0.05,
