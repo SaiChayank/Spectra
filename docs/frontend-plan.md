@@ -74,10 +74,11 @@ Each item lists the real endpoints. **P0** is needed for a first usable release,
 ### P0-1 Session, account and users
 * Login (`POST /api/auth/login`), logout (`/api/auth/logout`), current user (`GET /api/auth/me`), TOTP setup/enable/disable
   (`/api/auth/totp/*`): already partly there; finish the TOTP flow (QR/secret shown once, code entry, recovery message).
-* **Change own password**: missing today. `PATCH /api/users/{id}` works only with `users:manage` (ADMIN); a VIEWER or ANALYST gets 403
-  (fixture `frontend/contract/fixtures/PATCH_api_users_2__403_viewer_own_password.json`), so non-admins cannot change
-  their own password at all. This needs a new backend endpoint (proposed: `POST /api/auth/password` with the current and new password,
-  §6); build the screen against that proposal. On success the session is revoked: return to login with a clear message.
+* **Change own password**: implemented, `POST /api/auth/password` with `current_password` and `new_password` (plus `totp_code` when the
+  account has TOTP). Any signed-in role. Fixtures: `POST_api_auth_password.json` (200, session revoked, cookie cleared),
+  `..__401_no_session`, `..__403_wrong_current_password` (counts toward the login throttle; 429 when blocked),
+  `..__422_short_new_password`, `..__422_same_password`. (`PATCH /api/users/{id}` stays ADMIN-only, for resetting someone else.)
+  On success every session is revoked: return to login with a clear message.
 * Users admin (ADMIN): list/create/edit/delete (`/api/users`, `/api/users/{id}`), reset someone's TOTP (`DELETE /api/users/{id}/totp`).
 * Global handling: 401 → back to login keeping the deep link; 403 → "you do not have permission" (not a crash); 429 → show the wait from
   `Retry-After`; never log or display passwords or TOTP secrets after the first display.
@@ -101,7 +102,7 @@ Each item lists the real endpoints. **P0** is needed for a first usable release,
 
 ### P1-1 Host-centric triage (new; needs backend work, mock it)
 The detection plan (`docs/35_threat_engine_plan.md` §7, P2) moves the alert unit from a flow to a **host**: "10.0.4.17 looks compromised
-because A, B, C". Build the screen now against a PROPOSED contract (§6): a ranked host list with confidence, per-host evidence
+because A, B, C". The backend v0 now exists (§6; fixtures in `frontend/contract`): a ranked host list with confidence, per-host evidence
 timeline (which detector, when, which destination), and one-click analyst verdict *true / expected (benign but known) / false*. The
 verdicts will feed per-site learning (plan E6), so they must be quick to give.
 
@@ -132,12 +133,10 @@ Known proposals to start with (shapes are yours to draft; nothing here exists ye
 
 | Need | Proposed endpoint | Notes |
 |---|---|---|
-| Change own password | `POST /api/auth/password` | current + new password; any signed-in user; revokes the session; audited |
-| Host triage list | `GET /api/hosts?sort=risk` | rank, host, confidence, top evidence, last seen |
-| Host evidence | `GET /api/hosts/{host}/evidence` | detector, technique, time, destination, strength, flow ids |
-| Analyst verdict | `POST /api/hosts/{host}/verdict` | `true` / `expected` / `false`, optional note; audited |
+| ~~Change own password~~ | `POST /api/auth/password` | **implemented** (see §5 P0-1); current + new password; any signed-in user; revokes all sessions; audited |
+| ~~Host triage~~ | `GET /api/hosts`, `GET /api/hosts/{host}/evidence`, `POST /api/hosts/{host}/verdict` | **implemented as v0** (see §5 P1-1): an aggregation of existing alert evidence per internal source host (internal = `beaconing_internal_nets`, RFC1918/ULA by default), not fusion (E4). `confidence` = highest per-alert strength = max(classifier confidence, anomaly percentile / 100), 0-1, **not calibrated**. `technique` is always null (no ATT&CK mapping yet). Verdict needs `incidents:manage` (same as acknowledge/resolve), is append-only (latest wins), audited, and **not yet used for suppression** (E6) |
 | Per-site allow-list view | `GET /api/allowlist` | periodic services learned or entered; read-only at first |
-| Typed responses | response models on existing routes | backend work, so the generated types become trustworthy |
+| ~~Typed responses~~ | response models on existing routes | **done for the core API** (80 of 105 operations; was 3): auth, users, alerts, incidents, investigations, search, captures, flows, detections, history, status, stats, health, capabilities, interfaces, model (info, registry, drift, eval, train), audit, graph. Not typed, by design: the frozen modules (pqc/tee/bio/twin/edge, model harden/robustness/evasion/intel) and `/api/metrics` (text). Models only describe shapes (`spectra.api.schemas.Out`: extra fields pass through, absent keys stay absent, key order kept); the fixtures are byte-identical, and `tests/test_openapi_typed.py` fails if a core route loses its model. Free-form parts (evidence, pipeline telemetry, graph nodes, investigation sections) are `object` inside a typed envelope: trust the fixtures there |
 
 ## 7. Quality bar (definition of done for every screen)
 

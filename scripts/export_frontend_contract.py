@@ -24,6 +24,7 @@ Redaction and normalisation (so a re-run is byte-identical and nothing sensitive
 from __future__ import annotations
 
 import argparse
+import difflib
 import hashlib
 import json
 import os
@@ -46,9 +47,10 @@ VIEWER = ("contract-viewer", "contract-fake-viewer-pw")
 ANALYST = ("contract-analyst", "contract-fake-analyst-pw")
 PW_USER = ("contract-pwchange", "contract-fake-old-pw-1")
 PW_NEW = "contract-fake-new-pw-2"
+PW_NEW2 = "contract-fake-new-pw-3"
 TOTP_USER = ("contract-totp", "contract-fake-totp-pw-1")
 
-SECRET_KEYS = {"password", "code", "totp_code", "secret", "otpauth_uri", "otpauth", "recovery_codes",
+SECRET_KEYS = {"password", "current_password", "new_password", "code", "totp_code", "secret", "otpauth_uri", "otpauth", "recovery_codes",
                "token", "csrf", "csrf_token", "session"}
 VOLATILE_KEYS = {"uptime_s", "latency_ms", "duration_ms", "load_avg", "cpu_percent", "mem_percent",
                  "rss_bytes", "elapsed_s", "elapsed_ms"}
@@ -139,7 +141,8 @@ class Normaliser:
     ISO_RE = re.compile(r"\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)?")
     STABLE_HEX_KEYS = {"ja3"}            # fingerprints of the synthetic captures: stable, keep as recorded
     ZERO_KEYS = {"max_depth", "commits", "flushes", "write_samples", "cumulative", "loaded_at",
-                 "response_histogram", }
+                 "response_histogram",
+                 "snn_score", }   # spike-count score: one spike flips on a different CPU (CI 3.11: 63.41 vs 65.85)
     IMMUNE = {"danger_total": 0.0, "level": 0, "response": "ignore"}
 
     def __init__(self, start: float, paths: dict[str, str], id_order: list[str]):
@@ -273,6 +276,7 @@ def run_scenario(work: Path, rec: Recorder, app, engine, TestClient) -> None:
     rec.call(anon, "GET", "/api/health")
     rec.call(anon, "GET", "/api/auth/me", variant="401", expect=401)
     rec.call(anon, "GET", "/api/alerts", variant="401", expect=401)
+    rec.call(anon, "GET", "/api/hosts", variant="401", expect=401)
     rec.call(anon, "POST", "/api/auth/login", variant="422", json_body={"username": ""}, expect=422)
     login(anon, ADMIN_USER, "wrong-password-fake", variant="401_bad_password")
     login(admin, ADMIN_USER, ADMIN_PW, expect=200)
@@ -372,6 +376,9 @@ def run_scenario(work: Path, rec: Recorder, app, engine, TestClient) -> None:
     ids["model_id"] = active
     QUERY["/api/model/registry/compare"] = {"a": active, "b": other}
     ids["name"] = None
+    hosts = admin.get("/api/hosts?limit=5").json()["items"]
+    assert hosts, "expected >=1 internal host with evidence from the demo alerts"
+    host = ids["host"] = hosts[0]["host"]
 
     # -- read every GET route (ids that exist) -------------------------------------------------------------
     spec = app.openapi()
@@ -392,6 +399,16 @@ def run_scenario(work: Path, rec: Recorder, app, engine, TestClient) -> None:
         else:
             rec.call(admin, "GET", real, query=QUERY.get(path))
     rec.call(admin, "GET", "/api/alerts", variant="filtered", query={"status": "OPEN", "limit": 2})
+
+    # -- host triage v0 (aggregation of alert evidence per internal host) --------------------------------------------
+    rec.call(admin, "GET", "/api/hosts", variant="last_seen", query={"sort": "last_seen", "limit": 2}, expect=200)
+    rec.call(admin, "GET", "/api/hosts", variant="422_bad_sort", query={"sort": "nope"}, expect=422)
+    rec.call(admin, "GET", "/api/hosts/203.0.113.250/evidence", variant="404", expect=404)
+    rec.call(admin, "GET", "/api/hosts/not-an-ip/evidence", variant="422", expect=422)
+    rec.call(admin, "POST", f"/api/hosts/{host}/verdict", json_body={"verdict": "expected", "note": "known scanner"},
+             expect=200)
+    rec.call(admin, "POST", f"/api/hosts/{host}/verdict", variant="422_bad_verdict", json_body={"verdict": "maybe"},
+             expect=422)
     rec.call(admin, "GET", "/api/flows", variant="limit_2", query={"limit": 2})
     rec.call(admin, "GET", "/api/flows", variant="422_bad_limit", query={"limit": "abc"}, expect=422)
 
@@ -423,6 +440,8 @@ def run_scenario(work: Path, rec: Recorder, app, engine, TestClient) -> None:
     rec.call(viewer, "POST", "/api/users", variant="403_viewer", expect=403,
              json_body={"username": "contract-nope", "password": "contract-fake-pw-9", "role": "VIEWER"})
     rec.call(viewer, "POST", f"/api/alerts/{alert_ids[0]}/acknowledge", variant="403_viewer", expect=403)
+    rec.call(viewer, "POST", f"/api/hosts/{host}/verdict", variant="403_viewer", json_body={"verdict": "true"},
+             expect=403)
     rec.call(viewer, "PATCH", f"/api/users/{uid[VIEWER[0]]}", variant="403_viewer_own_password",
              json_body={"password": PW_NEW}, expect=403)
     analyst = TestClient(app)
@@ -437,12 +456,25 @@ def run_scenario(work: Path, rec: Recorder, app, engine, TestClient) -> None:
     rec.call(out, "POST", "/api/auth/logout", expect=200)
     rec.call(out, "GET", "/api/auth/me", variant="401_after_logout", expect=401)
 
-    # -- change password (admin-only route today: see README) -------------------------------------------------------
+    # -- change password (admin PATCH, then the self-service route) -------------------------------------------------------
     pw = TestClient(app)
     login(pw, *PW_USER, variant="before_password_change", expect=200)
     rec.call(admin, "PATCH", f"/api/users/{uid[PW_USER[0]]}", json_body={"password": PW_NEW}, expect=200)
     rec.call(pw, "GET", "/api/auth/me", variant="401_session_revoked_by_password_change", expect=401)
     login(pw, PW_USER[0], PW_NEW, variant="new_password", expect=200)
+    # self-service change (any role; here an ANALYST): 401, 403 wrong current, 422 policy/equal, 200 + revoked
+    rec.call(TestClient(app), "POST", "/api/auth/password", variant="401_no_session",
+             json_body={"current_password": PW_NEW, "new_password": PW_NEW2}, expect=401)
+    rec.call(pw, "POST", "/api/auth/password", variant="403_wrong_current_password",
+             json_body={"current_password": "contract-fake-wrong-pw", "new_password": PW_NEW2}, expect=403)
+    rec.call(pw, "POST", "/api/auth/password", variant="422_short_new_password",
+             json_body={"current_password": PW_NEW, "new_password": "x"}, expect=422)
+    rec.call(pw, "POST", "/api/auth/password", variant="422_same_password",
+             json_body={"current_password": PW_NEW, "new_password": PW_NEW}, expect=422)
+    rec.call(pw, "POST", "/api/auth/password", json_body={"current_password": PW_NEW, "new_password": PW_NEW2},
+             expect=200)
+    rec.call(pw, "GET", "/api/auth/me", variant="401_session_revoked_by_own_password_change", expect=401)
+    login(pw, PW_USER[0], PW_NEW2, variant="new_password_after_self_change", expect=200)
     rec.call(admin, "PATCH", f"/api/users/{uid[PW_USER[0]]}", variant="422_short_password",
              json_body={"password": "x"}, expect=422)
     rec.call(admin, "DELETE", f"/api/users/{uid[PW_USER[0]]}", expect=200)
@@ -557,6 +589,7 @@ def generate(out: Path) -> dict:
 
     import spectra.api.app as app_module
     app, engine = app_module.app, app_module.engine
+    app.state.strict_responses = True      # a response-model mismatch must fail the export, not be papered over
 
     rec = Recorder()
     rec.ws = []
@@ -572,8 +605,19 @@ def generate(out: Path) -> dict:
     files: dict[str, str] = {"openapi.json": dumps(openapi)}
     counts: dict[str, int] = {}
     seen: dict[str, int] = {}
+    def zero_numbers(v):       # every counter at any depth (pipeline queues included): the snapshot timing is a race
+        if isinstance(v, dict):
+            return {k: zero_numbers(x) for k, x in v.items()}
+        if isinstance(v, list):
+            return [zero_numbers(x) for x in v]
+        return 0 if isinstance(v, (int, float)) and not isinstance(v, bool) else v
+
     for it in rec.items:
         item = {k: v for k, v in it.items() if not k.startswith("_")}
+        if item["request"]["path"] == "/api/history/events" and isinstance(item["body"], dict):
+            for ev in item["body"].get("items", []):   # stored status snapshots: same race as the WebSocket ones
+                if ev.get("type") == "status" and isinstance(ev.get("data"), dict):
+                    ev["data"] = zero_numbers(ev["data"])
         norm.start_record()
         if item["request"]["path"] == "/api/interfaces" and isinstance(item["body"], dict):
             # host-specific (names, addresses, MACs of the machine running the export): replace with fixed examples
@@ -595,12 +639,12 @@ def generate(out: Path) -> dict:
         counts[key] = counts.get(key, 0) + 1
     for m in rec.ws:           # status snapshots are taken mid-processing: their counters are a race, zero them
         if m.get("type") == "status" and isinstance(m.get("data"), dict):
-            m["data"] = {k: (0 if isinstance(v, int) and not isinstance(v, bool) else v) for k, v in m["data"].items()}
+            m["data"] = zero_numbers(m["data"])
     files["fixtures/ws_events.json"] = dumps({
         "description": "First messages from /ws/events: a status snapshot, then events emitted while a "
                        "capture is uploaded and processed.", "messages": norm.walk(rec.ws)})
 
-    leaks = [s for s in sorted(rec.secrets | {ADMIN_PW, PW_NEW, VIEWER[1], ANALYST[1], PW_USER[1], TOTP_USER[1]})
+    leaks = [s for s in sorted(rec.secrets | {ADMIN_PW, PW_NEW, PW_NEW2, VIEWER[1], ANALYST[1], PW_USER[1], TOTP_USER[1]})
              if len(s) >= 6 and any(s in v for v in files.values())]
     paths = [p for p in (str(work), str(data), str(ROOT), str(Path.home()), "admin_bootstrap", "/tmp/")
              if any(p in v for v in files.values())]
@@ -638,6 +682,9 @@ def main() -> int:
             print(f"contract is stale ({len(diff)} file(s) differ; fresh copy in {tmp}); run: python scripts/export_frontend_contract.py")
             for k in diff[:30]:
                 print("  ", k, "(missing)" if k not in old else "(removed)" if k not in new else "(changed)")
+            for k in [k for k in diff if k in old and k in new][:3]:   # show what changed, so a CI-only failure is diagnosable
+                print("".join(list(difflib.unified_diff(old[k].decode().splitlines(True), new[k].decode().splitlines(True),
+                                                       k, k + " (fresh)", n=2))[:60]))
             return 1
         print(f"contract up to date ({summary['files']} files)")
         return 0

@@ -1630,3 +1630,29 @@ class ModelRegistryRepository:
         if row is None:  # updated in the transaction above - cannot happen
             raise StoreError(f"registry row {model_id} vanished after activation")
         return row
+
+
+class HostVerdictRepository:
+    """Append-only analyst verdicts per host (latest row wins)."""
+
+    def __init__(self, db: Database):
+        self._db = db
+
+    def add(self, host: str, verdict: str, note: str | None, actor: str,
+            now: float) -> dict:
+        with self._db.lock:
+            cur = self._db.execute(
+                "INSERT INTO host_verdicts (host, verdict, note, actor, "
+                "created_at) VALUES (?,?,?,?,?)",
+                (host, verdict, note, actor, now))
+            self._db.commit()
+            vid = cur.lastrowid
+        return self._db.query("SELECT * FROM host_verdicts WHERE id = ?",
+                              (vid,))[0]
+
+    def latest(self) -> dict[str, dict]:
+        """Newest verdict row per host."""
+        rows = self._db.query(
+            "SELECT * FROM host_verdicts WHERE id IN "
+            "(SELECT MAX(id) FROM host_verdicts GROUP BY host)")
+        return {r["host"]: r for r in rows}

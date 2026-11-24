@@ -11,15 +11,95 @@ from __future__ import annotations
 
 import logging
 
+from typing import Any, Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from ...store import StoreError, StoreUnavailable
 from ..runtime import engine
+from ..schemas import Num, Out
+from .core import Flow
 from ..security import require
 
 log = logging.getLogger("spectra.api")
 
 router = APIRouter(dependencies=[Depends(require("read"))])
+
+
+class HistoryFlow(Flow):
+    id: int
+    ts: Num
+
+
+class HistoryFlowList(Out):
+    count: int
+    offset: int
+    items: list[HistoryFlow]
+
+
+class HistoryCapture(Out):
+    id: int
+    mode: str
+    status: str
+    source: Optional[str] = None
+    source_type: Optional[str] = None
+    original_name: Optional[str] = None
+    stored_name: Optional[str] = None
+    content_hash: Optional[str] = None
+    size_bytes: Optional[int] = None
+    imported_at: Optional[Num] = None
+    started_at: Optional[Num] = None
+    stopped_at: Optional[Num] = None
+    packets: Optional[int] = None
+    flows: Optional[int] = None
+    detections: Optional[int] = None
+    error: Optional[str] = None
+
+
+class HistoryCaptureList(Out):
+    count: int
+    offset: int
+    items: list[HistoryCapture]
+
+
+class HistoryStats(Out):
+    flows: int
+    detections: int
+    anomaly_rate: Num
+    avg_score: Optional[Num] = None
+    first_ts: Optional[Num] = None
+    last_ts: Optional[Num] = None
+    by_proto: dict[str, int]
+    top_sni: list[dict[str, Any]]
+
+
+class ModelRun(Out):
+    id: int
+    trained_at: Num
+    n_train: int
+    contamination: Num
+    metrics: Optional[str] = None
+    pcap: Optional[str] = None
+
+
+class ModelRunList(Out):
+    count: int
+    offset: int
+    items: list[ModelRun]
+
+
+class HistoryEvent(Out):
+    id: int
+    ts: Num
+    type: str
+    capture_id: Optional[int] = None
+    data: dict[str, Any]
+
+
+class HistoryEventList(Out):
+    count: int
+    offset: int
+    items: list[HistoryEvent]
 
 
 def _store_or_400():
@@ -28,7 +108,7 @@ def _store_or_400():
     return engine.store
 
 
-@router.get("/api/history/flows")
+@router.get("/api/history/flows", response_model=HistoryFlowList)
 def history_flows(
     limit: int = Query(100, ge=1, le=1000),
     offset: int = Query(0, ge=0),
@@ -58,7 +138,7 @@ def history_flows(
                             detail="storage error") from None
 
 
-@router.get("/api/history/detections")
+@router.get("/api/history/detections", response_model=HistoryFlowList)
 def history_detections(
     limit: int = Query(100, ge=1, le=1000),
     offset: int = Query(0, ge=0),
@@ -86,7 +166,7 @@ def history_detections(
                             detail="storage error") from None
 
 
-@router.get("/api/history/captures")
+@router.get("/api/history/captures", response_model=HistoryCaptureList)
 def history_captures(
     limit: int = Query(20, ge=1, le=500),
     offset: int = Query(0, ge=0),
@@ -98,12 +178,12 @@ def history_captures(
                                          status=status)
 
 
-@router.get("/api/history/stats")
+@router.get("/api/history/stats", response_model=HistoryStats)
 def history_stats() -> dict:
     return _store_or_400().stats()
 
 
-@router.get("/api/history/model-runs")
+@router.get("/api/history/model-runs", response_model=ModelRunList)
 def history_model_runs(
     limit: int = Query(20, ge=1, le=200),
     offset: int = Query(0, ge=0),
@@ -114,7 +194,7 @@ def history_model_runs(
             "items": store.model_runs(limit, offset=offset)}
 
 
-@router.get("/api/history/events")
+@router.get("/api/history/events", response_model=HistoryEventList)
 def history_events(
     limit: int = Query(100, ge=1, le=1000),
     offset: int = Query(0, ge=0),

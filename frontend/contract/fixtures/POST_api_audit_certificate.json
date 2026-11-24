@@ -2,7 +2,7 @@
   "body": {
     "chain_head": {
       "entry_hash": "493b3987cbbacd0127c057138a424d5d82c3fe16c3064e14bfaa905a497d3705",
-      "seq": 37
+      "seq": 38
     },
     "claims": [
       {
@@ -429,12 +429,12 @@
       {
         "checkpoint": {
           "entry_hash": "4dc3724942d67549056501dd8e8f0de09e27670732178b5352582f68044c2805",
-          "seq": 37
+          "seq": 38
         },
-        "entries": 37,
+        "entries": 38,
         "head": {
           "entry_hash": "729685f353416b5efe55b41ae560c1c360d44b5338224687e27a67faa25274c0",
-          "seq": 37,
+          "seq": 38,
           "ts": 1800000000.0
         },
         "id": "chain_integrity",

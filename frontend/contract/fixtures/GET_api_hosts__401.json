@@ -1,0 +1,15 @@
+{
+  "body": {
+    "detail": "not authenticated"
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/hosts",
+    "query": {}
+  },
+  "status": 401
+}

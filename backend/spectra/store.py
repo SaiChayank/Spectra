@@ -21,6 +21,7 @@ Durability rules by table:
 * ``audit_log``           - immediate (hash-chain integrity) and never pruned
 * ``users`` / ``sessions`` - immediate (login must observe its own row now)
 * ``incidents`` / ``incident_notes`` - immediate (triage writes are rare)
+* ``host_verdicts``       - immediate (rare analyst writes)
 * ``alerts``              - immediate (verdict writes are rare; an alert must
                             be durable the moment it is streamed)
 * ``schema_migrations``   - written by the migration runner only
@@ -39,6 +40,7 @@ from .db import (
     Database,
     EventRepository,
     FlowRepository,
+    HostVerdictRepository,
     IncidentRepository,
     ModelRegistryRepository,
     ModelRunRepository,
@@ -102,6 +104,7 @@ class Store:
         self._sessions = SessionRepository(self._db)
         self._incidents = IncidentRepository(self._db)
         self._alerts = AlertRepository(self._db)
+        self._host_verdicts = HostVerdictRepository(self._db)
         self.retention = retention if retention is not None else RetentionPolicy()
         #: called with the per-policy counts after every retention run (outside
         #: the database lock) - the capture service uses it to delete the stored
@@ -483,6 +486,15 @@ class Store:
 
     def resolve_alert(self, alert_id: str) -> bool:
         return self._alerts.resolve(alert_id, now=time.time())
+
+    # -- host verdicts (host triage; append-only, latest wins) ------------------
+
+    def add_host_verdict(self, host: str, verdict: str, note: str | None,
+                         actor: str) -> dict:
+        return self._host_verdicts.add(host, verdict, note, actor, time.time())
+
+    def latest_host_verdicts(self) -> dict[str, dict]:
+        return self._host_verdicts.latest()
 
     # -- system events --------------------------------------------------------
 

@@ -1,6 +1,17 @@
 {
   "components": {
     "schemas": {
+      "Alert": {},
+      "AlertList": {},
+      "AuditCertificate": {},
+      "AuditCheckpoint": {},
+      "AuditChecks": {},
+      "AuditEntries": {},
+      "AuditEntry": {},
+      "AuditHead": {},
+      "AuditKeyRotation": {},
+      "AuditProof": {},
+      "AuditVerify": {},
       "BioAssessRequest": {
         "properties": {
           "anomaly": {
@@ -53,6 +64,9 @@
         "title": "Body_captures_import_api_captures_post",
         "type": "object"
       },
+      "Capabilities": {},
+      "CaptureDeleted": {},
+      "CaptureList": {},
       "CaptureRequest": {
         "description": "Live capture only - file processing is ``POST /api/captures/{id}/process``.\n\nThe mode pattern rejects ``pcap`` outright (422): a path-bearing or\npathless pcap start no longer exists, so no client can make the server\nopen an arbitrary filesystem path through this route.",
         "properties": {
@@ -85,6 +99,7 @@
         "title": "CaptureRequest",
         "type": "object"
       },
+      "CaptureResource": {},
       "CertificateRequest": {
         "properties": {
           "bits": {
@@ -153,6 +168,7 @@
         "title": "CertificateVerifyRequest",
         "type": "object"
       },
+      "Drift": {},
       "EdgeDeployRequest": {
         "properties": {
           "node": {
@@ -208,6 +224,82 @@
         "title": "EdgeSliceRequest",
         "type": "object"
       },
+      "EvalReport": {},
+      "EvalReports": {},
+      "EvidenceItem": {
+        "properties": {
+          "alert_id": {
+            "title": "Alert Id",
+            "type": "string"
+          },
+          "destination": {
+            "title": "Destination",
+            "type": "string"
+          },
+          "detector": {
+            "title": "Detector",
+            "type": "string"
+          },
+          "first_seen": {
+            "title": "First Seen",
+            "type": "number"
+          },
+          "flow_ids": {
+            "items": {
+              "type": "integer"
+            },
+            "title": "Flow Ids",
+            "type": "array"
+          },
+          "occurrences": {
+            "title": "Occurrences",
+            "type": "integer"
+          },
+          "strength": {
+            "title": "Strength",
+            "type": "number"
+          },
+          "technique": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Technique"
+          },
+          "threat_type": {
+            "title": "Threat Type",
+            "type": "string"
+          },
+          "time": {
+            "title": "Time",
+            "type": "number"
+          }
+        },
+        "required": [
+          "detector",
+          "threat_type",
+          "first_seen",
+          "time",
+          "destination",
+          "strength",
+          "occurrences",
+          "alert_id",
+          "flow_ids"
+        ],
+        "title": "EvidenceItem",
+        "type": "object"
+      },
+      "Flow": {},
+      "FlowList": {},
+      "GraphCascade": {},
+      "GraphNode": {},
+      "GraphPath": {},
+      "GraphSummary": {},
+      "GraphView": {},
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -273,6 +365,171 @@
         "title": "HardenRequest",
         "type": "object"
       },
+      "Health": {},
+      "HealthSystem": {},
+      "HistoryCapture": {},
+      "HistoryCaptureList": {},
+      "HistoryEvent": {},
+      "HistoryEventList": {},
+      "HistoryFlow": {},
+      "HistoryFlowList": {},
+      "HistoryStats": {},
+      "HostEvidence": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "host": {
+            "title": "Host",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HostVerdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "host",
+          "count",
+          "items"
+        ],
+        "title": "HostEvidence",
+        "type": "object"
+      },
+      "HostList": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/HostSummary"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "count",
+          "offset",
+          "items"
+        ],
+        "title": "HostList",
+        "type": "object"
+      },
+      "HostSummary": {
+        "properties": {
+          "confidence": {
+            "title": "Confidence",
+            "type": "number"
+          },
+          "evidence_count": {
+            "title": "Evidence Count",
+            "type": "integer"
+          },
+          "first_seen": {
+            "title": "First Seen",
+            "type": "number"
+          },
+          "host": {
+            "title": "Host",
+            "type": "string"
+          },
+          "last_seen": {
+            "title": "Last Seen",
+            "type": "number"
+          },
+          "rank": {
+            "title": "Rank",
+            "type": "integer"
+          },
+          "top_evidence": {
+            "$ref": "#/components/schemas/TopEvidence"
+          },
+          "verdict": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HostVerdict"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "host",
+          "rank",
+          "confidence",
+          "evidence_count",
+          "top_evidence",
+          "first_seen",
+          "last_seen"
+        ],
+        "title": "HostSummary",
+        "type": "object"
+      },
+      "HostVerdict": {
+        "properties": {
+          "actor": {
+            "title": "Actor",
+            "type": "string"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "number"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "verdict": {
+            "enum": [
+              "true",
+              "expected",
+              "false"
+            ],
+            "title": "Verdict",
+            "type": "string"
+          }
+        },
+        "required": [
+          "verdict",
+          "actor",
+          "created_at"
+        ],
+        "title": "HostVerdict",
+        "type": "object"
+      },
+      "Identity": {},
+      "IdentityResponse": {},
+      "Incident": {},
       "IncidentAttach": {
         "properties": {
           "alert_ids": {
@@ -313,6 +570,7 @@
         "title": "IncidentCorrelate",
         "type": "object"
       },
+      "IncidentCorrelation": {},
       "IncidentCreate": {
         "properties": {
           "alert_ids": {
@@ -367,6 +625,9 @@
         "title": "IncidentCreate",
         "type": "object"
       },
+      "IncidentDetail": {},
+      "IncidentList": {},
+      "IncidentNote": {},
       "IncidentNoteCreate": {
         "properties": {
           "body": {
@@ -382,6 +643,8 @@
         "title": "IncidentNoteCreate",
         "type": "object"
       },
+      "Interfaces": {},
+      "InvestigationBundle": {},
       "LoginRequest": {
         "properties": {
           "password": {
@@ -416,6 +679,45 @@
         "title": "LoginRequest",
         "type": "object"
       },
+      "ModelInfo": {},
+      "ModelRun": {},
+      "ModelRunList": {},
+      "OkResponse": {},
+      "PasswordChangeRequest": {
+        "properties": {
+          "current_password": {
+            "maxLength": 1024,
+            "minLength": 1,
+            "title": "Current Password",
+            "type": "string"
+          },
+          "new_password": {
+            "maxLength": 1024,
+            "minLength": 8,
+            "title": "New Password",
+            "type": "string"
+          },
+          "totp_code": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Totp Code"
+          }
+        },
+        "required": [
+          "current_password",
+          "new_password"
+        ],
+        "title": "PasswordChangeRequest",
+        "type": "object"
+      },
+      "PasswordChanged": {},
       "PlaybookRequest": {
         "properties": {
           "actions": {
@@ -504,6 +806,9 @@
         "title": "PlaybookRequest",
         "type": "object"
       },
+      "RegistryCompare": {},
+      "RegistryList": {},
+      "RegistryModel": {},
       "RobustnessRequest": {
         "properties": {
           "capture_id": {
@@ -536,6 +841,7 @@
         "title": "RobustnessRequest",
         "type": "object"
       },
+      "SearchResponse": {},
       "ShadowRequest": {
         "properties": {
           "capture_id": {
@@ -635,6 +941,52 @@
           }
         },
         "title": "SimulateRequest",
+        "type": "object"
+      },
+      "Stats": {},
+      "Status": {},
+      "StoredVerdict": {
+        "properties": {
+          "actor": {
+            "title": "Actor",
+            "type": "string"
+          },
+          "created_at": {
+            "title": "Created At",
+            "type": "number"
+          },
+          "host": {
+            "title": "Host",
+            "type": "string"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "verdict": {
+            "enum": [
+              "true",
+              "expected",
+              "false"
+            ],
+            "title": "Verdict",
+            "type": "string"
+          }
+        },
+        "required": [
+          "verdict",
+          "actor",
+          "created_at",
+          "host"
+        ],
+        "title": "StoredVerdict",
         "type": "object"
       },
       "TeeAttestRequest": {
@@ -776,6 +1128,40 @@
         "title": "TeeVerifyRequest",
         "type": "object"
       },
+      "TopEvidence": {
+        "properties": {
+          "destination": {
+            "title": "Destination",
+            "type": "string"
+          },
+          "detector": {
+            "title": "Detector",
+            "type": "string"
+          },
+          "strength": {
+            "title": "Strength",
+            "type": "number"
+          },
+          "technique": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Technique"
+          }
+        },
+        "required": [
+          "detector",
+          "destination",
+          "strength"
+        ],
+        "title": "TopEvidence",
+        "type": "object"
+      },
       "TotpDisableRequest": {
         "properties": {
           "code": {
@@ -798,6 +1184,7 @@
         "title": "TotpDisableRequest",
         "type": "object"
       },
+      "TotpDisabled": {},
       "TotpEnableRequest": {
         "properties": {
           "code": {
@@ -813,6 +1200,9 @@
         "title": "TotpEnableRequest",
         "type": "object"
       },
+      "TotpRecovery": {},
+      "TotpReset": {},
+      "TotpSetup": {},
       "TotpSetupRequest": {
         "properties": {
           "password": {
@@ -861,6 +1251,8 @@
         "title": "TrainRequest",
         "type": "object"
       },
+      "TrainResult": {},
+      "User": {},
       "UserCreate": {
         "properties": {
           "password": {
@@ -889,6 +1281,8 @@
         "title": "UserCreate",
         "type": "object"
       },
+      "UserDeleted": {},
+      "UserList": {},
       "UserUpdate": {
         "properties": {
           "password": {
@@ -958,6 +1352,36 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "VerdictRequest": {
+        "properties": {
+          "note": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "verdict": {
+            "enum": [
+              "true",
+              "expected",
+              "false"
+            ],
+            "title": "Verdict",
+            "type": "string"
+          }
+        },
+        "required": [
+          "verdict"
+        ],
+        "title": "VerdictRequest",
         "type": "object"
       }
     }
@@ -1176,9 +1600,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Alerts List Api Alerts Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AlertList"
                 }
               }
             },
@@ -1218,9 +1640,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Alerts Get Api Alerts  Alert Id  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Alert"
                 }
               }
             },
@@ -1260,9 +1680,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Alerts Acknowledge Api Alerts  Alert Id  Acknowledge Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Alert"
                 }
               }
             },
@@ -1302,9 +1720,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Alerts Resolve Api Alerts  Alert Id  Resolve Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Alert"
                 }
               }
             },
@@ -1343,9 +1759,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Audit Certificate Api Audit Certificate Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AuditCertificate"
                 }
               }
             },
@@ -1384,9 +1798,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Audit Certificate Verify Api Audit Certificate Verify Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AuditChecks"
                 }
               }
             },
@@ -1415,9 +1827,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Audit Checkpoint Api Audit Checkpoint Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AuditCheckpoint"
                 }
               }
             },
@@ -1454,9 +1864,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Audit Checkpoint Verify Api Audit Checkpoint Verify Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AuditChecks"
                 }
               }
             },
@@ -1574,9 +1982,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Audit Entries Api Audit Entries Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AuditEntries"
                 }
               }
             },
@@ -1604,9 +2010,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Audit Head Api Audit Head Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AuditHead"
                 }
               }
             },
@@ -1647,9 +2051,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Audit Proof Api Audit Proof Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AuditProof"
                 }
               }
             },
@@ -1678,9 +2080,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Audit Rotate Key Api Audit Rotate Key Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AuditKeyRotation"
                 }
               }
             },
@@ -1699,9 +2099,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Audit Verify Api Audit Verify Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/AuditVerify"
                 }
               }
             },
@@ -1730,9 +2128,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Auth Login Api Auth Login Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/IdentityResponse"
                 }
               }
             },
@@ -1761,9 +2157,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Auth Logout Api Auth Logout Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/OkResponse"
                 }
               }
             },
@@ -1782,9 +2176,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Auth Me Api Auth Me Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/IdentityResponse"
                 }
               }
             },
@@ -1792,6 +2184,45 @@
           }
         },
         "summary": "Auth Me"
+      }
+    },
+    "/api/auth/password": {
+      "post": {
+        "description": "Change the caller's own password (any role; needs the current one).\n\nWrong current password (or missing/wrong TOTP code) answers a generic 403\nand counts toward the login throttle for (ip, username), so a stolen\nsession cannot be used to guess the password; once throttled: 429 +\n``Retry-After`` before any scrypt work.  Success revokes every session of\nthe user (this one included), clears the cookie and audits the change\n(never the password).  401 is left to mean \"no/expired session\" so the\ndashboard's global 401 handler is not triggered by a typo.",
+        "operationId": "auth_password_api_auth_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PasswordChangeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PasswordChanged"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Auth Password"
       }
     },
     "/api/auth/totp/disable": {
@@ -1813,9 +2244,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Totp Disable Api Auth Totp Disable Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/TotpDisabled"
                 }
               }
             },
@@ -1854,9 +2283,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Totp Enable Api Auth Totp Enable Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/TotpRecovery"
                 }
               }
             },
@@ -1895,9 +2322,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Totp Setup Api Auth Totp Setup Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/TotpSetup"
                 }
               }
             },
@@ -1988,9 +2413,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Capabilities Api Capabilities Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Capabilities"
                 }
               }
             },
@@ -2019,9 +2442,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Capture Start Api Capture Start Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Status"
                 }
               }
             },
@@ -2049,9 +2470,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Capture Stop Api Capture Stop Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Status"
                 }
               }
             },
@@ -2112,9 +2531,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Captures List Api Captures Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CaptureList"
                 }
               }
             },
@@ -2151,9 +2568,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Captures Import Api Captures Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CaptureResource"
                 }
               }
             },
@@ -2193,9 +2608,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Capture Delete Api Captures  Capture Id  Delete",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CaptureDeleted"
                 }
               }
             },
@@ -2233,9 +2646,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Capture Details Api Captures  Capture Id  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CaptureResource"
                 }
               }
             },
@@ -2275,9 +2686,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Capture Process Api Captures  Capture Id  Process Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/CaptureResource"
                 }
               }
             },
@@ -2320,9 +2729,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Detections Api Detections Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/FlowList"
                 }
               }
             },
@@ -2509,9 +2916,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Flows Api Flows Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/FlowList"
                 }
               }
             },
@@ -2586,9 +2991,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Graph View Api Graph Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/GraphView"
                 }
               }
             },
@@ -2656,9 +3059,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Graph Cascade Api Graph Cascade Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/GraphCascade"
                 }
               }
             },
@@ -2697,9 +3098,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Graph Node Api Graph Node Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/GraphNode"
                 }
               }
             },
@@ -2763,9 +3162,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Graph Path Api Graph Path Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/GraphPath"
                 }
               }
             },
@@ -2793,9 +3190,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Graph Summary Api Graph Summary Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/GraphSummary"
                 }
               }
             },
@@ -2813,7 +3208,9 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/Health"
+                }
               }
             },
             "description": "Successful Response"
@@ -2831,9 +3228,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response System Health Api Health System Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HealthSystem"
                 }
               }
             },
@@ -2894,9 +3289,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response History Captures Api History Captures Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HistoryCaptureList"
                 }
               }
             },
@@ -3064,9 +3457,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response History Detections Api History Detections Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HistoryFlowList"
                 }
               }
             },
@@ -3168,9 +3559,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response History Events Api History Events Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HistoryEventList"
                 }
               }
             },
@@ -3375,9 +3764,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response History Flows Api History Flows Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HistoryFlowList"
                 }
               }
             },
@@ -3431,9 +3818,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response History Model Runs Api History Model Runs Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ModelRunList"
                 }
               }
             },
@@ -3461,9 +3846,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response History Stats Api History Stats Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/HistoryStats"
                 }
               }
             },
@@ -3471,6 +3854,182 @@
           }
         },
         "summary": "History Stats"
+      }
+    },
+    "/api/hosts": {
+      "get": {
+        "description": "Internal hosts with evidence, ranked by confidence (not calibrated).",
+        "operationId": "hosts_list_api_hosts_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "default": "risk",
+              "enum": [
+                "risk",
+                "last_seen"
+              ],
+              "title": "Sort",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "evidence seen at/after",
+            "in": "query",
+            "name": "since",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "evidence seen at/after",
+              "title": "Since"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HostList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Hosts List"
+      }
+    },
+    "/api/hosts/{host}/evidence": {
+      "get": {
+        "description": "The host's evidence timeline, newest first (404 when none).",
+        "operationId": "hosts_evidence_api_hosts__host__evidence_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "host",
+            "required": true,
+            "schema": {
+              "title": "Host",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HostEvidence"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Hosts Evidence"
+      }
+    },
+    "/api/hosts/{host}/verdict": {
+      "post": {
+        "description": "Record true / expected / false for a host (append-only, latest wins).",
+        "operationId": "hosts_verdict_api_hosts__host__verdict_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "host",
+            "required": true,
+            "schema": {
+              "title": "Host",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerdictRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StoredVerdict"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Hosts Verdict"
       }
     },
     "/api/incidents": {
@@ -3594,9 +4153,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incidents List Api Incidents Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/IncidentList"
                 }
               }
             },
@@ -3633,9 +4190,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incidents Create Api Incidents Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Incident"
                 }
               }
             },
@@ -3681,9 +4236,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incidents Correlate Api Incidents Correlate Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/IncidentCorrelation"
                 }
               }
             },
@@ -3723,9 +4276,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incidents Get Api Incidents  Incident Id  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/IncidentDetail"
                 }
               }
             },
@@ -3765,9 +4316,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incidents Acknowledge Api Incidents  Incident Id  Acknowledge Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Incident"
                 }
               }
             },
@@ -3817,9 +4366,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incidents Attach Api Incidents  Incident Id  Alerts Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/IncidentDetail"
                 }
               }
             },
@@ -3859,9 +4406,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incidents False Positive Api Incidents  Incident Id  False Positive Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Incident"
                 }
               }
             },
@@ -3901,9 +4446,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incidents Investigate Api Incidents  Incident Id  Investigate Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Incident"
                 }
               }
             },
@@ -3953,9 +4496,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incidents Add Note Api Incidents  Incident Id  Notes Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/IncidentNote"
                 }
               }
             },
@@ -3995,9 +4536,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incidents Reopen Api Incidents  Incident Id  Reopen Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Incident"
                 }
               }
             },
@@ -4037,9 +4576,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Incidents Resolve Api Incidents  Incident Id  Resolve Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Incident"
                 }
               }
             },
@@ -4068,9 +4605,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Interfaces Api Interfaces Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Interfaces"
                 }
               }
             },
@@ -4129,9 +4664,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Investigation Bundle Api Investigations  Incident Id  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/InvestigationBundle"
                 }
               }
             },
@@ -4178,9 +4711,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Info Api Model Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/ModelInfo"
                 }
               }
             },
@@ -4199,9 +4730,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Drift Api Model Drift Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Drift"
                 }
               }
             },
@@ -4220,9 +4749,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Eval List Api Model Eval Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/EvalReports"
                 }
               }
             },
@@ -4252,9 +4779,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Eval Get Api Model Eval  Name  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/EvalReport"
                 }
               }
             },
@@ -4366,9 +4891,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Registry List Api Model Registry Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/RegistryList"
                 }
               }
             },
@@ -4407,9 +4930,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Registry Compare Api Model Registry Compare Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/RegistryCompare"
                 }
               }
             },
@@ -4438,9 +4959,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Registry Rollback Api Model Registry Rollback Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/RegistryModel"
                 }
               }
             },
@@ -4469,9 +4988,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Registry Get Api Model Registry  Model Id  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/RegistryModel"
                 }
               }
             },
@@ -4511,9 +5028,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Registry Activate Api Model Registry  Model Id  Activate Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/RegistryModel"
                 }
               }
             },
@@ -4553,9 +5068,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Registry Retire Api Model Registry  Model Id  Retire Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/RegistryModel"
                 }
               }
             },
@@ -4595,9 +5108,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Registry Validate Api Model Registry  Model Id  Validate Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/RegistryModel"
                 }
               }
             },
@@ -4677,9 +5188,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Model Train Api Model Train Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/TrainResult"
                 }
               }
             },
@@ -4917,9 +5426,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Investigation Search Api Search Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/SearchResponse"
                 }
               }
             },
@@ -4947,9 +5454,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Stats Api Stats Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Stats"
                 }
               }
             },
@@ -4967,9 +5472,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Status Api Status Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/Status"
                 }
               }
             },
@@ -5422,9 +5925,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Users List Api Users Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/UserList"
                 }
               }
             },
@@ -5451,9 +5952,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Users Create Api Users Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/User"
                 }
               }
             },
@@ -5493,9 +5992,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Users Delete Api Users  User Id  Delete",
-                  "type": "object"
+                  "$ref": "#/components/schemas/UserDeleted"
                 }
               }
             },
@@ -5532,9 +6029,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Users Get Api Users  User Id  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/User"
                 }
               }
             },
@@ -5582,9 +6077,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Users Update Api Users  User Id  Patch",
-                  "type": "object"
+                  "$ref": "#/components/schemas/User"
                 }
               }
             },
@@ -5624,9 +6117,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Users Totp Reset Api Users  User Id  Totp Delete",
-                  "type": "object"
+                  "$ref": "#/components/schemas/TotpReset"
                 }
               }
             },

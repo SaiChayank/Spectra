@@ -1,0 +1,43 @@
+{
+  "body": {
+    "count": 2,
+    "host": "10.0.0.7",
+    "items": [
+      {
+        "alert_id": "alrt_9de57ae832fd",
+        "destination": "93.184.216.34:443",
+        "detector": "anomaly_model",
+        "first_seen": 1700001100.548779,
+        "flow_ids": [],
+        "occurrences": 3,
+        "strength": 1.0,
+        "technique": null,
+        "threat_type": "UNKNOWN_ANOMALY",
+        "time": 1700001100.548779
+      },
+      {
+        "alert_id": "alrt_f4d6cb1720c4",
+        "destination": "93.184.216.34:443",
+        "detector": "beaconing",
+        "first_seen": 1700001100.536348,
+        "flow_ids": [],
+        "occurrences": 1,
+        "strength": 1.0,
+        "technique": null,
+        "threat_type": "C2_BEACONING",
+        "time": 1700001100.536348
+      }
+    ],
+    "verdict": null
+  },
+  "headers": {
+    "content-type": "application/json"
+  },
+  "request": {
+    "body": null,
+    "method": "GET",
+    "path": "/api/hosts/10.0.0.7/evidence",
+    "query": {}
+  },
+  "status": 200
+}

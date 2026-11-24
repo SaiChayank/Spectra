@@ -102,7 +102,7 @@
               "version": "TLS 1.3",
               "version_code": 772
             },
-            "snn_score": 92.68,
+            "snn_score": 0.0,
             "swarm_flag": false
           },
           "occurrences": 3,
@@ -241,7 +241,7 @@
               "version": "TLS 1.3",
               "version_code": 772
             },
-            "snn_score": 92.68,
+            "snn_score": 0.0,
             "swarm_flag": false
           },
           "occurrences": 1,
@@ -275,7 +275,7 @@
             "slice_policy": "default:unchanged"
           },
           "ref": "flow:48",
-          "snn_score": 92.68,
+          "snn_score": 0.0,
           "swarm_flag": false
         },
         {
@@ -288,7 +288,7 @@
             "slice_policy": "default:unchanged"
           },
           "ref": "flow:47",
-          "snn_score": 70.73,
+          "snn_score": 0.0,
           "swarm_flag": false
         },
         {
@@ -301,7 +301,7 @@
             "slice_policy": "default:unchanged"
           },
           "ref": "flow:46",
-          "snn_score": 31.71,
+          "snn_score": 0.0,
           "swarm_flag": false
         },
         {
@@ -314,7 +314,7 @@
             "slice_policy": "default:unchanged"
           },
           "ref": "flow:45",
-          "snn_score": 53.66,
+          "snn_score": 0.0,
           "swarm_flag": false
         },
         {
@@ -327,7 +327,7 @@
             "slice_policy": "default:unchanged"
           },
           "ref": "flow:44",
-          "snn_score": 31.71,
+          "snn_score": 0.0,
           "swarm_flag": false
         },
         {
@@ -340,7 +340,7 @@
             "slice_policy": "default:unchanged"
           },
           "ref": "flow:43",
-          "snn_score": 100.0,
+          "snn_score": 0.0,
           "swarm_flag": false
         },
         {
@@ -353,7 +353,7 @@
             "slice_policy": "default:unchanged"
           },
           "ref": "flow:42",
-          "snn_score": 70.73,
+          "snn_score": 0.0,
           "swarm_flag": false
         },
         {
@@ -366,7 +366,7 @@
             "slice_policy": "default:unchanged"
           },
           "ref": "flow:41",
-          "snn_score": 19.51,
+          "snn_score": 0.0,
           "swarm_flag": false
         },
         {
@@ -379,7 +379,7 @@
             "slice_policy": "default:unchanged"
           },
           "ref": "flow:40",
-          "snn_score": 65.85,
+          "snn_score": 0.0,
           "swarm_flag": false
         },
         {
@@ -392,7 +392,7 @@
             "slice_policy": "default:unchanged"
           },
           "ref": "flow:35",
-          "snn_score": 97.56,
+          "snn_score": 0.0,
           "swarm_flag": false
         },
         {
@@ -405,7 +405,7 @@
             "slice_policy": "default:unchanged"
           },
           "ref": "flow:34",
-          "snn_score": 97.56,
+          "snn_score": 0.0,
           "swarm_flag": false
         },
         {
@@ -418,7 +418,7 @@
             "slice_policy": "default:unchanged"
           },
           "ref": "flow:33",
-          "snn_score": 31.71,
+          "snn_score": 0.0,
           "swarm_flag": false
         },
         {
@@ -431,7 +431,7 @@
             "slice_policy": "default:unchanged"
           },
           "ref": "flow:32",
-          "snn_score": 82.93,
+          "snn_score": 0.0,
           "swarm_flag": false
         },
         {
@@ -444,7 +444,7 @@
             "slice_policy": "default:unchanged"
           },
           "ref": "flow:31",
-          "snn_score": 36.59,
+          "snn_score": 0.0,
           "swarm_flag": false
         },
         {
@@ -457,7 +457,7 @@
             "slice_policy": "default:unchanged"
           },
           "ref": "flow:30",
-          "snn_score": 85.37,
+          "snn_score": 0.0,
           "swarm_flag": false
         },
         {
@@ -470,7 +470,7 @@
             "slice_policy": "default:unchanged"
           },
           "ref": "flow:29",
-          "snn_score": 4.88,
+          "snn_score": 0.0,
           "swarm_flag": false
         },
         {
@@ -483,7 +483,7 @@
             "slice_policy": "default:unchanged"
           },
           "ref": "flow:28",
-          "snn_score": 36.59,
+          "snn_score": 0.0,
           "swarm_flag": false
         },
         {
@@ -496,7 +496,7 @@
             "slice_policy": "default:unchanged"
           },
           "ref": "flow:27",
-          "snn_score": 97.56,
+          "snn_score": 0.0,
           "swarm_flag": false
         },
         {
@@ -509,7 +509,7 @@
             "slice_policy": "default:unchanged"
           },
           "ref": "flow:22",
-          "snn_score": 92.68,
+          "snn_score": 0.0,
           "swarm_flag": false
         },
         {
@@ -522,7 +522,7 @@
             "slice_policy": "default:unchanged"
           },
           "ref": "flow:21",
-          "snn_score": 36.59,
+          "snn_score": 0.0,
           "swarm_flag": false
         }
       ],
@@ -1827,7 +1827,7 @@
           "score": 100.0,
           "slice": "default",
           "sni": "quic.example",
-          "snn_score": 92.68,
+          "snn_score": 0.0,
           "src": "10.0.0.7:44444",
           "start_ts": 1700001100.0,
           "swarm_flag": false,
@@ -1947,7 +1947,7 @@
           "score": 12.2,
           "slice": "default",
           "sni": "example.com",
-          "snn_score": 70.73,
+          "snn_score": 0.0,
           "src": "10.0.0.5:42007",
           "start_ts": 1700001021.0,
           "swarm_flag": false,
@@ -2025,7 +2025,7 @@
           "score": 39.02,
           "slice": "default",
           "sni": "example.com",
-          "snn_score": 31.71,
+          "snn_score": 0.0,
           "src": "10.0.0.5:42006",
           "start_ts": 1700001018.0,
           "swarm_flag": false,
@@ -2103,7 +2103,7 @@
           "score": 41.46,
           "slice": "default",
           "sni": "example.com",
-          "snn_score": 53.66,
+          "snn_score": 0.0,
           "src": "10.0.0.5:42005",
           "start_ts": 1700001015.0,
           "swarm_flag": false,
@@ -2181,7 +2181,7 @@
           "score": 17.07,
           "slice": "default",
           "sni": "example.com",
-          "snn_score": 31.71,
+          "snn_score": 0.0,
           "src": "10.0.0.5:42004",
           "start_ts": 1700001012.0,
           "swarm_flag": false,
@@ -2259,7 +2259,7 @@
           "score": 90.24,
           "slice": "default",
           "sni": "example.com",
-          "snn_score": 100.0,
+          "snn_score": 0.0,
           "src": "10.0.0.5:42003",
           "start_ts": 1700001009.0,
           "swarm_flag": false,
@@ -2337,7 +2337,7 @@
           "score": 34.15,
           "slice": "default",
           "sni": "example.com",
-          "snn_score": 70.73,
+          "snn_score": 0.0,
           "src": "10.0.0.5:42002",
           "start_ts": 1700001006.0,
           "swarm_flag": false,
@@ -2415,7 +2415,7 @@
           "score": 34.15,
           "slice": "default",
           "sni": "example.com",
-          "snn_score": 19.51,
+          "snn_score": 0.0,
           "src": "10.0.0.5:42001",
           "start_ts": 1700001003.0,
           "swarm_flag": false,
@@ -2493,7 +2493,7 @@
           "score": 51.22,
           "slice": "default",
           "sni": "example.com",
-          "snn_score": 65.85,
+          "snn_score": 0.0,
           "src": "10.0.0.5:42000",
           "start_ts": 1700001000.0,
           "swarm_flag": false,
@@ -2588,7 +2588,7 @@
           "score": 100.0,
           "slice": "default",
           "sni": "quic.example",
-          "snn_score": 97.56,
+          "snn_score": 0.0,
           "src": "10.0.0.7:44444",
           "start_ts": 1700001100.0,
           "swarm_flag": false,
@@ -2689,7 +2689,7 @@
           "score": 43.9,
           "slice": "default",
           "sni": "example.com",
-          "snn_score": 97.56,
+          "snn_score": 0.0,
           "src": "10.0.0.5:42007",
           "start_ts": 1700001021.0,
           "swarm_flag": false,
@@ -2767,7 +2767,7 @@
           "score": 78.05,
           "slice": "default",
           "sni": "example.com",
-          "snn_score": 31.71,
+          "snn_score": 0.0,
           "src": "10.0.0.5:42006",
           "start_ts": 1700001018.0,
           "swarm_flag": false,
@@ -2845,7 +2845,7 @@
           "score": 65.85,
           "slice": "default",
           "sni": "example.com",
-          "snn_score": 82.93,
+          "snn_score": 0.0,
           "src": "10.0.0.5:42005",
           "start_ts": 1700001015.0,
           "swarm_flag": false,
@@ -2923,7 +2923,7 @@
           "score": 17.07,
           "slice": "default",
           "sni": "example.com",
-          "snn_score": 36.59,
+          "snn_score": 0.0,
           "src": "10.0.0.5:42004",
           "start_ts": 1700001012.0,
           "swarm_flag": false,
@@ -3001,7 +3001,7 @@
           "score": 87.8,
           "slice": "default",
           "sni": "example.com",
-          "snn_score": 85.37,
+          "snn_score": 0.0,
           "src": "10.0.0.5:42003",
           "start_ts": 1700001009.0,
           "swarm_flag": false,
@@ -3079,7 +3079,7 @@
           "score": 60.98,
           "slice": "default",
           "sni": "example.com",
-          "snn_score": 4.88,
+          "snn_score": 0.0,
           "src": "10.0.0.5:42002",
           "start_ts": 1700001006.0,
           "swarm_flag": false,
@@ -3157,7 +3157,7 @@
           "score": 41.46,
           "slice": "default",
           "sni": "example.com",
-          "snn_score": 36.59,
+          "snn_score": 0.0,
           "src": "10.0.0.5:42001",
           "start_ts": 1700001003.0,
           "swarm_flag": false,
@@ -3235,7 +3235,7 @@
           "score": 12.2,
           "slice": "default",
           "sni": "example.com",
-          "snn_score": 97.56,
+          "snn_score": 0.0,
           "src": "10.0.0.5:42000",
           "start_ts": 1700001000.0,
           "swarm_flag": false,
@@ -3330,7 +3330,7 @@
           "score": 100.0,
           "slice": "default",
           "sni": "quic.example",
-          "snn_score": 92.68,
+          "snn_score": 0.0,
           "src": "10.0.0.7:44444",
           "start_ts": 1700001100.0,
           "swarm_flag": false,
@@ -3431,7 +3431,7 @@
           "score": 14.63,
           "slice": "default",
           "sni": "example.com",
-          "snn_score": 36.59,
+          "snn_score": 0.0,
           "src": "10.0.0.5:42007",
           "start_ts": 1700001021.0,
           "swarm_flag": false,
@@ -3509,7 +3509,7 @@
           "score": 7.32,
           "slice": "default",
           "sni": "example.com",
-          "snn_score": 31.71,
+          "snn_score": 0.0,
           "src": "10.0.0.5:42006",
           "start_ts": 1700001018.0,
           "swarm_flag": false,
@@ -3587,7 +3587,7 @@
           "score": 48.78,
           "slice": "default",
           "sni": "example.com",
-          "snn_score": 36.59,
+          "snn_score": 0.0,
           "src": "10.0.0.5:42005",
           "start_ts": 1700001015.0,
           "swarm_flag": false,
@@ -3665,7 +3665,7 @@
           "score": 58.54,
           "slice": "default",
           "sni": "example.com",
-          "snn_score": 39.02,
+          "snn_score": 0.0,
           "src": "10.0.0.5:42004",
           "start_ts": 1700001012.0,
           "swarm_flag": false,
@@ -3743,7 +3743,7 @@
           "score": 26.83,
           "slice": "default",
           "sni": "example.com",
-          "snn_score": 39.02,
+          "snn_score": 0.0,
           "src": "10.0.0.5:42003",
           "start_ts": 1700001009.0,
           "swarm_flag": false,
@@ -3821,7 +3821,7 @@
           "score": 31.71,
           "slice": "default",
           "sni": "example.com",
-          "snn_score": 46.34,
+          "snn_score": 0.0,
           "src": "10.0.0.5:42002",
           "start_ts": 1700001006.0,
           "swarm_flag": false,
@@ -3899,7 +3899,7 @@
           "score": 7.32,
           "slice": "default",
           "sni": "example.com",
-          "snn_score": 53.66,
+          "snn_score": 0.0,
           "src": "10.0.0.5:42001",
           "start_ts": 1700001003.0,
           "swarm_flag": false,
@@ -3977,7 +3977,7 @@
           "score": 31.71,
           "slice": "default",
           "sni": "example.com",
-          "snn_score": 46.34,
+          "snn_score": 0.0,
           "src": "10.0.0.5:42000",
           "start_ts": 1700001000.0,
           "swarm_flag": false,
@@ -4072,7 +4072,7 @@
           "score": 100.0,
           "slice": "default",
           "sni": "quic.example",
-          "snn_score": 92.68,
+          "snn_score": 0.0,
           "src": "10.0.0.7:44444",
           "start_ts": 1700001100.0,
           "swarm_flag": false,
@@ -4173,7 +4173,7 @@
           "score": 14.63,
           "slice": "default",
           "sni": "example.com",
-          "snn_score": 36.59,
+          "snn_score": 0.0,
           "src": "10.0.0.5:42007",
           "start_ts": 1700001021.0,
           "swarm_flag": false,
@@ -4251,7 +4251,7 @@
           "score": 7.32,
           "slice": "default",
           "sni": "example.com",
-          "snn_score": 31.71,
+          "snn_score": 0.0,
           "src": "10.0.0.5:42006",
           "start_ts": 1700001018.0,
           "swarm_flag": false,
@@ -4329,7 +4329,7 @@
           "score": 48.78,
           "slice": "default",
           "sni": "example.com",
-          "snn_score": 36.59,
+          "snn_score": 0.0,
           "src": "10.0.0.5:42005",
           "start_ts": 1700001015.0,
           "swarm_flag": false,
@@ -4407,7 +4407,7 @@
           "score": 58.54,
           "slice": "default",
           "sni": "example.com",
-          "snn_score": 39.02,
+          "snn_score": 0.0,
           "src": "10.0.0.5:42004",
           "start_ts": 1700001012.0,
           "swarm_flag": false,
@@ -4485,7 +4485,7 @@
           "score": 26.83,
           "slice": "default",
           "sni": "example.com",
-          "snn_score": 39.02,
+          "snn_score": 0.0,
           "src": "10.0.0.5:42003",
           "start_ts": 1700001009.0,
           "swarm_flag": false,
@@ -4563,7 +4563,7 @@
           "score": 31.71,
           "slice": "default",
           "sni": "example.com",
-          "snn_score": 46.34,
+          "snn_score": 0.0,
           "src": "10.0.0.5:42002",
           "start_ts": 1700001006.0,
           "swarm_flag": false,
@@ -4641,7 +4641,7 @@
           "score": 7.32,
           "slice": "default",
           "sni": "example.com",
-          "snn_score": 53.66,
+          "snn_score": 0.0,
           "src": "10.0.0.5:42001",
           "start_ts": 1700001003.0,
           "swarm_flag": false,
@@ -4719,7 +4719,7 @@
           "score": 31.71,
           "slice": "default",
           "sni": "example.com",
-          "snn_score": 46.34,
+          "snn_score": 0.0,
           "src": "10.0.0.5:42000",
           "start_ts": 1700001000.0,
           "swarm_flag": false,

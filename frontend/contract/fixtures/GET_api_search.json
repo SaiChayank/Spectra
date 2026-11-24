@@ -109,7 +109,7 @@
                 "version": "TLS 1.3",
                 "version_code": 772
               },
-              "snn_score": 92.68,
+              "snn_score": 0.0,
               "swarm_flag": false
             },
             "occurrences": 3,
@@ -248,7 +248,7 @@
                 "version": "TLS 1.3",
                 "version_code": 772
               },
-              "snn_score": 92.68,
+              "snn_score": 0.0,
               "swarm_flag": false
             },
             "occurrences": 1,
@@ -369,7 +369,7 @@
             "score": 100.0,
             "slice": "default",
             "sni": "quic.example",
-            "snn_score": 92.68,
+            "snn_score": 0.0,
             "src": "10.0.0.7:44444",
             "start_ts": 1700001100.0,
             "swarm_flag": false,
@@ -506,7 +506,7 @@
             "score": 100.0,
             "slice": "default",
             "sni": "quic.example",
-            "snn_score": 97.56,
+            "snn_score": 0.0,
             "src": "10.0.0.7:44444",
             "start_ts": 1700001100.0,
             "swarm_flag": false,
@@ -624,7 +624,7 @@
             "score": 100.0,
             "slice": "default",
             "sni": "quic.example",
-            "snn_score": 92.68,
+            "snn_score": 0.0,
             "src": "10.0.0.7:44444",
             "start_ts": 1700001100.0,
             "swarm_flag": false,
@@ -742,7 +742,7 @@
             "score": 100.0,
             "slice": "default",
             "sni": "quic.example",
-            "snn_score": 92.68,
+            "snn_score": 0.0,
             "src": "10.0.0.7:44444",
             "start_ts": 1700001100.0,
             "swarm_flag": false,

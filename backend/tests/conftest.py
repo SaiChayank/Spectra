@@ -44,6 +44,7 @@ import spectra.api.app as app_module  # noqa: E402  (migrations + bootstrap)
 from spectra.api.security import SESSION_COOKIE  # noqa: E402
 
 _app = app_module.app
+_app.state.strict_responses = True   # a response-model mismatch fails the suite (production fails open, see app.py)
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = os.environ["SPECTRA_ADMIN_PASSWORD"]
 _admin_session: dict[str, str | None] = {"token": None}

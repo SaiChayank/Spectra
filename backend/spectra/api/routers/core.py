@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any, Optional, Union
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse, PlainTextResponse, Response
 from pydantic import BaseModel, Field
@@ -9,6 +11,7 @@ from pydantic import BaseModel, Field
 from ...capabilities import module_capabilities
 from ...capture import CaptureError
 from ..runtime import engine
+from ..schemas import Num, Out
 from ..security import require
 
 #: No router-level dependency: ``/api/health`` is public. Every other route
@@ -29,7 +32,107 @@ class CaptureRequest(BaseModel):
     bpf_filter: str = Field("", max_length=1024)
 
 
-@router.get("/api/health")
+class Health(Out):
+    """Public liveness probe (documented only: the route answers 200 or 503)."""
+    ok: bool
+    writable: dict[str, str]
+    service: str
+    version: str
+    database: str
+    schema_version: Optional[int] = None
+    uptime_s: Num
+
+
+class HealthSystem(Out):
+    ts: Num
+    uptime_s: Num
+    state: str
+    reason: str
+    counts: dict[str, int]
+    subsystems: list[dict[str, Any]]
+    metrics: dict[str, Any]
+
+
+class Status(Out):
+    """Live engine status (also embedded in /api/stats and status events)."""
+    running: bool
+    mode: Optional[str] = None
+    source: Optional[str] = None
+    packets: int
+    flows: int
+    detections: int
+    started_at: Optional[Num] = None
+    error: Optional[str] = None
+    model_trained: bool
+    filter: Optional[str] = None
+    persist: bool
+    queue: dict[str, Any]
+    failures: dict[str, Any]
+    pipeline: dict[str, Any]
+    websocket: dict[str, Any]
+
+
+class Stats(Out):
+    status: Status
+    model: dict[str, Any]
+    totals: dict[str, Any]
+    protocols: dict[str, int]
+    tls_versions: dict[str, int]
+    timeline: list[dict[str, Any]]
+
+
+class Flow(Out):
+    """One scored flow (metadata only). Detections add alert/threat fields."""
+    src: str
+    dst: str
+    proto: str
+    score: Optional[Num] = None  # null while no model is trained
+    anomaly: bool
+    start_ts: Num
+    last_ts: Num
+    duration: Num
+    packets: int
+    bytes: int
+    bytes_fwd: Optional[int] = None
+    cipher_count: Optional[int] = None
+    extension_count: Optional[int] = None
+    slice: Optional[str] = None
+    snn_score: Optional[Num] = None
+    swarm_flag: Optional[bool] = None
+    sni: Optional[str] = None
+    ja3: Optional[str] = None
+    ja4: Optional[str] = None
+    tls_version: Optional[str] = None
+    quic_version: Optional[str] = None
+    alpn: Optional[Union[list[str], str]] = None
+    alert_id: Optional[str] = None
+    threat: Optional[dict[str, Any]] = None
+    reasons: Optional[list[Any]] = None
+    detected_at: Optional[Num] = None
+    immune: Optional[dict[str, Any]] = None
+    pqc: Optional[dict[str, Any]] = None
+
+
+class FlowList(Out):
+    count: int
+    items: list[Flow]
+
+
+class Interfaces(Out):
+    interfaces: list[str]
+    details: Optional[list[dict[str, Any]]] = None  # absent when probing failed
+    error: Optional[str] = None
+
+
+class Capabilities(Out):
+    definitions: dict[str, str]
+    statuses: list[str]
+    scoring_policy: str
+    hardware_backed_count: int
+    modules: dict[str, dict[str, Any]]
+
+
+@router.get("/api/health", response_model=Health)
 def health() -> JSONResponse:
     """Liveness plus a cheap write probe: 503 when the data dir or database
     cannot be written (a merely busy database stays 200)."""
@@ -37,7 +140,7 @@ def health() -> JSONResponse:
     return JSONResponse(body, status_code=200 if body["ok"] else 503)
 
 
-@router.get("/api/health/system",
+@router.get("/api/health/system", response_model=HealthSystem,
             dependencies=[Depends(require("read"))])
 def system_health() -> dict:
     """System Health: per-subsystem state + reason + runtime metrics.
@@ -49,19 +152,19 @@ def system_health() -> dict:
     return engine.system.health_report()
 
 
-@router.get("/api/status",
+@router.get("/api/status", response_model=Status,
            dependencies=[Depends(require("read"))])
 def status() -> dict:
     return engine.system.status
 
 
-@router.get("/api/stats",
+@router.get("/api/stats", response_model=Stats,
            dependencies=[Depends(require("read"))])
 def stats() -> dict:
     return engine.system.snapshot()
 
 
-@router.get("/api/flows",
+@router.get("/api/flows", response_model=FlowList,
            dependencies=[Depends(require("read"))])
 def flows(limit: int = Query(100, ge=1, le=1000)) -> dict:
     """Recent in-memory flows; ``limit`` is bounded so one request cannot
@@ -69,14 +172,14 @@ def flows(limit: int = Query(100, ge=1, le=1000)) -> dict:
     return engine.detection.recent_flows(limit)
 
 
-@router.get("/api/detections",
+@router.get("/api/detections", response_model=FlowList,
            dependencies=[Depends(require("read"))])
 def detections(limit: int = Query(100, ge=1, le=1000)) -> dict:
     """Recent in-memory detections (bounded ``limit``, same as /api/flows)."""
     return engine.detection.recent_detections(limit)
 
 
-@router.post("/api/capture/start",
+@router.post("/api/capture/start", response_model=Status,
              dependencies=[Depends(require("capture:manage"))])
 def capture_start(req: CaptureRequest) -> dict:
     """Start a live NIC capture (PCAP processing: /api/captures/{id}/process)."""
@@ -87,20 +190,20 @@ def capture_start(req: CaptureRequest) -> dict:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
-@router.post("/api/capture/stop",
+@router.post("/api/capture/stop", response_model=Status,
              dependencies=[Depends(require("capture:manage"))])
 def capture_stop() -> dict:
     return engine.capture.stop()
 
 
-@router.get("/api/interfaces",
+@router.get("/api/interfaces", response_model=Interfaces,
            dependencies=[Depends(require("read"))])
 def interfaces() -> dict:
     """List capture interfaces (delegates to the system service)."""
     return engine.system.interfaces()
 
 
-@router.get("/api/capabilities",
+@router.get("/api/capabilities", response_model=Capabilities,
            dependencies=[Depends(require("read"))])
 def capabilities() -> dict:
     """Maturity, contract and live availability per advanced module."""

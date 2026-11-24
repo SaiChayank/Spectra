@@ -9,16 +9,50 @@ in the hash-chained audit log.
 
 from __future__ import annotations
 
+from typing import Any, Optional
+
 from fastapi import APIRouter, Depends, Query
 
 from ...services.threat_alerts import ThreatAlertError
 from ..runtime import engine
+from ..schemas import Out
 from ..security import auth_error, require
 
 router = APIRouter(dependencies=[Depends(require("read"))])
 
 
-@router.get("/api/alerts")
+class Alert(Out):
+    alert_id: str
+    status: str
+    severity: str
+    threat_type: str
+    protocol: str
+    source: str
+    destination: str
+    anomaly_score: Optional[float] = None
+    confidence: float
+    occurrences: int
+    capture_id: Optional[int] = None
+    flow_id: Optional[int] = None
+    first_seen: float
+    last_seen: float
+    timestamp: float
+    updated_at: Optional[float] = None
+    model_id: Optional[str] = None
+    model_version: Optional[str] = None
+    severity_factors: list[str] = []
+    evidence: dict[str, Any] = {}
+    metadata: dict[str, Any] = {}
+    module_annotations: dict[str, Any] = {}
+
+
+class AlertList(Out):
+    count: int
+    offset: int
+    items: list[Alert]
+
+
+@router.get("/api/alerts", response_model=AlertList)
 def alerts_list(
     status: str | None = Query(None, pattern="^(OPEN|ACKNOWLEDGED|RESOLVED)$"),
     threat_type: str | None = Query(None, max_length=64),
@@ -50,7 +84,7 @@ def alerts_list(
         raise auth_error(exc) from exc
 
 
-@router.get("/api/alerts/{alert_id}")
+@router.get("/api/alerts/{alert_id}", response_model=Alert)
 def alerts_get(alert_id: str) -> dict:
     """One alert: the four concepts side by side plus evidence + derivation."""
     try:
@@ -59,7 +93,7 @@ def alerts_get(alert_id: str) -> dict:
         raise auth_error(exc) from exc
 
 
-@router.post("/api/alerts/{alert_id}/acknowledge")
+@router.post("/api/alerts/{alert_id}/acknowledge", response_model=Alert)
 def alerts_acknowledge(
     alert_id: str,
     principal: dict = Depends(require("incidents:manage")),
@@ -76,7 +110,7 @@ def alerts_acknowledge(
     return alert
 
 
-@router.post("/api/alerts/{alert_id}/resolve")
+@router.post("/api/alerts/{alert_id}/resolve", response_model=Alert)
 def alerts_resolve(
     alert_id: str,
     principal: dict = Depends(require("incidents:manage")),

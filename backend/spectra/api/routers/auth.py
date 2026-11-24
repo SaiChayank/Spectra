@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field
 
 from ...services.auth import AuthError, CredentialsError
 from ..runtime import engine
+from ..schemas import Out
 from ..security import (
     auth_error,
     clear_session_cookie,
@@ -34,6 +35,14 @@ class LoginRequest(BaseModel):
     totp_code: str | None = Field(None, max_length=32)
 
 
+class PasswordChangeRequest(BaseModel):
+    current_password: str = Field(min_length=1, max_length=1024)
+    #: same bounds as user creation / PATCH; the service re-runs the full policy
+    new_password: str = Field(min_length=8, max_length=1024)
+    #: needed only when the account has two-factor enabled (same rule as login)
+    totp_code: str | None = Field(None, max_length=32)
+
+
 class TotpSetupRequest(BaseModel):
     password: str = Field(min_length=1, max_length=1024)
 
@@ -47,11 +56,47 @@ class TotpDisableRequest(BaseModel):
     code: str = Field(min_length=1, max_length=32)
 
 
+class Identity(Out):
+    id: int
+    username: str
+    role: str
+    permissions: list[str]
+    totp_enabled: bool
+
+
+class IdentityResponse(Out):
+    user: Identity
+    expires_at: float
+
+
+class OkResponse(Out):
+    ok: bool
+
+
+class PasswordChanged(Out):
+    ok: bool
+    sign_in_required: bool
+
+
+class TotpSetup(Out):
+    secret: str
+    issuer: str
+    otpauth_uri: str
+
+
+class TotpRecovery(Out):
+    recovery_codes: list[str]
+
+
+class TotpDisabled(Out):
+    totp_enabled: bool
+
+
 def _client_ip(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
-@router.post("/api/auth/login")
+@router.post("/api/auth/login", response_model=IdentityResponse)
 def auth_login(req: LoginRequest, response: Response,
                request: Request) -> dict:
     """Open a session; sets the HttpOnly cookie and returns the identity.
@@ -88,7 +133,7 @@ def auth_login(req: LoginRequest, response: Response,
     return identity_payload(user, expires_at, engine.auth.totp_enabled(user["id"]))
 
 
-@router.post("/api/auth/logout")
+@router.post("/api/auth/logout", response_model=OkResponse)
 def auth_logout(response: Response,
                 principal: dict = Depends(require("read"))) -> dict:
     """Invalidate the caller's session and clear the cookie (idempotent)."""
@@ -100,10 +145,46 @@ def auth_logout(response: Response,
     return {"ok": True}
 
 
-@router.get("/api/auth/me")
+@router.get("/api/auth/me", response_model=IdentityResponse)
 def auth_me(principal: dict = Depends(require("read"))) -> dict:
     """The signed-in identity: username, role, permissions, expiry."""
     return public_principal(principal, engine.auth.totp_enabled(principal["user_id"]))
+
+
+@router.post("/api/auth/password", response_model=PasswordChanged)
+def auth_password(req: PasswordChangeRequest, request: Request,
+                  response: Response,
+                  principal: dict = Depends(require("read"))) -> dict:
+    """Change the caller's own password (any role; needs the current one).
+
+    Wrong current password (or missing/wrong TOTP code) answers a generic 403
+    and counts toward the login throttle for (ip, username), so a stolen
+    session cannot be used to guess the password; once throttled: 429 +
+    ``Retry-After`` before any scrypt work.  Success revokes every session of
+    the user (this one included), clears the cookie and audits the change
+    (never the password).  401 is left to mean "no/expired session" so the
+    dashboard's global 401 handler is not triggered by a typo.
+    """
+    username, ip = principal["username"], _client_ip(request)
+    wait = engine.auth.throttle.retry_after(ip, username)
+    if wait is not None:
+        raise HTTPException(status_code=429, detail="too many failed attempts",
+                            headers={"Retry-After": str(int(wait) + 1)})
+    try:
+        engine.auth.change_own_password(
+            principal["user_id"], req.current_password, req.new_password,
+            req.totp_code)
+    except CredentialsError as exc:
+        engine.auth.throttle.record_failure(ip, username)
+        raise HTTPException(status_code=403,
+                            detail="current password is incorrect") from exc
+    except AuthError as exc:
+        raise auth_error(exc) from exc
+    engine.auth.throttle.record_success(ip, username)
+    clear_session_cookie(response)
+    engine.audit_service.append(
+        "auth.password_changed", {"username": username}, actor=username)
+    return {"ok": True, "sign_in_required": True}
 
 
 # -- optional TOTP second factor (self-service) ---------------------------------------
@@ -126,7 +207,7 @@ def _throttled(request: Request, username: str, action):
         raise auth_error(exc) from exc
 
 
-@router.post("/api/auth/totp/setup")
+@router.post("/api/auth/totp/setup", response_model=TotpSetup)
 def totp_setup(req: TotpSetupRequest, request: Request,
                principal: dict = Depends(require("read"))) -> dict:
     """Begin enrolling an authenticator app; returns the secret and otpauth URI once."""
@@ -134,7 +215,7 @@ def totp_setup(req: TotpSetupRequest, request: Request,
         principal["username"], req.password))
 
 
-@router.post("/api/auth/totp/enable")
+@router.post("/api/auth/totp/enable", response_model=TotpRecovery)
 def totp_enable(req: TotpEnableRequest, request: Request,
                 principal: dict = Depends(require("read"))) -> dict:
     """Confirm with a first valid code; returns the single-use recovery codes once."""
@@ -146,7 +227,7 @@ def totp_enable(req: TotpEnableRequest, request: Request,
     return {"recovery_codes": codes}
 
 
-@router.post("/api/auth/totp/disable")
+@router.post("/api/auth/totp/disable", response_model=TotpDisabled)
 def totp_disable(req: TotpDisableRequest, request: Request,
                  principal: dict = Depends(require("read"))) -> dict:
     """Turn the second factor off (password + a valid code or a recovery code)."""

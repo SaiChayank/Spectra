@@ -29,6 +29,7 @@ Design notes (production-style, deliberately free of identity infrastructure):
 from __future__ import annotations
 
 import hashlib
+import hmac
 import logging
 import os
 import re
@@ -45,7 +46,7 @@ from ..auth import (
 )
 from ..authz import ADMIN, ROLES, permissions_for
 from ..config import Config, get_config
-from ..store import Store, StoreError
+from ..store import Store, StoreError, StoreUnavailable
 
 log = logging.getLogger("spectra.auth")
 
@@ -509,7 +510,10 @@ class AuthService:
             self.store.delete_session(token_hash)
             return None
         if now - float(row["last_seen_at"]) > _TOUCH_INTERVAL:
-            self.store.touch_session(token_hash, now)
+            try:  # best-effort: a locked/full DB must not turn a read into a failure
+                self.store.touch_session(token_hash, now)
+            except StoreUnavailable:
+                log.warning("session touch skipped: storage unavailable")
         return {
             "user_id": user["id"],
             "username": user["username"],
@@ -607,6 +611,35 @@ class AuthService:
             log.info("password changed for '%s'; revoked %d session(s)",
                      updated["username"], revoked)
         return updated
+
+    def change_own_password(self, user_id: int, current: str, new: str,
+                            totp_code: str | None = None) -> dict:
+        """Self-service password change; revokes every session of the user.
+
+        The current password is verified exactly like login (scrypt, constant
+        time); a wrong one - or a missing/wrong second factor on an account
+        that has one - raises :class:`CredentialsError` (the router maps it to
+        403 and feeds the login throttle).  The new password goes through the
+        same policy as create/PATCH and must differ from the current one.
+        """
+        self._require_store()
+        user = self.store.get_user(user_id)
+        if user is None:
+            raise InvalidUser()
+        creds = self._credentials(user["username"], current)
+        self._check_second_factor(creds["id"], totp_code)
+        try:
+            check_password_policy(new)
+        except ValueError as exc:
+            raise UserPolicyError(str(exc)) from exc
+        if hmac.compare_digest(new.encode(), current.encode()):
+            raise UserPolicyError(
+                "new password must differ from the current password")
+        self.store.update_user(user_id, password_hash=hash_password(new))
+        revoked = self.store.invalidate_user_sessions(user_id)
+        log.info("password changed for '%s'; revoked %d session(s)",
+                 user["username"], revoked)
+        return user
 
     def delete_user(self, user_id: int, actor_id: int | None = None) -> None:
         """Delete an account (sessions cascade); guards self/last-admin."""
