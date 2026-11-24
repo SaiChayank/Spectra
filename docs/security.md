@@ -166,6 +166,14 @@ makes `/api/*` **default-deny** (public: `GET /api/health`,
   and fixed strings only), `POST /api/auth/login`, and
   FastAPI's own `/docs`, `/redoc`, `/openapi.json` (route *descriptions* — they
   return no data and every `/api/*` call from them still needs a session).
+* Password changes: an ADMIN reset (`PATCH /api/users/{id}`) revokes every
+  session of the account; a user's own change (`POST /api/auth/password`)
+  needs the current password and, when enabled, a second-factor code, and
+  ends every *other* session. Both write the new hash and the revocation in
+  one transaction, and the self-service write is a compare-and-swap on the
+  hash that was verified. Login only inserts its session while the hash it
+  verified is still current, so a login racing a reset gets no session
+  (`tests/test_password_change.py`).
 * Guards: you cannot delete your own account, and the **last ADMIN** cannot be
   deleted or demoted (`409`) — no self-lockout. The guard is part of the
   `UPDATE`/`DELETE` statement itself, so two concurrent requests cannot both

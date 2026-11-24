@@ -381,16 +381,19 @@ class AuthService:
         if not verify_password(password, creds["password_hash"]):
             raise CredentialsError()
         self._check_second_factor(creds["id"], totp_code)
-        if password_needs_rehash(creds["password_hash"]):
+        verified_hash = creds["password_hash"]
+        if password_needs_rehash(verified_hash):
             # Store-level write (no session revocation): the row is upgraded
             # in place to the current work factor right after its own proof,
             # so pre-hardening accounts reach the stronger parameters on the
-            # first successful login instead of never.
+            # first successful login instead of never.  Conditional on the
+            # verified hash, so it can never undo a concurrent reset.
+            upgraded = hash_password(password)
             try:
-                self.store.update_user(
-                    creds["id"], password_hash=hash_password(password))
-                log.info("upgraded password hash parameters for '%s'",
-                         creds["username"])
+                if self.store.rehash_password(creds["id"], verified_hash, upgraded):
+                    verified_hash = upgraded
+                    log.info("upgraded password hash parameters for '%s'",
+                             creds["username"])
             except StoreError:  # pragma: no cover - login must not fail here
                 log.warning("password rehash failed for '%s'",
                             creds["username"], exc_info=True)
@@ -398,7 +401,11 @@ class AuthService:
         self.store.purge_expired_sessions(now)  # opportunistic housekeeping
         token = secrets.token_urlsafe(32)
         expires_at = now + self.ttl_seconds
-        self.store.create_session(creds["id"], hash_token(token), expires_at)
+        # Only while the password just verified is still current: a reset that
+        # landed during the scrypt check has already revoked every session.
+        if not self.store.create_session(creds["id"], hash_token(token), expires_at,
+                                         password_hash=verified_hash):
+            raise CredentialsError()
         self.store.set_user_login_time(creds["id"])
         user = self.store.get_user(creds["id"])
         if user is None:  # pragma: no cover - row was read moments ago
@@ -607,23 +614,25 @@ class AuthService:
                 and user["role"] == "ADMIN"
                 and self.store.count_admin_users() <= 1):
             raise UserGuardError("cannot demote the last ADMIN account")
-        password_hash = None
+        revoked = None
         if password is not None:
             try:
                 check_password_policy(password)
             except ValueError as exc:
                 raise UserPolicyError(str(exc)) from exc
-            password_hash = hash_password(password)
-        updated = self.store.update_user(user_id, role=role,
-                                         password_hash=password_hash)
+            # the new hash and the revocation of every session: one transaction
+            result = self.store.change_password(user_id, hash_password(password),
+                                                role=role)
+            updated, revoked = result if result is not None else (None, None)
+        else:
+            updated = self.store.update_user(user_id, role=role)
         if updated is None:
             if self.store.get_user(user_id) is not None:
                 # the store's own guard: another request demoted or removed
                 # the other ADMIN between our count check and this write
                 raise UserGuardError("cannot demote the last ADMIN account")
             raise InvalidUser()
-        if password_hash is not None:
-            revoked = self.store.invalidate_user_sessions(user_id)
+        if revoked is not None:
             log.info("password changed for '%s'; revoked %d session(s)",
                      updated["username"], revoked)
         return updated
@@ -637,12 +646,18 @@ class AuthService:
         that has one - raises :class:`CredentialsError` (the router maps it to
         403 and feeds the login throttle).  The new password goes through the
         same policy as create/PATCH and must differ from the current one.
+
+        The write is a compare-and-swap on the hash that was verified, done in
+        the same transaction as the session revocation: two racing changes
+        cannot both win, and a failure cannot leave old sessions alive.
         """
         self._require_store()
         user = self.store.get_user(user_id)
         if user is None:
             raise InvalidUser()
         creds = self._credentials(user["username"], current)
+        if creds["id"] != user_id:  # pragma: no cover - usernames are unique
+            raise CredentialsError()
         self._check_second_factor(creds["id"], totp_code)
         try:
             check_password_policy(new)
@@ -651,8 +666,12 @@ class AuthService:
         if hmac.compare_digest(new.encode(), current.encode()):
             raise UserPolicyError(
                 "new password must differ from the current password")
-        self.store.update_user(user_id, password_hash=hash_password(new))
-        revoked = self.store.invalidate_user_sessions(user_id)
+        result = self.store.change_password(
+            user_id, hash_password(new), expected_hash=creds["password_hash"])
+        if result is None:
+            # another request changed the password between our check and this write
+            raise CredentialsError()
+        _, revoked = result
         log.info("password changed for '%s'; revoked %d session(s)",
                  user["username"], revoked)
         return user
