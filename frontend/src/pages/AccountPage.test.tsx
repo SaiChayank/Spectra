@@ -64,8 +64,8 @@ describe("formatDetail", () => {
 });
 
 describe("change own password", () => {
-  it("uses the proposed endpoint and returns to sign-in on success", async () => {
-    const calls = stubFetch({ "POST /api/auth/password": () => json(200, { ok: true, sessions_revoked: true }) });
+  it("sends the current and new password and returns to sign-in when the server asks", async () => {
+    const calls = stubFetch({ "POST /api/auth/password": () => json(200, { ok: true, sign_in_required: true }) });
     const { onSignedOut } = renderPage(viewer);
     fillPassword("old-pass-1", "new-pass-123");
     fireEvent.click(screen.getByRole("button", { name: "Change password" }));
@@ -84,27 +84,8 @@ describe("change own password", () => {
     expect(calls).toHaveLength(0);
   });
 
-  it("tells a non-admin honestly when the server lacks the route (404)", async () => {
-    stubFetch({});
-    const { onSignedOut } = renderPage(viewer);
-    fillPassword("old-pass-1", "new-pass-123");
-    fireEvent.click(screen.getByRole("button", { name: "Change password" }));
-    expect(await screen.findByText("Not available on this server yet")).toBeInTheDocument();
-    expect(onSignedOut).not.toHaveBeenCalled();
-  });
-
-  it("lets an admin fall back to PATCH /api/users/{id} when the route is missing", async () => {
-    const calls = stubFetch({ "PATCH /api/users/2": () => json(200, { id: 2 }) });
-    const { onSignedOut } = renderPage(admin);
-    fillPassword("old-pass-1", "new-pass-123");
-    fireEvent.click(screen.getByRole("button", { name: "Change password" }));
-    await waitFor(() => expect(onSignedOut).toHaveBeenCalled());
-    expect(calls.map((c) => c.key)).toEqual(["POST /api/auth/password", "PATCH /api/users/2"]);
-    expect(calls[1].body).toEqual({ password: "new-pass-123" });
-  });
-
-  it("a wrong current password (401) is a form error, not a dead session", async () => {
-    stubFetch({ "POST /api/auth/password": () => json(401, { detail: "current password is incorrect" }) });
+  it("a wrong current password (403) is a form error, not a dead session", async () => {
+    stubFetch({ "POST /api/auth/password": () => json(403, { detail: "current password is incorrect" }) });
     const ended = vi.fn();
     window.addEventListener("spectra:unauthorized", ended);
     const { onSignedOut } = renderPage(viewer);
@@ -114,6 +95,36 @@ describe("change own password", () => {
     window.removeEventListener("spectra:unauthorized", ended);
     expect(ended).not.toHaveBeenCalled();
     expect(onSignedOut).not.toHaveBeenCalled();
+  });
+
+  it("a 401 on this route means the session ended", async () => {
+    stubFetch({ "POST /api/auth/password": () => json(401, { detail: "not authenticated" }) });
+    const ended = vi.fn();
+    window.addEventListener("spectra:unauthorized", ended);
+    renderPage(viewer);
+    fillPassword("old-pass-1", "new-pass-123");
+    fireEvent.click(screen.getByRole("button", { name: "Change password" }));
+    await waitFor(() => expect(ended).toHaveBeenCalled());
+    window.removeEventListener("spectra:unauthorized", ended);
+  });
+
+  it("with two-factor on, asks for a code and sends it", async () => {
+    const calls = stubFetch({ "POST /api/auth/password": () => json(200, { ok: true, sign_in_required: true }) });
+    const { onSignedOut } = renderPage({ ...viewer, user: { ...viewer.user, totp_enabled: true } });
+    fillPassword("old-pass-1", "new-pass-123");
+    expect(screen.getByRole("button", { name: "Change password" })).toBeDisabled();
+    fireEvent.change(screen.getByLabelText("Two-factor code"), { target: { value: " 123456 " } });
+    fireEvent.click(screen.getByRole("button", { name: "Change password" }));
+    await waitFor(() => expect(onSignedOut).toHaveBeenCalled());
+    expect(calls[0].body).toEqual({ current_password: "old-pass-1", new_password: "new-pass-123", totp_code: "123456" });
+  });
+
+  it("shows a countdown when throttled (429)", async () => {
+    stubFetch({ "POST /api/auth/password": () => json(429, { detail: "too many failed attempts" }, { "Retry-After": "30" }) });
+    renderPage(viewer);
+    fillPassword("old-pass-1", "new-pass-123");
+    fireEvent.click(screen.getByRole("button", { name: "Change password" }));
+    expect(await screen.findByText(/Try again in 30 s/)).toBeInTheDocument();
   });
 });
 

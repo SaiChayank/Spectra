@@ -32,8 +32,8 @@ export interface TotpEnabled {
   recovery_codes: string[];
 }
 
-/** PROPOSED POST /api/auth/password (frontend/contract/proposed/). */
+/** POST /api/auth/password (contract fixture POST_api_auth_password): every session, this one included, is revoked. */
 export interface PasswordChanged {
   ok: boolean;
-  sessions_revoked: boolean;
+  sign_in_required: boolean;
 }

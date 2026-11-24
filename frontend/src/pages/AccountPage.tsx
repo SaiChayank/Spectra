@@ -34,17 +34,18 @@ function message(err: unknown): string {
 
 /* -- change own password ---------------------------------------------------------- */
 
-function ChangePassword({ identity, can, onSignedOut }: Pick<Props, "identity" | "can" | "onSignedOut">) {
+function ChangePassword({ identity, onSignedOut }: Pick<Props, "identity" | "onSignedOut">) {
+  const needsCode = identity.user.totp_enabled === true; // the server asks for the second factor too
   const [current, setCurrent] = useState("");
+  const [code, setCode] = useState("");
   const [next, setNext] = useState("");
   const [confirm, setConfirm] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [unsupported, setUnsupported] = useState(false);
 
   const tooShort = next.length > 0 && next.length < MIN_PASSWORD;
   const mismatch = confirm.length > 0 && confirm !== next;
-  const ready = current && next.length >= MIN_PASSWORD && confirm === next && !busy;
+  const ready = current && next.length >= MIN_PASSWORD && confirm === next && (!needsCode || code.trim()) && !busy;
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -52,23 +53,13 @@ function ChangePassword({ identity, can, onSignedOut }: Pick<Props, "identity" |
     setBusy(true);
     setError(null);
     try {
-      try {
-        await api.changeOwnPassword(current, next);
-      } catch (err) {
-        // the route is PROPOSED; on a backend without it, an admin can use the users API on themself
-        const missing = err instanceof ApiError && (err.status === 404 || err.status === 405);
-        if (!missing) throw err;
-        if (!can("users:manage")) {
-          setUnsupported(true);
-          return;
-        }
-        await api.updateUser(identity.user.id, { password: next });
-      }
-      onSignedOut("Password changed. Every session was signed out; sign in with your new password.");
+      const res = await api.changeOwnPassword(current, next, needsCode ? code.trim() : undefined);
+      if (res.sign_in_required) onSignedOut("Password changed. Every session was signed out; sign in with your new password.");
     } catch (err) {
       if (err instanceof ApiError && err.status === 429) setError(`Too many attempts. Try again in ${err.retryAfter ?? 60} s.`);
-      else if (err instanceof Error && err.name === "AuthError") setError("Current password is incorrect.");
-      else setError(message(err));
+      else if (err instanceof ApiError && err.status === 403) {
+        setError(identity.user.totp_enabled ? "Current password or two-factor code is incorrect." : "Current password is incorrect.");
+      } else setError(message(err));
     } finally {
       setBusy(false);
     }
@@ -76,12 +67,6 @@ function ChangePassword({ identity, can, onSignedOut }: Pick<Props, "identity" |
 
   return (
     <Card title="Change password" eyebrow="Sign-in">
-      {unsupported ? (
-        <Banner tone="warn" title="Not available on this server yet">
-          This server cannot change your own password: only an administrator can set it today. Ask an administrator, who can do
-          it from Account → Users.
-        </Banner>
-      ) : (
         <form onSubmit={submit} style={{ display: "grid", gap: 12, maxWidth: 420 }} noValidate>
           <PasswordInput label="Current password" value={current} onChange={(e) => setCurrent(e.target.value)} autoComplete="current-password" />
           <PasswordInput
@@ -99,6 +84,10 @@ function ChangePassword({ identity, can, onSignedOut }: Pick<Props, "identity" |
             autoComplete="new-password"
             error={mismatch ? "The two passwords differ." : undefined}
           />
+          {needsCode ? (
+            <Input label="Two-factor code" value={code} onChange={(e) => setCode(e.target.value)}
+              autoComplete="one-time-code" maxLength={32} hint="Two-factor is on for your account, so the server asks for a code too." />
+          ) : null}
           {error ? (
             <Banner tone="error" title="Password not changed">
               {error}
@@ -111,7 +100,6 @@ function ChangePassword({ identity, can, onSignedOut }: Pick<Props, "identity" |
             </SkewButton>
           </div>
         </form>
-      )}
     </Card>
   );
 }
@@ -339,7 +327,7 @@ export default function AccountPage({ identity, can, onSignedOut, onIdentityChan
               ]}
             />
           </Card>
-          <ChangePassword identity={identity} can={can} onSignedOut={onSignedOut} />
+          <ChangePassword identity={identity} onSignedOut={onSignedOut} />
           <TwoFactor identity={identity} onIdentityChanged={onIdentityChanged} />
         </div>
       )}

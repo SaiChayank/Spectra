@@ -216,13 +216,11 @@ export function resolve(index: FixtureIndex, state: MockState, req: MockRequest,
   // --- own account: unrecorded or PROPOSED routes (labelled x-mock) --------
   const body = (req.body ?? {}) as Record<string, string | undefined>;
   if (method === "POST" && path === "/api/auth/password") {
-    // PROPOSED: frontend/contract/proposed/POST_api_auth_password.json
-    const h = { "x-mock": "proposed endpoint" };
-    if (body.current_password === "wrong") return json(401, { detail: "current password is incorrect" }, h);
-    if (!body.new_password || body.new_password.length < 8) {
-      return json(422, { detail: [{ loc: ["body", "new_password"], msg: "String should have at least 8 characters" }] }, h);
-    }
-    return { ...json(200, { ok: true, sessions_revoked: true }, h), next: { role: null, loginFixture: null, totp: false } };
+    // recorded: POST_api_auth_password, __403_wrong_current_password, __422_short_new_password, __422_same_password
+    if (body.current_password === "wrong") return fromFixture(index.named("POST_api_auth_password__403_wrong_current_password")!);
+    if (!body.new_password || body.new_password.length < 8) return fromFixture(index.named("POST_api_auth_password__422_short_new_password")!);
+    if (body.new_password === body.current_password) return fromFixture(index.named("POST_api_auth_password__422_same_password")!);
+    return { ...fromFixture(index.named("POST_api_auth_password")!), next: { role: null, loginFixture: null, totp: false } };
   }
   if (method === "POST" && path === "/api/auth/totp/setup") {
     if (body.password === "wrong") return fromFixture(index.named("POST_api_auth_totp_setup__wrong_password")!);

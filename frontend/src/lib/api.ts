@@ -1092,9 +1092,10 @@ function notifyUnauthorized(path: string): void {
   // The login route owns its own 401s (bad credentials) — those are a
   // failed form submit, not a session that just died. The startup session
   // check (/api/auth/me) answers 401 when nobody is signed in: also not "ended".
-  // The TOTP and password routes answer 401 for a wrong code or current
-  // password (fixture POST_api_auth_totp_enable__wrong_code): a typo, not a dead session.
-  const ownsItsOwn401 = ["/api/auth/login", "/api/auth/logout", "/api/auth/me", "/api/auth/totp/", "/api/auth/password"];
+  // The TOTP routes answer 401 for a wrong code (fixture POST_api_auth_totp_enable__wrong_code):
+  // a typo, not a dead session. The password route answers 403 for a wrong current password
+  // (fixture POST_api_auth_password__403_wrong_current_password), so its 401 means a dead session.
+  const ownsItsOwn401 = ["/api/auth/login", "/api/auth/logout", "/api/auth/me", "/api/auth/totp/"];
   if (!ownsItsOwn401.some((p) => path.startsWith(p))) {
     window.dispatchEvent(new CustomEvent("spectra:unauthorized"));
   }
@@ -1226,11 +1227,15 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ password, code }),
     }),
-  /** PROPOSED (frontend/contract/proposed/POST_api_auth_password.json): not on the backend yet. */
-  changeOwnPassword: (currentPassword: string, newPassword: string) =>
+  /** Wrong current password (or a missing/wrong second-factor code) = 403; 429 when throttled. */
+  changeOwnPassword: (currentPassword: string, newPassword: string, totpCode?: string) =>
     request<PasswordChanged>("/api/auth/password", {
       method: "POST",
-      body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+      body: JSON.stringify({
+        current_password: currentPassword,
+        new_password: newPassword,
+        ...(totpCode ? { totp_code: totpCode } : {}),
+      }),
     }),
 
   // -- users admin (users:manage) ------------------------------------------------
