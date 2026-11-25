@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   Badge,
   Banner,
@@ -34,6 +34,8 @@ const verdictMeta = (v: HostVerdictValue) => VERDICTS.find((x) => x.value === v)
 const DETECTOR_LABEL: Record<string, string> = { anomaly_model: "Anomaly model", beaconing: "Beaconing", intel: "Threat intel" };
 const detectorName = (d: string) => DETECTOR_LABEL[d] ?? d;
 const NOTE_MAX = 500; // backend VerdictRequest.note
+/** Grid items default to min-width: auto, so the wide host table would stretch the page sideways instead of scrolling inside its own wrapper. */
+const GRID_ITEM = { minWidth: 0 } as const;
 
 function VerdictBadge({ verdict }: { verdict: HostVerdict | null }) {
   if (!verdict) return <span className="sx-hint">No verdict</span>;
@@ -67,7 +69,7 @@ export default function HostsPage({ canTriage }: Props) {
         ]}
       />
       <div style={{ display: "grid", gap: 16, gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 420px), 1fr))" }}>
-        <Card title="Hosts" eyebrow={list.data ? `${list.data.count} with evidence` : "Triage"}>
+        <Card style={GRID_ITEM} title="Hosts" eyebrow={list.data ? `${list.data.count} with evidence` : "Triage"}>
           <DataTable<HostSummary>
             caption="Hosts ranked by evidence"
             rows={list.data?.items ?? null}
@@ -93,7 +95,7 @@ export default function HostsPage({ canTriage }: Props) {
         {selected ? (
           <HostDetail key={selected} host={selected} canTriage={canTriage} onSaved={list.reload} onClose={() => setSelected(null)} />
         ) : (
-          <Card title="Host detail">
+          <Card style={GRID_ITEM} title="Host detail">
             <EmptyState title="Select a host">Pick a host in the list to see its evidence and record a verdict.</EmptyState>
           </Card>
         )}
@@ -104,7 +106,13 @@ export default function HostsPage({ canTriage }: Props) {
 
 function HostDetail({ host, canTriage, onSaved, onClose }: { host: string; canTriage: boolean; onSaved: () => void; onClose: () => void }) {
   const ev = useFetch(() => api.hostEvidence(host), [host]);
+  const ref = useRef<HTMLDivElement>(null);
+  // on a phone the detail stacks below the list: bring it into view (no jump on wide screens, where it is beside it)
+  useEffect(() => {
+    ref.current?.scrollIntoView?.({ block: "nearest", behavior: "smooth" }); // braces: never return its result as a cleanup
+  }, []);
   return (
+    <div ref={ref} style={GRID_ITEM}>
     <Card title={host} eyebrow="Host detail" actions={<SkewButton variant="ghost" onClick={onClose}>Close</SkewButton>}>
       {ev.loading ? (
         <Skeleton lines={4} />
@@ -117,6 +125,7 @@ function HostDetail({ host, canTriage, onSaved, onClose }: { host: string; canTr
         </div>
       ) : null}
     </Card>
+    </div>
   );
 }
 

@@ -20,8 +20,8 @@ const MAIN: Section[] = ["overview", "monitor", "captures", "incidents", "hosts"
 /** Sections the server gates behind `investigate` (shown, but restricted). */
 const INVESTIGATE_ONLY: Section[] = ["incidents", "network", "audit"];
 
-/** Not built yet: needs a proposed backend endpoint (frontend-plan §6). */
-const PLANNED: Section[] = ["hosts"];
+/** Sections shown but not built yet (none today; Hosts landed on the real /api/hosts routes). */
+const PLANNED: Section[] = [];
 
 export type LiveState = "live" | "reconnecting" | "offline";
 

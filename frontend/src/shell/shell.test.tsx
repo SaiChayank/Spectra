@@ -121,13 +121,13 @@ describe("useConnection", () => {
 });
 
 describe("Shell", () => {
-  it("marks the current page, restricted sections and planned ones", () => {
+  it("marks the current page, and restricted sections; Hosts is no longer planned", () => {
     renderShell(viewer, "overview");
     const nav = screen.getAllByRole("navigation", { name: "Console sections" })[0];
     expect(within(nav).getByRole("link", { name: /Overview/ }).getAttribute("aria-current")).toBe("page");
     // a viewer lacks `investigate`: gated sections say so in text
     expect(within(nav).getByRole("link", { name: /Alerts & Incidents.*restricted/i })).toBeTruthy();
-    expect(within(nav).getByRole("link", { name: /Hosts.*planned/i })).toBeTruthy();
+    expect(within(nav).getByRole("link", { name: /^Hosts/ }).textContent).not.toMatch(/planned/i);
     expect(within(nav).getAllByRole("link", { name: /simulated/i })).toHaveLength(5);
   });
 

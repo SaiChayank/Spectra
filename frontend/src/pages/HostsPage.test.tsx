@@ -79,6 +79,18 @@ describe("hosts page (recorded contract)", () => {
     expect(await screen.findByText("Your role cannot record verdicts.")).toBeInTheDocument();
   });
 
+  it("brings the detail into view on selection, and never returns scrollIntoView's result as an effect cleanup", async () => {
+    // Chromium returns a Promise from smooth scrollIntoView; returned from an effect, React calls it on unmount and throws
+    const scroll = vi.fn(() => Promise.resolve());
+    Element.prototype.scrollIntoView = scroll as unknown as Element["scrollIntoView"];
+    stubFetch(recorded);
+    const { unmount } = render(<HostsPage canTriage={false} />);
+    fireEvent.click(await screen.findByText("10.0.0.7"));
+    await screen.findByText(/Beaconing: c2 beaconing/);
+    expect(scroll).toHaveBeenCalledWith({ block: "nearest", behavior: "smooth" });
+    expect(() => unmount()).not.toThrow();
+  });
+
   it("empty and error states", async () => {
     stubFetch({ "GET /api/hosts": () => json(200, { count: 0, offset: 0, items: [] }) });
     render(<HostsPage canTriage={false} />);
