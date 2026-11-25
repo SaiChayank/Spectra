@@ -72,3 +72,12 @@ G-05 (sessions UI), G-06 (compile-time contract check, which also found a phanto
 In progress: G-01 set C (`setc-20261124T1950Z`, about 16 h). Waiting on the owner: G-08 security review (gates the merge to `main`),
 task 14 capture (G-01 H2), G-10 password-policy decision. Not checked in a browser: the Hosts and sessions screens (port 5173 was held by a
 process this session did not start); they are covered by tests driven by the recorded backend responses.
+
+## 7. Progress, 2026-11-25 (second pass)
+
+* Browser check of the new screens (mock mode, 1024 px and 375 px) found and fixed three issues: the Hosts page scrolled sideways
+  by 19 px (grid items default to `min-width: auto`), the host detail opened off screen on a phone, and the sidebar still tagged
+  Hosts as "planned". A regression test pins the scroll fix (verified red first).
+* User guide updated (change password, sessions, Hosts triage).
+* **E3 preregistered** (`ci/prereg/e3.json`): supervised model judged leave-family-out on families never used, with an era control.
+  Blocked on the owner approving the held-out download list (chosen by the rule in the file, not by results).

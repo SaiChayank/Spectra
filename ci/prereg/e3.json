@@ -1,0 +1,30 @@
+{
+ "name": "E3 supervised encrypted-malware model (preregistration)",
+ "frozen": "2026-11-25",
+ "status": "design only: no E3 code exists and no E3 data has been downloaded; the held-out list is fixed by rule below and its hashes are added by a data-only amendment before scoring",
+ "why": "E22 (docs/evaluation-report.md section 21) showed that per-site learning fails when the infection predates the sensor: on CTU-13 the learned-periodicity rule absorbed 22 of 33 C2 pairs. A supervised model learns what malicious traffic looks like from labelled captures, so it does not need a clean learning window. Section 16 showed the supervised idea transfers across families on CTU (leave-family-out ROC-AUC 0.93-0.98) but with an era confound (2011 botnets vs 2017 benign).",
+ "model": {
+  "learner": "sklearn.ensemble.HistGradientBoostingClassifier, fixed hyperparameters: max_iter=300, learning_rate=0.05, max_leaf_nodes=31, l2_regularization=1.0, class_weight='balanced', random_state=1337; no hyperparameter search",
+  "unit": "flow (the existing 39 features) and, separately reported, pair (mean of flow probabilities over the pair's flows; pairs >= 20 flows)",
+  "calibration": "isotonic on a calibration split of the TRAINING families only (20 %, grouped by capture)",
+  "output": "a calibrated probability used as ONE evidence signal into E4 fusion; it never raises an alert on its own (docs/35 E3)",
+  "refusal": "the scorer refuses input whose feature schema hash differs from training (existing model-card pattern)"
+ },
+ "data": {
+  "training_families": "every labelled malicious capture already on the owner-approved disk: CTU-13 scenarios 1-9, 12, 13 (labels: binetflow 'Botnet' rows) and the section 10 extra captures (rbot, fast-flux, botnet2); benign: CTU-Normal 2017 set A + the nine E22 fresh CTU-Normal captures",
+  "held_out_families": "NOT YET CHOSEN. Rule, fixed now: Stratosphere 'CTU-Malware-Capture-Botnet-N' captures with N >= 100 (2014 or later, so closer in era to the benign set), a binetflow label file containing 'Botnet' rows, a pcap <= 500 MB, and a malware family name (README 'Probable Name') not in the training families; take the first 6 by ascending N that satisfy the rule. Benign held-out: CTU-Normal captures not used anywhere so far (<= 500 MB). The list, sizes and hashes go into a data-only amendment and need the owner's download approval.",
+  "era_control": "report every result twice: all features, and without the capture-environment features (packet-size and TTL/MTU-dependent ones listed in the amendment before scoring), as section 16 did"
+ },
+ "evaluation": {
+  "protocol": "leave-one-family-out over the held-out families (train on all training families, test on one held-out family vs held-out benign); thresholds chosen on training-family benign data only (the score at 1 % flow FPR), never on held-out labels",
+  "metrics": "recall at 1 % and 0.1 % FPR (flow and pair), ROC-AUC, PR-AUC with prevalence stated, Brier score; 95 % bootstrap CIs (1000 resamples, seed 1337, resampling by capture)",
+  "baselines": "the shipped isolation forest trained on the same benign data; report both side by side"
+ },
+ "gate": {
+  "pass_if": "pair-level recall at <= 1 % pair FPR beats the isolation forest on >= 2 held-out families with non-overlapping 95 % CIs, AND the result holds (same direction, CIs not crossing) without the capture-environment features",
+  "on_failure": "report 'not a detector', keep the model out of the product, publish the numbers; no retuning after seeing held-out results",
+  "if_passed": "it may enter E4 fusion behind a flag, off by default, judged again by the E4 gate on the owner's network"
+ },
+ "human_items": ["approve the held-out download list (sizes and URLs in the amendment)", "security/privacy review: the model is trained on labelled malicious traffic metadata only; no payload"],
+ "amendments": []
+}
