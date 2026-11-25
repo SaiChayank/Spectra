@@ -84,7 +84,7 @@ viewfinder brackets. Motion: 200 ms hovers, 500 ms entrances, everything off und
 * 401 mid-session → sign-in with "Your session ended", then back to the page the analyst was on. A deep link while signed out →
   sign-in, then that page. (Sign-in itself is restyled in step 4; 429 countdown there.)
 * Existing pages render inside the shell and pick up the new palette through a variable bridge in `shell.css`; each is fully
-  restyled in steps 5–7. Hosts is a "planned" page; Account shows the profile until step 5.
+  restyled in steps 5–7. Hosts was a "planned" page at this step (built on the real `/api/hosts` routes on 2026-11-25); Account shows the profile until step 5.
 * Mock: the switcher is now bottom-left, with a "Demo data, no trained model" scenario.
 
 ## Step 4: landing and login (2026-11-19)

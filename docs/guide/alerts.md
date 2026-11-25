@@ -44,6 +44,19 @@ aid, not an alarm:
   the plan is documented in [plan-beaconing-detector.md](../plan-beaconing-detector.md).
 * There is no environment variable for it in `config.py`; it is a code-level setting.
 
+## Hosts: triage by host
+
+**Hosts** ranks hosts by how much independent evidence the detectors raised against them (anomaly model, beaconing when
+enabled, threat-intel hits). The **confidence** orders the list; it is **not** a probability that the host is compromised.
+Pick a host to see its evidence timeline (each item links to the alert id). Analysts and admins record a **verdict**:
+
+* **True positive**: the host is doing something malicious; open or update an incident.
+* **Expected**: benign and known (a scanner you run, a backup job); write why in the note so the next shift knows.
+* **False positive**: the detector was wrong.
+
+Verdicts are kept per host and audit-logged with who recorded them; viewers can read them but not set them. Notes are
+visible to everyone who can read the host, so never paste secrets into them.
+
 ## How well does the detector find attacks?
 
 Honestly: not reliably yet. On three real public datasets, with a benign-only baseline from earlier traffic

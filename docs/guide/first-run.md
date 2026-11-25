@@ -72,19 +72,25 @@ HTTP 429.
 
 ## 4. Change the admin password
 
-The dashboard has **no change-password screen yet**. Use the API; any signed-in user (admin, analyst or viewer) can
-change their own password with the current one (add `"totp_code"` if the account has two-factor enabled):
+Dashboard: **Account → Change password**. Enter the current password and the new one twice (at least 8 characters);
+if two-factor is on for your account, the form also asks for a two-factor code. A wrong current password shows
+"Current password is incorrect" and counts toward the login throttle. On success every session of that user ends,
+this browser included, and you sign in again with the new password. Then delete `admin_bootstrap.txt` if it exists.
+
+API, for scripts (add `"totp_code"` if the account has two-factor enabled):
 
 ```
-$ curl -s -b cookies.txt -X POST -H 'content-type: application/json' \
-    -d '{"current_password":"<current>","new_password":"<new password, at least 8 characters>"}' \
-    http://127.0.0.1:8787/api/auth/password
+$ curl -s -b cookies.txt -X POST -H 'content-type: application/json'     -d '{"current_password":"<current>","new_password":"<new password, at least 8 characters>"}'     http://127.0.0.1:8787/api/auth/password
 {"ok":true,"sign_in_required":true}
 ```
 
-This revokes every session of that user (the next call with the old cookie returns `{"detail":"not authenticated"}`),
-so sign in again with the new password. A wrong current password answers `403` and counts toward the login throttle.
-(An admin can still reset someone else's password with `PATCH /api/users/{id}`.) Then delete `admin_bootstrap.txt` if it exists.
+A wrong current password answers `403`. An admin can still reset someone else's password from **Account → Users** or
+with `PATCH /api/users/{id}`.
+
+**Where you are signed in.** **Account → Where you are signed in** lists your live sessions with this browser marked.
+**Sign out** ends one; ending this browser's session returns you to the sign-in page. Sign out anything you do not
+recognise, then change your password. (API: `GET /api/auth/sessions`, `DELETE /api/auth/sessions/{id}`; another user's
+session id answers `404`.)
 
 ## 5. Upload a capture
 
