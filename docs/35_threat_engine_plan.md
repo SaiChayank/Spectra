@@ -107,6 +107,12 @@ Order is by expected value on the evidence we have. Each ships behind a flag, of
 **Gate per detector (fixed before first run):** beats the best baseline on recall at 10 alerts/1,000 hosts/day on at least two datasets
 it was not tuned on, with non-overlapping 95 % CIs, or the report says it is "a ranking aid, not a detector" and it stays off by default.
 
+**E2.2 status (owner decision 2026-11-26):** prereg `ci/prereg/e22.json` frozen 2026-11-20. No public held-out set with >= 10
+compromised hosts and full-network captures was found (CTU-13 publishes only the bots' own traffic; in public botnet sets the victims
+share their C2, which rarity cannot see by design). The owner accepted the recommendation to stop searching: set_A and set_B are
+scored and reported as ANECDOTAL, E2.2 cannot pass its gate, stays off by default, and its host score is used as one input to E4
+fusion. The prereg rule is unchanged.
+
 ## 6. Phase E3: supervised encrypted-malware model (4-6 weeks)
 
 The supervised RandomForest already shows the features separate classes in-distribution. Make that useful without overclaiming:
