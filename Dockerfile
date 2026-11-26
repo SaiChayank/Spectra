@@ -8,8 +8,8 @@ ARG EXTRAS=""
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 \
     HOME=/home/spectra SPECTRA_DATA_DIR=/data SPECTRA_MODEL_PATH=/data/models/model.joblib
 
-# Pull in Debian security fixes newer than the pinned base (zlib1g CVE-2026-76844 / -85091, trivy 2026-11-08); drop once the base catches up.
-RUN apt-get update && apt-get install -y --no-install-recommends --only-upgrade zlib1g \
+# Pull in Debian security fixes newer than the pinned base (zlib1g CVE-2026-76844 / -85091, trivy 2026-11-08; libzstd1 CVE-2026-124851, trivy 2026-11-26); drop once the base catches up.
+RUN apt-get update && apt-get install -y --no-install-recommends --only-upgrade zlib1g libzstd1 \
  && rm -rf /var/lib/apt/lists/*
 RUN useradd --system --create-home --home-dir /home/spectra --uid 10001 spectra \
  && mkdir -p /data/models && chown -R spectra:spectra /data
