@@ -9,7 +9,9 @@
 dev = CIC-2018 Bot day (SEEN, never gate evidence; positives = the ten Bot victims).  A-wed / A-thu = set_A days, hosts and
 positives exactly as amendment A1.  Reads every per-host capture of the day with the tolerant metadata reader of
 bench_beacon_v2_cic.py (cached by SHA-256), scores the whole day as one window, and reports E22 next to baseline B1.
-RITA (B2) and Suricata (B3) are separate runs.  Metadata only: no payload bytes are read into the cache.
+B2 = RITA's own final_score per host (amendment A2) read from
+the day's ClickHouse database (--rita-db; benchmark stack in <root>/tools/rita), B3 = distinct ET-rule signatures per source host
+(amendment A3) from per-capture Suricata eve.json files (--suricata-dir).  Hosts a baseline has no evidence for score 0.  Metadata only: no payload bytes are read into the cache.
 """
 from __future__ import annotations
 
@@ -18,6 +20,7 @@ import glob
 import json
 import os
 import re
+import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -76,9 +79,58 @@ def all_pairs(records) -> dict:
     return {h: v["top"] for h, v in w["hosts"].items()}
 
 
+RITA_SQL = """
+SELECT src, max(final_score) FROM (
+  SELECT src, greatest(beacon_threat_score, long_conn_score, strobe_score, c2_over_dns_score, threat_intel_score) + total_modifier_score
+         + prevalence_score + first_seen_score + missing_host_header_score + threat_intel_data_size_score + c2_over_dns_direct_conn_score AS final_score
+  FROM (
+    SELECT hash, src, dst, fqdn, sum(beacon_threat_score) AS beacon_threat_score, sum(long_conn_score) AS long_conn_score,
+           sum(strobe_score) AS strobe_score, sum(c2_over_dns_score) AS c2_over_dns_score, sum(threat_intel_score) AS threat_intel_score,
+           sum(modifier_score) AS total_modifier_score, sum(prevalence_score) AS prevalence_score, sum(first_seen_score) AS first_seen_score,
+           sum(missing_host_header_score) AS missing_host_header_score, sum(threat_intel_data_size_score) AS threat_intel_data_size_score,
+           sum(c2_over_dns_direct_conn_score) AS c2_over_dns_direct_conn_score
+    FROM {db}.threat_mixtape t
+    INNER JOIN (SELECT hash, argMax(import_id, last_seen) AS import_id, max(last_seen) AS max_last_seen FROM {db}.threat_mixtape GROUP BY hash) x
+      ON t.hash = x.hash AND t.last_seen = x.max_last_seen AND t.import_id = x.import_id
+    GROUP BY hash, src, dst, fqdn)
+) GROUP BY src
+"""
+
+
+def b2_scores(rita: str, db: str, hosts) -> dict:
+    """Baseline B2 (amendment A2): max RITA final_score per source host, exactly as RITA's viewer computes it."""
+    assert re.fullmatch(r"[a-z0-9_]+", db)
+    r = subprocess.run(["docker", "compose", "exec", "-T", "clickhouse", "clickhouse-client", "--format", "TSV",
+                        "-q", RITA_SQL.format(db=db)], cwd=rita, capture_output=True, text=True, check=True)
+    got = {}
+    for line in r.stdout.splitlines():
+        src, v = line.split("\t")
+        got[src.removeprefix("::ffff:")] = float(v)
+    return {h: got.get(h, 0.0) for h in hosts}
+
+
+def b3_scores(sdir: str, files, hosts) -> tuple[dict, dict]:
+    """Baseline B3 (amendment A3): distinct ET-rule signatures per source host; all-alert signature counts beside it."""
+    from bench_baselines_ctu import is_rule_alert
+    rules, every = {h: set() for h in hosts}, {h: set() for h in hosts}
+    for p in files:
+        eve = os.path.join(sdir, os.path.basename(p), "eve.json")
+        if not os.path.isfile(eve):
+            raise SystemExit(f"missing Suricata output {eve}")
+        for line in open(eve):
+            e = json.loads(line)
+            if e.get("event_type") != "alert" or e.get("src_ip") not in rules:
+                continue
+            every[e["src_ip"]].add(e["alert"]["signature"])
+            if is_rule_alert(e):
+                rules[e["src_ip"]].add(e["alert"]["signature"])
+    return {h: float(len(v)) for h, v in rules.items()}, {h: len(v) for h, v in every.items()}
+
+
 def summary(scores: dict, pos: set) -> dict:
-    sp = [s for h, s in scores.items() if h in pos]
-    sn = [s for h, s in scores.items() if h not in pos]
+    order = sorted(scores)      # fixed order: the seeded bootstrap must not depend on set iteration (hash seed)
+    sp = [scores[h] for h in order if h in pos]
+    sn = [scores[h] for h in order if h not in pos]
     budget = 0.0 if len(sn) < 100 else 0.01
     ranked = sorted(scores, key=lambda h: -scores[h])
     rank = {h: 1 + sum(1 for x in scores.values() if x > scores[h]) for h in pos if h in scores}
@@ -92,6 +144,8 @@ def main() -> int:
     ap.add_argument("--set", required=True, choices=["dev", "A-wed", "A-thu"])
     ap.add_argument("--root", required=True)
     ap.add_argument("--out", required=True)
+    ap.add_argument("--rita-db", help="ClickHouse database of this day's RITA import (B2)")
+    ap.add_argument("--suricata-dir", help="directory with <capture name>/eve.json per capture (B3)")
     a = ap.parse_args()
     root = os.path.expanduser(a.root)
     files, pos, status = files_for(root, a.set)
@@ -109,11 +163,19 @@ def main() -> int:
         e22 = {h: v["score"] for h, v in w["hosts"].items()}
         base = b1_scores(all_pairs(recs))
         missing = sorted(pos - set(e22))
+        extra = {}
+        if a.rita_db:
+            extra["b2_rita"] = summary(b2_scores(os.path.join(root, "tools", "rita"), a.rita_db, e22), pos)
+        if a.suricata_dir:
+            b3, b3_all = b3_scores(os.path.expanduser(a.suricata_dir), files, e22)
+            extra["b3_suricata_et_rules"] = summary(b3, pos)
+            extra["b3_all_alert_signatures"] = summary({h: float(v) for h, v in b3_all.items()}, pos)
         out = {"set": a.set, "status": status, "prereg": "ci/prereg/e22.json", "git_commit": cic.git("rev-parse", "HEAD"),
                "N": w["N"], "positives_without_external_traffic": missing, "threshold": THRESHOLD,
                "e22": summary(e22, pos), "b1": summary(base, pos),
                "e22_at_threshold": {"alerts_pos": sum(1 for h in pos if w["hosts"].get(h, {}).get("alert")),
                                     "alerts_neg": sum(1 for h, v in w["hosts"].items() if v["alert"] and h not in pos)},
+               **extra,
                "positive_evidence": {h: w["hosts"][h] for h in pos if h in w["hosts"]},
                "capture_sha256": hashes}
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)

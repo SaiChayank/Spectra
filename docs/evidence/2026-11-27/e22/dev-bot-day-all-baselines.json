@@ -1,0 +1,914 @@
+{
+ "set": "dev",
+ "status": "SEEN DATA, dev only, NOT gate evidence",
+ "prereg": "ci/prereg/e22.json",
+ "git_commit": "5bc1dc25724758be55552fb8ac34b90479927c9c",
+ "N": 20,
+ "positives_without_external_traffic": [],
+ "threshold": 0.5,
+ "e22": {
+  "positives": 10,
+  "negatives": 10,
+  "fp_budget_fpr": 0.0,
+  "recall_at_budget": {
+   "recall": 0.0,
+   "fpr": 0.0,
+   "threshold": null
+  },
+  "positive_ranks": {
+   "172.31.69.30": 9,
+   "172.31.69.6": 9,
+   "172.31.69.12": 20,
+   "172.31.69.23": 9,
+   "172.31.69.14": 3,
+   "172.31.69.17": 9,
+   "172.31.69.10": 3,
+   "172.31.69.8": 9,
+   "172.31.69.29": 1,
+   "172.31.69.26": 9
+  },
+  "metrics": {
+   "n_pos": 10,
+   "n_neg": 10,
+   "bootstrap": 1000,
+   "seed": 1337,
+   "roc_auc": 0.575,
+   "roc_auc_ci95": [
+    0.305,
+    0.84
+   ],
+   "pr_auc": 0.6357142857142858,
+   "pr_auc_ci95": [
+    0.5066666666666666,
+    0.8615384615384617
+   ],
+   "recall_at_fpr_1pct": 0.0,
+   "recall_at_fpr_1pct_fpr_reached": 0.0,
+   "recall_at_fpr_1pct_ci95": [
+    0.0,
+    0.5
+   ],
+   "recall_at_fpr_0_1pct": 0.0,
+   "recall_at_fpr_0_1pct_fpr_reached": 0.0,
+   "recall_at_fpr_0_1pct_ci95": [
+    0.0,
+    0.5
+   ]
+  },
+  "top10": [
+   [
+    "172.31.67.62",
+    1.0,
+    false
+   ],
+   [
+    "172.31.69.29",
+    1.0,
+    true
+   ],
+   [
+    "172.31.69.14",
+    0.6666666666666666,
+    true
+   ],
+   [
+    "172.31.69.10",
+    0.6666666666666666,
+    true
+   ],
+   [
+    "172.31.69.15",
+    0.5,
+    false
+   ],
+   [
+    "172.31.69.7",
+    0.5,
+    false
+   ],
+   [
+    "172.31.69.18",
+    0.5,
+    false
+   ],
+   [
+    "172.31.69.27",
+    0.5,
+    false
+   ],
+   [
+    "172.31.69.30",
+    0.3333333333333333,
+    true
+   ],
+   [
+    "172.31.69.23",
+    0.3333333333333333,
+    true
+   ]
+  ]
+ },
+ "b1": {
+  "positives": 10,
+  "negatives": 10,
+  "fp_budget_fpr": 0.0,
+  "recall_at_budget": {
+   "recall": 0.0,
+   "fpr": 0.0,
+   "threshold": null
+  },
+  "positive_ranks": {
+   "172.31.69.30": 8,
+   "172.31.69.6": 4,
+   "172.31.69.12": 10,
+   "172.31.69.23": 4,
+   "172.31.69.14": 7,
+   "172.31.69.17": 8,
+   "172.31.69.10": 3,
+   "172.31.69.8": 6,
+   "172.31.69.29": 2,
+   "172.31.69.26": 10
+  },
+  "metrics": {
+   "n_pos": 10,
+   "n_neg": 10,
+   "bootstrap": 1000,
+   "seed": 1337,
+   "roc_auc": 0.81,
+   "roc_auc_ci95": [
+    0.595,
+    1.0
+   ],
+   "pr_auc": 0.7234920634920635,
+   "pr_auc_ci95": [
+    0.5366666666666666,
+    1.0
+   ],
+   "recall_at_fpr_1pct": 0.0,
+   "recall_at_fpr_1pct_fpr_reached": 0.0,
+   "recall_at_fpr_1pct_ci95": [
+    0.0,
+    1.0
+   ],
+   "recall_at_fpr_0_1pct": 0.0,
+   "recall_at_fpr_0_1pct_fpr_reached": 0.0,
+   "recall_at_fpr_0_1pct_ci95": [
+    0.0,
+    1.0
+   ]
+  },
+  "top10": [
+   [
+    "172.31.67.62",
+    854.9998195922785,
+    false
+   ],
+   [
+    "172.31.69.29",
+    11.975,
+    true
+   ],
+   [
+    "172.31.69.10",
+    5.909090909090909,
+    true
+   ],
+   [
+    "172.31.69.23",
+    4.923076923076923,
+    true
+   ],
+   [
+    "172.31.69.6",
+    4.923076923076923,
+    true
+   ],
+   [
+    "172.31.69.8",
+    3.909090909090909,
+    true
+   ],
+   [
+    "172.31.69.14",
+    3.857142857142857,
+    true
+   ],
+   [
+    "172.31.69.30",
+    1.6666666666666665,
+    true
+   ],
+   [
+    "172.31.69.17",
+    1.6666666666666665,
+    true
+   ],
+   [
+    "172.31.69.21",
+    0.0,
+    false
+   ]
+  ]
+ },
+ "e22_at_threshold": {
+  "alerts_pos": 3,
+  "alerts_neg": 5
+ },
+ "b2_rita": {
+  "positives": 10,
+  "negatives": 10,
+  "fp_budget_fpr": 0.0,
+  "recall_at_budget": {
+   "recall": 0.9,
+   "fpr": 0.0,
+   "threshold": 0.8999999999999999
+  },
+  "positive_ranks": {
+   "172.31.69.30": 3,
+   "172.31.69.6": 4,
+   "172.31.69.12": 16,
+   "172.31.69.23": 4,
+   "172.31.69.14": 4,
+   "172.31.69.17": 9,
+   "172.31.69.10": 4,
+   "172.31.69.8": 8,
+   "172.31.69.29": 1,
+   "172.31.69.26": 1
+  },
+  "metrics": {
+   "n_pos": 10,
+   "n_neg": 10,
+   "bootstrap": 1000,
+   "seed": 1337,
+   "roc_auc": 0.94,
+   "roc_auc_ci95": [
+    0.82,
+    1.0
+   ],
+   "pr_auc": 0.9625,
+   "pr_auc_ci95": [
+    0.8857142857142858,
+    1.0
+   ],
+   "recall_at_fpr_1pct": 0.9,
+   "recall_at_fpr_1pct_fpr_reached": 0.0,
+   "recall_at_fpr_1pct_ci95": [
+    0.7,
+    1.0
+   ],
+   "recall_at_fpr_0_1pct": 0.9,
+   "recall_at_fpr_0_1pct_fpr_reached": 0.0,
+   "recall_at_fpr_0_1pct_ci95": [
+    0.7,
+    1.0
+   ]
+  },
+  "top10": [
+   [
+    "172.31.69.26",
+    0.9580000000000002,
+    true
+   ],
+   [
+    "172.31.69.29",
+    0.9580000000000002,
+    true
+   ],
+   [
+    "172.31.69.30",
+    0.944,
+    true
+   ],
+   [
+    "172.31.69.23",
+    0.9339999999999999,
+    true
+   ],
+   [
+    "172.31.69.14",
+    0.9339999999999999,
+    true
+   ],
+   [
+    "172.31.69.10",
+    0.9339999999999999,
+    true
+   ],
+   [
+    "172.31.69.6",
+    0.9339999999999999,
+    true
+   ],
+   [
+    "172.31.69.8",
+    0.9220000000000002,
+    true
+   ],
+   [
+    "172.31.69.17",
+    0.8999999999999999,
+    true
+   ],
+   [
+    "172.31.69.28",
+    0.8,
+    false
+   ]
+  ]
+ },
+ "b3_suricata_et_rules": {
+  "positives": 10,
+  "negatives": 10,
+  "fp_budget_fpr": 0.0,
+  "recall_at_budget": {
+   "recall": 0.0,
+   "fpr": 0.0,
+   "threshold": null
+  },
+  "positive_ranks": {
+   "172.31.69.30": 1,
+   "172.31.69.6": 1,
+   "172.31.69.12": 1,
+   "172.31.69.23": 1,
+   "172.31.69.14": 1,
+   "172.31.69.17": 1,
+   "172.31.69.10": 1,
+   "172.31.69.8": 1,
+   "172.31.69.29": 1,
+   "172.31.69.26": 11
+  },
+  "metrics": {
+   "n_pos": 10,
+   "n_neg": 10,
+   "bootstrap": 1000,
+   "seed": 1337,
+   "roc_auc": 0.945,
+   "roc_auc_ci95": [
+    0.82,
+    1.0
+   ],
+   "pr_auc": 0.9009090909090908,
+   "pr_auc_ci95": [
+    0.7356643356643356,
+    1.0
+   ],
+   "recall_at_fpr_1pct": 0.0,
+   "recall_at_fpr_1pct_fpr_reached": 0.0,
+   "recall_at_fpr_1pct_ci95": [
+    0.0,
+    1.0
+   ],
+   "recall_at_fpr_0_1pct": 0.0,
+   "recall_at_fpr_0_1pct_fpr_reached": 0.0,
+   "recall_at_fpr_0_1pct_ci95": [
+    0.0,
+    1.0
+   ]
+  },
+  "top10": [
+   [
+    "172.31.69.30",
+    2.0,
+    true
+   ],
+   [
+    "172.31.69.23",
+    2.0,
+    true
+   ],
+   [
+    "172.31.69.14",
+    2.0,
+    true
+   ],
+   [
+    "172.31.67.62",
+    2.0,
+    false
+   ],
+   [
+    "172.31.69.10",
+    2.0,
+    true
+   ],
+   [
+    "172.31.69.6",
+    2.0,
+    true
+   ],
+   [
+    "172.31.69.17",
+    2.0,
+    true
+   ],
+   [
+    "172.31.69.8",
+    2.0,
+    true
+   ],
+   [
+    "172.31.69.29",
+    2.0,
+    true
+   ],
+   [
+    "172.31.69.12",
+    2.0,
+    true
+   ]
+  ]
+ },
+ "b3_all_alert_signatures": {
+  "positives": 10,
+  "negatives": 10,
+  "fp_budget_fpr": 0.0,
+  "recall_at_budget": {
+   "recall": 0.0,
+   "fpr": 0.0,
+   "threshold": null
+  },
+  "positive_ranks": {
+   "172.31.69.30": 6,
+   "172.31.69.6": 2,
+   "172.31.69.12": 10,
+   "172.31.69.23": 4,
+   "172.31.69.14": 4,
+   "172.31.69.17": 9,
+   "172.31.69.10": 6,
+   "172.31.69.8": 6,
+   "172.31.69.29": 3,
+   "172.31.69.26": 10
+  },
+  "metrics": {
+   "n_pos": 10,
+   "n_neg": 10,
+   "bootstrap": 1000,
+   "seed": 1337,
+   "roc_auc": 0.9,
+   "roc_auc_ci95": [
+    0.7,
+    1.0
+   ],
+   "pr_auc": 0.8098737373737374,
+   "pr_auc_ci95": [
+    0.6257692307692307,
+    1.0
+   ],
+   "recall_at_fpr_1pct": 0.0,
+   "recall_at_fpr_1pct_fpr_reached": 0.0,
+   "recall_at_fpr_1pct_ci95": [
+    0.0,
+    1.0
+   ],
+   "recall_at_fpr_0_1pct": 0.0,
+   "recall_at_fpr_0_1pct_fpr_reached": 0.0,
+   "recall_at_fpr_0_1pct_ci95": [
+    0.0,
+    1.0
+   ]
+  },
+  "top10": [
+   [
+    "172.31.67.62",
+    22.0,
+    false
+   ],
+   [
+    "172.31.69.6",
+    16.0,
+    true
+   ],
+   [
+    "172.31.69.29",
+    15.0,
+    true
+   ],
+   [
+    "172.31.69.23",
+    14.0,
+    true
+   ],
+   [
+    "172.31.69.14",
+    14.0,
+    true
+   ],
+   [
+    "172.31.69.30",
+    11.0,
+    true
+   ],
+   [
+    "172.31.69.10",
+    11.0,
+    true
+   ],
+   [
+    "172.31.69.8",
+    11.0,
+    true
+   ],
+   [
+    "172.31.69.17",
+    10.0,
+    true
+   ],
+   [
+    "172.31.69.26",
+    9.0,
+    true
+   ]
+  ]
+ },
+ "positive_evidence": {
+  "172.31.69.30": {
+   "score": 0.3333333333333333,
+   "alert": false,
+   "top": [
+    {
+     "dest": "csi.gstatic.com",
+     "score": 0.3333333333333333,
+     "prevalence": 1,
+     "hours": 1,
+     "flows": 2,
+     "dst_ips": [
+      "172.217.22.163"
+     ]
+    },
+    {
+     "dest": "40.80.145.38",
+     "score": 0.13333333333333333,
+     "prevalence": 5,
+     "hours": 2,
+     "flows": 2,
+     "dst_ips": [
+      "40.80.145.38"
+     ]
+    },
+    {
+     "dest": "fonts.gstatic.com",
+     "score": 0.1111111111111111,
+     "prevalence": 9,
+     "hours": 3,
+     "flows": 10,
+     "dst_ips": [
+      "172.217.7.131",
+      "216.58.198.67"
+     ]
+    }
+   ]
+  },
+  "172.31.69.6": {
+   "score": 0.3333333333333333,
+   "alert": false,
+   "top": [
+    {
+     "dest": "23.62.6.27",
+     "score": 0.3333333333333333,
+     "prevalence": 1,
+     "hours": 1,
+     "flows": 6,
+     "dst_ips": [
+      "23.62.6.27"
+     ]
+    },
+    {
+     "dest": "104.196.176.36",
+     "score": 0.3333333333333333,
+     "prevalence": 1,
+     "hours": 1,
+     "flows": 2,
+     "dst_ips": [
+      "104.196.176.36"
+     ]
+    },
+    {
+     "dest": "13.33.46.77",
+     "score": 0.3333333333333333,
+     "prevalence": 1,
+     "hours": 1,
+     "flows": 2,
+     "dst_ips": [
+      "13.33.46.77"
+     ]
+    }
+   ]
+  },
+  "172.31.69.12": {
+   "score": 0.13333333333333333,
+   "alert": false,
+   "top": [
+    {
+     "dest": "40.80.145.38",
+     "score": 0.13333333333333333,
+     "prevalence": 5,
+     "hours": 2,
+     "flows": 2,
+     "dst_ips": [
+      "40.80.145.38"
+     ]
+    },
+    {
+     "dest": "sassets.myfax.com",
+     "score": 0.1111111111111111,
+     "prevalence": 3,
+     "hours": 1,
+     "flows": 5,
+     "dst_ips": [
+      "23.199.198.50"
+     ]
+    },
+    {
+     "dest": "www.rnengage.com",
+     "score": 0.1111111111111111,
+     "prevalence": 3,
+     "hours": 1,
+     "flows": 3,
+     "dst_ips": [
+      "23.13.178.232"
+     ]
+    }
+   ]
+  },
+  "172.31.69.23": {
+   "score": 0.3333333333333333,
+   "alert": false,
+   "top": [
+    {
+     "dest": "client.wns.windows.com",
+     "score": 0.3333333333333333,
+     "prevalence": 3,
+     "hours": 6,
+     "flows": 6,
+     "dst_ips": [
+      "13.89.187.212",
+      "13.89.191.45",
+      "131.253.34.230"
+     ]
+    },
+    {
+     "dest": "www.admuncher.com",
+     "score": 0.3333333333333333,
+     "prevalence": 1,
+     "hours": 1,
+     "flows": 5,
+     "dst_ips": [
+      "104.27.170.98"
+     ]
+    },
+    {
+     "dest": "www.paypalobjects.com",
+     "score": 0.3333333333333333,
+     "prevalence": 1,
+     "hours": 1,
+     "flows": 3,
+     "dst_ips": [
+      "23.36.32.229"
+     ]
+    }
+   ]
+  },
+  "172.31.69.14": {
+   "score": 0.6666666666666666,
+   "alert": true,
+   "top": [
+    {
+     "dest": "23.219.88.176",
+     "score": 0.6666666666666666,
+     "prevalence": 1,
+     "hours": 2,
+     "flows": 2,
+     "dst_ips": [
+      "23.219.88.176"
+     ]
+    },
+    {
+     "dest": "13.33.78.214",
+     "score": 0.3333333333333333,
+     "prevalence": 1,
+     "hours": 1,
+     "flows": 2,
+     "dst_ips": [
+      "13.33.78.214"
+     ]
+    },
+    {
+     "dest": "52.85.146.96",
+     "score": 0.3333333333333333,
+     "prevalence": 1,
+     "hours": 1,
+     "flows": 2,
+     "dst_ips": [
+      "52.85.146.96"
+     ]
+    }
+   ]
+  },
+  "172.31.69.17": {
+   "score": 0.3333333333333333,
+   "alert": false,
+   "top": [
+    {
+     "dest": "13.33.78.223",
+     "score": 0.3333333333333333,
+     "prevalence": 1,
+     "hours": 1,
+     "flows": 2,
+     "dst_ips": [
+      "13.33.78.223"
+     ]
+    },
+    {
+     "dest": "www.cyberoam.com",
+     "score": 0.16666666666666666,
+     "prevalence": 4,
+     "hours": 2,
+     "flows": 10,
+     "dst_ips": [
+      "52.44.192.243"
+     ]
+    },
+    {
+     "dest": "themes.googleusercontent.com",
+     "score": 0.16666666666666666,
+     "prevalence": 4,
+     "hours": 2,
+     "flows": 3,
+     "dst_ips": [
+      "172.217.12.225",
+      "172.217.7.129"
+     ]
+    }
+   ]
+  },
+  "172.31.69.10": {
+   "score": 0.6666666666666666,
+   "alert": true,
+   "top": [
+    {
+     "dest": "180.100.207.78",
+     "score": 0.6666666666666666,
+     "prevalence": 1,
+     "hours": 2,
+     "flows": 2,
+     "dst_ips": [
+      "180.100.207.78"
+     ]
+    },
+    {
+     "dest": "www.faxfx.net",
+     "score": 0.3333333333333333,
+     "prevalence": 2,
+     "hours": 2,
+     "flows": 9,
+     "dst_ips": [
+      "41.203.16.49"
+     ]
+    },
+    {
+     "dest": "41.203.16.49",
+     "score": 0.3333333333333333,
+     "prevalence": 2,
+     "hours": 2,
+     "flows": 7,
+     "dst_ips": [
+      "41.203.16.49"
+     ]
+    }
+   ]
+  },
+  "172.31.69.8": {
+   "score": 0.3333333333333333,
+   "alert": false,
+   "top": [
+    {
+     "dest": "23.219.88.11",
+     "score": 0.3333333333333333,
+     "prevalence": 1,
+     "hours": 1,
+     "flows": 6,
+     "dst_ips": [
+      "23.219.88.11"
+     ]
+    },
+    {
+     "dest": "35.170.101.86",
+     "score": 0.3333333333333333,
+     "prevalence": 1,
+     "hours": 1,
+     "flows": 2,
+     "dst_ips": [
+      "35.170.101.86"
+     ]
+    },
+    {
+     "dest": "52.84.63.166",
+     "score": 0.3333333333333333,
+     "prevalence": 1,
+     "hours": 1,
+     "flows": 2,
+     "dst_ips": [
+      "52.84.63.166"
+     ]
+    }
+   ]
+  },
+  "172.31.69.29": {
+   "score": 1.0,
+   "alert": true,
+   "top": [
+    {
+     "dest": "23.219.88.73",
+     "score": 1.0,
+     "prevalence": 1,
+     "hours": 3,
+     "flows": 8,
+     "dst_ips": [
+      "23.219.88.73"
+     ]
+    },
+    {
+     "dest": "23.67.251.160",
+     "score": 1.0,
+     "prevalence": 1,
+     "hours": 3,
+     "flows": 5,
+     "dst_ips": [
+      "23.67.251.160"
+     ]
+    },
+    {
+     "dest": "www.privoxy.org",
+     "score": 0.6666666666666666,
+     "prevalence": 1,
+     "hours": 2,
+     "flows": 7,
+     "dst_ips": [
+      "46.165.244.215"
+     ]
+    }
+   ]
+  },
+  "172.31.69.26": {
+   "score": 0.3333333333333333,
+   "alert": false,
+   "top": [
+    {
+     "dest": "client.wns.windows.com",
+     "score": 0.3333333333333333,
+     "prevalence": 3,
+     "hours": 7,
+     "flows": 2,
+     "dst_ips": [
+      "13.89.184.238",
+      "13.89.187.212"
+     ]
+    },
+    {
+     "dest": "40.80.145.38",
+     "score": 0.13333333333333333,
+     "prevalence": 5,
+     "hours": 2,
+     "flows": 2,
+     "dst_ips": [
+      "40.80.145.38"
+     ]
+    },
+    {
+     "dest": "18.219.211.138",
+     "score": 0.1,
+     "prevalence": 10,
+     "hours": 6,
+     "flows": 14868,
+     "dst_ips": [
+      "18.219.211.138"
+     ]
+    }
+   ]
+  }
+ },
+ "capture_sha256": {
+  "Friday-02-03-2018__UCAP172.31.69.15": "e08b441c2a4c0cad757b85564f39ed16244c4569458489e60346ef145b9aab84",
+  "Friday-02-03-2018__UCAP172.31.69.18": "5eefe0b26d37ab10a7134274bb6eca21754c8f5a428fefb136bf56f447a6a357",
+  "Friday-02-03-2018__UCAP172.31.69.21": "bb9479fb5e88a13000c6893a09d7a664cba396d9db22c2bec53fd306afeca6f1",
+  "Friday-02-03-2018__UCAP172.31.69.22": "4de5df26f4e0db20e5216b366983083b1cb1aa47ce435900e36f131992c09e66",
+  "Friday-02-03-2018__UCAP172.31.69.25": "16b26ae2036c7183288d71c8660c3c0d68c5c93d2c07c9db854d8e1f74220c83",
+  "Friday-02-03-2018__UCAP172.31.69.27": "2f820aa4b89fe2a4a996b5584711e1ac3fd2c88bc9bba82b7cc0992f5c070aa7",
+  "Friday-02-03-2018__UCAP172.31.69.28": "8a09e5d476fa81571e49a632df8b3a78666dcdce19803fa7d714f7167835fe43",
+  "Friday-02-03-2018__UCAP172.31.69.7": "83d8d04dea73e3a0c621f32aecc0b651ceab88e7f4ce30cd81b153324fcbc80a",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.10": "48265cd901fe91e95b4a6552cfb822daf682b68359494ef153c9ff0278854243",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.12": "00e2d2d175de6a93821dd19961c2f00b45c39b48bb1fd2f054843b8785af03fd",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.14": "d701711685967c7564ea4442d272f877f31005ce3803ffcd6e8e7593db0b36a4",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.17": "560e8e123189a1d63a734757c2de47f2e768b2226c9097e9e54e85046be1bb48",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.20": "a7d589d0dd86dde58b9fa20e555fb7292ce78cf75531b5073b84380d61e4d287",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.23": "56fc8375d9104615ec08952bf811cc17e0579af5d2fc98e54dea669cc9d5d58e",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.26": "ed0b57eac080732e41535b0228b114a7c90a9e4da88faa140621ff8117cbeebd",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.29": "799081247a14ea82ccfda77756bc6212f428e59b474b5b18fe688326a7b4a378",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.30": "4e129df72cf04e3bc425d649bace9dddf214d25f1461de3b229aa86add0ab01b",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.6": "4e116afc21ba8b8609127c2ef476987d589851ae7bb7f258a9cec36a67de3bfd",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69.8": "dfdfdf3e850e8910fc3e2cb1cd5ada03bcc68e29db78809b6c62f7fe46a70992",
+  "Friday-02-03-2018__capEC2AMAZ-O4EL3NG-172.31.69_-_Copy.24": "f8e0382a34d000d16e13c4c14f2e952db7fc1372589b95f5d8c53696c4fb6c05",
+  "Friday-02-03-2018__capWIN-J6GMIG1DQE5-172.31.67.62": "d611a5b53d901f6e17728f66a6485a7f97e3a63f32a40102a7e9ccdec04568f5",
+  "Friday-02-03-2018__capWIN-J6GMIG1DQE5-172.31.67.95": "ec78c0adf63abaac2d9f3556583b30975795e1175f8e3bfa62b19e10cc47a197"
+ }
+}
