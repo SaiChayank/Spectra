@@ -226,6 +226,15 @@
         "mapping": "per (src, dst, fqdn) row: final_score exactly as RITA's viewer computes it = greatest(beacon_threat_score, long_conn_score, strobe_score, c2_over_dns_score, threat_intel_score) + sum(modifier_score) + prevalence_score + first_seen_score + missing_host_header_score + threat_intel_data_size_score + c2_over_dns_direct_conn_score, using RITA's own latest-import join and GROUP BY hash, src, dst, fqdn; B2 host score = max final_score over the host's rows; host with no row = 0; IPv4-mapped src converted back to dotted IPv4 to join with the dataset's host list",
         "per_day": "one RITA database per capture day (= the E22 window), built from that day's merged Zeek logs of exactly the hosts E22 scores",
         "unchanged": "everything else in this file"
+    },
+    {
+        "id": "A3",
+        "date": "2026-11-27",
+        "before": "any held-out set is scored",
+        "what": "fixes which Suricata alerts count for B3 (the prereg said only 'distinct alert signatures')",
+        "rule": "headline B3 host score = number of distinct signatures among ET rule alerts whose src_ip is the host, where an ET rule alert is the project's existing definition (backend/scripts/bench_baselines_ctu.py is_rule_alert: signature starts with 'ET ' and not 'ET INFO '), so Suricata engine/decoder events (capture artefacts) and informational rules do not count; the all-alerts count is reported next to it",
+        "reason": "same definition as every earlier Suricata baseline in docs/evaluation-report.md (corrected 2026-11-07 after engine events were miscounted as detections); chosen before any held-out run",
+        "unchanged": "everything else in this file"
     }
   ]
 }
